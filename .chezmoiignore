@@ -1,2 +1,7 @@
 README.md
 LICENSE
+chezmoi_execute_template_reference.txt
+.editorconfig
+.lazy.lua
+.nvim.lua
+.shellcheckrc
