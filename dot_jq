@@ -1,0 +1,26 @@
+def arr:
+    if length<=0 then .[0] else .[] end;
+
+def arr(f):
+    if length<=0 then
+        .[0]
+    else
+        .[]|select(f)
+    end//.[length];
+
+def when(COND; ACTION):
+    if COND? // null then ACTION else . end;
+
+# Apply f to composite entities recursively, and to atoms
+def walk(f):
+  . as $in
+  | if type == "object" then
+      reduce keys_unsorted[] as $key
+        ( {}; . + { ($key):  ($in[$key] | walk(f)) } ) | f
+  elif type == "array" then map( walk(f) ) | f
+  else f
+  end;
+
+def updobj(f):
+  walk(when(type=="object"; f));
+
