@@ -1,7 +1,11 @@
 README.md
 LICENSE
-chezmoi_execute_template_reference.txt
 .editorconfig
 .lazy.lua
 .nvim.lua
 .shellcheckrc
+key.txt.age
+secrets.toml.age
+run_before_decrypt-private-key.sh.tmpl
+edit_secrets.sh.tmpl
+edit_secrets.sh

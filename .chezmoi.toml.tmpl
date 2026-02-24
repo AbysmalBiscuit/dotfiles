@@ -1,0 +1,173 @@
+{{/* boolean feature tags */}}
+{{- $is_ephemeral := false -}}{{/* true if this machine is is_ephemeral, e.g. a cloud or VM instance */}}
+{{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
+{{- $is_work := false -}}{{/* true if this machine is a is_work machine */}}
+{{- $is_personal := false -}}{{/* true if this machine should have personal secrets */}}
+{{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
+{{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
+{{- $is_windows := eq .chezmoi.os "windows" -}}{{/* true if this machine is a Windows machine */}}
+{{- $is_macos := false -}}{{/* true if this machine is a macOS machine */}}
+{{- /* Default values/placeholders for variables */ -}}
+{{- $fullname := "" -}}
+{{- $firstname := "" -}}
+{{- $lastname := "" -}}
+{{- $email := "" -}}
+{{- $hostname := .chezmoi.hostname -}}
+{{- /* Encryption/Security */ -}}
+{{- $gpg_key := "" -}}
+{{- $has_age_key := false -}}
+{{- $age_identities := list | toJson -}}
+{{- $age_recipients := list | toJson -}}
+{{- $has_keepassxc := false -}}
+{{- $keepassxc_cli := "" -}}
+{{- $keepassxc_database := "" -}}
+{{- $keepassxc_keyfile := "" -}}
+{{- $has_secrets := false -}}
+{{- $secrets_key := "" -}}
+{{- $secrets_path := joinPath .chezmoi.homeDir ".config/chezmoi/secrets.toml" -}}
+{{- $secrets := dict -}}
+{{- if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")  }}
+{{-   $has_age_key = true -}}
+{{- end }}
+{{- if stat $secrets_path -}}
+{{-   $has_secrets = true -}}
+{{-   $secrets = include $secrets_path | fromToml -}}
+{{- end -}}
+{{- "" -}}
+
+{{- $osID := .chezmoi.os -}}
+{{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
+{{-   $osID = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
+{{- end -}}
+
+{{/* detect GitHub codespaces, VSCode remote containers, Docker containers, Multipass VMs, and Vagrant boxes */}}
+{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") (eq .chezmoi.username "root" "ubuntu" "vagrant" "vscode" "webmaster") -}}
+{{-   $is_ephemeral = true -}}
+{{-   $is_headless = true -}}
+{{- end -}}
+
+{{/* work around unreliable hostname on darwin */}}
+{{- $hostname = .chezmoi.hostname -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $hostname = output "scutil" "--get" "LocalHostName" | trim -}}
+{{- end -}}
+
+{{- /* Identify if running on ephemeral machine */ -}}
+{{- if eq .chezmoi.os "" -}}
+{{-   $is_ephemeral = true -}}
+{{- end -}}
+
+{{- /* detect WSL */ -}}
+{{- if env "WSL_DISTRO_NAME" -}}
+{{-   $is_wsl = true -}}
+{{- end -}}
+
+{{- /*if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")*/ -}}
+{{- /*   $has_age_key = true */ -}}
+{{- /* end */ -}}
+
+{{- /* Check for numbered keys (e.g., 1 to 5) */ -}}
+{{- /* range $i := (seq 1 5 | splitList " ") */ -}}
+  {{- /* if stat (joinPath $.chezmoi.homeDir (printf ".config/chezmoi/key%d.txt" (int $i))) */ -}}
+    {{- /* $has_age_key = true */ -}}
+    {{- /* break */ -}}
+  {{- /* end */ -}}
+{{- /* end */ -}}
+
+{{- /* Identify hostname and set specific settings based on that */ -}}
+{{- if not $is_ephemeral -}}
+{{-   if ($is_wsl) -}}
+{{-     $is_personal = true -}}
+{{-     $secrets_key = "wsl" -}}
+{{-   else if (and ($is_windows) (or (contains "Yin" $hostname) (contains "GLaDOS" $hostname))) -}}
+{{-     $is_personal = true -}}
+{{-     $secrets_key = "windows" -}}
+{{-   else if eq $hostname "ubuntu" -}}
+{{-     $is_headless = true -}}
+{{-     $is_personal = true -}}
+{{-   else if eq $hostname "work_hostname" -}}
+{{-     $is_work = true -}}
+{{-   else if stdinIsATTY -}}
+{{-     $is_headless = promptBoolOnce . "is_headless" "is_headless" -}}
+{{-     $is_ephemeral = promptBoolOnce . "is_ephemeral" "is_ephemeral" -}}
+{{-   else -}}
+{{-     $is_ephemeral = true -}}
+{{-     $is_headless = true -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if $is_work -}}
+{{-   $email = "" -}}
+{{- end -}}
+
+{{- if (and (eq .chezmoi.os "windows") $is_personal) -}}
+{{- end -}}
+
+
+{{- /* Set values based on secrets */ -}}
+{{- if (and ($is_personal) ($secrets)) -}}
+  {{- $fullname = $secrets.name.fullname -}}
+  {{- $firstname = $secrets.name.firstname -}}
+  {{- $lastname = $secrets.name.lastname -}}
+  {{- $email = $secrets.email.personal -}}
+  {{- $gpg_key = $secrets.gpg.gpg_key -}}
+  {{- $age_identities = $secrets.age.identities | toJson -}}
+  {{- $age_recipients = $secrets.age.recipients | toJson -}}
+  {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
+  {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
+  {{- $keepassxc_keyfile = (index $secrets.keepassxc $secrets_key).keyfile -}}
+  {{- /* if $is_wsl */ -}}
+  {{- /* else if $is_linux */ -}}
+  {{- /* else if $is_macos */ -}}
+  {{- /* else if $is_windows */ -}}
+  {{- /* end */ -}}
+{{- end -}}
+
+{{""}}
+{{- if (and ($has_age_key) ($has_secrets)) -}}
+encryption = "age"
+
+[age]
+identities = {{ $age_identities }}
+recipients = {{ $age_recipients }}
+
+{{ end }}
+
+{{- "" -}}
+
+[data]
+[data.age]
+identities = {{ $age_identities }}
+recipients = {{ $age_recipients }}
+
+# OS booleans
+[data.os]
+is_wsl = {{ $is_wsl }}
+is_linux = {{ $is_linux }}
+is_macos = {{ $is_macos }}
+is_windows = {{ $is_macos }}
+
+[data.personal]
+# Personal info
+email = {{ $email | quote }}
+fullname = {{ $fullname | quote }}
+firstname = {{ $firstname | quote }}
+lastname = {{ $lastname | quote }}
+gpg_key = {{ $gpg_key | quote }}
+
+[data.system]
+# System info
+is_work = {{ $is_work }}
+is_personal = {{ $is_personal }}
+is_ephemeral = {{ $is_ephemeral }}
+is_headless = {{ $is_headless }}
+hostname = {{ $hostname | quote }}
+osid = {{ $osID | quote }}
+
+[github]
+refreshPeriod = "12h"
+
+[keepassxc]
+command = "{{ $keepassxc_cli }}"
+database = "{{ $keepassxc_database }}"
+args = ["--key-file", "{{ $keepassxc_keyfile }}"]

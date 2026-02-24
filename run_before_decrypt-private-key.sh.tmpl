@@ -1,0 +1,15 @@
+#!/bin/sh
+
+CHEZMOI_DIR="${HOME}/.config/chezmoi"
+SOURCE_DIR="{{ .chezmoi.sourceDir }}"
+
+if [ ! -f "${HOME}/.config/chezmoi/key.txt" ]; then
+    mkdir -p "${HOME}/.config/chezmoi"
+    chezmoi age decrypt --output "${HOME}/.config/chezmoi/key.txt" --passphrase "{{ .chezmoi.sourceDir }}/key.txt.age"
+    chmod 600 "${HOME}/.config/chezmoi/key.txt"
+fi
+
+if [ ! -f "${CHEZMOI_DIR}/secrets.toml" ]; then
+    age -d -i "${CHEZMOI_DIR}/key.txt" -o "${CHEZMOI_DIR}/secrets.toml" "${SOURCE_DIR}/secrets.toml.age"
+    chmod 600 "${CHEZMOI_DIR}/secrets.toml"
+fi
