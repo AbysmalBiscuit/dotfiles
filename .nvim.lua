@@ -89,23 +89,32 @@ vim.api.nvim_set_hl(0, "LspReferenceRead", {})
 -- Treesitter
 --------------------------------------------------------------------------------
 
-local chezmoi_filetypes = { "bash", "sh", "fish", "toml", "conf", "ini" }
-for i = 1, #chezmoi_filetypes do
-    vim.treesitter.language.register("gotmpl", chezmoi_filetypes[i] .. ".chezmoitmpl")
-end
-
+local gotmpl_filetypes = { "go", "gomod", "gowork", "gotmpl" }
+local chezmoi_filetypes = {
+    "bash",
+    "sh",
+    "fish",
+    "toml",
+    "conf",
+    "ini",
+    "gitconfig",
+    "yaml",
+    -- "nanorc",
+}
 local ft_to_parser = {
     sh = "bash",
-    bash = "bash",
-    zsh = "bash",
-    toml = "toml",
-    yaml = "yaml",
-    json = "json",
-    fish = "fish",
-    lua = "lua",
-    ini = "ini",
-    conf = "bash",
 }
+local chezmoi_filetypes_postfixed = {}
+for i = 1, #chezmoi_filetypes do
+    local filetype = chezmoi_filetypes[i]
+    local post_fixed = filetype .. ".chezmoitmpl"
+    table.insert(chezmoi_filetypes_postfixed, post_fixed)
+    table.insert(gotmpl_filetypes, post_fixed)
+    vim.treesitter.language.register("gotmpl", post_fixed)
+    if ft_to_parser[filetype] == nil then
+        ft_to_parser[filetype] = filetype
+    end
+end
 
 local function set_gotmpl_injections(lang)
     vim.treesitter.query.set(
@@ -154,14 +163,8 @@ vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
 -- LSP
 --------------------------------------------------------------------------------
 
-local all_filetypes = { "bash", "sh", "fish", "toml", "conf", "ini" }
-local filetypes = { "go", "gomod", "gowork", "gotmpl" }
-for i = 1, #all_filetypes do
-    table.insert(filetypes, all_filetypes[i] .. ".chezmoitmpl")
-end
-
 vim.lsp.config("gopls", {
-    filetypes = filetypes,
+    filetypes = gotmpl_filetypes,
     settings = {
         gopls = {
             templateExtensions = { "tmpl" },
@@ -200,18 +203,7 @@ vim.lsp.config("gopls", {
 --------------------------------------------------------------------------------
 vim.api.nvim_create_autocmd("FileType", {
     group = vim.api.nvim_create_augroup("gotmpl_comment", { clear = false }),
-    pattern = {
-        "go",
-        "gomod",
-        "gowork",
-        "gotmpl",
-        "bash.chezmoitmpl",
-        "sh.chezmoitmpl",
-        "fish.chezmoitmpl",
-        "toml.chezmoitmpl",
-        "conf.chezmoitmpl",
-        "ini.chezmoitmpl",
-    },
+    pattern = gotmpl_filetypes,
     callback = function()
         require("gotmpl_comment").setup()
     end,
