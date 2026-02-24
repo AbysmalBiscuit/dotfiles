@@ -1,8 +1,9 @@
-{{/* boolean feature tags */}}
-{{- $is_ephemeral := false -}}{{/* true if this machine is is_ephemeral, e.g. a cloud or VM instance */}}
-{{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
+{{- /* System information */ -}}
 {{- $is_work := false -}}{{/* true if this machine is a is_work machine */}}
 {{- $is_personal := false -}}{{/* true if this machine should have personal secrets */}}
+{{- $is_ephemeral := false -}}{{/* true if this machine is is_ephemeral, e.g. a cloud or VM instance */}}
+{{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
+{{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
 {{- $is_windows := eq .chezmoi.os "windows" -}}{{/* true if this machine is a Windows machine */}}
@@ -12,6 +13,8 @@
 {{- $firstname := "" -}}
 {{- $lastname := "" -}}
 {{- $email := "" -}}
+{{- $editor := "" }}
+{{- $editor_args := list }}
 {{- $hostname := .chezmoi.hostname -}}
 {{- /* Encryption/Security */ -}}
 {{- $gpg_key := "" -}}
@@ -97,11 +100,24 @@
 {{- end -}}
 
 {{- if $is_work -}}
-{{-   $email = "" -}}
 {{- end -}}
 
 {{- if (and (eq .chezmoi.os "windows") $is_personal) -}}
 {{- end -}}
+
+{{- /* Identify editor */ -}}
+{{- if lookPath "nvim" }}
+  {{- $editor = "nvim" }}
+{{- else if lookPath "vim" }}
+  {{- $editor = "vim" }}
+{{- else if lookPath "zed" }}
+  {{- $editor = "zed" }}
+{{- else if lookPath "nano" }}
+  {{- $editor = "nano" }}
+{{- else if lookPath "code" }}
+  {{- $editor = "code" }}
+  {{- $editor_args = list "--wait" }}
+{{- end }}
 
 
 {{- /* Set values based on secrets */ -}}
@@ -135,6 +151,19 @@ recipients = {{ $age_recipients }}
 
 {{- "" -}}
 
+[edit]
+command = {{ $editor | quote }}
+args = {{ $editor_args }}
+
+[github]
+refreshPeriod = "12h"
+
+[keepassxc]
+command = "{{ $keepassxc_cli }}"
+database = "{{ $keepassxc_database }}"
+args = ["--key-file", "{{ $keepassxc_keyfile }}"]
+
+# Data for use in templates
 [data]
 [data.age]
 identities = {{ $age_identities }}
@@ -163,11 +192,3 @@ is_ephemeral = {{ $is_ephemeral }}
 is_headless = {{ $is_headless }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
-
-[github]
-refreshPeriod = "12h"
-
-[keepassxc]
-command = "{{ $keepassxc_cli }}"
-database = "{{ $keepassxc_database }}"
-args = ["--key-file", "{{ $keepassxc_keyfile }}"]
