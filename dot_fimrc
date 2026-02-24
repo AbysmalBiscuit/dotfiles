@@ -1,0 +1,84 @@
+# Some other combinations (e.g.:C-l) may have similar problems in your console.
+#bind 'f' "flip";
+#bind 'F' "fliponce";
+#bind 'm' "mirror";
+#bind 'M' "mirroronce";
+#bind 'q' "quit";
+#bind 'Esc' "quit";
+
+#bind 'n' "next_file";
+#bind 'n' "next";
+bind 't' "next";
+bind 't' "next_file";
+
+#bind 'C-h' "help";
+#bind '?' "help"; # assigned to back-search
+#bind '/' "help"; # assigned to forward-search
+#bind '=' "scale '100%'";
+#bind 'p' "prev_file";
+#bind 'Del' "list 'pop';reload";
+#bind 's' "list 'sort'";
+#bind ' ' "scroll 'forward'";
+#bind 'S' "toggleDisplayStatus";
+#bind 'I' "toggleautonegate";
+#bind 'i' "color 'negate';redisplay";
+
+#bind 'g' "color 'desaturate';redisplay";
+bind 'd' "color 'desaturate';redisplay";
+
+#bind '[' 'font_reduce;redisplay';
+#bind ']' 'font_magnify;redisplay';
+#bind '|' 'toggle_font_auto_scale;redisplay';
+#bind '{' 'font "prev";redisplay';
+#bind '}' 'font "next";redisplay';
+#bind 'G' "toggleDesaturate";
+#bind 'r' "rotate90";
+#bind 'R' "rotate270";
+#bind '+' "magnify";
+#bind 'a' "scale 'a'";
+#bind 'H' "scale 'H'";
+#bind 'Tab' "toggleVerbosity";
+#bind 'Menu' "toggleVerbosity";
+#bind 'v' "toggleDisplayStatus";
+#bind 'A' "A";
+
+#bind 'C-m' "list 'mark'";
+bind 'c' "list 'mark'";
+
+#bind 'u' "list 'unmark'";
+bind 'C' "list 'unmark'";
+
+#bind 'Enter' "list 'mark';goto _lastgotodirection";
+#bind '-' "reduce";
+
+#bind "Up" "pan_up";
+#bind 'k' "pan_up";
+bind 'l' "pan_up";
+
+#bind "Right" "pan_right";
+#bind 'l' "pan_right";
+bind 'n' "pan_right";
+
+#bind "Down" "pan_down";
+#bind 'j' "pan_down";
+bind 'k' "pan_down";
+
+#bind "Left" "pan_left";
+#bind 'h' "pan_left";
+bind 'h' "pan_left";
+
+#bind 't' "align 'top'";
+bind 'g' "align 'top'";
+
+#bind 'C-g' "system 'fbgrab fim.png'";
+#bind 'C-r' "recording 'start'";
+#bind 'C-r' "reload ''";
+#bind 'Q' "recording 'stop'";
+#bind 'D' "recording 'dump'";
+bind 'z' "recording 'dump'";
+
+#bind 'E' "recording 'execute'";
+#bind 'C-e' "recording 'execute'";
+#bind 'C-x' "recording 'execute'";
+#bind '.' "recording 'repeat_last'";
+#bind "'" "toggleLimitMarked";
