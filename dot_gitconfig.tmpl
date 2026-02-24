@@ -1,0 +1,73 @@
+# vim:shiftwidth=2
+[user]
+  email = {{ .personal.email | quote }}
+  name = {{ .personal.fullname | quote }}
+  signingkey = {{ .personal.gpg_key }}
+[interactive]
+  color = auto
+[core]
+  attributesfile = ~/.gitattributes_global
+  excludesfile = ~/.gitignore_global
+  eol = lf
+  autocrlf = input
+  whitespace = warn
+  editor = nvim
+[alias]
+  lg = lg1
+  lg1 = lg1-specific --all
+  lg2 = lg2-specific --all
+  lg3 = lg3-specific --all
+  lg4 = lg4-specific --all
+  lg5 = lg5-specific --all
+
+  lg1-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+  lg2-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n''  %C(white)%s%C(reset) %C(dim white)- %an%C(reset)'
+  lg3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''  %C(white)%s%C(reset)%n''          %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)'
+  lg4-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''  %C(white)%s%C(reset)%n''          %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)%n''          %C(cyan)gpg: (%G?) (%GS)%C(reset)'
+  lg5-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''  %C(white)%s%C(reset)%n''          %C(dim white)- %an <%ae> %C(reset) %C(dim white)(committer: %cn <%ce>)%C(reset)%n''          %C(cyan)gpg: (%G?) %GS [%GK]%C(reset)'
+  update-index = update-index
+  st = status
+  unstage = reset HEAD --
+[credential]
+{{- if .os.is_wsl }}
+  helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
+{{- else if .os.is_windows }}
+  helper = /c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
+{{- else if .os.is_macos }}
+  helper = /usr/share/git/credential/libsecret/git-credential-libsecret
+{{- end }}
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
+[diff]
+  tool = nvim
+[difftool]
+  prompt = false
+[difftool "meld"]
+  cmd = meld $LOCAL $REMOTE
+[merge]
+  tool = nvim
+  ff=false
+  conflictStyle=diff3
+[mergetool]
+  prompt = false
+[mergetool "nvim"]
+  cmd = nvim -d "$LOCAL" "$BASE" "$REMOTE" -c "wincmd J"
+[mergetool "meld"]
+  cmd = meld $LOCAL $MERGED $REMOTE --output $MERGED
+[commit]
+  template = ~/.git_commit_template
+  gpgSign = true
+[init]
+  defaultBranch = main
+[tag]
+  gpgSign = true
+[push]
+  autoSetupRemote = true
+  # gpgSign = true
+[pull]
+  rebase = true
+[difftool "nvim"]
+  cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
