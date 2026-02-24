@@ -1,0 +1,60 @@
+{{- if eq .chezmoi.username "root" -}}
+# Root nanorc file, with more red coloring to show nano is being run as root
+{{- else -}}
+# User nanorc file
+{{- end }}
+
+## Display line numbers to the left of the text.
+set linenumbers
+
+## Use this tab size instead of the default; it must be greater than 0.
+set tabsize 2
+
+## Convert typed tabs to spaces.
+set tabstospaces
+
+## Snip whitespace at the end of lines when justifying or hard-wrapping.
+set trimblanks
+
+## The two single-column characters used to display the first characters
+## of tabs and spaces.  187 in ISO 8859-1 (0000BB in Unicode) and 183 in
+## ISO-8859-1 (0000B7 in Unicode) seem to be good values for these.
+## The default when in a UTF-8 locale:
+set whitespace "»·"
+## The default otherwise:
+# set whitespace ">."
+
+## Paint the interface elements of nano.  These are examples;
+## by default there are no colors, except for errorcolor.
+{{- if eq .chezmoi.username "root" -}}
+set titlecolor brightwhite,red
+set statuscolor brightwhite,red
+set selectedcolor brightwhite,cyan
+set numbercolor white
+set keycolor brightmagenta
+set functioncolor brightmagenta,black
+{{- else -}}
+set titlecolor brightwhite,blue
+set statuscolor brightwhite,green
+set selectedcolor brightwhite,magenta
+set numbercolor cyan
+set keycolor cyan
+set functioncolor green
+{{- end -}}
+set errorcolor brightwhite,red
+
+{{- if glob "/usr/share/nano/*.nanorc" -}}
+## To include all existing syntax definitions, you can do:
+include "/usr/share/nano/*.nanorc"
+{{- end -}}
+
+{{- if glob "~/bin/share/nano/*.nanorc" -}}
+# Include custom syntax definitions
+include "~/bin/share/nano/*.nanorc"
+{{- end -}}
+
+{{- if glob "~/.local/share/nano/*.nanorc" -}}
+# Include custom syntax definitions
+include "~/.local/share/nano/*.nanorc"
+{{- end -}}
+
