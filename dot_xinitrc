@@ -1,0 +1,3 @@
+export QT_QPA_PLATFORMTHEME=qgnomeplatform
+export IBUS_ENABLE_SYNC_MODE=1
+exec gnome-session
