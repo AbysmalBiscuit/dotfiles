@@ -1,0 +1,5 @@
+defaultIndent: "  "
+noAdditionalIndent:
+  item: 1
+indentRules:
+  item: " "
