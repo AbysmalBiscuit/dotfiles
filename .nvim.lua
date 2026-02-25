@@ -18,6 +18,7 @@
 --     end,
 -- })
 vim.api.nvim_create_autocmd("BufWritePost", {
+    group = vim.api.nvim_create_augroup("chezmoi_group_custom1", { clear = false }),
     pattern = ".chezmoi.toml.tmpl",
     callback = function()
         local stderr_chunks = {}
@@ -31,16 +32,6 @@ vim.api.nvim_create_autocmd("BufWritePost", {
             on_exit = function(_, code)
                 vim.schedule(function()
                     if code == 0 then
-                        -- Reload chezmoi.toml if it's open in any buffer
-                        local target = vim.fn.expand("~") .. "/.config/chezmoi/chezmoi.toml"
-                        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                            if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_name(buf) == target then
-                                vim.api.nvim_buf_call(buf, function()
-                                    vim.cmd("edit!")
-                                end)
-                                break
-                            end
-                        end
                         vim.notify("chezmoi init succeeded")
                     else
                         vim.notify("chezmoi init failed", vim.log.levels.ERROR)
@@ -50,6 +41,25 @@ vim.api.nvim_create_autocmd("BufWritePost", {
                 end)
             end,
         })
+    end,
+})
+vim.api.nvim_create_autocmd("BufWritePost", {
+    group = vim.api.nvim_create_augroup("chezmoi_group_custom2", { clear = false }),
+    callback = function()
+        vim.schedule(function()
+            local home = vim.fn.expand("~")
+            local chezmoi_source = home .. "/.local/share/chezmoi"
+            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                if vim.api.nvim_buf_is_loaded(buf) then
+                    local name = vim.api.nvim_buf_get_name(buf)
+                    if name ~= "" and not vim.startswith(name, chezmoi_source) and vim.startswith(name, home) then
+                        vim.api.nvim_buf_call(buf, function()
+                            vim.cmd("edit!")
+                        end)
+                    end
+                end
+            end
+        end)
     end,
 })
 
@@ -176,35 +186,36 @@ vim.lsp.config("gopls", {
 -- local method = vim.lsp.protocol.Methods.textDocument_publishDiagnostics
 --
 -- vim.api.nvim_create_autocmd("LspAttach", {
--- 	callback = function(args)
--- 		local client = vim.lsp.get_client_by_id(args.data.client_id)
+--   callback = function(args)
+--     local client = vim.lsp.get_client_by_id(args.data.client_id)
 --
--- 		-- Only apply to vtsls
--- 		if client and client.name == "vtsls" then
--- 			client.handlers[method] = function(err, result, ctx, config)
--- 				if result.diagnostics then
--- 					local filtered = {}
--- 					for _, diagnostic in ipairs(result.diagnostics) do
--- 						if not ignored_vtsls_codes[diagnostic.code] then
--- 							table.insert(filtered, diagnostic)
--- 						end
--- 					end
--- 					result.diagnostics = filtered
--- 				end
--- 				-- Call the default handler with the filtered results
--- 				vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx)
--- 			end
--- 		end
--- 	end,
+--     -- Only apply to vtsls
+--     if client and client.name == "vtsls" then
+--       client.handlers[method] = function(err, result, ctx, config)
+--         if result.diagnostics then
+--           local filtered = {}
+--           for _, diagnostic in ipairs(result.diagnostics) do
+--             if not ignored_vtsls_codes[diagnostic.code] then
+--               table.insert(filtered, diagnostic)
+--             end
+--           end
+--           result.diagnostics = filtered
+--         end
+--         -- Call the default handler with the filtered results
+--         vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx)
+--       end
+--     end
+--   end,
 -- })
 
 --------------------------------------------------------------------------------
--- go templ comments
+-- gotmpl comments
 --------------------------------------------------------------------------------
-vim.api.nvim_create_autocmd("FileType", {
-    group = vim.api.nvim_create_augroup("gotmpl_comment", { clear = false }),
-    pattern = gotmpl_filetypes,
-    callback = function()
-        require("gotmpl_comment").setup()
-    end,
-})
+-- vim.api.nvim_create_autocmd("FileType", {
+--     group = vim.api.nvim_create_augroup("gotmpl_comment", { clear = false }),
+--     pattern = gotmpl_filetypes,
+--     callback = function()
+--         require("gotmpl_comment").setup()
+--     end,
+-- })
+require("gotmpl_comment").setup({ buffer = false, silent = true })
