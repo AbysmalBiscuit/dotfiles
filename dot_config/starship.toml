@@ -1,0 +1,952 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# scan_timeout = 30
+# command_timeout = 500
+scan_timeout = 50
+command_timeout = 1000
+# scan_timeout = 100
+# command_timeout = 1000
+continuation_prompt = "[▸▹ ](dimmed white)"
+
+# Sets user-defined palette
+# Palettes must be defined _after_ this line
+# palette = "catppuccin_macchiato"
+
+palette = 'tokyo_night_moon'
+# palette = 'catppuccin_mocha'
+
+format = """
+[░▒▓](#a2aed2)\
+[ $os ](fg:#090c0c bg:#a2aed2)\
+[](fg:#a3aed2 bg:#769ff0)\
+$directory\
+[](fg:#769ff0 bg:#394260)\
+$git_branch\
+$git_status\
+$fossil_branch\
+$fossil_metrics\
+[](fg:#394259 bg:#212736)\
+$container\
+$docker_context\
+$shell\
+$bun\
+$c\
+$golang\
+$nodejs\
+$python\
+$rust\
+[](fg:#212735 bg:bg_dark)\
+$time\
+[](fg:bg_dark)\
+$battery\
+$memory_usage\
+$cmd_duration\
+$status\
+\n$character"""
+
+
+# right_format = """
+# $singularity\
+# $kubernetes\
+# $directory\
+# $vcsh\
+# $fossil_branch\
+# $git_branch\
+# $git_commit\
+# $git_state\
+# $git_status\
+# $hg_branch\
+# $pijul_channel\
+# $docker_context\
+# $package\
+# $c\
+# $cpp\
+# $cmake\
+# $cobol\
+# $daml\
+# $dart\
+# $deno\
+# $dotnet\
+# $elixir\
+# $elm\
+# $erlang\
+# $fennel\
+# $fortran\
+# $golang\
+# $guix_shell\
+# $haskell\
+# $haxe\
+# $helm\
+# $java\
+# $julia\
+# $kotlin\
+# $gradle\
+# $lua\
+# $nim\
+# $nodejs\
+# $ocaml\
+# $opa\
+# $perl\
+# $php\
+# $pulumi\
+# $purescript\
+# $python\
+# $raku\
+# $rlang\
+# $red\
+# $ruby\
+# $rust\
+# $scala\
+# $solidity\
+# $swift\
+# $terraform\
+# $vlang\
+# $vagrant\
+# $xmake\
+# $zig\
+# $buf\
+# $conda\
+# $pixi\
+# $meson\
+# $spack\
+# $memory_usage\
+# $aws\
+# $gcloud\
+# $openstack\
+# $azure\
+# $crystal\
+# $custom\
+# $status\
+# $os\
+# $battery\
+# $time"""
+
+
+# Starship modules
+## Basic prompt features
+[battery]
+disabled = true
+format = "[\b $symbol$percentage]($style bg:bg_time) "
+unknown_symbol = "?"
+display = [
+    { threshold = 10, style = 'bold red' },
+    { threshold = 30, style = 'bold orange' },
+    { threshold = 50, style = 'bold yellow' },
+    { threshold = 80, style = 'bold green1' },
+    { threshold = 100, style = 'bold green' },
+]
+
+[character]
+disabled = false
+# Note the use of Catppuccin color 'peach'
+# success_symbol = "[[󰄛](green) ❯](peach)"
+# error_symbol = "[[󰄛](red) ❯](peach)"
+# vimcmd_symbol = "[󰄛 ❮](subtext1)" # For use with zsh-vi-mode
+#
+success_symbol = '[\[I\]❯](bold green)'
+error_symbol = '[\[I\]❯](bold red)'
+vimcmd_symbol = '[\[N\]❯](bold blue)'
+vimcmd_replace_one_symbol = '[\[R\]❯](bold red)'
+vimcmd_replace_symbol = '[\[R\]❯](bold red)'
+# vimcmd_visual_symbol = '[❮](bold #cba6f7)'
+vimcmd_visual_symbol = '[\[V\]❯](bold #cba6f7)'
+
+format = '$symbol '
+# success_symbol = "[◎](bold italic bright-yellow)"
+# error_symbol = "[○](italic purple)"
+# vimcmd_symbol = "[■](italic dimmed green)"
+# not supported in zsh
+# vimcmd_replace_one_symbol = "◌"
+# vimcmd_replace_symbol = "□"
+# vimcmd_visual_symbol = "▼"
+
+[cmd_duration]
+disabled = false
+show_milliseconds = true
+format = "[\b   in $duration]($style) "
+# style = "bg:lavender"
+style = "fg:magenta bg:bg_time"
+show_notifications = true
+min_time_to_notify = 45000
+# min_time_to_notify = 100
+min_time = 300
+
+[directory]
+disabled = false
+style = "fg:#e3e5e5 bg:#769ff0"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+read_only = "󰌾 "
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+
+[time]
+disabled = false
+time_format = "%R"                                      # Hour:Minute Format
+style = "bg:bg_dark"
+format = '[[  $time ](fg:fg_time bg:bg_dark)]($style)'
+
+
+## Environment
+[hostname]
+disabled = true
+ssh_symbol = " "
+
+[jobs]
+disabled = false
+symbol = "󱃐 "
+
+[localip]
+disabled = true
+
+
+[memory_usage]
+disabled = false
+symbol = "󰍛 "
+# format = " mem [${ram}( ${swap})]($style)"
+format = "$symbol[${ram}( \\(${swap}\\))]($style)"
+threshold = 75
+
+[os]
+disabled = false
+format = "[$symbol]($style)"
+style = "bg:#a2aed2 fg:#090c0c"
+
+[os.symbols]
+Alpaquita = " "
+Alpine = " "
+AlmaLinux = " "
+Amazon = " "
+Android = " "
+AOSC = " "
+Arch = " "
+Artix = " "
+CachyOS = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Elementary = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
+Ios = "󰀷 "
+Kali = " "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+Nobara = " "
+OpenBSD = "󰈺 "
+openSUSE = " "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+RockyLinux = " "
+Redox = "󰀘 "
+Solus = "󰠳 "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Void = " "
+Windows = "󰍲 "
+Zorin = " "
+
+[shell]
+disabled = false
+bash_indicator = ' '
+fish_indicator = '[󰈺 ](fg:#34C534 bg:#212736)'
+zsh_indicator = '%_'
+powershell_indicator = '[ ](fg:#246db7 bg:#212736)'
+pwsh_indicator = '[ ](fg:#4e79ad bg:#212736)'
+ion_indicator = ' '
+elvish_indicator = 'esh'
+tcsh_indicator = 'tsh'
+xonsh_indicator = 'xsh'
+cmd_indicator = ' '
+nu_indicator = 'nu>'
+
+format = '[ $indicator]($style)'
+unknown_indicator = ' '
+style = 'fg:#769ff0 bg:#212736'
+
+[status]
+disabled = false
+pipestatus = true
+map_symbol = true
+style = ''
+success_style = 'fg:green bg:bg_dark1'
+failure_style = 'fg:red bg:bg_dark1'
+# success_symbol = "[](fg:#1d2230 bg:bg_dark1)"
+# success_symbol = "[](fg:#1d2230)"
+# success_symbol = "[✔](fg:#11cf45 bg:bg_dark1)"
+# success_symbol = "✔ "
+# success_symbol = " "
+# success_symbol = ""
+symbol = "❌"
+not_executable_symbol = "🚫 "
+not_found_symbol = "🔍 "
+sigint_symbol = "🧱 "
+signal_symbol = "⚡ "
+
+format = """\
+[\b ](fg:bg_time bg:bg_dark1)\
+[$symbol$status( $common_meaning)( $signal_name)]($style)\
+[](fg:bg_dark1) """
+
+# pipestatus_format = """\n[\\[$pipestatus\\] => \
+# [](fg:bg_dark1)\
+# [$symbol($status)( $common_meaning)( $signal_name)]($style)\
+# [](fg:bg_dark1)](bg:bg_dark1) """
+
+pipestatus_format = """\n[\\[$pipestatus\\] => \
+[$symbol($status)( $common_meaning)( $signal_name)]($style)\
+[](fg:bg_dark1)](bg:bg_dark1) """
+
+pipestatus_separator = '[|](bg:bg_dark1)'
+
+# pipestatus_segment_format = """\
+# [](fg:bg_dark1)\
+# [$symbol($status)( $common_meaning)( $signal_name)]($style)\
+# [](fg:bg_dark1)"""
+pipestatus_segment_format = """\
+[ $symbol($status)( $common_meaning)( $signal_name) ]($style)"""
+
+[sudo]
+disabled = true
+# symbol = '🧙 '
+symbol = ' '
+format = '[as $symbol]($style)'
+style = 'bold blue'
+
+## dotfiles
+[vcsh]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[vcsh $symbol$repo]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+
+## Environment management
+[direnv]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$loaded/$allowed]($style)'
+style = "fg:fg_lang bg:bg_lang"
+allowed_msg = " "
+not_allowed_msg = " "
+denied_msg = "󰲼 "
+loaded_msg = "󰦕 "
+unloaded_msg = "󱄊 "
+# symbol = ". "
+
+[mise]
+disabled = true
+
+[nix_shell]
+disabled = false
+symbol = "[ ](fg:#5277C3 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[[$symbol$state( \\($name\\))]($style)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[pixi]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version )(\($environment\))]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[spack]
+disabled = false
+symbol = "[ ](fg:#0f3a80 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$environment]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+
+## Version control
+### Fossil
+[fossil_branch]
+disabled = false
+symbol = " "
+style = "bg:#394259"
+
+[fossil_metrics]
+disabled = true
+
+### Git
+[git_branch]
+disabled = false
+symbol = " "
+style = "bg:#394259"
+format = '[[|$symbol $branch ](fg:#768ff0 bg:#394260)]($style)'
+
+[git_commit]
+disabled = false
+tag_symbol = '  '
+
+[git_status]
+disabled = false
+style = "bg:#394259"
+format = '[[($all_status$ahead_behind )](fg:#768ff0 bg:#394260)]($style)'
+# use_git_executable = false
+# windows_starship = '/mnt/c/Users/Lev/.cargo/bin/starship.exe'
+
+
+### Mercurial
+[hg_branch]
+disabled = true
+symbol = " "
+
+[hg_state]
+disabled = true
+style = "bg:#394259"
+
+
+### Pijul
+[pijul_channel]
+disabled = true
+symbol = " "
+style = "bg:#394259"
+
+
+## Platforms / Containers
+[aws]
+disabled = true
+symbol = "  "
+
+[container]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol \[$name\]]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[docker_context]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$context]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[kubernetes]
+disabled = false
+symbol = "[ ](fg:#326CE5 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$context( \($namespace\))]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[openstack]
+disabled = false
+symbol = "[ ](fg:#ED1944 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$cloud(\($project\))]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[pulumi]
+disabled = false
+symbol = "[ ](fg:#8A3391 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($username@)$stack]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[singularity]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol\[$env\]]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[terraform]
+disabled = false
+symbol = "[ ](fg:#844FBA bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$workspace]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[vagrant]
+disabled = false
+symbol = "[ ](fg:#1868F2 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+
+## Languages
+[buf]
+disabled = true
+symbol = " "
+style = "fg:fg_lang bg:bg_lang"
+# format = '[|](fg:#91b2f3 bg:#212736)[$symbol($version)]($style)'
+
+[bun]
+disabled = false
+# format = '[[|$symbol($version)](fg:fg_lang bg:bg_lang)]($style)'
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+symbol = "[ ](fg:white bg:bg_lang)"
+
+[c]
+disabled = false
+symbol = "[ ](fg:#A8B9CC bg:bg_lang)"
+format = "[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version(-$name))]($style)"
+style = "fg:fg_lang bg:bg_lang"
+# detect_folders = ["!WindowsPowerShell"]
+
+[cpp]
+disabled = false
+symbol = "[ ](fg:##00599C bg:bg_lang)"
+format = "[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version(-$name))]($style)"
+style = "fg:fg_lang bg:bg_lang"
+# format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+# detect_folders = ["!WindowsPowerShell"]
+
+[cmake]
+disabled = false
+symbol = "[ ](fg:#064F8C bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[cobol]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[conda]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$environment]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[crystal]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[daml]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[dart]
+disabled = false
+symbol = "[ ](fg:#0175C2 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[deno]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[dotnet]
+disabled = false
+symbol = "[ ](fg:##512BD4 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[elixir]
+disabled = false
+symbol = "[ ](fg:##4B275F bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version \(OTP $otp_version\)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[elm]
+disabled = false
+symbol = "[ ](fg:#1293D8 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[erlang]
+disabled = false
+symbol = "[ ](fg:#A90533 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[fennel]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[fortran]
+disabled = false
+symbol = "[ ](fg:#734F96 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[gleam]
+disabled = false
+symbol = "[ ](fg:#FFAFF3 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[golang]
+disabled = false
+symbol = "[ ](fg:#00ADD8 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+# version_format = "${raw}"
+
+[guix_shell]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+
+[gradle]
+disabled = false
+symbol = "[ ](fg:#02303A bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[haskell]
+disabled = false
+symbol = "[ ](fg:#5D4F85 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[haxe]
+disabled = false
+symbol = "[ ](fg:#EA8220 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[helm]
+disabled = false
+symbol = "[ ](fg:#0F1689 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[java]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[julia]
+disabled = false
+symbol = "[ ](fg:#9558B2 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[kotlin]
+disabled = false
+symbol = "[ ](fg:#7F52FF bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[lua]
+disabled = false
+symbol = "[ ](fg:#00A2FF bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[meson]
+disabled = false
+symbol = "󰔷 "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol$project]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[mojo]
+disabled = false
+symbol = "[🔥 ](fg:#f56d36 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[nim]
+disabled = false
+symbol = "[ ](fg:#FFE953 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+
+[nodejs]
+disabled = false
+symbol = "[󰎙 ](fg:#5FA04E bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+# version_format = "${raw}"
+
+[ocaml]
+disabled = false
+symbol = "[ ](fg:#5FA04E bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version )(\\($switch_indicator$switch_name\\) )]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[odin]
+disabled = false
+symbol = "[Ø ](fg:#3882D2 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[package]
+disabled = false
+symbol = "󰏗 "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[perl]
+disabled = false
+symbol = "[ ](fg:#0073A1 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[php]
+disabled = false
+symbol = "[ ](fg:#777BB4 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[purescript]
+disabled = false
+symbol = "[ ](fg:#b9b9ba bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[python]
+disabled = false
+# symbol = "[ ](fg:#3776AB bg:bg_lang)"
+symbol = "[ ](fg:yellow bold bg:bg_lang)"
+# format = "[|[${symbol}](yellow bold  bg:#212736) ${pyenv_prefix}(${version})(\\($virtualenv\\) )]($style)"
+format = "[|](fg:fg_lang_sep bg:bg_lang)[$symbol( ${pyenv_prefix})(${version})(\\($virtualenv\\) )]($style)"
+style = "fg:fg_lang bg:bg_lang"
+# version_format = "${raw}"
+
+[quarto]
+disabled = false
+symbol = "[⨁ ](fg:#39729E bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[rlang]
+disabled = false
+symbol = "[ ](fg:#276DC3 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[raku]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[red]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[ruby]
+disabled = false
+symbol = "[ ](fg:#CC342D bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[rust]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+# detect_folders = ["!../system32", "!AccountHealthAssets", "!WindowsPowerShell"]
+
+[scala]
+disabled = false
+symbol = "[ ](fg:#DC322F bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[solidity]
+disabled = false
+symbol = "[ ](fg:#c3c3c3 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[swift]
+disabled = false
+symbol = "[ ](fg:#F05138 bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[typst]
+disabled = false
+symbol = " "
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[vlang]
+disabled = false
+symbol = "[ ](fg:#5D87BF bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[xmake]
+disabled = false
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+[zig]
+disabled = false
+symbol = "[ ](fg:#F7A41D bg:bg_lang)"
+format = '[|](fg:fg_lang_sep bg:bg_lang)[$symbol($version)]($style)'
+style = "fg:fg_lang bg:bg_lang"
+
+
+## custom commands
+
+## Palette definitions
+[palettes.tokyo_night_moon]
+bg = "#222436"
+bg_dark = "#1e2030"
+bg_dark1 = "#191b29"
+bg_highlight = "#2f334d"
+blue = "#82aaff"
+blue0 = "#3e68d7"
+blue1 = "#65bcff"
+blue2 = "#0db9d7"
+blue5 = "#89ddff"
+blue6 = "#b4f9f8"
+blue7 = "#394b70"
+comment = "#636da6"
+cyan = "#86e1fc"
+dark3 = "#545c7e"
+dark5 = "#737aa2"
+fg = "#c8d3f5"
+fg_dark = "#828bb8"
+fg_gutter = "#3b4261"
+green = "#c3e88d"
+green1 = "#4fd6be"
+green2 = "#41a6b5"
+magenta = "#c099ff"
+magenta2 = "#ff007c"
+orange = "#ff966c"
+purple = "#fca7ea"
+red = "#ff757f"
+red1 = "#c53b53"
+teal = "#4fd6be"
+terminal_black = "#444a73"
+yellow = "#ffc777"
+git_add = "#b8db87"
+git_change = "#7ca1f2"
+git_delete = "#e26a75"
+
+black = "#1B1D2B"
+bg_time = "#1d2230"
+fg_time = "#a0a9cb"
+
+fg_lang = "#769ff0"
+bg_lang = "#212736"
+fg_lang_sep = "#91b2f3"
+
+[palettes.catppuccin_latte]
+rosewater = "#dc8a78"
+flamingo = "#dd7878"
+pink = "#ea76cb"
+mauve = "#8839ef"
+red = "#d20f39"
+maroon = "#e64553"
+peach = "#fe640b"
+yellow = "#df8e1d"
+green = "#40a02b"
+teal = "#179299"
+sky = "#04a5e5"
+sapphire = "#209fb5"
+blue = "#1e66f5"
+lavender = "#7287fd"
+text = "#4c4f69"
+subtext1 = "#5c5f77"
+subtext0 = "#6c6f85"
+overlay2 = "#7c7f93"
+overlay1 = "#8c8fa1"
+overlay0 = "#9ca0b0"
+surface2 = "#acb0be"
+surface1 = "#bcc0cc"
+surface0 = "#ccd0da"
+base = "#eff1f5"
+mantle = "#e6e9ef"
+crust = "#dce0e8"
+
+[palettes.catppuccin_frappe]
+rosewater = "#f2d5cf"
+flamingo = "#eebebe"
+pink = "#f4b8e4"
+mauve = "#ca9ee6"
+red = "#e78284"
+maroon = "#ea999c"
+peach = "#ef9f76"
+yellow = "#e5c890"
+green = "#a6d189"
+teal = "#81c8be"
+sky = "#99d1db"
+sapphire = "#85c1dc"
+blue = "#8caaee"
+lavender = "#babbf1"
+text = "#c6d0f5"
+subtext1 = "#b5bfe2"
+subtext0 = "#a5adce"
+overlay2 = "#949cbb"
+overlay1 = "#838ba7"
+overlay0 = "#737994"
+surface2 = "#626880"
+surface1 = "#51576d"
+surface0 = "#414559"
+base = "#303446"
+mantle = "#292c3c"
+crust = "#232634"
+
+[palettes.catppuccin_macchiato]
+rosewater = "#f4dbd6"
+flamingo = "#f0c6c6"
+pink = "#f5bde6"
+mauve = "#c6a0f6"
+red = "#ed8796"
+maroon = "#ee99a0"
+peach = "#f5a97f"
+yellow = "#eed49f"
+green = "#a6da95"
+teal = "#8bd5ca"
+sky = "#91d7e3"
+sapphire = "#7dc4e4"
+blue = "#8aadf4"
+lavender = "#b7bdf8"
+text = "#cad3f5"
+subtext1 = "#b8c0e0"
+subtext0 = "#a5adcb"
+overlay2 = "#939ab7"
+overlay1 = "#8087a2"
+overlay0 = "#6e738d"
+surface2 = "#5b6078"
+surface1 = "#494d64"
+surface0 = "#363a4f"
+base = "#24273a"
+mantle = "#1e2030"
+crust = "#181926"
+
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"
