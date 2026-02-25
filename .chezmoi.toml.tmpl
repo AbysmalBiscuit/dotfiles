@@ -5,6 +5,11 @@
 {{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
 {{- $arch := "" }}
 {{- $chost := "" }}
+{{- $is_desktop := false -}}
+{{- $is_laptop := false -}}
+{{- $is_phone := false -}}
+{{- $is_tablet := false -}}
+{{- $has_battery := false -}}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -104,7 +109,7 @@
 {{- if $is_work -}}
 {{- end -}}
 
-{{- if (and (eq .chezmoi.os "windows") $is_personal) -}}
+{{- if (and $is_windows $is_personal) -}}
 {{- end -}}
 
 {{- /* Identify editor */ -}}
@@ -171,7 +176,23 @@
   {{- end -}}
 {{- end -}}
 
+{{ if hasKey $secrets.system $hostname -}}
+  {{- /* (index $secrets.system $hostname) | toToml */ -}}
+  {{- $secrets_system := (index $secrets.system $hostname) -}}
+  {{- $is_desktop = $secrets_system.is_desktop -}}
+  {{- $is_laptop = $secrets_system.is_laptop -}}
+  {{- $is_phone = $secrets_system.is_phone -}}
+  {{- $is_tablet = $secrets_system.is_tablet -}}
+{{- else -}}
+  {{- /* Assume a laptop by default */ -}}
+  {{- $is_desktop = false -}}
+  {{- $is_laptop = true -}}
+  {{- $is_phone = false -}}
+  {{- $is_tablet = false -}}
+{{ end -}}
+
 {{""}}
+{{- /* Start writing actual config file */ -}}
 {{- if (and ($has_age_key) ($has_secrets)) -}}
 encryption = "age"
 
@@ -231,6 +252,11 @@ is_work = {{ $is_work }}
 is_personal = {{ $is_personal }}
 is_ephemeral = {{ $is_ephemeral }}
 is_headless = {{ $is_headless }}
+is_desktop = {{ $is_desktop }}
+is_laptop = {{ $is_laptop }}
+is_phone = {{ $is_phone }}
+is_tablet = {{ $is_tablet }}
+has_battery = {{ not $is_desktop }}
 arch = {{ $arch | quote }}
 chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
