@@ -1,0 +1,56 @@
+[window]
+dimensions                = { columns = 80, lines = 24 }
+padding                   = { x = 5, y = 1 }
+decorations_theme_variant = "Dark"
+
+[font]
+normal = { family = "MesloLGS Nerd Font Mono", style = "Regular" }
+size   = 15
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+foreground = "#e5e5e5"
+background = "#141F2E"
+
+[colors.search]
+matches = { foreground = "#e5e5e5", background = "#375780" }
+
+[colors.normal]
+# black = ""
+red     = "#990000"
+green   = "#0DA335"
+yellow  = "#999900"
+blue    = "#4472CC"
+magenta = "#B200B2"
+cyan    = "#00A6B2"
+white   = "#BFBFBF"
+
+[colors.bright]
+# black = ""
+red     = "#E50000"
+green   = "#11CF45"
+yellow  = "#E5E500"
+blue    = "#558EFF"
+magenta = "#E500E5"
+cyan    = "#00E5E5"
+white   = "#E5E5E5"
+
+[keyboard]
+bindings = [
+  { key = "ArrowDown", mods = "Shift|Alt", action = "ScrollLineDown" },
+  { key = "ArrowUp", mods = "Shift|Alt", action = "ScrollLineUp" },
+  { key = "PageDown", mods = "Shift|Alt", action = "ScrollHalfPageDown" },
+  { key = "PageUp", mods = "Shift|Alt", action = "ScrollHalfPageUp" },
+{ key = "c", mods = "Super", action = "Copy" },
+{key="v", mods="Super", action="Paste"},
+]
+
+[mouse]
+hide_when_typing = true
+bindings = [
+  { mouse = "Back", action = "ScrollLineDown" },
+  { mouse = "Forward", action = "ScrollLineUp" },
+  { mouse = "Right", action = "Paste" },
+]
