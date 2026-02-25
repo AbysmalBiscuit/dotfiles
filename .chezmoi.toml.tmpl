@@ -3,6 +3,7 @@
 {{- $is_personal := false -}}{{/* true if this machine should have personal secrets */}}
 {{- $is_ephemeral := false -}}{{/* true if this machine is is_ephemeral, e.g. a cloud or VM instance */}}
 {{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
+{{- $has_nvim := false }}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -24,7 +25,7 @@
 {{- $has_keepassxc := false -}}
 {{- $keepassxc_cli := "" -}}
 {{- $keepassxc_database := "" -}}
-{{- $keepassxc_keyfile := "" -}}
+{{- $keepassxc_args := list -}}
 {{- $has_secrets := false -}}
 {{- $secrets_key := "" -}}
 {{- $secrets_path := joinPath .chezmoi.homeDir ".config/chezmoi/secrets.toml" -}}
@@ -90,9 +91,9 @@
 {{-     $is_personal = true -}}
 {{-   else if eq $hostname "work_hostname" -}}
 {{-     $is_work = true -}}
-{{-   else if stdinIsATTY -}}
-{{-     $is_headless = promptBoolOnce . "is_headless" "is_headless" -}}
-{{-     $is_ephemeral = promptBoolOnce . "is_ephemeral" "is_ephemeral" -}}
+{{- /*   else if stdinIsATTY */ -}}
+{{- /*     $is_headless = promptBoolOnce . "is_headless" "is_headless" */ -}}
+{{- /*     $is_ephemeral = promptBoolOnce . "is_ephemeral" "is_ephemeral" */ -}}
 {{-   else -}}
 {{-     $is_ephemeral = true -}}
 {{-     $is_headless = true -}}
@@ -108,6 +109,7 @@
 {{- /* Identify editor */ -}}
 {{- if lookPath "nvim" }}
   {{- $editor = "nvim" }}
+  {{- $has_nvim := false }}
 {{- else if lookPath "vim" }}
   {{- $editor = "vim" }}
 {{- else if lookPath "zed" }}
@@ -131,7 +133,7 @@
   {{- $age_recipients = $secrets.age.recipients | toJson -}}
   {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
   {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
-  {{- $keepassxc_keyfile = (index $secrets.keepassxc $secrets_key).keyfile -}}
+  {{- $keepassxc_args = (index $secrets.keepassxc $secrets_key).args | toJson -}}
   {{- /* if $is_wsl */ -}}
   {{- /* else if $is_linux */ -}}
   {{- /* else if $is_macos */ -}}
@@ -161,10 +163,13 @@ refreshPeriod = "12h"
 [keepassxc]
 command = "{{ $keepassxc_cli }}"
 database = "{{ $keepassxc_database }}"
-args = ["--key-file", "{{ $keepassxc_keyfile }}"]
+args = {{ $keepassxc_args }}
+mode = "open"
 
 # Data for use in templates
-[data]
+{{ $data := dict "data" (dict "secrets" $secrets) -}}
+{{ toToml $data }}
+
 [data.age]
 identities = {{ $age_identities }}
 recipients = {{ $age_recipients }}
@@ -190,5 +195,6 @@ is_work = {{ $is_work }}
 is_personal = {{ $is_personal }}
 is_ephemeral = {{ $is_ephemeral }}
 is_headless = {{ $is_headless }}
+has_nvim = {{ $has_nvim }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
