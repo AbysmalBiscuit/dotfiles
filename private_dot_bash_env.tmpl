@@ -196,11 +196,11 @@ fi
 
 {{ if .os.is_wsl -}}
 # WSL Specific
-export WINHOME={{ (index .secrets.paths .system.hostname).wsl_winhome | quote }}
+export WINHOME={{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
 
 export GTK_THEME="Adwaita:dark"
 # Use Windows Browser
-export BROWSER={{ (index .secrets.paths .system.hostname).browser | quote }}
+export BROWSER={{ (index .secrets.system .system.hostname).browser | quote }}
 
 # Split path into linux and windows parts
 OLDIFS=$IFS
