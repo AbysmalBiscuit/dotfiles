@@ -1,0 +1,92 @@
+#!/bin/bash
+# Setting up command aliases
+
+# ls aliases
+if has_command eza; then
+    alias ls='eza -ah --color=auto --icons=auto --classify=auto'
+else
+    alias ls='ls -ah --color=auto --classify=auto'
+fi
+alias l='ls'
+alias ll='ls -l'
+alias la='ls -A'
+
+# dir aliases
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+
+# grep aliases
+alias grep='grep --color=auto'
+alias fgrep='grep -F --color=auto'
+alias egrep='grep -E --color=auto'
+alias igrep='grep -i'
+
+# diff
+alias diff='diff --color=auto'
+
+# dmesg
+alias dmesg='dmesg --color=auto'
+
+if has_command yt-dlp; then
+    # youtube-dl aliases
+    alias yt='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-mp3='yt-dlp -ciw -f bestaudio --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-pl='yt-dlp -ciw --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-pl-mp3='yt-dlp -f bestaudio -ciw --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias ytl='yt-dlp -g'
+    alias ytp='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.ytp }}'
+fi
+
+# gnome-mpv alias
+if has_command gnome-mpv; then
+    alias gm='gnome-mpv'
+fi
+
+# sudo aliases
+alias sudo='sudo '
+# sudo with user's environment
+#alias sudo='sudo -E env "PATH=$PATH" '
+
+# df alias for human friendly output
+alias df='df -h'
+
+# du alias for human friendly output
+alias du='du -h'
+alias dus='dus -sh'
+
+# fdfind
+if has_command fdfind && ! has_command fd; then
+    alias fd='fdfind'
+fi
+
+if has_command pacman; then
+    # search for orphaned packages
+    alias pacorphans='pacman -Qtdq'
+
+    # making pacman -Q | grep more friendly
+    alias pacmanq='pacman -Q | grep'
+fi
+
+{{- if .os.is_linux }}
+
+# making sensors start a loop to monitor temperatures similar to top
+alias sensorsl='while true; do clear; sensors; sleep 1; done'
+
+# making nvidia-smi start a loop to monitor temperatures similar to top
+alias nvidia-smil='while true; do clear; nvidia-smi; sleep 1; done'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+{{- end }}
+
+# Get external ip
+alias wanip='dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
+
+alias wanip6='dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
+
+{{- if .os.is_linux }}
+
+# systemctl aliases
+alias systemctlu='systemctl --user'
+{{ end -}}

@@ -3,7 +3,8 @@
 {{- $is_personal := false -}}{{/* true if this machine should have personal secrets */}}
 {{- $is_ephemeral := false -}}{{/* true if this machine is is_ephemeral, e.g. a cloud or VM instance */}}
 {{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
-{{- $has_nvim := false }}
+{{- $arch := "" }}
+{{- $chost := "" }}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -141,6 +142,35 @@
   {{- /* end */ -}}
 {{- end -}}
 
+{{- /* Set system values */ -}}
+{{- if eq .chezmoi.arch "amd64" -}}
+  {{- $arch = "x86_64" -}}
+{{- else if eq .chezmoi.arch "386" -}}
+  {{- $arch = "x86" -}}
+{{- else if eq .chezmoi.arch "arm64" -}}
+  {{-   $arch = "aarch64" -}}
+{{- else if eq .chezmoi.arch "arm" -}}
+  {{-   $arch = "arm" -}}
+{{- else if eq .chezmoi.arch "riscv64" -}}
+  {{-   $arch = "riscv64" -}}
+{{- else if eq .chezmoi.arch "ppc64le" -}}
+  {{-   $arch = "powerpc64le" -}}
+{{- else if eq .chezmoi.arch "s390x" -}}
+  {{-   $arch = "s390x" -}}
+{{- end -}}
+
+{{- if $arch -}}
+  {{- if $is_linux -}}
+    {{- $chost = printf "%s%s" $arch "-pc-linux-gnu" -}}
+  {{- else if $is_windows -}}
+    {{- $chost = printf "%s%s" $arch "-pc-windows-msvc" -}}
+  {{- else if $is_macos -}}
+    {{- $chost = printf "%s%s" $arch "-apple-darwin" -}}
+  {{- else -}}
+    {{- $chost = printf "%s%s%s" $arch "-unknown-" .chezmoi.os -}}
+  {{- end -}}
+{{- end -}}
+
 {{""}}
 {{- if (and ($has_age_key) ($has_secrets)) -}}
 encryption = "age"
@@ -174,6 +204,12 @@ mode = "open"
 identities = {{ $age_identities }}
 recipients = {{ $age_recipients }}
 
+[data.cache]
+[data.cache.build]
+bash = {{ and $is_personal (not $is_ephemeral) }}
+fish = {{ and $is_personal (not $is_ephemeral) }}
+zsh = {{ and $is_personal (not $is_ephemeral) }}
+
 # OS booleans
 [data.os]
 is_wsl = {{ $is_wsl }}
@@ -195,6 +231,7 @@ is_work = {{ $is_work }}
 is_personal = {{ $is_personal }}
 is_ephemeral = {{ $is_ephemeral }}
 is_headless = {{ $is_headless }}
-has_nvim = {{ $has_nvim }}
+arch = {{ $arch | quote }}
+chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}

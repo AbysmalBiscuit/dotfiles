@@ -1,0 +1,63 @@
+#!/bin/bash
+# some common environment variables to optimise compilation
+# export commands that are commented out are the defaults in /etc/makepkg.conf
+# To see latest default makepkg.conf:
+# https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf
+
+# system and architecture
+ARCH={{ .system.arch | quote }}
+CHOST={{ .system.chost | quote }}
+export ARCH
+export CHOST
+
+#-- Compiler and Linker Flags
+# -march (or -mcpu) builds exclusively for an architecture
+# -mtune optimizes for an architecture, but builds for whole processor family
+# export CFLAGS="-march=native -mtune=native -O2 -pipe -fstack-protector-strong -fno-plt"
+export CFLAGS="-march=native -O2 -pipe -fno-plt -fexceptions \
+        -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security \
+        -fstack-clash-protection -fcf-protection \
+        -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
+# export CFLAGS="-march=native -O2 -pipe -fno-plt -fexceptions \
+#         -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security"
+export CPPFLAGS="-D_FORTIFY_SOURCE=2"
+#export CXXFLAGS="-march=x86-64 -mtune=generic -O3 -pipe -fstack-protector-strong -fno$
+export CXXFLAGS="${CFLAGS}"
+#export LDFLAGS="-Wl,-O1,--sort-common,--as-needed,-z,relro,-z,now"
+#-- Make Flags: change this for DistCC/SMP systems
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
+#-- Debugging flags
+export DEBUG_CFLAGS="-g -fvar-tracking-assignments"
+export DEBUG_CXXFLAGS="-g -fvar-tracking-assignments"
+
+# rust
+# -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes
+export RUSTFLAGS='-C target-cpu=native'
+{{ if .os.is_windows -}}
+{{- /* Windows linker doesn't support the linker args */ -}}
+RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
+{{- else -}}
+RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1 -C link-arg=-z -C link-arg=pack-relative-relocs"
+{{- end }}
+export RUSTFLAGS_RELEASE
+
+# go
+if has_command go; then
+    GOAMD64="v1"
+    temp_file=$(mktemp 'XXXXX.go')
+    printf 'package main\nfunc main() { println("testing go level") }\n' >"$temp_file"
+
+    for level in 4 3 2 1; do
+        if GO111MODULE=off GOAMD64="v$level" go run "$temp_file" &>/dev/null; then
+            GOAMD64="v$level"
+            break
+        fi
+    done
+
+    # Final cleanup if the loop finishes without success
+    if [[ -f "$temp_file" ]]; then
+        rm "$temp_file"
+    fi
+    export GOAMD64
+fi
