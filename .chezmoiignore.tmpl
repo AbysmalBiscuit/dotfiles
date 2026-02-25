@@ -8,7 +8,73 @@ LICENSE
 key.txt.age
 secrets.toml.age
 run_before_decrypt-private-key.sh.tmpl
+decrypt-private-key.sh
 edit_secrets.sh.tmpl
 edit_secrets.sh
 chezmoi_execute_template_reference.md
 chezmoi_execute_template_reference_windows.md
+
+{{ if .os.is_wsl -}}
+.bash_logout
+{{- else -}}
+!.oh-my-zsh/plugins
+{{ range .zshPlugins }}
+!.oh-my-zsh/plugins/{{ . }}
+!.oh-my-zsh/plugins/{{ . }}/**
+{{- end }}
+.oh-my-zsh/cache/**
+.oh-my-zsh/plugins/**
+.oh-my-zsh/templates/**
+.oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
+{{- end }}
+
+
+{{ if not .os.is_macos }}
+.chezmoiscripts/darwin/**
+.config/aerospace
+.config/homebrew
+.hammerspoon
+{{ end }}
+
+{{ if not .os.is_linux }}
+.chezmoiscripts/linux/**
+.hushlogin
+.local/bin/nvim
+.local/share/fonts
+{{ end }}
+
+{{ if not .os.is_windows }}
+.chezmoiscripts/windows/**
+Documents
+{{ else }}
+.bash_aliases
+.config/ghostty
+.config/git/cookies
+.config/psql
+.config/readline
+.config/tmux
+.gnupg
+.gnupg/**
+.inputrc
+.oh-my-zsh
+.oh-my-zsh/**
+.p10k.zsh
+.ssh/id_rsa
+.ssh/id_rsa.pub
+.tmux.conf
+.zprofile
+.zshrc
+{{ end }}
+
+{{ if not .personal }}
+.config/ghostty
+.config/ghostty/**
+.config/psql
+.config/psql/**
+.hammerspoon
+.hammerspoon/**
+.pypirc
+.psqlrc
+.ssh
+.ssh/**
+{{ end }}
