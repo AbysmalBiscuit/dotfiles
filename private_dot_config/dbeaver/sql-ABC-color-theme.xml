@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<colorTheme id="57329" name="ABC" modified="2019-04-03 09:06:19" author="Lev Velykoivanenko" website="https://github.com/AbysmalBiscuit">
+    <searchResultIndication color="#EDEDED" />
+    <filteredSearchResultIndication color="#EDEDED" />
+    <occurrenceIndication color="#3C5F8C" />
+    <writeOccurrenceIndication color="#3C5F8C" />
+    <findScope color="#BCADAD" />
+    <deletionIndication color="#9b5656" />
+    <sourceHoverBackground color="#EEEEEE" />
+    <singleLineComment color="#7F7F7F" />
+    <multiLineComment color="#7F7F7F" />
+    <commentTaskTag color="#7F7F7F" />
+    <javadoc color="#11CF45" />
+    <javadocLink color="#05314D" />
+    <javadocTag color="#05314d" underline="true" />
+    <javadocKeyword color="#558EFF" bold="true" />
+    <class color="#AA00AA" bold="true" />
+    <interface color="#9B5656" />
+    <method color="#EDEDED" bold="false" />
+    <methodDeclaration color="#EDEDED" bold="true" />
+    <bracket color="#EDEDED" />
+    <number color="#FF9D00" />
+    <string color="#11CF45" />
+    <operator color="#EDEDED" />
+    <keyword color="#558EFF" bold="true" />
+    <annotation color="#808080" />
+    <staticMethod color="#C4C4B7" />
+    <localVariable color="#EDEDED" />
+    <localVariableDeclaration color="#FFFAB1" bold="true" />
+    <field color="#566874" />
+    <staticField color="#885d3b" />
+    <staticFinalField color="#885d3b" />
+    <deprecatedMember color="#ab2525" />
+    <enum color="#885d3b" />
+    <inheritedMethod color="#2c577c" />
+    <abstractMethod color="#2c577c" />
+    <parameterVariable color="#5c8198" />
+    <typeArgument color="#885D3B" />
+    <typeParameter color="#91CCFF" />
+    <constant color="#EDEDED" />
+    <background color="#141F2E" />
+    <currentLine color="#1B2B40" />
+    <foreground color="#EDEDED" />
+    <lineNumber color="#808080" />
+    <selectionBackground color="#375780" />
+    <selectionForeground color="#F5F5F5" />
+</colorTheme>
