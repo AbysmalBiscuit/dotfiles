@@ -1,0 +1,19 @@
+#:schema = https://json.schemastore.org/cargo.json
+
+[alias]
+nag = "clippy -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
+fixnags = "clippy --fix -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
+
+# [target.x86_64-unknown-linux-gnu]
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+#
+# [target.stable-x86_64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+#
+# [target.nightly-x86_64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# [target.'cfg(any(target_os = "linux", target_os = "macos"))']
+[target.'cfg(any(target_os = "linux"))']
+# linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
