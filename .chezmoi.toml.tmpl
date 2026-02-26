@@ -231,13 +231,6 @@ bash = {{ and $is_personal (not $is_ephemeral) }}
 fish = {{ and $is_personal (not $is_ephemeral) }}
 zsh = {{ and $is_personal (not $is_ephemeral) }}
 
-# OS booleans
-[data.os]
-is_wsl = {{ $is_wsl }}
-is_linux = {{ $is_linux }}
-is_macos = {{ $is_macos }}
-is_windows = {{ $is_macos }}
-
 [data.personal]
 # Personal info
 email = {{ $email | quote }}
@@ -247,6 +240,11 @@ lastname = {{ $lastname | quote }}
 gpg_key = {{ $gpg_key | quote }}
 
 [data.system]
+# OS booleans
+is_wsl = {{ $is_wsl }}
+is_linux = {{ $is_linux }}
+is_macos = {{ $is_macos }}
+is_windows = {{ $is_macos }}
 # System info
 is_work = {{ $is_work }}
 is_personal = {{ $is_personal }}
@@ -261,3 +259,4 @@ arch = {{ $arch | quote }}
 chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
+editor = {{ $editor | quote }}

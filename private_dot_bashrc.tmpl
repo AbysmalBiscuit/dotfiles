@@ -45,7 +45,7 @@ if [[ $- != *i* ]]; then
         build_bash_cache
     fi
     source "$env_cache"
-    {{- if .os.is_wsl }}
+    {{- if .system.is_wsl }}
     export PATH="$PATH_CLEAN:$PATH_WINDOWS"
     {{- end }}
     return 0
@@ -95,11 +95,11 @@ function build_bash_cache {
 
     declare -p | grep -vE '^declare -[^x]' >>"$env_cache"
     declare -p | grep -E '^declare -..? (__git_|__zoxide_)' >>"$env_cache"
-    if [[ "$OS" = "wsl" ]]; then
-        echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
-    else
-        echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
-    fi
+    {{ if .system.is_wsl -}}
+    echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
+    {{- else -}}
+    echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
+    {{- end }}
     {{- end }}
 
     # If not running interactively, stop here
@@ -162,33 +162,31 @@ function build_bash_cache {
     # declare -p >"$cache"  # variables
     # variables
 
-    {{- if .os.is_wsl }}
+    {{- if .system.is_wsl }}
 
     function __initialize_wsl_ssh_agent {
-        if [[ "$OS" = "wsl" ]]; then
-            ## SSH Sock
-            if has_command wsl2-ssh-agent; then
-                export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
-                if ! pidof wsl2-ssh-agent >/dev/null; then
-                    wsl2-ssh-agent
-                fi
-            elif has_command "$HOME/.ssh/wsl2-ssh-agent"; then
-                export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
-                if ! pidof wsl2-ssh-agent >/dev/null; then
-                    "$HOME/.ssh/wsl2-ssh-agent"
-                fi
+        ## SSH Sock
+        if has_command wsl2-ssh-agent; then
+            export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
+            if ! pidof wsl2-ssh-agent >/dev/null; then
+                wsl2-ssh-agent
             fi
+        elif has_command "$HOME/.ssh/wsl2-ssh-agent"; then
+            export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
+            if ! pidof wsl2-ssh-agent >/dev/null; then
+                "$HOME/.ssh/wsl2-ssh-agent"
+            fi
+        fi
 
-            if [[ $(cat /proc/sys/fs/inotify/max_user_watches) -lt 524288 ]]; then
-                #     sudo sysctl -p
-                sudo sysctl fs.inotify.max_user_watches=524288
-                sudo sysctl -p
-            fi
+        if [[ $(cat /proc/sys/fs/inotify/max_user_watches) -lt 524288 ]]; then
+            #     sudo sysctl -p
+            sudo sysctl fs.inotify.max_user_watches=524288
+            sudo sysctl -p
+        fi
 
-            # Create socket file for xserver apps
-            if [ ! -e /tmp/.X11-unix ]; then
-                ln -s /mnt/wslg/.X11-unix /tmp/.X11-unix
-            fi
+        # Create socket file for xserver apps
+        if [ ! -e /tmp/.X11-unix ]; then
+            ln -s /mnt/wslg/.X11-unix /tmp/.X11-unix
         fi
     }
     __initialize_wsl_ssh_agent
@@ -250,7 +248,7 @@ if [[ "${bash_force_cache}" = "true" ]] || [[ "${bash_force_cache_once}" = "true
     fi
 else
     [[ -s "$interactive_cache" ]] && source "$interactive_cache"
-    {{- if .os.is_wsl }}
+    {{- if .system.is_wsl }}
     __initialize_wsl_ssh_agent
 fi
 
@@ -295,7 +293,7 @@ fi
 
 source "$interactive_cache_extensions"
 
-{{- if .os.is_wsl }}
+{{- if .system.is_wsl }}
 
 # Restore windows paths to PATH if running in WSL
 export PATH="$PATH_CLEAN:$PATH_WINDOWS"

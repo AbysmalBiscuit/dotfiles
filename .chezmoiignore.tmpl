@@ -14,7 +14,7 @@ edit_secrets.sh
 chezmoi_execute_template_reference.md
 chezmoi_execute_template_reference_windows.md
 
-{{ if .os.is_wsl -}}
+{{ if .system.is_wsl -}}
 .bash_logout
 {{- else -}}
 !.oh-my-zsh/plugins
@@ -29,21 +29,21 @@ chezmoi_execute_template_reference_windows.md
 {{- end }}
 
 
-{{ if not .os.is_macos }}
+{{ if not .system.is_macos }}
 .chezmoiscripts/darwin/**
 .config/aerospace
 .config/homebrew
 .hammerspoon
 {{ end }}
 
-{{ if not .os.is_linux }}
+{{ if not .system.is_linux }}
 .chezmoiscripts/linux/**
 .hushlogin
 .local/bin/nvim
 .local/share/fonts
 {{ end }}
 
-{{ if not .os.is_windows }}
+{{ if not .system.is_windows }}
 .chezmoiscripts/windows/**
 Documents
 {{ else }}
@@ -67,6 +67,7 @@ Documents
 {{ end }}
 
 {{ if not .personal }}
+.aider.*
 .config/ghostty
 .config/ghostty/**
 .config/psql

@@ -67,7 +67,7 @@ if has_command pacman; then
     alias pacmanq='pacman -Q | grep'
 fi
 
-{{- if .os.is_linux }}
+{{- if .system.is_linux }}
 
 # making sensors start a loop to monitor temperatures similar to top
 alias sensorsl='while true; do clear; sensors; sleep 1; done'
@@ -85,7 +85,7 @@ alias wanip='dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
 
 alias wanip6='dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
 
-{{- if .os.is_linux }}
+{{- if .system.is_linux }}
 
 # systemctl aliases
 alias systemctlu='systemctl --user'

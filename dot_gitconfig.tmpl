@@ -29,11 +29,11 @@
   st = status
   unstage = reset HEAD --
 [credential]
-{{- if .os.is_wsl }}
+{{- if .system.is_wsl }}
   helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
-{{- else if .os.is_windows }}
+{{- else if .system.is_windows }}
   helper = /c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
-{{- else if .os.is_macos }}
+{{- else if .system.is_macos }}
   helper = /usr/share/git/credential/libsecret/git-credential-libsecret
 {{- end }}
 [filter "lfs"]

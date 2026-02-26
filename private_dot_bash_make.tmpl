@@ -34,7 +34,7 @@ export DEBUG_CXXFLAGS="-g -fvar-tracking-assignments"
 # rust
 # -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes
 export RUSTFLAGS='-C target-cpu=native'
-{{ if .os.is_windows -}}
+{{ if .system.is_windows -}}
 {{- /* Windows linker doesn't support the linker args */ -}}
 RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
 {{- else -}}

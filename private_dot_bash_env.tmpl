@@ -23,7 +23,11 @@ if [ -z "${XDG_STATE_HOME-}" ]; then
 fi
 
 # set OS
+{{ if .system.is_wsl -}}
+export OS="wsl"
+{{- else -}}
 export OS={{ .chezmoi.os | quote }}
+{{- end }}
 # export OS="$(uname -s | tr '[A-Z]' '[a-z]')"
 
 # Color settings
@@ -194,7 +198,7 @@ elif has_command python && command python --version 2>/dev/null | grep -q -Pe '.
     export PYTHON3_HOST_PROG="$(command -v python)"
 fi
 
-{{ if .os.is_wsl -}}
+{{ if .system.is_wsl -}}
 # WSL Specific
 export WINHOME={{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
 
@@ -249,7 +253,7 @@ if has_command nvim; then
 
     # Set up manpager
     export MANWIDTH=999
-{{- if .os.is_wsl }}
+{{- if .system.is_wsl }}
     # use cleaned path on WSL
     export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
 {{- else }}
@@ -270,7 +274,7 @@ elif has_command code; then
 fi
 export VISUAL
 
-{{ if (and (.system.is_personal) (.secrets.api_keys.AVANTE_GEMINI_API_KEY)) -}}
+{{ if (and (.system.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
 # API keys
-export AVANTE_GEMINI_API_KEY={{ .secrets.api_keys.AVANTE_GEMINI_API_KEY | quote }}
+export AVANTE_GEMINI_API_KEY={{ .secrets.api_keys.avante.personal.gemini | quote }}
 {{- end -}}
