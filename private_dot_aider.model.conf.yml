@@ -1,7 +1,7 @@
 - name: ollama_chat/qwen3:8b
   extra_params:
-    # num_ctx: 40960
-    num_ctx: 20480
+      # num_ctx: 40960
+      num_ctx: 20480
 # - name: ollama_chat/qwen3:8b
 #   extra_params:
 #     num_ctx: 40960
