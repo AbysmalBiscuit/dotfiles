@@ -1,0 +1,106 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "id": "1",
+        "type": "model",
+        "color": "ansi256:77",
+        "bold": false,
+        "rawValue": true
+      },
+      {
+        "id": "3",
+        "type": "separator"
+      },
+      {
+        "id": "4",
+        "type": "context-length",
+        "color": "ansi256:172",
+        "bold": true,
+        "rawValue": true
+      },
+      {
+        "id": "2eb57823-6671-43b7-a1e4-89c71740e2f7",
+        "type": "separator",
+        "character": " "
+      },
+      {
+        "id": "2",
+        "type": "context-percentage",
+        "color": "ansi256:172",
+        "bold": true,
+        "rawValue": true,
+        "metadata": {
+          "inverse": "false"
+        }
+      },
+      {
+        "id": "5",
+        "type": "separator"
+      },
+      {
+        "id": "6",
+        "type": "git-branch",
+        "color": "brightBlue",
+        "bold": true,
+        "rawValue": false
+      },
+      {
+        "id": "7",
+        "type": "separator"
+      },
+      {
+        "id": "8",
+        "type": "git-changes",
+        "color": "ansi256:69",
+        "bold": true,
+        "rawValue": false
+      },
+      {
+        "id": "71490fab-ee56-49ef-a89f-8a81904032b6",
+        "type": "separator"
+      },
+      {
+        "id": "ca911a78-adb6-43fd-9da5-89a76c6099f7",
+        "type": "session-cost",
+        "color": "ansi256:220",
+        "bold": true,
+        "rawValue": true
+      }
+    ],
+    [
+      {
+        "id": "ba9e4319-52c9-4439-a1f9-51796275b9ec",
+        "type": "custom-command",
+        "commandPath": "~/.claude/statusline-usage.sh"
+      },
+      {
+        "id": "66ba0983-b84d-447a-b6d1-5b9b0c02c7c7",
+        "type": "separator"
+      },
+      {
+        "id": "3dd8f0f7-c266-41ce-94e4-3f92e4620bfc",
+        "type": "block-timer",
+        "rawValue": false
+      }
+    ]
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 2,
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [
+      ""
+    ],
+    "separatorInvertBackground": [
+      false
+    ],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false
+  }
+}
