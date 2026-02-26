@@ -1,3 +1,4 @@
+{{ if .system.is_linux -}}
 # Linux OS
 *~
 
@@ -12,9 +13,10 @@
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
+{{- end }}
 
 
-
+{{ if .system.is_macos -}}
 # macOS
 *.DS_Store
 .AppleDouble
@@ -41,8 +43,10 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+{{- end }}
 
 
+{{ if .system.is_windows -}}
 
 # Windows OS
 # Windows thumbnail cache files
@@ -64,6 +68,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+{{- end }}
 
 
 
