@@ -1,0 +1,18 @@
+{
+    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+    "version": "0.2",
+    "dictionaryDefinitions": [
+        {
+            "name": "project_words",
+            "path": "./project_words.txt",
+            "addWords": true
+        }
+    ],
+    "dictionaries": [
+        "project_words",
+        "lua"
+    ],
+    "flagWords": [],
+    "language": "en-US",
+    "words": []
+}
