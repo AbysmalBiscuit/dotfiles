@@ -16,6 +16,9 @@ chezmoi_execute_template_reference_windows.md
 
 {{ if .system.is_wsl -}}
 .bash_logout
+.config/alacritty
+.config/ghostty
+.config/kitty
 {{- else -}}
 !.oh-my-zsh/plugins
 {{ range .zshPlugins }}
