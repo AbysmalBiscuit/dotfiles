@@ -85,3 +85,8 @@ AppData/**
 .ssh
 .ssh/**
 {{ end }}
+
+{{- /* specific programs */ -}}
+{{ if not (lookPath "ranger") -}}
+.config/ranger
+{{- end }}
