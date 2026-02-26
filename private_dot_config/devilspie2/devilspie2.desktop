@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Devilspie2
+X-GNOME-Autostart-enabled=true
+Exec=devilspie2
+
+Name[en_US]=devilspie2

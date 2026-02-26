@@ -1,0 +1,10 @@
+-- a file used for testing devilspie2 functions
+print("********************************************************************************")
+print("*********************************** test.lua ***********************************")
+print("********************************************************************************")
+print("window_name=", get_window_name())
+print("get_window_geometry=", get_window_geometry())
+print("application_name=", get_application_name())
+print("screen_geometry=", get_screen_geometry())
+print("********************************************************************************")
+print()
