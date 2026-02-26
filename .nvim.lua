@@ -62,6 +62,16 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         end)
     end,
 })
+vim.api.nvim_create_autocmd("FileType", {
+    group = vim.api.nvim_create_augroup("chezmoi_toml_tmpl", { clear = true }),
+    pattern = "toml.chezmoitmpl",
+    callback = function(args)
+        local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(args.buf), ":t")
+        if filename == ".chezmoi.toml.tmpl" then
+            vim.bo[args.buf].filetype = "chezmoi_toml.toml.chezmoitmpl"
+        end
+    end,
+})
 
 --------------------------------------------------------------------------------
 -- Snacks
