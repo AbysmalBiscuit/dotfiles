@@ -217,6 +217,12 @@ database = "{{ $keepassxc_database }}"
 args = {{ $keepassxc_args }}
 mode = "open"
 
+[merge]
+{{ if eq $editor "nvim" -}}
+command = {{ $editor | quote }}
+args = ["-d", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Source }}" }}, {{ printf "%q" "{{ .Target }}" }}]
+{{- end }}
+
 # Data for use in templates
 {{ $data := dict "data" (dict "secrets" $secrets) -}}
 {{ toToml $data }}
