@@ -62,6 +62,9 @@ run_before_decrypt-private-key.sh.tmpl
 .config/gedit
 .local/share/gedit
 {{- end }}
+{{ if not (lookPath "gnome-terminal") -}}
+.config/gnome-terminal
+{{- end }}
 {{ end }}
 
 

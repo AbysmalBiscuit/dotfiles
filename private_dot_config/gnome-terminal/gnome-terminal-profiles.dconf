@@ -1,0 +1,35 @@
+[/]
+list=['b1dcc9dd-5262-4d8d-a863-c897e6d979b9', '91b6a1ab-feed-4190-b438-ff54e2e707f4']
+
+[:91b6a1ab-feed-4190-b438-ff54e2e707f4]
+background-color='rgb(20,31,46)'
+bold-color='rgb(239,239,239)'
+bold-color-same-as-fg=false
+cursor-background-color='rgb(240,240,240)'
+cursor-colors-set=true
+cursor-foreground-color='rgb(20,31,46)'
+font='Meslo LG S 13'
+foreground-color='rgb(237,237,237)'
+highlight-background-color='rgb(55,87,128)'
+highlight-colors-set=true
+highlight-foreground-color='rgb(237,237,237)'
+palette=['rgb(20,31,46)', 'rgb(204,0,0)', 'rgb(17,207,69)', 'rgb(196,160,0)', 'rgb(85,142,255)', 'rgb(117,80,123)', 'rgb(6,152,154)', 'rgb(211,215,207)', 'rgb(47,64,88)', 'rgb(239,41,41)', 'rgb(43,232,95)', 'rgb(252,233,79)', 'rgb(145,204,255)', 'rgb(173,127,168)', 'rgb(52,226,226)', 'rgb(237,237,237)']
+use-system-font=false
+use-theme-colors=false
+visible-name='SDC'
+
+[:b1dcc9dd-5262-4d8d-a863-c897e6d979b9]
+background-color='rgb(20,31,46)'
+bold-color-same-as-fg=false
+cursor-background-color='rgb(240,240,240)'
+cursor-colors-set=true
+cursor-foreground-color='rgb(20,31,46)'
+font='Meslo LG S 13'
+foreground-color='rgb(237,237,237)'
+highlight-background-color='rgb(55,87,128)'
+highlight-colors-set=true
+highlight-foreground-color='rgb(237,237,237)'
+palette=['rgb(46,52,54)', 'rgb(204,0,0)', 'rgb(78,154,6)', 'rgb(196,160,0)', 'rgb(52,101,164)', 'rgb(117,80,123)', 'rgb(6,152,154)', 'rgb(211,215,207)', 'rgb(85,87,83)', 'rgb(239,41,41)', 'rgb(138,226,52)', 'rgb(252,233,79)', 'rgb(114,159,207)', 'rgb(173,127,168)', 'rgb(52,226,226)', 'rgb(238,238,236)']
+use-system-font=false
+use-theme-colors=true
+visible-name='Default'
