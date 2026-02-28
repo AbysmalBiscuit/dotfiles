@@ -1,0 +1,44 @@
+
+Description="ABC"
+
+Categories = {"dark"}
+
+Default        = { Colour="#ededed" }
+Canvas         = { Colour="#141F2E" }
+Number         = { Colour="#FFAA00" }
+Escape         = { Colour="#83A6C1" }
+String         = { Colour="#11CF45" }
+StringPreProc  = { Colour="#11CF45" }
+BlockComment   = { Colour="#7F7F7F" }
+LineComment    = { Colour="#7F7F7F" }
+PreProcessor   = { Colour="#FC7A00" }
+LineNum        = { Colour="#808080" }
+Operator       = { Colour="#ededed" }
+Interpolation  = { Colour="#83A6C1" }
+
+Keywords = {
+  { Colour= "#558EFF", Bold=true },                     --1
+  { Colour= "#558EFF", Bold=true },                     --2
+  { Colour= "#558EFF", Bold=true },                     --3
+  { Colour= "#f5f5f5", Bold=true },          --4
+  { Colour= "#7ae171" },                     --5
+  { Colour= "#f28177" },                     --6
+}
+
+-- new LSP based elements:
+
+SemanticTokenTypes = {
+  { Type = 'type', Style = { Colour= "#91CCFF"} },
+  { Type = 'class', Style =  { Colour= "#558EFF", Bold=true } },
+  { Type = 'struct', Style =  Keywords[4] },
+  { Type = 'interface', Style = Keywords[1] },
+  { Type = 'parameter', Style = { Colour= "#aa00aa"} },
+  { Type = 'variable', Style = Keywords[5] },
+  { Type = 'enumMember', Style = Keywords[5] },
+  { Type = 'function', Style = Keywords[4] },
+  { Type = 'method', Style = { Colour= "#f5f5f5" }, },
+  { Type = 'keyword', Style =  { Colour= "#558EFF", Bold=true }, },
+  { Type = 'number', Style = Number },
+  { Type = 'regexp', Style = String },
+  { Type = 'operator', Style = Operator },
+}
