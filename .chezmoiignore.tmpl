@@ -16,7 +16,9 @@ edit_secrets.sh.tmpl
 edit_secrets.sh
 chezmoi_execute_template_reference.md
 chezmoi_execute_template_reference_windows.md
+notes.md
 fix_persmissions.sh
+**/__pychache__/**
 
 {{ if .system.is_wsl -}}
 .bash_logout
@@ -50,6 +52,11 @@ fix_persmissions.sh
 .local/bin/nvim
 .local/share/fonts
 {{ end }}
+
+{{ if not (lookPath "gedit") -}}
+.config/gedit
+.local/share/gedit
+{{- end }}
 
 {{ if not .system.is_windows }}
 .chezmoiscripts/windows/**

@@ -1,0 +1,13 @@
+#!/bin/sh
+# [Gedit Tool]
+# Name=Wrap lines
+# Input=document
+# Output=replace-document
+# Applicability=all
+# Save-files=nothing
+# Languages=
+# Shortcut=<Alt>F11
+
+# Wraps lines at the predefined standard of 79 characters
+
+fold -w 79 -s

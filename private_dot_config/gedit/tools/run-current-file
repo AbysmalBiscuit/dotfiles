@@ -1,0 +1,89 @@
+#!/bin/sh
+# [Gedit Tool]
+# Name=Run current file
+# Input=nothing
+# Output=output-panel
+# Applicability=all
+# Save-files=document
+# Shortcut=F5
+# Languages=
+
+# Runs the current document based on the file extension
+# if a shebang is not available
+
+# Adding user bin and bin/bin directory to PATH
+if [[ -d "$HOME/bin/bin" ]]; then
+  export PATH="$HOME/bin:$HOME/bin/bin:$PATH"
+fi
+
+# Global variables
+file="$GEDIT_CURRENT_DOCUMENT_NAME"
+checkExeFound=""
+exe=""
+extension=""
+shebangPresent=""
+shebang=""
+
+
+# Functions
+function getExtension() {
+  extension=$(echo -n "$file" | sed -r 's/.*\.(.*)\s*$/\1/')
+}
+
+
+function getExeFromExtension() {
+  exe=$(which "$extension")
+  checkExeFound=$(echo -n "$exe" | grep -q -e "^which: no $extension.*" && echo 1 || echo 0)
+}
+
+
+function extensionSpecial() {
+  case "$extension" in
+    "sh")
+      exe="bash"
+      ;;
+    *)
+      exe="None"
+      ;;
+  esac
+}
+
+
+function checkShebang() {
+  shebangPresent=$(head -n 1 "$file" | grep -q -e "#!" && echo "1" || echo "0")
+}
+
+
+function getExeFromShebang() {
+  shebang=$(head -n 1 "$file")
+  exe=$(echo -n "$shebang" | sed "s/#!//")
+}
+
+
+# Main
+checkShebang
+
+if [ "$shebangPresent" = "1" ]; then
+  getExeFromShebang
+  if echo -n "$exe" | grep -q -e ' '; then
+    eval "$exe $file"
+  else
+    "$exe" "$file"
+  fi
+  exit 0
+else
+  getExtension
+  getExeFromExtension
+  if [ "$checkExeFound" = "1" ];then
+    "$exe" "$file"
+    exit 0
+  else
+    extensionSpecial
+    if [ "$extension" != "None" ]; then
+      "$exe" "$file"
+      exit 0
+    else
+      exit 1
+    fi
+  fi
+fi
