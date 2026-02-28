@@ -1,0 +1,60 @@
+<style-scheme name="ABC" id="abc" version="1.0">
+  <author>Lev Velykoivanenko</author>
+  <description>Dark Blue based colour scheme</description>
+
+  <style name="text"	foreground="#ededed" background="#141F2E" />
+  <style name="selection" foreground="#ededed"	background="#375780" />
+  <style name="cursor"	foreground="#f0f0f0" />
+  <style name="current-line"	background="#1b2b40" />
+  <style name="line-numbers"	foreground="#808080" background="#282828" />
+  <style name="draw-spaces"	foreground="#777777" />
+  <style name="right-margin"	foreground="#cccccc" background="#cccccc" />
+  <style name="background-pattern"	background="#00213F" />
+  <style name="bracket-match"	background="#3C5F8C" />
+  <style name="bracket-mismatch"	background="#990000" />
+  <style name="search-match"	foreground="#ededed" background="#308cc6" />
+  <style name="bookmark"	background="#ffffff" />
+  <style name="def:comment"	foreground="#7f7f7f" />
+  <style name="def:shebang"	foreground="#0088ff" italic="true" />
+  <style name="def:doc-comment-element"	bold="true" />
+  <style name="def:constant"	foreground="#ffee80" />
+  <style name="def:string"	foreground="#11CF45" />
+  <style name="def:special-char"	foreground="#cccccc" />
+  <style name="def:special-constant"	foreground="#aa00aa" bold="true" />
+  <style name="def:number"	foreground="#ff9d00" />
+  <style name="def:floating-point"	foreground="#ff9d00" />
+  <style name="def:keyword"	foreground="#558eff" bold="true" />
+  <style name="def:builtin"	foreground="#aa00aa" bold="true" />
+  <style name="def:variable"	foreground="#FFFAB1" />
+  <style name="def:identifier"	foreground="#fc7a00" />
+  <style name="def:function"	foreground="#f5f5f5" bold="true" />
+  <style name="def:statement"	foreground="#558eff" />
+  <style name="def:type"	foreground="#91CCFF" />
+  <style name="def:error"	foreground="#f5f5f5" background="#e80000" bold="true" />
+  <style name="def:warning"	foreground="#f5f5f5" background="#ff0044" />
+  <style name="def:note"	foreground="#ffdd00" bold="true" />
+  <style name="def:net-address-in-comment"	foreground="#80ffbb" underline="true" />
+  <style name="def:preprocessor"	foreground="#fc7a00" />
+  <style name="def:specials"	foreground="#f5f5f5" background="#ffdd00" />
+  <style name="def:boolean"	foreground="#558eff" bold="true" />
+  <style name="c:preprocessor"	foreground="#80ffbb" bold="true" />
+  <style name="c:included-file"	foreground="#3ad900" />
+  <style name="c:common-defines"	foreground="#0088ff" bold="true" />
+  <style name="diff:ignore"	foreground="#777777" />
+  <style name="diff:added-line"	foreground="#408040" />
+  <style name="diff:removed-line"	foreground="#CC6666" />
+  <style name="diff:changed-line"	foreground="#4D6F99" />
+  <style name="diff:diff-file"	foreground="#0088ff" />
+  <style name="diff:location"	foreground="#91CCFF" bold="true" />
+  <style name="diff:special-case"	foreground="#ff0044" bold="true" />
+  <style name="ruby:module-handler"	foreground="#80ffbb" />
+  <style name="ruby:symbol"	foreground="#ff0044" />
+  <style name="ruby:regex"	foreground="#80ffbb" />
+  <style name="sh:function"	foreground="#ffdd00" />
+  <style name="xml:attribute-name"	foreground="#91CCFF" />
+  <style name="xml:element-name"	foreground="#558eff" bold="true" />
+  <style name="xml:entity"	foreground="#ededed" bold="true" />
+  <style name="xml:processing-instruction"	bold="true" />
+  <style name="python:module-handler" foreground="#558eff" bold="true" />
+  <style name="python:builtin-constant" foreground="#558eff" bold="true" />
+</style-scheme>
