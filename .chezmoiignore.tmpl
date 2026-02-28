@@ -61,6 +61,7 @@ run_before_decrypt-private-key.sh.tmpl
 {{ if not (lookPath "gedit") -}}
 .config/gedit
 .local/share/gedit
+.local/share/gtksourceview-5
 {{- end }}
 {{ if not (lookPath "gnome-terminal") -}}
 .config/gnome-terminal
