@@ -1,23 +1,30 @@
-README.md
-LICENSE
-.gitignore
+{{- /* project files */ -}}
 .editorconfig
+.gitignore
 .lazy.lua
+.ltex/**
 .nvim.lua
 .shellcheckrc
-.ltex/**
-project_words.txt
-cspell.json
-key.txt.age
-secrets.toml.age
-run_before_decrypt-private-key.sh.tmpl
-decrypt-private-key.sh
-edit_secrets.sh.tmpl
-edit_secrets.sh
+LICENSE
+README.md
 chezmoi_execute_template_reference.md
 chezmoi_execute_template_reference_windows.md
+cspell.json
 notes.md
+project_words.txt
+
+{{- /* secrets */ -}}
+key.txt.age
+secrets.toml.age
+
+{{- /* Scripts used by chezmoi */ -}}
+decrypt-private-key.sh
+edit_secrets.sh
+edit_secrets.sh.tmpl
 fix_persmissions.sh
+run_before_decrypt-private-key.sh.tmpl
+
+{{- /* general exclusions */ -}}
 **/__pychache__/**
 
 {{ if .system.is_wsl -}}
@@ -51,21 +58,22 @@ fix_persmissions.sh
 .hushlogin
 .local/bin/nvim
 .local/share/fonts
-{{ end }}
-
 {{ if not (lookPath "gedit") -}}
 .config/gedit
 .local/share/gedit
 {{- end }}
+{{ end }}
+
 
 {{ if not .system.is_windows }}
 .chezmoiscripts/windows/**
-Documents
 AppData/**
+Documents
 {{ else }}
 .bash_aliases
 .config/ghostty
 .config/git/cookies
+.config/gitui
 .config/psql
 .config/readline
 .config/tmux
