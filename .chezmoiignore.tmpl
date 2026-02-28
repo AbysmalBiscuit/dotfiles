@@ -1,4 +1,4 @@
-{{- /* project files */ -}}
+{{/* project files */}}
 .editorconfig
 .gitignore
 .lazy.lua
@@ -13,18 +13,18 @@ cspell.json
 notes.md
 project_words.txt
 
-{{- /* secrets */ -}}
+{{/* secrets */}}
 key.txt.age
 secrets.toml.age
 
-{{- /* Scripts used by chezmoi */ -}}
+{{/* Scripts used by chezmoi */}}
 decrypt-private-key.sh
 edit_secrets.sh
 edit_secrets.sh.tmpl
 fix_persmissions.sh
 run_before_decrypt-private-key.sh.tmpl
 
-{{- /* general exclusions */ -}}
+{{/* general exclusions */}}
 **/__pychache__/**
 
 {{ if .system.is_wsl -}}
@@ -44,7 +44,6 @@ run_before_decrypt-private-key.sh.tmpl
 .oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
 {{- end }}
 
-
 {{ if not .system.is_macos }}
 .chezmoiscripts/darwin/**
 .config/aerospace
@@ -58,6 +57,10 @@ run_before_decrypt-private-key.sh.tmpl
 .hushlogin
 .local/bin/nvim
 .local/share/fonts
+{{- else -}}
+{{ if not (lookPath "devilspie2") -}}
+.config/devilspie2
+{{- end }}
 {{ if not (lookPath "gedit") -}}
 .config/gedit
 .local/share/gedit
@@ -68,12 +71,7 @@ run_before_decrypt-private-key.sh.tmpl
 {{- end }}
 {{ end }}
 
-
-{{ if not .system.is_windows }}
-.chezmoiscripts/windows/**
-AppData/**
-Documents
-{{ else }}
+{{ if .system.is_windows }}
 .bash_aliases
 .config/ghostty
 .config/git/cookies
@@ -92,6 +90,10 @@ Documents
 .tmux.conf
 .zprofile
 .zshrc
+{{- else -}}
+.chezmoiscripts/windows/**
+AppData/**
+Documents
 {{ end }}
 
 {{ if not .personal }}
@@ -108,7 +110,13 @@ Documents
 .ssh/**
 {{ end }}
 
-{{- /* specific programs */ -}}
+{{/* specific cross-platform programs */}}
 {{ if not (lookPath "ranger") -}}
 .config/ranger
+{{- end }}
+{{ if not (lookPath "dbeaver") -}}
+.config/dbeaver
+{{- end }}
+{{ if not (lookPath "highlight") -}}
+.local/share/highlight
 {{- end }}
