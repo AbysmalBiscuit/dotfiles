@@ -29,6 +29,12 @@ run_before_decrypt-private-key.sh.tmpl
 # general exclusions
 **/__pychache__/**
 
+
+# always exclude
+.ideavimrc
+
+# os specific exclusions
+
 {{ if .system.is_wsl -}}
 .bash_logout
 .config/alacritty
@@ -122,4 +128,7 @@ Documents
 {{- end }}
 {{ if not (lookPath "highlight") -}}
 .local/share/highlight
+{{- end }}
+{{ if not (lookPath "ccr") -}}
+.claude-code-router
 {{- end }}

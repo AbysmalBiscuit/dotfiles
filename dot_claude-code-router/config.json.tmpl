@@ -1,0 +1,32 @@
+{
+  "LOG": true,
+  "LOG_LEVEL": "info",
+  "CLAUDE_PATH": "",
+  "HOST": {{ .secrets.claude_code_router.host | quote }},
+  "PORT": {{ .secrets.claude_code_router.port }},
+{{ if .personal }}
+  "APIKEY": {{ .secrets.api_keys.claude_code_router.personal | toJson }},
+{{ end }}
+  "API_TIMEOUT_MS": "600000",
+  "PROXY_URL": "",
+  "transformers": [],
+  "Providers": [
+{{ if lookPath "ccr" -}}
+{{ if .personal -}}
+{{ .secrets.claude_code_router.personal | join ",\n" }}
+{{- end }}
+{{- end }}
+  ],
+  "StatusLine": {
+    "enabled": false,
+    "currentStyle": "default",
+    "default": {
+      "modules": []
+    },
+    "powerline": {
+      "modules": []
+    }
+  },
+  "Router": {{ .secrets.claude_code_router.router }},
+  "CUSTOM_ROUTER_PATH": ""
+}
