@@ -71,3 +71,6 @@ zed
 zellij
 zsh
 zsh2
+eza
+FanControl
+claude-code-router
