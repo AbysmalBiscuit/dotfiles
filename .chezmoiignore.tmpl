@@ -127,21 +127,21 @@ Documents
 {{ end }}
 
 # specific cross-platform programs
-{{ if not (lookPath "ranger") -}}
+{{ if not .has.ranger -}}
 .config/ranger
 {{- end }}
-{{ if not (lookPath "dbeaver") -}}
+{{ if not .has.dbeaver -}}
 .config/dbeaver
 {{- end }}
-{{ if not (lookPath "highlight") -}}
+{{ if not .has.highlight -}}
 .local/share/highlight
 {{- end }}
-{{ if not (lookPath "ccr") -}}
+{{ if not .has.claude_code_router -}}
 .claude-code-router
 {{- end }}
-{{ if not (lookPath "iterm2") -}}
+{{ if not .has.iterm2 -}}
 .config/iterm2
 {{- end }}
-{{ if not (lookPath "jq") -}}
+{{ if not .has.jq -}}
 .jq
 {{- end }}

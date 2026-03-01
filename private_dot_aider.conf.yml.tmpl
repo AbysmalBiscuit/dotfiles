@@ -52,7 +52,7 @@
 #  - yyy
 #  - zzz
 
-{{ if (or (lookPath "ollama") (lookPath "ollama.exe")) -}}
+{{ if (or .has.ollama .has.ollama_exe) -}}
 set-env:
   - OLLAMA_API_BASE=http://127.0.0.1:11434
 {{- end }}

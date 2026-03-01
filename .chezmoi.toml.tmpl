@@ -266,3 +266,13 @@ chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
 editor = {{ $editor | quote }}
+
+[data.has]
+claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
+dbeaver = {{ if lookPath "dbeaver" }}true{{ else }}false{{ end }}
+highlight = {{ if lookPath "highlight" }}true{{ else }}false{{ end }}
+iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
+jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
+ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
+ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
+ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
