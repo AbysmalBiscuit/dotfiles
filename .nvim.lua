@@ -119,6 +119,7 @@ local chezmoi_filetypes = {
     "ini",
     "gitconfig",
     "yaml",
+    "json",
     -- "nanorc",
 }
 local ft_to_parser = {
