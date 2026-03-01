@@ -1,0 +1,138 @@
+;; vim:fileencoding=utf-8:foldmethod=marker:commentstring=;;\ %s:shiftwidth=2
+#|
+This minimal config changes Caps Lock to act as Caps Lock on quick tap, but
+if held, it will act as Left Ctrl. It also changes the backtick/grave key to
+act as backtick/grave on quick tap, but change ijkl keys to arrow keys on hold.
+
+This text between the two pipe+octothorpe sequences is a multi-line comment.
+
+Key names can be found here:
+https://github.com/jtroo/kanata/blob/main/parser/src/keys/mod.rs?plain=1#L176
+
+|#
+
+;; Text after double-semicolons are single-line comments.
+
+#|
+One defcfg entry may be added, which is used for configuration key-pairs. These
+configurations change kanata's behaviour at a more global level than the other
+configuration entries.
+|#
+
+(defcfg
+  #|
+  This configuration will process all keys pressed inside of kanata, even if
+  they are not mapped in defsrc. This is so that certain actions can activate
+  at the right time for certain input sequences. By default, unmapped keys are
+  not processed through kanata due to a Windows issue related to AltGr. If you
+  use AltGr in your keyboard, you will likely want to follow the simple.kbd
+  file while unmapping lctl and ralt from defsrc.
+  |#
+  process-unmapped-keys yes
+  concurrent-tap-hold yes
+
+  ;; Apply only to specific keyboards
+  macos-dev-names-include ()
+  linux-dev ()
+  windows-interception-keyboard-hwids ()
+
+  ;; Other options
+  tray-icon base.png
+  icon-match-layer-name     yes    ;;|yes| match layer name to icon files even without an explicit (icon name.ico) config
+  tooltip-layer-changes     yes    ;;|false|
+  tooltip-show-blank        yes    ;;|no|
+  tooltip-duration          500    ;;|500|
+  tooltip-size              24,24  ;;|24 24|
+  notify-cfg-reload         yes    ;;|yes|
+  notify-cfg-reload-silent  no     ;;|no|
+  notify-error              yes    ;;|yes|
+)
+
+;; Map of keys that kanata will manage
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rmet rctl
+)
+
+;; default layer
+(deflayer (default 🖼 🏠)
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rmet rctl
+)
+
+;; extend layer
+(deflayer (extend 🖼 🧭)
+  grv    f1     f2     f3     f4     f5     f6     f7     f8     f9     f10    f11    f12    bspc
+  tab    esc    @ew    @ee    @er    @et    @ey    @eu    @ei    @eo    @ep    [      ]      \
+  @cap   @ea    @es    @ed    @ef    @eg    @eh    @ej    @ek    @el    @e;    @e'    ret
+  @elsft @ez    @ex    @ec    @ev    @eb    @en    @em    @e,    @e.    @e/    @ersft
+  @elctl lmet   lalt                 spc                  ralt   rmet   rctl
+)
+
+
+(defalias
+  extend (layer-toggle extend)
+)
+
+(defalias
+  cap (tap-hold-press 200 200 esc @extend)
+  ;; grv (tap-hold-press 200 200 grv (layer-toggle arrows))
+  ;; q row
+  ew (tap-hold-press 200 200 C-w (mwheel-up 50 120))
+  ee C-e
+  er C-r
+  et (tap-hold-press 150 150 S-grv grv)
+  ey PageUp
+  eu Home
+  ei ArrowUp
+  eo End
+  ep Delete
+
+  ;; a row
+  ea (tap-hold-press 150 150 C-a AltLeft)
+  es (tap-hold-press 150 150 C-s (mwheel-down 50 120))
+  ed (tap-hold-press 150 150 C-d ShiftLeft)
+  ef (tap-hold-press 150 150 C-f ControlLeft)
+  eg (tap-hold-press 150 150 S-Minus Minus)
+  eh PageDown
+  ej ArrowLeft
+  ek ArrowDown
+  el ArrowRight
+  e; Backspace
+  e' (tap-hold-press 150 150 Quote S-Quote)
+
+  ;; z row
+  elsft (tap-hold-press 150 150 BracketLeft ShiftLeft)
+  ez (tap-hold-press 150 150 z C-z)
+  ex (tap-hold-press 150 150 x C-x)
+  ec (tap-hold-press 150 150 c C-c)
+  ev (tap-hold-press 150 150 v C-v)
+  eb (tap-hold-press 150 150 S-Digit9 S-Digit0)
+  en (tap-hold-press 150 150 Backslash S-Backslash)
+  em (tap-hold-press 150 150 Equal S-Equal)
+  e, Comma
+  e. Period
+  e/ Slash
+  ersft (tap-hold-press 150 150 BracketRight ShiftRight)
+
+  ;; Bottom row
+  elctl (tap-hold-press 150 150 S-Digit9 ControlLeft)
+
+)
+
+;; quality of life modifications
+(defchordsv2
+  (h j) esc              50 all-released ()
+  (e r) S-BracketLeft    50 all-released ()
+  (r t) S-BracketRight   50 all-released ()
+  (c v) BracketLeft      50 all-released ()
+  (v b) BracketRight     50 all-released ()
+  (f g) Minus            50 all-released ()
+)
+
