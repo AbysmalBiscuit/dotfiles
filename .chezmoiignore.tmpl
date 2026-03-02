@@ -36,6 +36,15 @@ run_once_decrypt-private-key.sh.tmpl
 # always exclude
 .ideavimrc
 localSettings.yaml
+!.oh-my-zsh/plugins
+{{ range .zshPlugins }}
+!.oh-my-zsh/plugins/{{ . }}
+!.oh-my-zsh/plugins/{{ . }}/**
+{{- end }}
+.oh-my-zsh/cache/**
+.oh-my-zsh/plugins/**
+.oh-my-zsh/templates/**
+.oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
 
 # os specific exclusions
 
@@ -47,15 +56,6 @@ localSettings.yaml
 .config/kanata
 .wezterm.lua
 {{- else -}}
-!.oh-my-zsh/plugins
-{{ range .zshPlugins }}
-!.oh-my-zsh/plugins/{{ . }}
-!.oh-my-zsh/plugins/{{ . }}/**
-{{- end }}
-.oh-my-zsh/cache/**
-.oh-my-zsh/plugins/**
-.oh-my-zsh/templates/**
-.oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
 {{- end }}
 
 {{ if not .system.is_macos }}
@@ -106,11 +106,14 @@ localSettings.yaml
 .ssh/id_rsa.pub
 .tmux.conf
 .zprofile
-.zshrc
+.zsh*
+.bash*
+.profile
 {{- else -}}
 .chezmoiscripts/windows/**
 AppData/**
 Documents
+powershell-profile.ps1
 {{ end }}
 
 {{ if not .personal }}
@@ -127,6 +130,11 @@ Documents
 .ssh
 .ssh/**
 {{ end }}
+
+{{ if not (eq .system.shell "zsh") -}}
+.zsh*
+.oh-my-zsh/**
+{{- end }}
 
 # specific cross-platform programs
 {{ if not .has.ranger -}}

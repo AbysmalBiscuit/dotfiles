@@ -12,6 +12,8 @@
 {{- $has_battery := false -}}
 {{- $secrets_system := dict -}}
 {{- $shell := "" -}}
+{{- $default_wsl_distro := "" -}}
+{{- $line_end := "\n" -}}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -108,6 +110,23 @@
 {{-   end -}}
 {{- end -}}
 
+{{- /* General per os settings */ -}}
+{{- if $is_linux -}}
+  {{- $line_end = "\n" -}}
+{{- else if $is_macos -}}
+  {{- $line_end = "\n" -}}
+{{- else -}}
+  {{- $line_end = "\r\n" -}}
+  {{- if lookPath "wsl.exe" -}}
+    {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
+    {{- range $line := splitList "\n" $wslList -}}
+      {{- if contains "(Default)" $line -}}
+        {{- $default_wsl_distro = $line | replace " (Default)" "" | trim -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{- if $is_work -}}
 {{- end -}}
 
@@ -148,8 +167,6 @@
 
   {{- if $secrets_system.wsl_shell -}}
     {{- $shell = $secrets_system.wsl_shell -}}
-  {{- else if $secrets_system.wsl_shell -}}
-    {{- $shell = $secrets_system.shell -}}
   {{- end -}}
   {{- /* if $is_wsl */ -}}
   {{- /* else if $is_linux */ -}}
@@ -290,6 +307,8 @@ shell = {{ $shell | quote }}
 {{- else -}}
 shell = {{ env "SHELL" | base | quote }}
 {{- end }}
+default_wsl_distro = {{ $default_wsl_distro | quote }}
+path_sep = {{ .chezmoi.pathSeparator | quote }}
 
 [data.has]
 claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
@@ -300,10 +319,15 @@ jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
 ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
 ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
 spotify_player = {{ if lookPath "spotify_player" }}true{{ else }}false{{ end }}
+fish = {{ if lookPath "fish" }}true{{ else }}false{{ end }}
+{{- if not $is_windows }}
+nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
+{{- end }}
 {{- if or $is_windows $is_wsl }}
 ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
 pwsh_exe = {{ if lookPath "pwsh.exe" }}true{{ else }}false{{ end }}
 {{- end }}
 {{- if $is_windows }}
 bash_exe = {{ if lookPath "bash.exe" }}true{{ else }}false{{ end }}
+wsl_exe = {{ if lookPath "wsl.exe" }}true{{ else }}false{{ end }}
 {{- end }}
