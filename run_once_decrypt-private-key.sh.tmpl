@@ -1,4 +1,5 @@
 #!/bin/sh
+# {{ include "key.txt.age" | sha256sum }}
 
 CHEZMOI_DIR="${HOME}/.config/chezmoi"
 SOURCE_DIR="{{ .chezmoi.sourceDir }}"
