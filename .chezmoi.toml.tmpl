@@ -10,6 +10,8 @@
 {{- $is_phone := false -}}
 {{- $is_tablet := false -}}
 {{- $has_battery := false -}}
+{{- $secrets_system := dict -}}
+{{- $shell := "" -}}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -127,6 +129,9 @@
   {{- $editor_args = list "--wait" }}
 {{- end }}
 
+{{- if (index $secrets.system $hostname) -}}
+  {{- $secrets_system = (index $secrets.system $hostname) -}}
+{{- end -}}
 
 {{- /* Set values based on secrets */ -}}
 {{- if (and ($is_personal) ($secrets)) -}}
@@ -140,6 +145,12 @@
   {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
   {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
   {{- $keepassxc_args = (index $secrets.keepassxc $secrets_key).args | toJson -}}
+
+  {{- if $secrets_system.wsl_shell -}}
+    {{- $shell = $secrets_system.wsl_shell -}}
+  {{- else if $secrets_system.wsl_shell -}}
+    {{- $shell = $secrets_system.shell -}}
+  {{- end -}}
   {{- /* if $is_wsl */ -}}
   {{- /* else if $is_linux */ -}}
   {{- /* else if $is_macos */ -}}
@@ -224,8 +235,16 @@ args = ["-d", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Source
 {{- end }}
 
 # Data for use in templates
-{{ $data := dict "data" (dict "secrets" $secrets) -}}
-{{ toToml $data }}
+[data]
+zshPlugins = [
+    "per-directory-history",
+    "vi-mode",
+    "zsh-syntax-highlighting",
+]
+
+# Secrets
+{{- $data := dict "data" (dict "secrets" $secrets) -}}
+{{- toToml $data | replace "[data]\n" "" -}}
 
 [data.age]
 identities = {{ $age_identities }}
@@ -266,6 +285,11 @@ chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
 editor = {{ $editor | quote }}
+{{ if $shell -}}
+shell = {{ $shell | quote }}
+{{- else -}}
+shell = {{ env "SHELL" | base | quote }}
+{{- end }}
 
 [data.has]
 claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
@@ -275,6 +299,7 @@ iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
 jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
 ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
 ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
+spotify_player = {{ if lookPath "spotify_player" }}true{{ else }}false{{ end }}
 {{- if or $is_windows $is_wsl }}
 ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
 pwsh_exe = {{ if lookPath "pwsh.exe" }}true{{ else }}false{{ end }}

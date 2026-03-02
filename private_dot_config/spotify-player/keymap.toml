@@ -1,0 +1,51 @@
+[[keymaps]]
+command = "CurrentlyPlayingContextPage"
+key_sequence = "i"
+
+[[keymaps]]
+command = "CurrentlyPlayingContextPage"
+key_sequence = "p"
+
+[[keymaps]]
+command = "NextTrack"
+key_sequence = "w"
+
+[[keymaps]]
+command = "PreviousTrack"
+key_sequence = "b"
+
+[[keymaps]]
+command = "Quit"
+key_sequence = "Q"
+
+[[keymaps]]
+command = "Queue"
+key_sequence = "q"
+
+[[keymaps]]
+command = "FocusNextWindow"
+key_sequence = "right"
+
+[[keymaps]]
+command = "FocusPreviousWindow"
+key_sequence = "left"
+
+[[actions]]
+action = "ToggleLiked"
+key_sequence = "C-l"
+
+[[keymaps]]
+command = "JumpToCurrentTrackInContext"
+key_sequence = "c"
+
+[[keymaps]]
+command = "SortLibraryAlphabetically"
+key_sequence = "z"
+
+[[keymaps]]
+command = { SeekForward = { duration = 5 } }
+key_sequence = "f"
+
+[[keymaps]]
+command = { SeekBackward = { duration = 5 } }
+key_sequence = "F"

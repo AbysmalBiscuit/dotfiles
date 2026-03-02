@@ -147,3 +147,6 @@ Documents
 {{ if not .has.jq -}}
 .jq
 {{- end }}
+{{ if not .has.spotify_player -}}
+.config/spotify-player
+{{- end }}
