@@ -1,4 +1,4 @@
-{{- if eq .chezmoi.username "root" -}}
+{{ if eq .chezmoi.username "root" -}}
 # Root nanorc file, with more red coloring to show nano is being run as root
 {{- else -}}
 # User nanorc file
@@ -26,7 +26,7 @@ set whitespace "»·"
 
 ## Paint the interface elements of nano.  These are examples;
 ## by default there are no colors, except for errorcolor.
-{{- if eq .chezmoi.username "root" -}}
+{{ if eq .chezmoi.username "root" -}}
 set titlecolor brightwhite,red
 set statuscolor brightwhite,red
 set selectedcolor brightwhite,cyan
@@ -40,21 +40,21 @@ set selectedcolor brightwhite,magenta
 set numbercolor cyan
 set keycolor cyan
 set functioncolor green
-{{- end -}}
+{{- end }}
 set errorcolor brightwhite,red
 
-{{- if glob "/usr/share/nano/*.nanorc" -}}
+{{ if glob "/usr/share/nano/*.nanorc" -}}
 ## To include all existing syntax definitions, you can do:
 include "/usr/share/nano/*.nanorc"
-{{- end -}}
+{{- end }}
 
-{{- if glob "~/bin/share/nano/*.nanorc" -}}
+{{ if glob "~/bin/share/nano/*.nanorc" -}}
 # Include custom syntax definitions
 include "~/bin/share/nano/*.nanorc"
-{{- end -}}
+{{- end }}
 
-{{- if glob "~/.local/share/nano/*.nanorc" -}}
+{{ if glob "~/.local/share/nano/*.nanorc" -}}
 # Include custom syntax definitions
 include "~/.local/share/nano/*.nanorc"
-{{- end -}}
+{{- end }}
 
