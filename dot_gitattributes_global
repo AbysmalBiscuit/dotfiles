@@ -1,20 +1,19 @@
 # Denote all files that are truly binary and should not be modified.
 
 # Auto detect text files and perform LF normalization
-# http://davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
 * text=auto
 
 # Documents
-*.doc	 diff=astextplain
-*.DOC	 diff=astextplain
+*.doc  diff=astextplain
+*.DOC  diff=astextplain
 *.docx diff=astextplain
 *.DOCX diff=astextplain
 *.dot  diff=astextplain
 *.DOT  diff=astextplain
 *.pdf  diff=astextplain
-*.PDF	 diff=astextplain
-*.rtf	 diff=astextplain
-*.RTF	 diff=astextplain
+*.PDF  diff=astextplain
+*.rtf  diff=astextplain
+*.RTF  diff=astextplain
 *.md text
 *.adoc text
 *.textile text
