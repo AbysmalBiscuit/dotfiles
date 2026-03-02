@@ -274,5 +274,11 @@ highlight = {{ if lookPath "highlight" }}true{{ else }}false{{ end }}
 iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
 jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
 ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
-ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
 ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
+{{- if or $is_windows $is_wsl }}
+ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
+pwsh_exe = {{ if lookPath "pwsh.exe" }}true{{ else }}false{{ end }}
+{{- end }}
+{{- if $is_windows }}
+bash_exe = {{ if lookPath "bash.exe" }}true{{ else }}false{{ end }}
+{{- end }}
