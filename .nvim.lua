@@ -18,86 +18,86 @@
 --     end,
 -- })
 vim.api.nvim_create_autocmd("BufWritePost", {
-    group = vim.api.nvim_create_augroup("chezmoi_group_custom1", { clear = false }),
-    pattern = ".chezmoi.toml.tmpl",
-    callback = function()
-        local stderr_chunks = {}
-        vim.fn.jobstart("chezmoi init", {
-            stderr_buffered = true,
-            on_stderr = function(_, data)
-                if data then
-                    vim.list_extend(stderr_chunks, data)
-                end
-            end,
-            on_exit = function(_, code)
-                vim.schedule(function()
-                    if code == 0 then
-                        vim.notify("chezmoi init succeeded")
-                    else
-                        vim.notify("chezmoi init failed", vim.log.levels.ERROR)
-                        local msg = table.concat(stderr_chunks, "\n")
-                        vim.notify(msg, vim.log.levels.ERROR)
-                    end
-                end)
-            end,
-        })
-    end,
+  group = vim.api.nvim_create_augroup("chezmoi_group_custom1", { clear = false }),
+  pattern = ".chezmoi.toml.tmpl",
+  callback = function()
+    local stderr_chunks = {}
+    vim.fn.jobstart("chezmoi init", {
+      stderr_buffered = true,
+      on_stderr = function(_, data)
+        if data then
+          vim.list_extend(stderr_chunks, data)
+        end
+      end,
+      on_exit = function(_, code)
+        vim.schedule(function()
+          if code == 0 then
+            vim.notify("chezmoi init succeeded")
+          else
+            vim.notify("chezmoi init failed", vim.log.levels.ERROR)
+            local msg = table.concat(stderr_chunks, "\n")
+            vim.notify(msg, vim.log.levels.ERROR)
+          end
+        end)
+      end,
+    })
+  end,
 })
 vim.api.nvim_create_autocmd("BufWritePost", {
-    group = vim.api.nvim_create_augroup("chezmoi_group_custom2", { clear = false }),
-    callback = function()
-        vim.schedule(function()
-            local home = vim.fn.expand("~")
-            local chezmoi_source = home .. "/.local/share/chezmoi"
-            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-                if vim.api.nvim_buf_is_loaded(buf) then
-                    local name = vim.api.nvim_buf_get_name(buf)
-                    if name ~= "" and not vim.startswith(name, chezmoi_source) and vim.startswith(name, home) then
-                        vim.api.nvim_buf_call(buf, function()
-                            vim.cmd("edit!")
-                        end)
-                    end
-                end
-            end
-        end)
-    end,
+  group = vim.api.nvim_create_augroup("chezmoi_group_custom2", { clear = false }),
+  callback = function()
+    vim.schedule(function()
+      local home = vim.fn.expand("~")
+      local chezmoi_source = home .. "/.local/share/chezmoi"
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buf) then
+          local name = vim.api.nvim_buf_get_name(buf)
+          if name ~= "" and not vim.startswith(name, chezmoi_source) and vim.startswith(name, home) then
+            vim.api.nvim_buf_call(buf, function()
+              vim.cmd("edit!")
+            end)
+          end
+        end
+      end
+    end)
+  end,
 })
 vim.api.nvim_create_autocmd("FileType", {
-    group = vim.api.nvim_create_augroup("chezmoi_toml_tmpl", { clear = true }),
-    pattern = "toml.chezmoitmpl",
-    callback = function(args)
-        local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(args.buf), ":t")
-        if filename == ".chezmoi.toml.tmpl" then
-            vim.bo[args.buf].filetype = "chezmoi_toml.toml.chezmoitmpl"
-        end
-    end,
+  group = vim.api.nvim_create_augroup("chezmoi_toml_tmpl", { clear = true }),
+  pattern = "toml.chezmoitmpl",
+  callback = function(args)
+    local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(args.buf), ":t")
+    if filename == ".chezmoi.toml.tmpl" then
+      vim.bo[args.buf].filetype = "chezmoi_toml.toml.chezmoitmpl"
+    end
+  end,
 })
 
 --------------------------------------------------------------------------------
 -- Snacks
 --------------------------------------------------------------------------------
 local snacks_sources = {
-    "files",
-    "explorer",
-    "grep",
-    "grep_word",
-    "grep_buffers",
-    "lsp_references",
-    "lsp_definitions",
-    "lsp_declarations",
-    "lsp_implementations",
-    "lsp_symbols",
-    "lsp_workspace_symbols",
+  "files",
+  "explorer",
+  "grep",
+  "grep_word",
+  "grep_buffers",
+  "lsp_references",
+  "lsp_definitions",
+  "lsp_declarations",
+  "lsp_implementations",
+  "lsp_symbols",
+  "lsp_workspace_symbols",
 }
 
 for _, source_name in ipairs(snacks_sources) do
-    local source = Snacks.config.picker.sources[source_name]
-    if source ~= nil then
-        ---@diagnostic disable-next-line: inject-field
-        source.follow = true
-        ---@diagnostic disable-next-line: inject-field
-        source.hidden = true
-    end
+  local source = Snacks.config.picker.sources[source_name]
+  if source ~= nil then
+    ---@diagnostic disable-next-line: inject-field
+    source.follow = true
+    ---@diagnostic disable-next-line: inject-field
+    source.hidden = true
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -111,73 +111,75 @@ vim.api.nvim_set_hl(0, "LspReferenceRead", {})
 
 local gotmpl_filetypes = { "go", "gomod", "gowork", "gotmpl" }
 local chezmoi_filetypes = {
-    "bash",
-    "sh",
-    "fish",
-    "toml",
-    "conf",
-    "ini",
-    "gitconfig",
-    "yaml",
-    "json",
-    -- "nanorc",
+  "bash",
+  "sh",
+  "fish",
+  "toml",
+  "conf",
+  "ini",
+  "gitconfig",
+  "yaml",
+  "json",
+  "jsonc",
+  "zsh",
+  -- "nanorc",
 }
 local ft_to_parser = {
-    sh = "bash",
+  sh = "bash",
 }
 local chezmoi_filetypes_postfixed = {}
 for i = 1, #chezmoi_filetypes do
-    local filetype = chezmoi_filetypes[i]
-    local post_fixed = filetype .. ".chezmoitmpl"
-    table.insert(chezmoi_filetypes_postfixed, post_fixed)
-    table.insert(gotmpl_filetypes, post_fixed)
-    vim.treesitter.language.register("gotmpl", post_fixed)
-    if ft_to_parser[filetype] == nil then
-        ft_to_parser[filetype] = filetype
-    end
+  local filetype = chezmoi_filetypes[i]
+  local post_fixed = filetype .. ".chezmoitmpl"
+  table.insert(chezmoi_filetypes_postfixed, post_fixed)
+  table.insert(gotmpl_filetypes, post_fixed)
+  vim.treesitter.language.register("gotmpl", post_fixed)
+  if ft_to_parser[filetype] == nil then
+    ft_to_parser[filetype] = filetype
+  end
 end
 
 local function set_gotmpl_injections(lang)
-    vim.treesitter.query.set(
-        "gotmpl",
-        "injections",
-        string.format('((text) @injection.content (#set! injection.combined) (#set! injection.language "%s"))', lang)
-    )
+  vim.treesitter.query.set(
+    "gotmpl",
+    "injections",
+    string.format('((text) @injection.content (#set! injection.combined) (#set! injection.language "%s"))', lang)
+  )
 end
 
 local orig_ts_start = vim.treesitter.start
 vim.treesitter.start = function(buf, lang, ...)
-    buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
-    if vim.b[buf].chezmoi_ts_lang then
-        lang = vim.b[buf].chezmoi_ts_lang
-    end
-    return orig_ts_start(buf, lang, ...)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  if vim.b[buf].chezmoi_ts_lang then
+    lang = vim.b[buf].chezmoi_ts_lang
+  end
+  return orig_ts_start(buf, lang, ...)
 end
 
 vim.api.nvim_create_autocmd("BufReadPost", {
-    pattern = { "*.tmpl" },
-    callback = function(ev)
-        -- Mark this buffer early, before filetype is even set
-        vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
-    end,
+  pattern = { "*.tmpl" },
+  callback = function(ev)
+    -- Mark this buffer early, before filetype is even set
+    vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
+  end,
 })
 
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "*.chezmoitmpl",
-    callback = function(ev)
-        local ft = vim.bo[ev.buf].filetype
-        local base = ft:match("^(.+)%.chezmoitmpl$")
-        local lang = ft_to_parser[base] or "bash"
-        vim.b[ev.buf].chezmoi_base_parser = lang
-        set_gotmpl_injections(lang)
-    end,
+  pattern = "*.chezmoitmpl",
+  callback = function(ev)
+    local ft = vim.bo[ev.buf].filetype
+    local base = ft:match("^(.+)%.chezmoitmpl$")
+    local lang = ft_to_parser[base] or "bash"
+    vim.b[ev.buf].chezmoi_base_parser = lang
+    set_gotmpl_injections(lang)
+  end,
 })
 
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
-    pattern = "*.tmpl",
-    callback = function(ev)
-        vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
-    end,
+  pattern = "*.tmpl",
+  callback = function(ev)
+    vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
+  end,
 })
 
 --------------------------------------------------------------------------------
@@ -185,12 +187,12 @@ vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
 --------------------------------------------------------------------------------
 
 vim.lsp.config("gopls", {
-    filetypes = gotmpl_filetypes,
-    settings = {
-        gopls = {
-            templateExtensions = { "tmpl" },
-        },
+  filetypes = gotmpl_filetypes,
+  settings = {
+    gopls = {
+      templateExtensions = { "tmpl" },
     },
+  },
 })
 
 -- local ignored_vtsls_codes = { [80001] = true }
