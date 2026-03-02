@@ -1,0 +1,31 @@
+use_nerdfont = true
+cover_max_scale = 2
+flip_status_indicators = true
+
+[keybindings]
+"Shift+q" = "quit"
+"q" = "noop"
+"y" = "share selected"
+"Shift+y" = "share current"
+"p" = "playpause"
+"Shift+p" = "move playing"
+"d" = "noop"
+"Shift+d" = "delete"
+
+[theme]
+background = "#1e1e2e"
+primary = "#cdd6f4"
+secondary = "#94e2d5"
+title = "#74c7ec"
+playing = "#a6e3a1"
+playing_bg = "#1e1e2e"
+highlight = "#cdd6f4"
+highlight_bg = "#49728d"
+playing_selected = "#a6e3a1"
+error = "#1e1e2e"
+error_bg = "#f38ba8"
+statusbar = "#74c7ec"
+statusbar_bg = "#313244"
+statusbar_progress = "#74c7ec"
+cmdline = "#74c7ec"
+cmdline_bg = "#181825"
