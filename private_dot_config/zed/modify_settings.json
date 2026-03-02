@@ -1,0 +1,514 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* $current := .chezmoi.stdin | mustFromJson */ -}}
+{{- /* $source := include (joinPath .chezmoi.sourceDir "settings.json.base") | mustFromJson */ -}}
+{{- /* $merged := $source */ -}}
+{{- /* if hasKey $current "wsl_connections" */ -}}
+{{- /*   $merged = merge (dict "wsl_connections" $current.wsl_connections) $source */ -}}
+{{- /* end */ -}}
+{{- /* $merged | toPrettyJson */ -}}
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "diagnostics": {
+    "inline": {
+      "enabled": true
+    }
+  },
+  "tabs": {
+    "show_diagnostics": "off"
+  },
+  "language_models": {
+    {{- if or .has.ollama .has.ollama_exe }}
+    "ollama": {
+      "api_url": "http://localhost:11434"
+    }
+    {{- end }}
+  },
+  "edit_predictions": {
+    "disabled_globs": ["*.aider.conf.yml"]
+  },
+  "inlay_hints": {
+    "show_other_hints": true,
+    "show_parameter_hints": true,
+    "show_type_hints": true,
+    "show_value_hints": true,
+    "show_background": false,
+    "enabled": true
+  },
+  "ssh_connections": [],
+  "base_keymap": "VSCode",
+  "agent_buffer_font_size": 16.0,
+  "context_servers": {
+    "mcp-server-sequential-thinking": {
+      "enabled": true,
+      "settings": {}
+    },
+    {{ if index .system.is_personal -}}
+    "mcp-server-linear": {
+        "enabled": true,
+        "settings": {
+            "linear_api_key": {{ .secrets.api_keys.linear.personal | quote }}
+        }
+    },
+    {{- end }}
+    {{ if .system.is_personal -}}
+    "mcp-server-context7": {
+        "enabled": true,
+        "settings": {
+            "context7_api_key": {{ .secrets.api_keys.context7.personal | quote }}
+        }
+    },
+    {{- end }}
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+    }
+  },
+  "disable_ai": true,
+  "agent": {
+    "button": true,
+    "profiles": {
+      "write": {
+        "name": "Write",
+        "tools": {},
+        "enable_all_context_servers": false,
+        "context_servers": {}
+      },
+      "feature": {
+        "name": "Feature",
+        "tools": {
+          "find_path": true,
+          "thinking": true,
+          "terminal": true,
+          "read_file": true,
+          "project_notifications": true,
+          "now": true,
+          "open": true,
+          "move_path": true,
+          "list_directory": true,
+          "grep": true,
+          "fetch": true,
+          "edit_file": true,
+          "diagnostics": true,
+          "delete_path": true,
+          "create_directory": true,
+          "copy_path": true
+        },
+        "enable_all_context_servers": false,
+        "context_servers": {
+          "mcp-server-context7": {
+            "tools": {
+              "get-library-docs": true,
+              "resolve-library-id": true
+            }
+          },
+          "mcp-server-sequential-thinking": {
+            "tools": {
+              "sequentialthinking": true
+            }
+          },
+          "mcp-server-linear": {
+            "tools": {
+              "linear_create_issue": false,
+              "linear_bulk_update_issues": false,
+              "linear_auth_callback": false,
+              "linear_auth": false
+            }
+          }
+        }
+      }
+    },
+    "default_profile": "ask",
+    "default_model": {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite-preview"
+    },
+    "model_parameters": [],
+    "single_file_review": false,
+    "enabled": false
+    // "version": "2"
+  },
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
+    }
+  },
+  "features": {
+    "edit_prediction_provider": "zed"
+  },
+  "format_on_save": "on",
+  "telemetry": {
+    "metrics": false,
+    "diagnostics": false
+  },
+  "use_smartcase_search": true,
+  "vim_mode": true,
+  "ui_font_family": "Atkinson Hyperlegible Next",
+  "ui_font_fallbacks": [
+    "Atkinson Hyperlegible Next",
+    "Noto Sans KR",
+    "Noto Sans SC",
+    "Noto Sans JP",
+    "Noto Sans HK",
+    "Noto Sans TC",
+    "NanumGothic",
+    "Twemoji Mozilla",
+    "Symbols Nerd Font Mono",
+    "Segoe UI",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    ".ZedSans",
+    ".SystemUIFont"
+  ],
+  "ui_font_features": {
+    "calt": true, // Disable ligatures
+    "clig": true,
+    "hlig": true,
+    "liga": true,
+    "rlig": true
+  },
+  "ui_font_size": 18,
+  "buffer_font_size": 16,
+  "buffer_font_family": "Sarasa Fixed K",
+  "buffer_font_features": {
+    "calt": false, // Disable ligatures
+    "clig": false,
+    "hlig": false,
+    "liga": false,
+    "rlig": false
+  },
+  "buffer_font_fallbacks": [
+    "Sarasa Fixed K",
+    "NanumGothicCoding",
+    "Symbols Nerd Font Mono",
+    "Symbols Nerd Font",
+    "MesloLGM Nerd Font Propo",
+    "Atkinson Hyperlegible Mono",
+    "Noto Sans Mono CJK KR",
+    "Noto Sans Mono CJK SC",
+    "Noto Sans Mono CJK HK",
+    "Noto Sans Mono CJK JP",
+    "Noto Sans Mono CJK TC",
+    "Font Awesome 6 Pro",
+    "Twemoji Mozilla"
+  ],
+  "wrap_guides": [80, 100, 120],
+  "relative_line_numbers": "enabled",
+  "languages": {
+    "LaTeX": {
+      "tab_size": 4,
+      "soft_wrap": "bounded",
+      "preferred_line_length": 80,
+      "format_on_save": "on",
+      "show_edit_predictions": false
+      // "language_servers": ["codebook", "..."]
+    },
+    "Python": {
+      "show_edit_predictions": false,
+      "language_servers": ["pyrefly", "ruff"]
+    }
+  },
+  "lsp": {
+    // "texpresso-lsp": {
+    //   "initialization_options": {
+    //     "root_tex": "main.tex", // relative to workspace root, defaults to main.tex
+    //     "texpresso_path": "/Users/admin/Git/github/texpresso/build/texpresso" // omissable if TeXpresso is in PATH
+    //   }
+    // },
+    "typescript-language-server": {
+      "initialization_options": {
+        "preferences": {
+          "includeInlayParameterNameHints": "all",
+          "includeInlayParameterNameHintsWhenArgumentMatchesName": true,
+          "includeInlayFunctionParameterTypeHints": true,
+          "includeInlayVariableTypeHints": true,
+          "includeInlayVariableTypeHintsWhenTypeMatchesName": true,
+          "includeInlayPropertyDeclarationTypeHints": true,
+          "includeInlayFunctionLikeReturnTypeHints": true,
+          "includeInlayEnumMemberValueHints": true
+        }
+      }
+    },
+    "vtsls": {
+      "settings": {
+        // For JavaScript:
+        "javascript": {
+          "inlayHints": {
+            "parameterNames": {
+              "enabled": "all",
+              "suppressWhenArgumentMatchesName": false
+            },
+            "parameterTypes": {
+              "enabled": true
+            },
+            "variableTypes": {
+              "enabled": true,
+              "suppressWhenTypeMatchesName": true
+            },
+            "propertyDeclarationTypes": {
+              "enabled": true
+            },
+            "functionLikeReturnTypes": {
+              "enabled": true
+            },
+            "enumMemberValues": {
+              "enabled": true
+            }
+          }
+        },
+        // For TypeScript:
+        "typescript": {
+          "inlayHints": {
+            "parameterNames": {
+              "enabled": "all",
+              "suppressWhenArgumentMatchesName": false
+            },
+            "parameterTypes": {
+              "enabled": true
+            },
+            "variableTypes": {
+              "enabled": true,
+              "suppressWhenTypeMatchesName": true
+            },
+            "propertyDeclarationTypes": {
+              "enabled": true
+            },
+            "functionLikeReturnTypes": {
+              "enabled": true
+            },
+            "enumMemberValues": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    },
+    "texlab": {
+      "settings": {
+        "texlab": {
+          "binary": {
+            "env": {
+              "TEXINPUTS": ".:",
+              "BIBINPUTS": ".:"
+            }
+          },
+        {{- if not .system.is_macos }}
+          "forwardSearch": {
+            "executable": "zathura",
+            "args": [
+              "--synctex-forward",
+              "%l:1:%f",
+              "-x",
+              "zed %%{input}:%%{line}",
+              "%p"
+            ]
+          },
+        {{- else -}}
+          // From Thesis project:
+          "forwardSearch": {
+            "executable": "/Applications/Skim.app/Contents/SharedSupport/displayline",
+            "args": [
+              "-g",
+              "-r",
+              "%l",
+              "%p",
+              "%f"
+            ]
+          },
+          // Previous default:
+          // "forwardSearch": {
+          //   "executable": "/Applications/Skim.app/Contents/SharedSupport/displayline",
+          //   "args": [
+          //     "-g",
+          //     "-r",
+          //     // "-z",
+          //     "%l",
+          //     "%p",
+          //     "%f"
+          //     // "--synctex-forward",
+          //     // "%l:1:%f",
+          //     // "-x",
+          //     // "zed %%{input}:%%{line}",
+          //     // "%p"
+          //   ]
+          // },
+          // "forwardSearch": {
+          //   "args": ["-g", "-r", "%l", "%p", "%f"]
+          // },
+          // "initialization_options": {
+          //   "extra_tex_inputs": [
+          //     // "/Users/admin/Git/ISP_Lab_Unil/papers/UbiComp25"
+          //     "/Users/admin/Git/ISP_Lab_Unil/papers/Thesis"
+          //   ]
+          // },
+          {{- end }}
+          "build": {
+            "onSave": false,
+            "forwardSearchAfter": false
+          },
+          "latexFormatter": "latexindent",
+          "latexindent": {
+            // instead of explicitly setting CLI args directly, configure behaviour here
+            "modifyLineBreaks": false,
+            "local": "{{ .chezmoi.homeDir }}{{ .system.path_sep }}.latexIndentSettings.yaml",
+            "replacement": null // place for flags like -rr -rv -r
+          }
+        }
+      }
+    },
+    "ltex": {
+      "settings": {
+        "ltex": {
+          "latex": {
+            "commands": {
+              "\\xspace": "dummy"
+            }
+          },
+          "language": "en-US",
+          "additionalRules": {
+            "motherTongue": "en-US"
+          }
+        }
+      }
+    }
+  },
+  "terminal": {
+    "blinking": "terminal_controlled",
+    "shell": {
+    {{- if .has.fish }}
+      "program": "fish"
+    {{- else -}}
+      "program": {{ .system.shell | quote }}
+    {{- end }}
+    },
+    "detect_venv": {
+      "on": {
+        {{- if .has.fish }}
+        "activate_script": "fish"
+        {{- else -}}
+        "activate_script": {{ .system.shell | quote }}
+        {{- end }}
+      }
+    }
+  },
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "ABC"
+  },
+  "icon_theme": {
+    "mode": "dark",
+    "light": "Zed (Default)",
+    "dark": "Catppuccin Mocha"
+  },
+  "experimental.theme_overrides": {
+    "editor.background": "",
+    "syntax": {
+      "attribute": {},
+      "boolean": {},
+      "comment": {
+        "color": "#7f7f7f",
+        "font_style": "normal"
+      },
+      "comment.doc": {
+        "color": "#11cf45",
+        "font_style": "normal"
+      },
+      "color.value": {
+        "color": "#e5e5e5"
+      },
+      "constant": {
+        "color": "#ffa07a",
+        "font_style": null,
+        "font_weight": null
+      },
+      "constructor": {},
+      "embedded": {},
+      "emphasis": {},
+      "emphasis.strong": {},
+      "enum": {},
+      "function": {},
+      "hint": {},
+      "keyword": {
+        "color": "#558eff",
+        "font_weight": 800
+      },
+      "label": {},
+      "link_text": {},
+      "link_uri": {},
+      "number": {
+        "color": "#ff9d00"
+      },
+      "operator": {
+        "color": "#e5e5e5"
+      },
+      "predictive": {},
+      "preproc": {},
+      "primary": {},
+      "property": {},
+      "property.name": {},
+      "punctuation": {
+        "color": "#e5e5e5"
+      },
+      // "punctuation.bracket": {
+      //   "color": "#e5e5e5"
+      // },
+      "punctuation.delimiter": {
+        "color": "#e5e5e5"
+      },
+      "punctuation.list_marker": {
+        "color": "#e5e5e5"
+      },
+      "punctuation.special": {
+        "color": "#e5e5e5"
+      },
+      "search.match_background": {
+        "font_weight": 800
+      },
+      "string": {
+        "color": "#11cf45"
+      },
+      "string.doc": {
+        "color": "#11cf45",
+        "font_style": "normal",
+        "font_weight": null
+      },
+      "string.escape": {
+        "color": "#83A6C1"
+      },
+      "string.regex": {},
+      "string.special": {},
+      "string.special.symbol": {},
+      "tag": {},
+      "text.literal": {
+        "color": "#e5e5e5"
+      },
+      "text.accent": {
+        "font_weight": 800
+      },
+      "title": {},
+      "type": {
+        "color": "#91CCFF",
+        "font_weight": 800
+      },
+      "variable": {
+        "color": "#e5e5e5",
+        "font_style": null,
+        "font_weight": null
+      },
+      "variable.special": {},
+      "variable.builtin": {
+        "color": "#ca30ca",
+        "font_style": null,
+        "font_weight": null
+      },
+      "variant": {}
+    }
+  }
+}
