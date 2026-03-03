@@ -1,5 +1,21 @@
 -- vim.cmd("ToggleBlinkRipgrep")
 
+local home = vim.fn.expand("~")
+local chezmoi_source = home .. "/.local/share/chezmoi"
+
+function reload_buffers()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) then
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name ~= "" and not vim.startswith(name, chezmoi_source) and vim.startswith(name, home) then
+        vim.api.nvim_buf_call(buf, function()
+          vim.cmd("edit!")
+        end)
+      end
+    end
+  end
+end
+
 --------------------------------------------------------------------------------
 -- Autocommands
 --------------------------------------------------------------------------------
@@ -22,11 +38,17 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = ".chezmoi.toml.tmpl",
   callback = function()
     local stderr_chunks = {}
+    local env = vim.deepcopy(vim.fn.environ())
+    if vim.g.is_wsl then
+      env.PATH = env.PATH_CLEAN .. ":" .. env.PATH_WINDOWS
+    end
     vim.fn.jobstart("chezmoi init", {
       stderr_buffered = true,
+      env = env,
       on_stderr = function(_, data)
         if data then
           vim.list_extend(stderr_chunks, data)
+          reload_buffers()
         end
       end,
       on_exit = function(_, code)
@@ -46,20 +68,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("chezmoi_group_custom2", { clear = false }),
   callback = function()
-    vim.schedule(function()
-      local home = vim.fn.expand("~")
-      local chezmoi_source = home .. "/.local/share/chezmoi"
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.api.nvim_buf_is_loaded(buf) then
-          local name = vim.api.nvim_buf_get_name(buf)
-          if name ~= "" and not vim.startswith(name, chezmoi_source) and vim.startswith(name, home) then
-            vim.api.nvim_buf_call(buf, function()
-              vim.cmd("edit!")
-            end)
-          end
-        end
-      end
-    end)
+    vim.schedule(reload_buffers)
   end,
 })
 vim.api.nvim_create_autocmd("FileType", {
