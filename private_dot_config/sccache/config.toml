@@ -1,0 +1,104 @@
+# If specified, wait this long for the server to start up.
+# server_startup_timeout_ms = 10000
+#
+# [dist]
+# # where to find the scheduler
+# scheduler_url = "http://1.2.3.4:10600"
+# # a set of prepackaged toolchains
+# toolchains = []
+# # the maximum size of the toolchain cache in bytes
+# toolchain_cache_size = 5368709120
+# cache_dir = "/home/user/.cache/sccache-dist-client"
+#
+# [dist.auth]
+# type = "token"
+# token = "secrettoken"
+
+
+#[cache.azure]
+# does not work as it appears
+
+[cache.disk]
+# dir = "/tmp/.cache/sccache"
+size = 7516192768 # 7 GiBytes
+
+# See the local docs on more explanations about this mode
+[cache.disk.preprocessor_cache_mode]
+# Whether to use the preprocessor cache mode
+use_preprocessor_cache_mode = true
+# Whether to use file times to check for changes
+file_stat_matches = true
+# Whether to also use ctime (file status change) time to check for changes
+use_ctime_for_stat = true
+# Whether to ignore `__TIME__` when caching
+ignore_time_macros = false
+# Whether to skip (meaning not cache, only hash) system headers
+skip_system_headers = false
+# Whether hash the current working directory
+hash_working_directory = true
+
+# [cache.gcs]
+# # optional oauth url
+# oauth_url = "..."
+# # optional deprecated url
+# deprecated_url = "..."
+# rw_mode = "READ_ONLY"
+# # rw_mode = "READ_WRITE"
+# cred_path = "/psst/secret/cred"
+# bucket = "bucket"
+# key_prefix = "prefix"
+#
+# [cache.gha]
+# url = "http://localhost"
+# token = "secret"
+# cache_to = "sccache-latest"
+# cache_from = "sccache-"
+#
+# [cache.memcached]
+# # Deprecated alias for `endpoint`
+# # url = "127.0.0.1:11211"
+# endpoint = "tcp://127.0.0.1:11211"
+# # Username and password for authentication
+# username = "user"
+# password = "passwd"
+# # Entry expiration time in seconds. Default is 86400 (24 hours)
+# expiration = 3600
+# key_prefix = "/custom/prefix/if/need"
+#
+# [cache.redis]
+# # Deprecated, use `endpoint` instead
+# url = "redis://user:passwd@1.2.3.4:6379/?db=1"
+# ## Refer to the `opendal` documentation for more information about Redis endpoint
+# # Single-node endpoint. Mutually exclusive with `cluster_endpoints`
+# endpoint = "redis://127.0.0.1:6379"
+# # Multiple-node list of endpoints (cluster mode). Mutually exclusive with `endpoint`
+# cluster_endpoints = "redis://10.0.0.1:6379,redis://10.0.0.2:6379"
+# username = "user"
+# password = "passwd"
+# # Database number to use. Default is 0
+# db = 1
+# # Entry expiration time in seconds. Default is 0 (never expire)
+# expiration = 3600
+# key_prefix = "/custom/prefix/if/need"
+#
+# [cache.s3]
+# bucket = "name"
+# endpoint = "s3-us-east-1.amazonaws.com"
+# use_ssl = true
+# key_prefix = "s3prefix"
+# server_side_encryption = false
+#
+# [cache.webdav]
+# endpoint = "http://192.168.10.42:80/some/webdav.php"
+# key_prefix = "/custom/webdav/subfolder/if/need"
+# # Basic HTTP authentication credentials.
+# username = "alice"
+# password = "secret12"
+# # Mutually exclusive with username & password. Bearer token value
+# token = "token123"
+#
+# [cache.oss]
+# bucket = "name"
+# endpoint = "oss-us-east-1.aliyuncs.com"
+# key_prefix = "ossprefix"
+# no_credentials = true
