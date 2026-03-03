@@ -1,0 +1,28 @@
+# backtraces_path = "/path/to/neovide_backtraces.log" # see below for the default platform specific location
+fork = false
+frame = "full"
+idle = true
+maximized = false
+mouse-cursor-icon = "arrow"
+# neovim-bin = "/usr/bin/nvim"                        # in reality found dynamically on $PATH if unset
+no-multigrid = false
+srgb = false
+tabs = true
+theme = "auto"
+title-hidden = true
+vsync = false
+{{ if and .system.is_windows .system.default_wsl_distro -}}
+wsl = true
+{{- else -}}
+wsl = false
+{{- end }}
+
+[box-drawing]
+mode = "native"
+
+[font]
+normal = {{ .font.monospace | toToml }}
+bold = {{ .font.monospace | toToml }}
+italic = {{ .font.monospace | toToml }}
+bold_italic = {{ .font.monospace | toToml }}
+size = 14
