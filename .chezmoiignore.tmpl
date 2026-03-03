@@ -108,6 +108,7 @@ localSettings.yaml
 .zprofile
 .zsh*
 .bash*
+.zprofile
 .profile
 {{- else -}}
 .chezmoiscripts/windows/**
@@ -133,6 +134,7 @@ powershell-profile.ps1
 
 {{ if not (eq .system.shell "zsh") -}}
 .zsh*
+.zprofile
 .oh-my-zsh/**
 {{- end }}
 
