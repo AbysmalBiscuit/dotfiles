@@ -1,0 +1,16 @@
+[colors]
+enabled = true
+theme = "catppuccin-mocha"
+
+[themes.catppuccin-mocha]
+plain = "#cdd6f4"
+error = "#f38ba8"
+unit = "#74c7ec"
+quantity = "#89b4fa"
+number = "#fab387"
+user_input = "bold #cdd6f4"
+doc_string = "#45475a"
+pow = "default"
+prop_name = "default"
+date_time = "default"
+# link = "#74c7ec"
