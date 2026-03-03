@@ -348,11 +348,12 @@ fish = {{ if lookPath "fish" }}true{{ else }}false{{ end }}
 highlight = {{ if lookPath "highlight" }}true{{ else }}false{{ end }}
 iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
 jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
+ncspot = {{ if lookPath "ncspot" }}true{{ else }}false{{ end }}
+nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
 ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
 ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
 sccache = {{ if lookPath "sccache" }}true{{ else }}false{{ end }}
 spotify_player = {{ if lookPath "spotify_player" }}true{{ else }}false{{ end }}
-nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
 wl_copy = {{ if lookPath "wl-copy" }}true{{ else }}false{{ end }}
 # Windows
 spotify_player_exe = {{ if lookPath "spotify_player.exe" }}true{{ else }}false{{ end }}
