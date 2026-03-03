@@ -13,6 +13,8 @@
 {{- $secrets_system := dict -}}
 {{- $shell := "" -}}
 {{- $default_wsl_distro := "" -}}
+{{- $copy_command := "" -}}
+{{- $paste_command := "" -}}
 {{- $line_end := "\n" -}}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
@@ -113,10 +115,21 @@
 {{- /* General per os settings */ -}}
 {{- if $is_linux -}}
   {{- $line_end = "\n" -}}
+  {{ if lookPath "wl-copy" }}
+    {{- $copy_command = "wl-copy" -}}
+    {{- $paste_command = "wl-paste" -}}
+  {{- else -}}
+    {{- $copy_command = "xclip -i -selection clipboard" -}}
+    {{- $paste_command = "xclip -o -selection clipboard" -}}
+  {{- end -}}
 {{- else if $is_macos -}}
   {{- $line_end = "\n" -}}
+  {{- $copy_command = "pbcopy" -}}
+  {{- $paste_command = "pbpaste" -}}
 {{- else -}}
   {{- $line_end = "\r\n" -}}
+  {{- $copy_command = "Set-Clipboard" -}}
+  {{- $paste_command = "Get-Clipboard" -}}
   {{- if lookPath "wsl.exe" -}}
     {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
     {{- range $line := splitList "\n" $wslList -}}
@@ -325,6 +338,8 @@ shell = {{ env "SHELL" | base | quote }}
 {{- end }}
 default_wsl_distro = {{ $default_wsl_distro | quote }}
 path_sep = {{ .chezmoi.pathSeparator | quote }}
+copy_command = {{ $copy_command | quote }}
+paste_command = {{ $paste_command | quote }}
 
 [data.has]
 claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
@@ -339,15 +354,14 @@ sccache = {{ if lookPath "sccache" }}true{{ else }}false{{ end }}
 spotify_player = {{ if lookPath "spotify_player" }}true{{ else }}false{{ end }}
 nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
 wl_copy = {{ if lookPath "wl-copy" }}true{{ else }}false{{ end }}
+# Windows
 spotify_player_exe = {{ if lookPath "spotify_player.exe" }}true{{ else }}false{{ end }}
 ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
 pwsh_exe = {{ if lookPath "pwsh.exe" }}true{{ else }}false{{ end }}
 bash_exe = {{ if lookPath "bash.exe" }}true{{ else }}false{{ end }}
 wsl_exe = {{ if lookPath "wsl.exe" }}true{{ else }}false{{ end }}
 
-
 # Secrets
+{{ "" }}
 {{- $data := dict "data" (dict "secrets" $secrets) -}}
 {{- toToml $data | replace "[data]\n" "" -}}
-
-{{ "" }}
