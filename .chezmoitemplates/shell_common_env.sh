@@ -1,5 +1,7 @@
 # Setting up various environment variables
 
+{{ template "shell_profile.sh" .}}
+
 #
 # Miscellaneous variables
 #
