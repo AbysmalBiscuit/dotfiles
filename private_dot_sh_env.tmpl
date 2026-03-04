@@ -1,7 +1,5 @@
 # Setting up various environment variables
 
-{{ template "shell_profile.sh" .}}
-
 #
 # Miscellaneous variables
 #
@@ -317,7 +315,7 @@ PATH_WINDOWS="${PATH_WINDOWS:1}"
 export PATH_CLEAN
 export PATH_WINDOWS
 
-PATH="$PATH_CLEAN"
+# PATH="$PATH_CLEAN"
 export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
 # export PATH_FULL="$PATH_CLEAN:$PATH_WINDOWS"
 
@@ -373,4 +371,6 @@ export VISUAL
 {{ if (and (.system.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
 # API keys
 export AVANTE_GEMINI_API_KEY={{ .secrets.api_keys.avante.personal.gemini | quote }}
-{{- end -}}
+{{- end }}
+
+{{ template "sh/env_compiler.sh" . }}

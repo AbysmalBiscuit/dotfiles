@@ -2,5 +2,6 @@
 # ~/.bash_profile
 #
 
-[[ -f "$HOME/.profile" ]] && source "$HOME/.profile"
+{{ template "sh/profile.sh" . }}
+
 [[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"

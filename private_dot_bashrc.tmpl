@@ -2,269 +2,31 @@
 # ~/.bashrc
 #
 
-# echo $BASH_SUBSHELL
-# ps -p $PPID -o comm=
-# echo $SHLVL
-[[ -f "$HOME/debug_shell_startup" ]] && debug_shell_startup=true || debug_shell_startup=false
+{{ template "sh/debug_startup_start.sh" }}
 
-if [[ "$debug_shell_startup" = "true" ]]; then
-    start=$(date +%s.%N)
-fi
-# FORCEBASH=1
-# This is a general configuration file with specialized files for aliases,
-# environment, make
+{{ template "sh/rc.sh" }}
 
-{{ template "shell_utility_functions.sh" }}
+{{ template "sh/utility_functions.sh" }}
 
-{{- /* Only cache bash env on personal and non-ephemeral systems */ -}}
-{{ if .cache.build.bash }}
-
-bash_cache_dir="$HOME/.cache/bash"
-if ! [[ -d "$bash_cache_dir" ]]; then
-    mkdir -p "$bash_cache_dir"
-    chmod 700 "$bash_cache_dir"
-fi
-
-interactive_cache="$HOME/.cache/bash/cache_interactive.bash"
-interactive_cache_extensions="$HOME/.cache/bash/cache_interactive_extensions.bash"
-env_cache="$HOME/.cache/bash/cache_env.bash"
-
-# If not running interactively, don't do anything
-if [[ $- != *i* ]]; then
-    if [[ ! -f "$env_cache" ]]; then
-        build_bash_cache
-    fi
-    source "$env_cache"
-    {{- if .system.is_wsl }}
-    export PATH="$PATH_CLEAN:$PATH_WINDOWS"
-    {{- end }}
-    return 0
-fi
-
-[[ -f "$HOME/force_bash" || -f "$HOME/.force_bash" ]] && FORCEBASH=1
-[[ -f "$HOME/.bash_force_cache" || -f "$HOME/bash_force_cache" ]] && bash_force_cache=true || bash_force_cache=false
-[[ -f "$HOME/bash_force_cache_once" ]] && bash_force_cache_once=true || bash_force_cache_once=false
-
-last_cache=$(cat "$bash_cache_dir/last_cache" 2>/dev/null)
-
-function build_bash_cache {
-    # bash "$HOME/bash_build_env_cache.bash"
-    # if [[ -s "$HOME/.cache/bash/bash_cache_env.bash" ]] && [[ "$load" = "1" ]]; then
-    if [[ "$SHLVL" -ge 2 ]]; then
-        if [[ $- != *i* ]]; then
-            if [[ ! -f "$env_cache" ]]; then
-                echo "Not running in a fresh shell, but environment Bash cache is missing."
-                echo "Cache will be built, but may be dirty. Rebuild it via bash_force_cache"
-            else
-                source "$env_cache"
-                return 0
-            fi
-        elif [[ ! -f "$interactive_cache" ]]; then
-            echo "Not running in a fresh shell, but Bash cache is missing."
-            echo "Cache will be built, but may be dirty. Rebuild it via bash_force_cache"
-        else
-            source "$interactive_cache"
-            return 0
-        fi
-    fi
-    echo "Building BASH cache"
-    echo "#!/bin/bash" >"$env_cache"
-    {{- end }}
-
-    # add additional environment variables
-    [[ -s "$HOME/.profile" ]] && source "$HOME/.profile"
-    [[ -s "$HOME/.bash_env" ]] && source "$HOME/.bash_env"
-
-    # add default make/build environment variables to optimise copmilation
-    [[ -s "$HOME/.compiler_env" ]] && source "$HOME/.compiler_env"
-
-    {{- if .cache.build.bash }}
-
-    # Store the more basic env cache
-    echo "shopt -s extglob" >>"$env_cache"
-
-    declare -p | grep -vE '^declare -[^x]' >>"$env_cache"
-    declare -p | grep -E '^declare -..? (__git_|__zoxide_)' >>"$env_cache"
-    {{ if .system.is_wsl -}}
-    echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
-    {{- else -}}
-    echo "export PATH=\"$PATH:$PATH_WINDOWS\"" >>"$env_cache"
-    {{- end }}
-    {{- end }}
-
-    # If not running interactively, stop here
-    [[ $- != *i* ]] && return
-
-    {{- if .cache.build.bash }}
-
-    # Build interactive session cache
-    echo "#!/bin/bash" >"$interactive_cache"
-    echo "#!/bin/bash" >"$interactive_cache_extensions"
-    {{- end }}
-
-    # add alias definitions
-    [[ -f "$HOME/.bash_aliases" ]] && source "$HOME/.bash_aliases"
-
-    # Source prompt configuration if available
-    [[ -f "$HOME/.bash_prompt" ]] && source "$HOME/.bash_prompt"
-
-    # don't put duplicate lines or lines starting with space in the history.
-    # See bash(1) for more options
-    HISTCONTROL=ignoreboth
-
-    # append to the history file, don't overwrite it
-    shopt -s histappend
-
-    # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-    HISTSIZE=1000
-    HISTFILESIZE=2000
-
-    # check the window size after each command and, if necessary,
-    # update the values of LINES and COLUMNS.
-    shopt -s checkwinsize
-
-    # enable auto "cd" when entering just a path
-    shopt -s autocd
-
-    # check there are no running jobs before exiting
-    shopt -s checkjobs
-
-    # enable color support of ls and also add handy aliases
-    if [ -x /usr/bin/dircolors ]; then
-        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    fi
-
-    # enable programmable completion features (you don't need to enable
-    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-    # sources /etc/bash.bashrc).
-    if ! shopt -oq posix; then
-        if [ -f /usr/share/bash-completion/bash_completion ]; then
-            source /usr/share/bash-completion/bash_completion
-        elif [ -f /etc/bash_completion ]; then
-            source /etc/bash_completion
-        fi
-    fi
-
-    # Source configs for various programs
-    # has_command starship && eval "$(starship init bash)"
-    # has_command zoxide && eval "$(zoxide init bash)"
-
-    # declare -p >"$cache"  # variables
-    # variables
-
-    {{- if .system.is_wsl }}
-
-    function __initialize_wsl_ssh_agent {
-        ## SSH Sock
-        if has_command wsl2-ssh-agent; then
-            export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
-            if ! pidof wsl2-ssh-agent >/dev/null; then
-                wsl2-ssh-agent
-            fi
-        elif has_command "$HOME/.ssh/wsl2-ssh-agent"; then
-            export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
-            if ! pidof wsl2-ssh-agent >/dev/null; then
-                "$HOME/.ssh/wsl2-ssh-agent"
-            fi
-        fi
-
-        if [[ $(cat /proc/sys/fs/inotify/max_user_watches) -lt 524288 ]]; then
-            #     sudo sysctl -p
-            sudo sysctl fs.inotify.max_user_watches=524288
-            sudo sysctl -p
-        fi
-
-        # Create socket file for xserver apps
-        if [ ! -e /tmp/.X11-unix ]; then
-            ln -s /mnt/wslg/.X11-unix /tmp/.X11-unix
-        fi
-    }
-    __initialize_wsl_ssh_agent
-    {{- end }}
-    {{- if .cache.build.bash }}
-
-    # Unset helper functions
-    unset -f build_bash_cache
-    # unset -f __initialize_wsl_ssh_agent
-
-    # declare -p | grep -vE '^declare -[^x] |^declare -[^ ]*r|^declare -[-ixaA] (BASH|bash_cache_dir=|cache=|FORCEBASH|S?RANDOM|SECONDS|gem_bin_dir=)' >"$cache"
-    {
-        echo "shopt -s extglob"
-        declare -p | grep -vE '^declare -[^x]'
-        # extra variables
-        # declare -p | grep -E '^declare -..? (__git_|__zoxide_)'
-        declare -f # functions
-        alias -p   # aliases
-        shopt -p   # shell options
-    } >>"$interactive_cache"
-
-    if has_command starship; then
-        starship init bash --print-full-init >>"$interactive_cache_extensions"
-        echo "" >>"$interactive_cache_extensions"
-        export STARSHIP_LOG=error
-    fi
-
-    if has_command sk; then
-        sk --shell bash --shell-bindings >>"$interactive_cache_extensions"
-    elif has_command fzf; then
-        fzf --bash >>"$interactive_cache_extensions"
-    fi
-
-    has_command zoxide && zoxide init bash >>"$interactive_cache_extensions"
-
-    date +%s >"$bash_cache_dir/last_cache"
-    chmod 600 "$bash_cache_dir/last_cache"
-}
-{{- else }}
-if has_command starship; then
-    eval "$(starship init bash --print-full-init)"
-    export STARSHIP_LOG=error
-fi
-
-if has_command sk; then
-    eval "$(sk --shell bash --shell-bindings)"
-elif has_command fzf; then
-    eval "$(fzf --bash)"
-fi
-
-has_command zoxide && eval "$(zoxide init bash)"
-{{- end }}
-
-{{ if .cache.build.bash -}}
-if [[ "${bash_force_cache}" = "true" ]] || [[ "${bash_force_cache_once}" = "true" ]] || [[ -z "${last_cache}" ]] || (($(date +%s) - last_cache >= 86400)); then
-    build_bash_cache
-    if [[ "$bash_force_cache_once" = "true" ]] && [[ -f "$HOME/bash_force_cache_once" ]]; then
-        rm "$HOME/bash_force_cache_once"
-    fi
-else
-    [[ -s "$interactive_cache" ]] && source "$interactive_cache"
-    {{- if .system.is_wsl }}
-    __initialize_wsl_ssh_agent
-fi
-
-unset -f __initialize_wsl_ssh_agent
+{{/* Only cache env on personal and non-ephemeral systems */ -}}
+{{ if .cache.build.shell }}
+{{ template "shell_env_cache_build.sh" . }}
 {{- else -}}
-fi
-{{- end }}
+# add additional environment variables
+[[ -s "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
 
+# If not running interactively, stop here
+[[ $- != *i* ]] && return
+
+{{ template "sh/env_wsl.sh" . }}
 {{ end -}}
 
 # enable gpg integration
 export GPG_TTY=$(tty)
 
-{{ if .cache.build.bash -}}
-# If not running interactively, don't do anything
-[[ $- != *i* ]] && return
-
-{{ end -}}
-
 # Starting fish shell, and make sure to exit after
-if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCEBASH" != "1" ]]; then
-    if [[ "$debug_shell_startup" = "true" ]]; then
-        end=$(date +%s.%N)
-        runtime_ms=$(echo "scale=6; ($end - $start) * 1000" | bc)
-        echo "BASH execution took $runtime_ms ms"
-    fi
+if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCESH" != "1" && (! -v ZED_TERM || "$ZED_TERM" != "true") ]]; then
+    {{ template "sh/debug_startup_end.sh" }}
 
     exec fish
 fi
@@ -275,19 +37,60 @@ fi
 #     exec fish $LOGIN_OPTION
 # fi
 
-if [[ "$debug_shell_startup" = "true" ]]; then
-    end=$(date +%s.%N)
-    runtime_ms=$(echo "scale=6; ($end - $start) * 1000" | bc)
-    echo "BASH execution took $runtime_ms ms"
+{{ if .cache.build.shell -}}
+source "$interactive_cache"
+{{- else -}}
+{{ template "bash/rc.bash" }}
+
+# Configuration for the terminal prompt
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+xterm-color) color_prompt=yes ;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+force_color_prompt=yes
+
+if [[ -n "$force_color_prompt" ]]; then
+    if [[ -x /usr/bin/tput ]] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+    else
+        color_prompt=
+    fi
 fi
 
-source "$interactive_cache_extensions"
+if [[ "$color_prompt" = yes ]]; then
+    ESC=$(printf "\e")
+    if [[ "$EUID" -ne 0 ]]; then
+        # Prompt for regular users is colored green
+        PS1='[\[\033[01;32m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\]]\$ '
+        #PS1='[\e]4;1;rgb:11/CF/45\e\\\e[31m\e[1m\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\]]\$ '
+    else
+        # Prompt for root is colored red
+        PS1='[\[\033[01;31m\]\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[00m\]]\$ '
+    fi
+else
+    PS1='[\u@\h \W]\$ '
+fi
+unset color_prompt force_color_prompt
 
-{{- if .system.is_wsl }}
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm* | rxvt*)
+    PS1="\[\e]0;\u@\h: \W\a\]$PS1"
+    ;;
+*) ;;
+esac
 
-# Restore windows paths to PATH if running in WSL
-export PATH="$PATH_CLEAN:$PATH_WINDOWS"
+{{ template "sh/extensions.sh" . }}
 {{- end }}
+
+{{ template "sh/debug_startup_end.sh" }}
 
 # Avoid error message after shell start
 return 0

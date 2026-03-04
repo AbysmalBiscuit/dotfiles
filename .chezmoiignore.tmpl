@@ -35,6 +35,7 @@ run_once_decrypt-private-key.sh.tmpl
 
 # always exclude
 .ideavimrc
+.profile
 localSettings.yaml
 !.oh-my-zsh/plugins
 {{ range .zshPlugins }}
@@ -87,7 +88,7 @@ localSettings.yaml
 {{ end }}
 
 {{ if .system.is_windows }}
-.bash_aliases
+.bash*
 .config/ghostty
 .config/git/cookies
 .config/gitui
@@ -102,14 +103,13 @@ localSettings.yaml
 .oh-my-zsh
 .oh-my-zsh/**
 .p10k.zsh
+.profile
+.sh_*
 .ssh/id_rsa
 .ssh/id_rsa.pub
 .tmux.conf
 .zprofile
 .zsh*
-.bash*
-.zprofile
-.profile
 {{- else -}}
 .chezmoiscripts/windows/**
 AppData/**
@@ -133,10 +133,11 @@ powershell-profile.ps1
 {{ end }}
 
 {{ if not (eq .system.shell "zsh") -}}
-.zsh*
-.zprofile
-.oh-my-zsh/**
+#.zsh*
+#.zprofile
+#.oh-my-zsh/**
 {{- end }}
+
 
 # specific cross-platform programs
 {{ if not .has.ranger -}}

@@ -1,4 +1,3 @@
-#!/bin/bash
 # some common environment variables to optimise compilation
 # export commands that are commented out are the defaults in /etc/makepkg.conf
 # To see latest default makepkg.conf:

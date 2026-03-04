@@ -9,7 +9,7 @@
 #umask 022
 
 # start=$EPOCHREALTIME
-{{ template "shell_profile.sh" . }}
+{{ template "sh/profile.sh" . }}
 
 # end=$EPOCHREALTIME
 # runtime_ms=$(echo "scale=6; ($end - $start) * 1000" | bc)

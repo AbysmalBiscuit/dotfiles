@@ -1,21 +1,11 @@
-[[ -f "$HOME/force_bash" || -f "$HOME/.force_bash" ]] && FORCEBASH=1
-
-# add additional environment variables
-[[ -s "$HOME/.bash_env" ]] && source "$HOME/.bash_env"
-
-# add default make/build environment variables to optimise copmilation
-[[ -s "$HOME/.compiler_env" ]] && source "$HOME/.compiler_env"
-
-# If not running interactively, stop here
-[[ $- != *i* ]] && return
-
-{{ template "shell_env_wsl.sh" . }}
-
-# enable gpg integration
-export GPG_TTY=$(tty)
-
 # Starting fish shell, and make sure to exit after
 if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCEBASH" != "1" ]]; then
+    if [[ "$debug_shell_startup" = "true" ]]; then
+        end=$(date +%s.%N)
+        runtime_ms=$(echo "scale=6; ($end - $start) * 1000" | bc)
+        echo "BASH execution took $runtime_ms ms"
+    fi
+
     exec fish
 fi
 
@@ -88,10 +78,21 @@ if [[ "$debug_shell_startup" = "true" ]]; then
     echo "BASH execution took $runtime_ms ms"
 fi
 
+{{ if .cache.build.shell -}}
 source "$interactive_cache_extensions"
+{{- end }}
+
+if [[ "$debug_shell_startup" = "true" ]]; then
+    end=$(date +%s.%N)
+    runtime_ms=$(echo "scale=6; ($end - $start) * 1000" | bc)
+    echo "BASH execution took $runtime_ms ms"
+fi
+
+{{- if .system.is_wsl }}
 
 # Restore windows paths to PATH if running in WSL
 export PATH="$PATH_CLEAN:$PATH_WINDOWS"
+{{- end }}
 
 # Avoid error message after shell start
 return 0

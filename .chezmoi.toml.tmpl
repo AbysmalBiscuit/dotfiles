@@ -298,6 +298,7 @@ recipients = {{ $age_recipients }}
 
 [data.cache]
 [data.cache.build]
+shell = {{ and $is_personal (not $is_ephemeral) }}
 bash = {{ and $is_personal (not $is_ephemeral) }}
 fish = {{ and $is_personal (not $is_ephemeral) }}
 zsh = {{ and $is_personal (not $is_ephemeral) }}
