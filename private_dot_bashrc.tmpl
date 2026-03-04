@@ -1,4 +1,5 @@
 #!/bin/bash
+{{- $shell := "bash" }}
 # ~/.bashrc
 #
 
@@ -10,6 +11,7 @@
 
 {{/* Only cache env on personal and non-ephemeral systems */ -}}
 {{ if .cache.build.shell }}
+{{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 {{- else -}}
 # add additional environment variables

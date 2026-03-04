@@ -1,9 +1,11 @@
 #!/bin/zsh
+{{- $shell := "zsh" }}
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Sourcing external packages
 {{ if .cache.build.shell }}
+{{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 {{- else -}}
 {{ template "zsh/rc.zsh" . }}

@@ -1,5 +1,6 @@
 # vim:filetype=sh.chezmoitmpl
 {{- $shell := .system.shell -}}
+{{- /* $shell := "zsh" */ -}}
 {{- /* Only cache env on personal and non-ephemeral systems */ -}}
 {{ "" }}
 sh_cache_dir="$HOME/.cache/{{ $shell }}"
@@ -28,7 +29,12 @@ fi
 
 last_cache=$(cat "$last_cache_file" 2>/dev/null)
 
-if ! ([[ "${sh_force_cache}" = "true" ]] || [[ "${sh_force_cache_once}" = "true" ]] || [[ -z "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400))); then
+if ! (
+    [[ ! -f "$interactive_cache" ]] ||
+        [[ "${sh_force_cache}" = "true" ]] ||
+        [[ "${sh_force_cache_once}" = "true" ]] ||
+        { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); }
+); then
     {{ template "sh/env_wsl.sh" . }}
     source "$interactive_cache"
     return 0
@@ -58,11 +64,11 @@ fi
 echo "Building {{ $shell }} cache"
 echo "#!/bin/{{ $shell }}" >"$env_cache"
 
-{{- if eq .system.shell "bash" }}
+{{- if eq $shell "bash" }}
 [[ -f "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
 {{- end }}
 
-{{- if eq .system.shell "bash" }}
+{{- if eq $shell "bash" }}
 # Store the more basic env cache
 echo "shopt -s extglob" >>"$env_cache"
 {{- end }}
@@ -81,21 +87,23 @@ echo "#!/bin/{{ $shell }}" >"$interactive_cache"
 # add alias definitions
 [[ -f "$HOME/.sh_aliases" ]] && source "$HOME/.sh_aliases"
 
-{{ if eq .system.shell "bash" -}}
+{{ if eq $shell "bash" -}}
 {{ template "bash/rc.bash" . }}
-{{- else if eq .system.shell "zsh" -}}
+{{- else if eq $shell "zsh" -}}
 {{ template "zsh/rc.zsh" . }}
 {{- end }}
 
 # declare -p | grep -vE '^declare -[^x] |^declare -[^ ]*r|^declare -[-ixaA] (BASH|sh_cache_dir=|cache=|FORCEBASH|S?RANDOM|SECONDS|gem_bin_dir=)' >"$cache"
 {
-    {{ if eq .system.shell "bash" -}}
+    {{ if eq $shell "bash" -}}
+    echo "shopt -s extglob"
     declare -p | grep -vE '^declare -[^x]'
     alias -p
     declare -f
     shopt -p
-    {{- else if eq .system.shell "zsh" -}}
-    export -p
+    {{- else if eq $shell "zsh" -}}
+    # export -p
+    declare -p | grep -vE '^(declare -[^x]|typeset -A (commands|functions)|typeset -.+ (EPOCH|epochtime))'
     alias -L
     echo "'builtin' 'unsetopt' 'aliases'"
     declare -f
