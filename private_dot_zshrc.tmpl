@@ -4,7 +4,7 @@
 
 # Sourcing external packages
 {{ if .cache.build.shell }}
-{{ template "shell_env_cache_build.sh" . }}
+[[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 {{- else -}}
 {{ template "zsh/rc.zsh" . }}
 {{- end }}

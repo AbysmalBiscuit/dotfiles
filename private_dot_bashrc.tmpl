@@ -10,7 +10,7 @@
 
 {{/* Only cache env on personal and non-ephemeral systems */ -}}
 {{ if .cache.build.shell }}
-{{ template "shell_env_cache_build.sh" . }}
+[[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 {{- else -}}
 # add additional environment variables
 [[ -s "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
@@ -19,7 +19,7 @@
 [[ $- != *i* ]] && return
 
 {{ template "sh/env_wsl.sh" . }}
-{{ end -}}
+{{- end }}
 
 # enable gpg integration
 export GPG_TTY=$(tty)
@@ -38,9 +38,7 @@ fi
 #     exec fish $LOGIN_OPTION
 # fi
 
-{{ if .cache.build.shell -}}
-source "$interactive_cache"
-{{- else -}}
+{{ if not .cache.build.shell -}}
 {{ template "bash/rc.bash" }}
 
 # Configuration for the terminal prompt
