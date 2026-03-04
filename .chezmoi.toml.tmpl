@@ -343,6 +343,7 @@ copy_command = {{ $copy_command | quote }}
 paste_command = {{ $paste_command | quote }}
 
 [data.has]
+nvim = {{ if eq $editor "nvim" }}true{{ else }}false{{ end }}
 claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
 dbeaver = {{ if lookPath "dbeaver" }}true{{ else }}false{{ end }}
 fish = {{ if lookPath "fish" }}true{{ else }}false{{ end }}
