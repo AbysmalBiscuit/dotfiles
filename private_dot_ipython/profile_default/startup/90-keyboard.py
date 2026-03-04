@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from IPython import InteractiveShell
 
-ip: InteractiveShell | None = get_ipython()
+ip = get_ipython()
 
 
 def unindent(event):
