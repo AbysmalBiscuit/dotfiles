@@ -1,0 +1,45 @@
+"$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
+
+[mgr]
+show_hidden = true
+show_symlink = true
+sort_dir_first = true
+sort_by = "natural"
+sort_translit = true
+linemode = "size"
+
+[preview]
+tab_size = 2
+# image_quality = 75
+image_delay = 50
+image_filter = "triangle"
+# max_width = 2000
+# max_height = 2000
+
+[plugin]
+prepend_preloaders = [
+    # Replace magick, image, video with mediainfo
+    { mime = "{audio,video,image}/*", run = "mediainfo" },
+    { mime = "application/subrip", run = "mediainfo" },
+    # Adobe Illustrator
+    { mime = "application/postscript", run = "mediainfo" },
+]
+prepend_previewers = [
+    { url = "*.tex", run = "code_custom" },
+    # {mime="application"},
+    # Replace magick, image, video with mediainfo
+    # { mime = "{audio,video,image}/*", run = "mediainfo" },
+    { mime = "{video,image}/*", run = "mediainfo" },
+    { mime = "audio/*", run = "exifaudio" },
+    { mime = "application/subrip", run = "mediainfo" },
+    # Adobe Illustrator
+    { mime = "application/postscript", run = "mediainfo" },
+]
+append_previewers = [{ url = "*", run = "hexyl" }]
+
+prepend_fetchers = [
+    { id = "mime", url = "local://*", run = "mime-ext.local", prio = "high" },
+    { id = "mime", url = "remote://*", run = "mime-ext.remote", prio = "high" },
+    { id = "git", url = "*", run = "git" },
+    { id = "git", url = "*/", run = "git" },
+]

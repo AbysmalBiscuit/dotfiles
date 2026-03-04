@@ -1,0 +1,140 @@
+"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+# [[mgr.prepend_keymap]]
+# on = "T"
+# run = "plugin max-preview"
+# desc = "Maximize or restore preview"
+[[mgr.prepend_keymap]]
+on = "T"
+run = "plugin toggle-pane max-preview"
+desc = "Maximize or restore the preview pane"
+
+[[mgr.prepend_keymap]]
+on = "<Home>"
+run = "seek -5"
+desc = 'Seek up 5 units in the preview'
+
+[[mgr.prepend_keymap]]
+on = "<End>"
+run = 'seek 5'
+desc = 'Seek down 5 units in the preview'
+
+[[mgr.prepend_keymap]]
+on = ["g", "+"]
+run = "plugin zoom 1"
+desc = "Zoom in hovered file"
+
+[[mgr.prepend_keymap]]
+on = ["g", "-"]
+run = "plugin zoom -1"
+desc = "Zoom out hovered file"
+
+[[mgr.prepend_keymap]]
+on = ["c", "a", "a"]
+run = "plugin compress"
+desc = "Archive selected files"
+
+[[mgr.prepend_keymap]]
+on = ["c", "a", "p"]
+run = "plugin compress -p"
+desc = "Archive selected files (password)"
+
+[[mgr.prepend_keymap]]
+on = ["c", "a", "h"]
+run = "plugin compress -ph"
+desc = "Archive selected files (password+header)"
+
+[[mgr.prepend_keymap]]
+on = ["c", "a", "l"]
+run = "plugin compress -l"
+desc = "Archive selected files (compression level)"
+
+[[mgr.prepend_keymap]]
+on = ["c", "a", "u"]
+run = "plugin compress -phl"
+desc = "Archive selected files (password+header+level)"
+
+[[mgr.prepend_keymap]]
+on = ["<C-PageUp>"]
+run = "tab_switch --relative -1"
+desc = "Go to previous tab"
+
+[[mgr.prepend_keymap]]
+on = ["<C-PageDown>"]
+run = "tab_switch --relative 1"
+desc = "Go to next tab"
+
+{{ if not .system.is_windows -}}
+[[mgr.prepend_keymap]]
+on = "!"
+for = "unix"
+run = 'shell "$SHELL" --block'
+desc = "Open $SHELL here"
+
+# Yank file content
+[[mgr.prepend_keymap]]
+on  = "Y"
+run = [ '''shell --
+sep=$(printf '#%.0s' $(seq 1 80))
+count=0
+for path in %s; do
+  [ -n "$path" ] && count=$((count+1))
+done
+{
+  for path in %s; do
+    [ -n "$path" ] || continue
+    if [ "$count" -gt 1 ]; then
+      printf '%%s\n' "$sep" "# $path"
+    fi
+    cat "$path"
+    echo
+  done
+} | {{ .system.copy_command }}''', "yank" ]
+{{- else -}}
+# If you also using Yazi on Windows:
+[[mgr.prepend_keymap]]
+on = "!"
+for = "windows"
+run = 'shell "powershell.exe" --block'
+desc = "Open PowerShell here"
+
+# Yank file paths as URI list
+[[mgr.prepend_keymap]]
+on  = "y"
+run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $paths | ForEach-Object { 'file:///' + ($_ -replace '\\','/') } | Set-Clipboard"''', "yank" ]
+
+# Yank file content
+[[mgr.prepend_keymap]]
+on  = "Y"
+run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $sep = '#' * 80; $out = @(); foreach ($p in $paths) { if ($paths.Count -gt 1) { $out += $sep; $out += '# ' + $p }; $out += (Get-Content -Raw $p) }; ($out -join \"`n\") | Set-Clipboard"''', "yank" ]
+{{- end }}
+
+{{ if .system.is_linux -}}
+# Also copy file paths to system clipboard
+[[mgr.prepend_keymap]]
+on  = "y"
+run = [ 'shell -- for path in %s; do echo "file://$path"; done | {{ .system.copy_command }} -t text/uri-list', "yank" ]
+{{- end }}
+
+# [mgr]
+# keymap = [
+#   { on = "u", run = "plugin restore", desc = "Restore last deleted files/folders" },
+#   # or use "d + u" like me
+#   { on = [
+#     "d",
+#     "u",
+#   ], run = "plugin restore", desc = "Restore last deleted files/folders" },
+#
+#   # Select files/folders to restore. Input item index or range separated by comma:
+#   # - Restore a trashed file:
+#   #      What file to restore [0..4]: 4
+#   # - Restore multiple trashed files separated by comma, also support range:
+#   #      What file to restore [0..3]: 0-2, 3
+#
+#   # Remove --overwrite if you don't want to overwrite existed files and this will abort restoring when there is existed file.
+#   { on = [
+#     "d",
+#     "U",
+#   ], run = "shell --block -- clear && trash-restore --overwrite", desc = "Restore deleted file (Interactive)" },
+#   # ... Other keymaps
+# ]
