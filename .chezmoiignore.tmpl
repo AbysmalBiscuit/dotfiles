@@ -110,11 +110,12 @@ localSettings.yaml
 .tmux.conf
 .zprofile
 .zsh*
+**\.sh
 {{- else -}}
 .chezmoiscripts/windows/**
 AppData/**
 Documents
-powershell-profile.ps1
+**\.ps1
 {{ end }}
 
 {{ if not .personal }}
