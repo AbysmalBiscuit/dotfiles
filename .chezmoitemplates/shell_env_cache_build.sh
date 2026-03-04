@@ -121,7 +121,6 @@ if [[ "${sh_force_cache}" = "true" ]] || [[ "${sh_force_cache_once}" = "true" ]]
         rm "$HOME/sh_force_cache_once"
     fi
 else
-    source "$interactive_cache"
     {{ template "sh/env_wsl.sh" . }}
 fi
 

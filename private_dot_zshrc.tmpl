@@ -1,0 +1,30 @@
+#!/bin/zsh
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
+
+# Sourcing external packages
+{{ if .cache.build.shell }}
+{{ template "shell_env_cache_build.sh" . }}
+{{- else -}}
+{{ template "zsh/rc.zsh" . }}
+{{- end }}
+
+# Starting fish shell
+if [[ -x $(command -v fish 2>/dev/null) \
+    && -z "$BASH_EXECUTION_STRING" \
+    && x"$FORCESH" != x"1" \
+    && (! -v ZED_TERM || "$ZED_TERM" != "true") ]]; then
+    source "$env_cache"
+    exec fish
+fi
+
+{{ if .cache.build.shell -}}
+source "$interactive_cache"
+{{- else -}}
+{{ template "sh/extensions.sh" . }}
+{{- end }}
+
+{{ template "sh/debug_startup_end.sh" }}
+
+# Avoid error message after shell start
+return 0

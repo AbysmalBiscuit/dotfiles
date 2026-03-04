@@ -26,6 +26,7 @@ export GPG_TTY=$(tty)
 
 # Starting fish shell, and make sure to exit after
 if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCESH" != "1" && (! -v ZED_TERM || "$ZED_TERM" != "true") ]]; then
+    source "$env_cache"
     {{ template "sh/debug_startup_end.sh" }}
 
     exec fish
