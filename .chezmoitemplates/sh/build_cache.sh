@@ -109,19 +109,23 @@ echo "#!/bin/{{ $shell }}" >"$interactive_cache"
     {{- end }}
 } >>"$interactive_cache"
 
-if has_command starship; then
-    starship init {{ $shell }} --print-full-init >>"$interactive_cache"
-    echo "" >>"$interactive_cache"
-    echo "export STARSHIP_LOG=error" >>"$interactive_cache"
-fi
 
-if has_command sk; then
-    sk --shell {{ $shell }} --shell-bindings >>"$interactive_cache"
-elif has_command fzf; then
-    fzf --{{ $shell }} >>"$interactive_cache"
-fi
-
+{{ if eq $shell "bash" -}}
+{{ if .has.starship -}}
+starship init {{ $shell }} --print-full-init >>"$interactive_cache"
+echo "" >>"$interactive_cache"
+echo "export STARSHIP_LOG=error" >>"$interactive_cache"
+{{- end }}
+{{ if .has.sk -}}
+sk --shell {{ $shell }} --shell-bindings >>"$interactive_cache"
+{{- else if .has.fzf -}}
+fzf --{{ $shell }} >>"$interactive_cache"
+{{- end }}
+{{ if .has.zoxide -}}
 has_command zoxide && zoxide init {{ $shell }} >>"$interactive_cache"
+{{- end }}
+{{- end }}
+
 
 date +%s >"$last_cache_file"
 chmod 600 "$last_cache_file"

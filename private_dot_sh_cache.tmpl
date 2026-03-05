@@ -37,6 +37,9 @@ if ! (
 ); then
     {{ template "sh/env_wsl.sh" . }}
     source "$interactive_cache"
+    {{ if eq $shell "bash" -}}
+    source "$HOME/.bash_extensions"
+    {{- end }}
     return 0
 fi
 
@@ -93,7 +96,6 @@ echo "#!/bin/{{ $shell }}" >"$interactive_cache"
 {{ template "zsh/rc.zsh" . }}
 {{- end }}
 
-# declare -p | grep -vE '^declare -[^x] |^declare -[^ ]*r|^declare -[-ixaA] (BASH|sh_cache_dir=|cache=|FORCEBASH|S?RANDOM|SECONDS|gem_bin_dir=)' >"$cache"
 {
     {{ if eq $shell "bash" -}}
     echo "shopt -s extglob"
@@ -110,20 +112,6 @@ echo "#!/bin/{{ $shell }}" >"$interactive_cache"
     echo "'builtin' 'setopt' 'aliases'"
     {{- end }}
 } >>"$interactive_cache"
-
-if has_command starship; then
-    starship init {{ $shell }} --print-full-init >>"$interactive_cache"
-    echo "" >>"$interactive_cache"
-    echo "export STARSHIP_LOG=error" >>"$interactive_cache"
-fi
-
-if has_command sk; then
-    sk --shell {{ $shell }} --shell-bindings >>"$interactive_cache"
-elif has_command fzf; then
-    fzf --{{ $shell }} >>"$interactive_cache"
-fi
-
-has_command zoxide && zoxide init {{ $shell }} >>"$interactive_cache"
 
 date +%s >"$last_cache_file"
 chmod 600 "$last_cache_file"

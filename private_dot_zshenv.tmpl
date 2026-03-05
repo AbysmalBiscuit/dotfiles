@@ -8,4 +8,4 @@ fi
 
 {{ template "sh/utility_functions.sh" }}
 
-{{ template "sh/common_env.sh" . }}
+[[ -s {{ joinPath .chezmoi.homeDir ".sh_env" }} ]] && {{ joinPath .chezmoi.homeDir ".sh_env" }}

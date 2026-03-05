@@ -136,6 +136,13 @@ Documents
 .zsh*
 .zprofile
 .oh-my-zsh/**
+{{- else -}}
+{{ if not .has.sk -}}
+.oh-my-zsh/completions/_sk
+{{- end }}
+{{ if not .has.fzf -}}
+.oh-my-zsh/completions/_fzf
+{{- end }}
 {{- end }}
 
 
