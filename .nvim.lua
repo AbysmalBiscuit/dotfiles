@@ -42,6 +42,25 @@ vim.api.nvim_create_autocmd("BufWritePost", {
     if vim.g.is_wsl then
       env.PATH = env.PATH_CLEAN .. ":" .. env.PATH_WINDOWS
     end
+
+    local function run_has_cache()
+      vim.fn.jobstart(
+        "chezmoi execute-template < ~/.local/share/chezmoi/.chezmoiscripts/run_before_generate-has-cache.sh.tmpl | sh",
+        {
+          env = env,
+          on_exit = function(_, code)
+            vim.schedule(function()
+              if code == 0 then
+                vim.notify("has cache rebuilt")
+              else
+                vim.notify("has cache rebuild failed", vim.log.levels.ERROR)
+              end
+            end)
+          end,
+        }
+      )
+    end
+
     vim.fn.jobstart("chezmoi init", {
       stderr_buffered = true,
       env = env,
@@ -55,6 +74,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         vim.schedule(function()
           if code == 0 then
             vim.notify("chezmoi init succeeded")
+            run_has_cache()
           else
             vim.notify("chezmoi init failed", vim.log.levels.ERROR)
             local msg = table.concat(stderr_chunks, "\n")
