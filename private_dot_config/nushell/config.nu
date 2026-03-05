@@ -999,9 +999,19 @@ $env.config = {
     ]
 }
 
+# Functions
+def has_command [cmd: string] {
+    (which $cmd | length) > 0
+}
+
+def path_exists [p: string] {
+    $p | path exists
+}
+
 # Source new theme
 #source nu-themes/catppuccin-mocha.nu
 
+let config_dir = $nu.config-path | path dirname
 
 # Define aliases
 alias l = ls
@@ -1012,9 +1022,13 @@ alias ll = ls -l
 const auto_load = $nu.data-dir | path join vendor/autoload
 mkdir ($auto_load)
 
-if (which starship | is-not-empty) {
+if (has_command starship) {
   starship init nu | save -f ($auto_load | path join starship.nu)
 }
-if (which zoxide | is-not-empty) {
+if (has_command zoxide) {
   zoxide init nushell | save -f ($auto_load | path join zoxide.nu)
+}
+
+if (path_exists "$config_dir/completions-jj.nu") {
+    use completions-jj.nu *  # Or `source completions-jj.nu`
 }
