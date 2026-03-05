@@ -1,0 +1,69 @@
+#!/bin/sh
+# Updates neovim from GitHub releases (tar.gz)
+# {{ gitHubLatestRelease "neovim/neovim" | toJson | sha256sum }}
+
+set -e
+
+last_cache_file="{{ joinPath .chezmoi.homeDir ".config" "chezmoi" "nvim_install" }}"
+last_cache=$(cat "$last_cache_file" 2>/dev/null || echo 0)
+now=$(date +%s)
+age=$((now - last_cache))
+if [ "$age" -lt $((86400 * 3)) ]; then
+    exit 0
+fi
+
+BIN_DIR="$HOME/.local/bin"
+ARCH="{{ .arch }}"
+
+case "$(uname -s)" in
+Linux) OS_NAME="linux" ;;
+Darwin) OS_NAME="macos" ;;
+*)
+    echo "Unsupported OS" >&2
+    exit 1
+    ;;
+esac
+
+ASSET="nvim-${OS_NAME}-${ARCH}.tar.gz"
+EXTRACT_DIR="$BIN_DIR/nvim-${OS_NAME}-${ARCH}"
+URL="https://github.com/neovim/neovim/releases/download/nightly/${ASSET}"
+
+mkdir -p "$BIN_DIR"
+
+# Fetch checksum from GitHub API
+CHECKSUM=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/tags/nightly" |
+    jq -r ".assets[] | select(.name == \"${ASSET}\") | .digest" |
+    sed 's/sha256://')
+
+TARBALL="$BIN_DIR/$ASSET"
+echo "Downloading $ASSET..."
+curl -fL -o "$TARBALL" "$URL"
+
+if [ -n "$CHECKSUM" ]; then
+    echo "Verifying checksum..."
+    ACTUAL=$(sha256sum "$TARBALL" | cut -d' ' -f1)
+    if [ "$CHECKSUM" != "$ACTUAL" ]; then
+        echo "Error: checksum mismatch!" >&2
+        echo "  Expected: $CHECKSUM" >&2
+        echo "  Got:      $ACTUAL" >&2
+        rm -f "$TARBALL"
+        exit 1
+    fi
+    echo "Checksums match."
+else
+    echo "Warning: no checksum found, proceeding anyway."
+fi
+
+# Extract
+rm -rf "$EXTRACT_DIR"
+tar -xzf "$TARBALL" -C "$BIN_DIR"
+rm "$TARBALL"
+
+# Link
+rm -f "$BIN_DIR/nvim"
+ln -s "$EXTRACT_DIR/bin/nvim" "$BIN_DIR/nvim"
+chmod -R go-rwx "$EXTRACT_DIR"
+
+date +%s >"$last_cache_file"
+
+echo "Neovim installed: $($BIN_DIR/nvim --version | head -1)"

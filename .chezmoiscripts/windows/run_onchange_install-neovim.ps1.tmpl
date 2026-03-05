@@ -1,0 +1,70 @@
+#!/usr/bin/env pwsh
+# Updates neovim from GitHub releases (tar.gz)
+# {{ gitHubLatestRelease "neovim/neovim" | toJson | sha256sum }}
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$BinDir = "$HOME\.local\bin"
+$Arch = if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq 'Arm64') { 'arm64' } else { 'x86_64' }
+
+$OS = if ($IsWindows) { 'win' } elseif ($IsMacOS) { 'macos' } else { 'linux' }
+
+$Asset = if ($IsWindows) {
+    if ($Arch -eq 'arm64') { 'nvim-win-arm64.zip' } else { 'nvim-win64.zip' }
+} else {
+    "nvim-$OS-$Arch.tar.gz"
+}
+
+$ExtractDir = Join-Path $BinDir "nvim-$OS-$Arch"
+$Url = "https://github.com/neovim/neovim/releases/download/nightly/$Asset"
+
+New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
+
+# Fetch checksum from GitHub API
+$Release = Invoke-RestMethod -Uri 'https://api.github.com/repos/neovim/neovim/releases/tags/nightly'
+$AssetInfo = $Release.assets | Where-Object { $_.name -eq $Asset } | Select-Object -First 1
+$Checksum = if ($AssetInfo) { $AssetInfo.digest -replace '^sha256:', '' } else { $null }
+
+$Tarball = Join-Path $BinDir $Asset
+Write-Host "Downloading $Asset..."
+Invoke-WebRequest -Uri $Url -OutFile $Tarball
+
+if ($Checksum) {
+    Write-Host "Verifying checksum..."
+    $Actual = (Get-FileHash -Algorithm SHA256 $Tarball).Hash.ToLower()
+    if ($Checksum -ne $Actual) {
+        Write-Error "Checksum mismatch!`n  Expected: $Checksum`n  Got:      $Actual"
+        Remove-Item $Tarball -Force
+        exit 1
+    }
+    Write-Host "Checksums match."
+} else {
+    Write-Warning "No checksum found, proceeding anyway."
+}
+
+# Extract
+if (Test-Path $ExtractDir) { Remove-Item $ExtractDir -Recurse -Force }
+
+if ($Asset.EndsWith('.zip')) {
+    Expand-Archive -Path $Tarball -DestinationPath $BinDir -Force
+} else {
+    tar -xzf $Tarball -C $BinDir
+}
+Remove-Item $Tarball
+
+# Link
+$NvimExe = if ($IsWindows) { 'nvim.exe' } else { 'nvim' }
+$NvimBin = if ($IsWindows) {
+    # Windows archives use nvim-win64 or nvim-win-arm64, not nvim-win-x86_64
+    $WinDir = if ($Arch -eq 'arm64') { 'nvim-win-arm64' } else { 'nvim-win64' }
+    Join-Path $BinDir $WinDir 'bin' $NvimExe
+} else {
+    Join-Path $ExtractDir 'bin' $NvimExe
+}
+
+$LinkPath = Join-Path $BinDir $NvimExe
+if (Test-Path $LinkPath) { Remove-Item $LinkPath -Force }
+New-Item -ItemType SymbolicLink -Path $LinkPath -Target $NvimBin | Out-Null
+
+Write-Host "Neovim installed: $(& $LinkPath --version | Select-Object -First 1)"
