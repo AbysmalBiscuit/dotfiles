@@ -1,4 +1,4 @@
-{{ if .system.is_wsl -}}
+{{ if .is_wsl -}}
 if [[ ! -f "/tmp/wsl_init_finished" ]]; then
     ## SSH Sock
     if has_command wsl2-ssh-agent; then

@@ -49,10 +49,10 @@ bind -T root C-Right select-pane -R
 set-option -g status-position top
 
 # Re-enable home and end keys
-{{- if .system.is_wsl -}}
+{{- if .is_wsl -}}
   bind-key -n Home send-keys \033[H
   bind-key -n End send-keys \033[F
-{{- else if .system.is_macos -}}
+{{- else if .is_macos -}}
 bind-key -n Home send Escape "OH"
 bind-key -n End send Escape "OF"
 {{- end -}}
@@ -180,7 +180,7 @@ set -g status-right "#{E:@catppuccin_status_application}"
 set -ga status-right "#(tmux-spotify-info)"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 # 
-{{- if .system.is_macos -}}
+{{- if .is_macos -}}
 set -ag status-right "#[bg=#{@thm_flamingo},fg=#{@thm_crust}]#[reverse]#[noreverse]󱀙  "
 set -ag status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(memory_pressure | awk '/percentage/{print $5}') "
 {{- end -}}

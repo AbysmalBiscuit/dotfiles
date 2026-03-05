@@ -485,7 +485,7 @@
     "command": "-python.execSelectionInTerminal",
     "when": "editorTextFocus && !findInputFocussed && !notebookEditorFocused && !python.datascience.ownsSelection && !replaceInputFocussed && editorLangId == 'python'"
   },
-  {{ if .system.is_macos -}}
+  {{ if .is_macos -}}
   {
     "key": "cmd+.",
     "command": "editor.action.quickFix",
@@ -504,7 +504,7 @@
   },
   {{- end }}
   // Fuzzy search commands
-  {{ if .system.is_macos -}}
+  {{ if .is_macos -}}
   {
     "args": {
       "command": "rgff2_code",
@@ -589,7 +589,7 @@
   },
   {{- end }}
   // Snippet commands
-  {{ if .system.is_macos -}}
+  {{ if .is_macos -}}
   {
     "key": "cmd+k cmd+o",
     "command": "editor.action.insertSnippet",

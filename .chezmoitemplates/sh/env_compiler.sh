@@ -4,8 +4,8 @@
 # https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf
 
 # system and architecture
-ARCH={{ .system.arch | quote }}
-CHOST={{ .system.chost | quote }}
+ARCH={{ .arch | quote }}
+CHOST={{ .chost | quote }}
 export ARCH
 export CHOST
 
@@ -38,7 +38,7 @@ export NPY_NUM_BUILD_JOBS="$(nproc)"
 # rust
 # -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes
 export RUSTFLAGS='-C target-cpu=native'
-{{ if .system.is_windows -}}
+{{ if .is_windows -}}
 {{- /* Windows linker doesn't support the linker args */ -}}
 RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
 {{- else -}}
@@ -46,7 +46,7 @@ RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assert
 {{- end }}
 export RUSTFLAGS_RELEASE
 
-{{- if .system.is_macos }}
+{{- if .is_macos }}
 # Setting compiler variables for specific libraries
 if [[ -d "/usr/local/opt/openblas" ]]; then
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openblas/lib"

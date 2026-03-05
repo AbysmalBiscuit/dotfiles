@@ -1,4 +1,4 @@
-{{ if .system.is_linux -}}
+{{ if .is_linux -}}
 # Linux OS
 *~
 
@@ -16,7 +16,7 @@
 {{- end }}
 
 
-{{ if .system.is_macos -}}
+{{ if .is_macos -}}
 # macOS
 *.DS_Store
 .AppleDouble
@@ -46,7 +46,7 @@ Temporary Items
 {{- end }}
 
 
-{{ if .system.is_windows -}}
+{{ if .is_windows -}}
 
 # Windows OS
 # Windows thumbnail cache files

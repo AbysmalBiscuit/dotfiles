@@ -5,6 +5,9 @@
 {{- $is_headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
 {{- $arch := "" }}
 {{- $chost := "" }}
+{{- $compiler_os := "" -}}
+{{- $archive := ".tar.gz" -}}
+{{- $exe_ext := "" -}}
 {{- $is_desktop := false -}}
 {{- $is_laptop := false -}}
 {{- $is_phone := false -}}
@@ -207,14 +210,25 @@
 
 {{- if $arch -}}
   {{- if $is_linux -}}
-    {{- $chost = printf "%s%s" $arch "-pc-linux-gnu" -}}
-  {{- else if $is_windows -}}
-    {{- $chost = printf "%s%s" $arch "-pc-windows-msvc" -}}
-  {{- else if $is_macos -}}
-    {{- $chost = printf "%s%s" $arch "-apple-darwin" -}}
+  {{- if eq .chezmoi.osRelease.idLike "debian" -}}
+    {{- $compiler_os = "pc-linux-gnu" -}}
   {{- else -}}
-    {{- $chost = printf "%s%s%s" $arch "-unknown-" .chezmoi.os -}}
+    {{- $compiler_os = "unknown-linux-musl" -}}
   {{- end -}}
+  {{- else if $is_windows -}}
+    {{- $compiler_os = "pc-windows-msvc" -}}
+  {{- else if $is_macos -}}
+    {{- $compiler_os = "apple-darwin" -}}
+  {{- else -}}
+    {{- $compiler_os = printf "%s%s" "unknown-" .chezmoi.os -}}
+  {{- end -}}
+{{- end -}}
+{{- $chost = printf "%s%s" $arch $compiler_os -}}
+
+{{- if $is_linux -}}
+{{- else if $is_windows -}}
+{{- $archive = ".zip" -}}
+{{- $exe_ext = ".exe" -}}
 {{- end -}}
 
 {{ if hasKey $secrets.system $hostname -}}
@@ -266,6 +280,30 @@ args = ["-d", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Source
 
 # Data for use in templates
 [data]
+arch = {{ $arch | quote }}
+chost = {{ $chost | quote }}
+compiler_os = {{ $compiler_os | quote }}
+archive = {{ $archive | quote }}
+exe_ext = {{ $exe_ext | quote }}
+# OS booleans
+is_wsl = {{ $is_wsl }}
+is_linux = {{ $is_linux }}
+is_macos = {{ $is_macos }}
+is_windows = {{ $is_macos }}
+# System info
+is_work = {{ $is_work }}
+is_personal = {{ $is_personal }}
+is_ephemeral = {{ $is_ephemeral }}
+is_headless = {{ $is_headless }}
+is_desktop = {{ $is_desktop }}
+is_laptop = {{ $is_laptop }}
+is_phone = {{ $is_phone }}
+is_tablet = {{ $is_tablet }}
+{{ if $shell -}}
+shell = {{ $shell | quote }}
+{{- else -}}
+shell = {{ env "SHELL" | base | quote }}
+{{- end }}
 zshPlugins = [
     "per-directory-history",
     "vi-mode",
@@ -312,46 +350,26 @@ lastname = {{ $lastname | quote }}
 gpg_key = {{ $gpg_key | quote }}
 
 [data.system]
-# OS booleans
-is_wsl = {{ $is_wsl }}
-is_linux = {{ $is_linux }}
-is_macos = {{ $is_macos }}
-is_windows = {{ $is_macos }}
-# System info
-is_work = {{ $is_work }}
-is_personal = {{ $is_personal }}
-is_ephemeral = {{ $is_ephemeral }}
-is_headless = {{ $is_headless }}
-is_desktop = {{ $is_desktop }}
-is_laptop = {{ $is_laptop }}
-is_phone = {{ $is_phone }}
-is_tablet = {{ $is_tablet }}
 has_battery = {{ not $is_desktop }}
-arch = {{ $arch | quote }}
-chost = {{ $chost | quote }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
 editor = {{ $editor | quote }}
-{{ if $shell -}}
-shell = {{ $shell | quote }}
-{{- else -}}
-shell = {{ env "SHELL" | base | quote }}
-{{- end }}
 default_wsl_distro = {{ $default_wsl_distro | quote }}
 path_sep = {{ .chezmoi.pathSeparator | quote }}
 copy_command = {{ $copy_command | quote }}
 paste_command = {{ $paste_command | quote }}
 
 [data.has]
-nvim = {{ if eq $editor "nvim" }}true{{ else }}false{{ end }}
 claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
 dbeaver = {{ if lookPath "dbeaver" }}true{{ else }}false{{ end }}
 fish = {{ if lookPath "fish" }}true{{ else }}false{{ end }}
 highlight = {{ if lookPath "highlight" }}true{{ else }}false{{ end }}
 iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
 jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
+mpv = {{ if lookPath "mpv" }}true{{ else }}false{{ end }}
 ncspot = {{ if lookPath "ncspot" }}true{{ else }}false{{ end }}
 nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
+nvim = {{ if eq $editor "nvim" }}true{{ else }}false{{ end }}
 ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
 ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
 sccache = {{ if lookPath "sccache" }}true{{ else }}false{{ end }}

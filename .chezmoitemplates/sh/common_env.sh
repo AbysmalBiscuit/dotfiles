@@ -5,7 +5,7 @@
 #
 
 # set OS
-{{ if .system.is_wsl -}}
+{{ if .is_wsl -}}
 export OS="wsl"
 {{- else -}}
 export OS={{ .chezmoi.os | quote }}
@@ -48,7 +48,7 @@ if [[ -d "$HOME/chroot" ]]; then
     export CHROOT="$HOME/chroot"
 fi
 
-{{ if .system.is_macos -}}
+{{ if .is_macos -}}
 # Setting darwin only environment variables
 # Add /usr/local/bin to PATH (needed to find brew installed binaries)
 if [[ -d "/usr/local/bin" ]]; then
@@ -58,7 +58,7 @@ fi
 # Setting JAVA_HOME environment variable
 export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
 
-{{ else if .system.is_linux -}}
+{{ else if .is_linux -}}
 # Setting JAVA_HOME environment variable
 if [[ -d "/usr/lib/jvm/default-java" ]]; then
     export JAVA_HOME="/usr/lib/jvm/default-java"
@@ -112,7 +112,7 @@ fi
 # Configuring PATH
 #
 # Store original system path
-{{ if .system.is_macos -}}
+{{ if .is_macos -}}
 if [[ -x /usr/libexec/path_helper ]]; then
     PATH_SYS="$(/usr/libexec/path_helper)"
 else
@@ -213,7 +213,7 @@ fi
 [[ -d "$HOME/.local/bin" ]] && PATH="$HOME/.local/bin:$PATH"
 
 
-{{- if .system.is_macos }}
+{{- if .is_macos }}
 
 # Add brew ruby binaries to path
 if [[ -d '/usr/local/opt/ruby/bin' ]]; then
@@ -282,7 +282,7 @@ elif has_command python && command python --version 2>/dev/null | grep -q -Pe '.
     export PYTHON3_HOST_PROG="$(command -v python)"
 fi
 
-{{- if .system.is_wsl }}
+{{- if .is_wsl }}
 
 # Exclude windows man paths as it makes man very slow
 export MANPATH="$(remove_windows_paths "$MANPATH")"
@@ -331,7 +331,7 @@ export PATH_WINDOWS
 
 export PATH
 
-{{ if .system.is_macos -}}
+{{ if .is_macos -}}
 # Ensure that a non-login, non-interactive shell has a defined environment.
 # if [[ ( "$SHLVL" -eq 1 && ! -o LOGIN ) && -s "${ZDOTDIR:-$HOME}/.zprofile" ]]; then
     # source "${ZDOTDIR:-$HOME}/.zprofile"
@@ -347,7 +347,7 @@ if has_command nvim; then
 
     # Set up manpager
     export MANWIDTH=999
-{{- if .system.is_wsl }}
+{{- if .is_wsl }}
     # use cleaned path on WSL
     export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
 {{- else }}
@@ -368,7 +368,7 @@ elif has_command code; then
 fi
 export VISUAL
 
-{{ if (and (.system.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
+{{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
 # API keys
 export AVANTE_GEMINI_API_KEY={{ .secrets.api_keys.avante.personal.gemini | quote }}
 {{- end }}

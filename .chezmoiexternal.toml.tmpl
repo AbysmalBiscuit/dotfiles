@@ -1,0 +1,198 @@
+{{- $asset := "" -}}
+{{- if not .is_ephemeral -}}
+
+{{- if .is_linux }}
+{{ if false -}}
+
+{{ if not (stat (joinPath .chezmoi.homeDir "go" "bin" "age")) -}}
+{{- $asset = printf "age-*-%s-%s%s" .chezmoi.os .chezmoi.arch .exe_ext -}}
+[".local/bin/age"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "FiloSottile/age" $asset | quote }}
+executable = true
+path = "age/age"
+path = {{ printf "age/age%s" .exe_ext | quote }}
+{{- end }}
+
+[".local/bin/age-keygen"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "FiloSottile/age" (printf "age-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
+executable = true
+path = "age/age-keygen"
+
+[".local/bin/croc"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "schollz/croc" "croc_v*_Linux-64bit.tar.gz" | quote }}
+executable = true
+path = "croc"
+
+[".local/bin/cue"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "cue-lang/cue" (printf "cue_v*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
+executable = true
+path = "cue"
+
+[".local/bin/eza"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "eza-community/eza" "eza_x86_64-unknown-linux-gnu.tar.gz" | quote }}
+executable = true
+path = "./eza"
+
+[".local/bin/gdu"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "dundee/gdu" (printf "gdu_%s_%s.tgz" .chezmoi.os .chezmoi.arch) | quote }}
+executable = true
+path = "gdu_linux_amd64"
+
+[".local/bin/glow"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "charmbracelet/glow" "glow_*_Linux_x86_64.tar.gz" | quote }}
+executable = true
+stripComponents = 1
+path = "glow"
+
+[".local/bin/golangci-lint"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "golangci/golangci-lint" (printf "golangci-lint-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
+executable = true
+stripComponents = 1
+path = "golangci-lint"
+
+[".local/bin/jj"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" "jj-*.0-x86_64-unknown-linux-musl.tar.gz" | quote }}
+executable = true
+path = "./jj"
+
+[".local/bin/jless"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "PaulJuliusMartinez/jless" "jless-v*-x86_64-unknown-linux-gnu.zip" | quote }}
+executable = true
+path = "jless"
+
+[".local/bin/nvim"]
+type = "file"
+url = "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage"
+refreshPeriod = "672h"
+executable = true
+
+[".local/bin/sqlc"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "sqlc-dev/sqlc" (printf "sqlc_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
+refreshPeriod = "672h"
+executable = true
+path = "sqlc"
+
+# if false end
+{{- end }}
+
+[".local/bin/uv"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "astral-sh/uv" "uv-x86_64-unknown-linux-gnu.tar.gz" | quote }}
+refreshPeriod = "72h"
+executable = true
+path = "uv-x86_64-unknown-linux-gnu/uv"
+
+{{- end }}
+
+
+{{- if not .is_headless }}
+  {{- $fontDir := "" }}
+  {{- if .is_macos }}
+    {{- $fontDir = "Library/Fonts" }}
+  {{- else if .is_linux }}
+    {{- $fontDir = ".local/share/fonts" }}
+  {{- else if .is_windows -}}
+    {{- $fontDir = "AppData/Local/Microsoft/Windows/Fonts" -}}
+  {{- end }}
+  {{- range (list
+          "MesloLGMNerdFontPropo-Regular.ttf"
+          "MesloLGMNerdFontPropo-Bold.ttf"
+          "MesloLGMNerdFontPropo-Italic.ttf"
+          "MesloLGMNerdFontPropo-BoldItalic.ttf") }}
+["{{ $fontDir }}/{{ . }}"]
+type = "file"
+url = {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Meslo.tar.xz" | quote }}
+refreshPeriod = "168h"
+path = {{ . | quote }}
+  {{- end }}
+  {{- range (list
+        "SymbolsNerdFont-Regular"
+        "SymbolsNerdFontMono-Regular") }}
+["{{ $fontDir }}/{{ . }}.ttf"]
+type = "file"
+url = {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "NerdFontsSymbolsOnly.tar.xz"  | quote }}
+refreshPeriod = "168h"
+path = "{{ . }}.ttf"
+  {{- end }}
+{{- $sarasa_version := (gitHubLatestRelease "be5invis/Sarasa-Gothic").TagName | trimPrefix "v" -}}
+{{ if not .is_windows -}}
+{{- range (list
+    "Bold.ttf"
+    "BoldItalic.ttf"
+    "ExtraLight.ttf"
+    "ExtraLightItalic.ttf"
+    "Italic.ttf"
+    "Light.ttf"
+    "LightItalic.ttf"
+    "Regular.ttf"
+    "SemiBold.ttf"
+    "SemiBoldItalic.ttf") }}
+["{{ $fontDir }}/SarasaFixedK-{{ . }}"]
+type = "file"
+url = {{ printf "https://github.com/be5invis/Sarasa-Gothic/releases/download/v%s/SarasaFixedK-TTF-%s.7z" $sarasa_version $sarasa_version  | quote }}
+refreshPeriod = "168h"
+path = "SarasaFixedK-{{ . }}"
+  {{- end }}
+{{- else -}}
+{{- $sarasa_version := (gitHubLatestRelease "be5invis/Sarasa-Gothic").TagName | trimPrefix "v" }}
+["{{ $fontDir }}/Sarasa-SuperTTC.ttc"]
+type = "file"
+url = {{ printf "https://github.com/be5invis/Sarasa-Gothic/releases/download/v%s/Sarasa-SuperTTC-%s.7z" $sarasa_version $sarasa_version  | quote }}
+refreshPeriod = "168h"
+path = "Sarasa-SuperTTC.ttc"
+{{- end }}
+{{- end }}
+
+
+{{ if eq .shell "zsh" -}}
+[".oh-my-zsh"]
+type = "archive"
+url = "https://github.com/ohmyzsh/ohmyzsh/archive/master.tar.gz"
+exact = true
+stripComponents = 1
+refreshPeriod = "168h"
+exclude = [
+  "*/.*",
+  "*/templates",
+  "*/themes",
+]
+
+[".oh-my-zsh/custom/plugins/zsh-syntax-highlighting"]
+type = "archive"
+url = "https://github.com/zsh-users/zsh-syntax-highlighting/archive/master.tar.gz"
+exact = true
+stripComponents = 1
+refreshPeriod = "168h"
+exclude = [
+  "*/.editorconfig",
+  "*/.gitattributes",
+  "*/.github",
+  "*/.gitignore",
+]
+{{- end }}
+
+
+
+{{- /* starship in cargo means starship was built locally */ -}}
+{{ if not (stat (joinPath .chezmoi.homeDir ".cargo" "bin" "starship")) -}}
+{{- $asset = printf "starship-%s-%s%s" .rust_arch .rust_os .archive -}}
+[".local/bin/starship"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "starship/starship" $asset | quote }}
+refreshPeriod = "72h"
+executable = true
+path = {{ printf "starship%s" .exe_ext | quote }}
+{{- end }}
+
+{{- end -}}

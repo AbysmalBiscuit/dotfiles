@@ -1,4 +1,4 @@
-{{ if .system.is_linux -}}
+{{ if .is_linux -}}
 export IBUS_ENABLE_SYNC_MODE=1
 {{- end }}
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"

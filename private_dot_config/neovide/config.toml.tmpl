@@ -11,7 +11,7 @@ tabs = true
 theme = "auto"
 title-hidden = true
 vsync = false
-{{ if and .system.is_windows .system.default_wsl_distro -}}
+{{ if and .is_windows .system.default_wsl_distro -}}
 wsl = true
 {{- else -}}
 wsl = false

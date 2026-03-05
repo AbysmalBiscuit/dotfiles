@@ -63,7 +63,7 @@ set-env:
 # api-key:
   # - openrouter=  # Sets env var OPENROUTER_API_KEY=bar
   # - deepseek=    # Sets env var DEEPSEEK_API_KEY=baz
-{{ if .system.is_personal -}}
+{{ if .is_personal -}}
 api-key:
 {{- if .secrets.api_keys.aider.personal }}
   - gemini={{ .secrets.api_keys.aider.personal.gemini }}

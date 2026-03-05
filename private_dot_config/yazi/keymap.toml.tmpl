@@ -64,7 +64,7 @@ on = ["<C-PageDown>"]
 run = "tab_switch --relative 1"
 desc = "Go to next tab"
 
-{{ if not .system.is_windows -}}
+{{ if not .is_windows -}}
 [[mgr.prepend_keymap]]
 on = "!"
 for = "unix"
@@ -109,7 +109,7 @@ on  = "Y"
 run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $sep = '#' * 80; $out = @(); foreach ($p in $paths) { if ($paths.Count -gt 1) { $out += $sep; $out += '# ' + $p }; $out += (Get-Content -Raw $p) }; ($out -join \"`n\") | Set-Clipboard"''', "yank" ]
 {{- end }}
 
-{{ if .system.is_linux -}}
+{{ if .is_linux -}}
 # Also copy file paths to system clipboard
 [[mgr.prepend_keymap]]
 on  = "y"

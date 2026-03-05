@@ -88,7 +88,7 @@ if [[ "$debug_shell_startup" = "true" ]]; then
     echo "BASH execution took $runtime_ms ms"
 fi
 
-{{- if .system.is_wsl }}
+{{- if .is_wsl }}
 
 # Restore windows paths to PATH if running in WSL
 export PATH="$PATH_CLEAN:$PATH_WINDOWS"

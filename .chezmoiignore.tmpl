@@ -23,11 +23,9 @@ key.txt.age
 secrets.toml.age
 
 # Scripts used by chezmoi
-decrypt-private-key.sh
 edit_secrets.sh
 edit_secrets.sh.tmpl
 fix_persmissions.sh
-run_once_decrypt-private-key.sh.tmpl
 
 # general exclusions
 **/__pychache__/**
@@ -45,11 +43,10 @@ localSettings.yaml
 .oh-my-zsh/cache/**
 .oh-my-zsh/plugins/**
 .oh-my-zsh/templates/**
-.oh-my-zsh/custom/themes/powerlevel10k/**/*.zwc
 
 # os specific exclusions
 
-{{ if .system.is_wsl -}}
+{{ if .is_wsl -}}
 .bash_logout
 .config/alacritty
 .config/ghostty
@@ -59,7 +56,7 @@ localSettings.yaml
 {{- else -}}
 {{- end }}
 
-{{ if not .system.is_macos }}
+{{ if not .is_macos }}
 .chezmoiscripts/darwin/**
 .config/aerospace
 .config/homebrew
@@ -68,7 +65,7 @@ localSettings.yaml
 .hammerspoon
 {{ end }}
 
-{{ if not .system.is_linux }}
+{{ if not .is_linux }}
 .chezmoiscripts/linux/**
 .hushlogin
 .local/bin/nvim
@@ -87,7 +84,7 @@ localSettings.yaml
 {{- end }}
 {{ end }}
 
-{{ if .system.is_windows }}
+{{ if .is_windows }}
 .bash*
 .config/ghostty
 .config/git/cookies
@@ -133,7 +130,7 @@ Documents
 .ssh/**
 {{ end }}
 
-{{ if not (eq .system.shell "zsh") -}}
+{{ if not (eq .shell "zsh") -}}
 .zsh*
 .zprofile
 .oh-my-zsh/**
@@ -164,4 +161,7 @@ Documents
 {{- end }}
 {{ if not .has.ncspot -}}
 .config/ncspot
+{{- end }}
+{{ if not .has.mpv -}}
+.config/mpv
 {{- end }}
