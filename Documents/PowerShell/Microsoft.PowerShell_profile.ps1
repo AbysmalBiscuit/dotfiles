@@ -356,6 +356,10 @@ if (has_command yazi) {
     }
 }
 
+if (has_command jj) {
+    jj util completion power-shell | Out-String | Invoke-Expression
+}
+
 if (has_command chezmoi) {
     Invoke-Expression ((& chezmoi completion powershell) -join "`n")
     function cm {
