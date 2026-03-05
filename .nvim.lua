@@ -141,15 +141,16 @@ vim.api.nvim_set_hl(0, "LspReferenceRead", {})
 local gotmpl_filetypes = { "go", "gomod", "gowork", "gotmpl" }
 local chezmoi_filetypes = {
   "bash",
-  "sh",
-  "fish",
-  "toml",
   "conf",
-  "ini",
+  "fish",
   "gitconfig",
-  "yaml",
+  "ini",
   "json",
   "jsonc",
+  "nu",
+  "sh",
+  "toml",
+  "yaml",
   "zsh",
   -- "nanorc",
 }
