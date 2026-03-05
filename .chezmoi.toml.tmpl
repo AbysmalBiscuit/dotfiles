@@ -19,6 +19,7 @@
 {{- $copy_command := "" -}}
 {{- $paste_command := "" -}}
 {{- $line_end := "\n" -}}
+{{- $home := .chezmoi.homeDir -}}
 {{- /* OS information */ -}}
 {{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
@@ -43,16 +44,46 @@
 {{- $keepassxc_args := list -}}
 {{- $has_secrets := false -}}
 {{- $secrets_key := "" -}}
-{{- $secrets_path := joinPath .chezmoi.homeDir ".config/chezmoi/secrets.toml" -}}
+{{- $secrets_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "secrets.toml" -}}
 {{- $secrets := dict -}}
-{{- if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")  }}
-{{-   $has_age_key = true -}}
+{{- if stat (joinPath .chezmoi.homeDir ".config" "chezmoi" "key.txt")  }}
+  {{- $has_age_key = true -}}
 {{- end }}
 {{- if stat $secrets_path -}}
-{{-   $has_secrets = true -}}
-{{-   $secrets = include $secrets_path | fromToml -}}
+  {{- $has_secrets = true -}}
+  {{- $secrets = include $secrets_path | fromToml -}}
 {{- end -}}
 {{- "" -}}
+{{- $has_has := false -}}
+{{- $has_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" -}}
+{{- $has := dict -}}
+{{- if stat $secrets_path -}}
+  {{- $has_has = true -}}
+  {{- $has = include $has_path | fromToml -}}
+{{- end -}}
+{{- $secrets = include $secrets_path | fromToml -}}
+{{- $cli_tools := (list
+        "ccr"
+        "dbeaver"
+        "fish"
+        "highlight"
+        "iterm2"
+        "jj"
+        "sqlc"
+        "uv"
+        "jless"
+        "jq"
+        "mpv"
+        "ncspot"
+        "nvidia-smi"
+        "nvim"
+        "ollama"
+        "ranger"
+        "sccache"
+        "spotify_player"
+        "wl-copy"
+) -}}
+{{- $cli_tools_wsl := list -}}
 
 {{- $osID := .chezmoi.os -}}
 {{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
@@ -96,6 +127,7 @@
 {{- /* Identify hostname and set specific settings based on that */ -}}
 {{- if not $is_ephemeral -}}
 {{-   if ($is_wsl) -}}
+{{-     $is_headless = true -}}
 {{-     $is_personal = true -}}
 {{-     $secrets_key = "wsl" -}}
 {{-   else if (and ($is_windows) (or (contains "Yin" $hostname) (contains "GLaDOS" $hostname))) -}}
@@ -125,11 +157,28 @@
     {{- $copy_command = "xclip -i -selection clipboard" -}}
     {{- $paste_command = "xclip -o -selection clipboard" -}}
   {{- end -}}
+  {{- if $is_wsl -}}
+    {{- $cli_tools_wsl = (list
+            "spotify_player.exe"
+            "ollama.exe"
+            "pwsh.exe"
+            "bash.exe"
+            "wsl.exe"
+    ) -}}
+    {{- if lookPath "wsl.exe" -}}
+      {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
+      {{- range $line := splitList "\n" $wslList -}}
+        {{- if contains "(Default)" $line -}}
+          {{- $default_wsl_distro = $line | replace " (Default)" "" | trim -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
 {{- else if $is_macos -}}
   {{- $line_end = "\n" -}}
   {{- $copy_command = "pbcopy" -}}
   {{- $paste_command = "pbpaste" -}}
-{{- else -}}
+{{- else if $is_windows -}}
   {{- $line_end = "\r\n" -}}
   {{- $copy_command = "Set-Clipboard" -}}
   {{- $paste_command = "Get-Clipboard" -}}
@@ -223,13 +272,14 @@
     {{- $compiler_os = printf "%s%s" "unknown-" .chezmoi.os -}}
   {{- end -}}
 {{- end -}}
-{{- $chost = printf "%s%s" $arch $compiler_os -}}
+{{- $chost = printf "%s-%s" $arch $compiler_os -}}
 
 {{- if $is_linux -}}
 {{- else if $is_windows -}}
 {{- $archive = ".zip" -}}
 {{- $exe_ext = ".exe" -}}
 {{- end -}}
+
 
 {{ if hasKey $secrets.system $hostname -}}
   {{- /* (index $secrets.system $hostname) | toToml */ -}}
@@ -281,6 +331,7 @@ args = ["-d", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Source
 # Data for use in templates
 [data]
 arch = {{ $arch | quote }}
+arch_go = {{ dict "x86_64" "amd64" "aarch64" "arm64" | dig .arch .arch | quote }}
 chost = {{ $chost | quote }}
 compiler_os = {{ $compiler_os | quote }}
 archive = {{ $archive | quote }}
@@ -309,6 +360,16 @@ zshPlugins = [
     "vi-mode",
     "zsh-syntax-highlighting",
 ]
+cli_tools = [
+{{- range $cli_tools -}}
+  {{- printf "%s%s" . $exe_ext | quote -}},
+{{- end -}}
+]
+cli_tools_wsl = [
+{{- range $cli_tools_wsl -}}
+  {{- printf "%s" . | quote -}},
+{{- end -}}
+]
 
 [data.font]
 monospace = [
@@ -329,6 +390,23 @@ monospace = [
     "Font Awesome 6 Pro",
     "Twemoji Mozilla",
 ]
+
+[data.path]
+home = {{ $home | quote }}
+{{ if stat (joinPath $home ".cargo") -}}
+cargo_dir = {{ joinPath $home ".cargo" | quote}}
+cargo_bin_dir = {{ joinPath $home ".cargo" "bin" | quote}}
+{{- else -}}
+cargo_dir = ""
+cargo_bin_dir = ""
+{{- end }}
+{{ if stat (joinPath $home "go") -}}
+go_dir = {{ joinPath $home "go" | quote}}
+go_bin_dir = {{ joinPath $home "go" "bin" | quote}}
+{{- else -}}
+go_dir = ""
+go_bin_dir = ""
+{{- end }}
 
 [data.age]
 identities = {{ $age_identities }}
@@ -359,28 +437,28 @@ path_sep = {{ .chezmoi.pathSeparator | quote }}
 copy_command = {{ $copy_command | quote }}
 paste_command = {{ $paste_command | quote }}
 
+{{- if $has_has }}
+
+{{ $data := dict "data" (dict "has" $has) -}}
+{{- toToml $data | replace "[data]\n" "" -}}
+{{ "" }}
+{{- else }}
+
 [data.has]
-claude_code_router = {{ if lookPath "ccr" }}true{{ else }}false{{ end }}
-dbeaver = {{ if lookPath "dbeaver" }}true{{ else }}false{{ end }}
-fish = {{ if lookPath "fish" }}true{{ else }}false{{ end }}
-highlight = {{ if lookPath "highlight" }}true{{ else }}false{{ end }}
-iterm2 = {{ if lookPath "iterm2" }}true{{ else }}false{{ end }}
-jq = {{ if lookPath "jq" }}true{{ else }}false{{ end }}
-mpv = {{ if lookPath "mpv" }}true{{ else }}false{{ end }}
-ncspot = {{ if lookPath "ncspot" }}true{{ else }}false{{ end }}
-nvidia_smil = {{ if lookPath "nvidia-smi" }}true{{ else }}false{{ end }}
-nvim = {{ if eq $editor "nvim" }}true{{ else }}false{{ end }}
-ollama = {{ if lookPath "ollama" }}true{{ else }}false{{ end }}
-ranger = {{ if lookPath "ranger" }}true{{ else }}false{{ end }}
-sccache = {{ if lookPath "sccache" }}true{{ else }}false{{ end }}
-spotify_player = {{ if lookPath "spotify_player" }}true{{ else }}false{{ end }}
-wl_copy = {{ if lookPath "wl-copy" }}true{{ else }}false{{ end }}
+{{ "" }}
+  {{- range $cli_tools -}}
+  {{- $exe_name := printf "%s%s" . $exe_ext -}}
+{{ $exe_name | replaceAllRegex "(-|\\.)" "_" }} = {{ if lookPath . }}true{{ else }}false{{ end }}
+{{ end }}
+
+  {{- if $is_wsl }}
 # Windows
-spotify_player_exe = {{ if lookPath "spotify_player.exe" }}true{{ else }}false{{ end }}
-ollama_exe = {{ if lookPath "ollama.exe" }}true{{ else }}false{{ end }}
-pwsh_exe = {{ if lookPath "pwsh.exe" }}true{{ else }}false{{ end }}
-bash_exe = {{ if lookPath "bash.exe" }}true{{ else }}false{{ end }}
-wsl_exe = {{ if lookPath "wsl.exe" }}true{{ else }}false{{ end }}
+{{ range $cli_tools_wsl -}}
+  {{- $exe_name := printf "%s" . -}}
+{{ $exe_name | replaceAllRegex "(-|\\.)" "_" }} = {{ if lookPath . }}true{{ else }}false{{ end }}
+{{ end }}
+  {{- end }}
+{{- end }}
 
 # Secrets
 {{ "" }}

@@ -85,7 +85,10 @@ localSettings.yaml
 {{ end }}
 
 {{ if .is_windows }}
+**\.sh
 .bash*
+.chezmoiscripts/linux/**
+.chezmoiscripts/macos/**
 .config/ghostty
 .config/git/cookies
 .config/gitui
@@ -107,7 +110,6 @@ localSettings.yaml
 .tmux.conf
 .zprofile
 .zsh*
-**\.sh
 {{- else -}}
 .chezmoiscripts/windows/**
 AppData/**
@@ -147,7 +149,7 @@ Documents
 {{ if not .has.highlight -}}
 .local/share/highlight
 {{- end }}
-{{ if not .has.claude_code_router -}}
+{{ if not (index .has "ccr") -}}
 .claude-code-router
 {{- end }}
 {{ if not .has.iterm2 -}}
