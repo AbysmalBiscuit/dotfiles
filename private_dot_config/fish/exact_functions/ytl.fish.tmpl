@@ -1,0 +1,4 @@
+# Defined in - @ line 1
+function ytl --wraps=yt-dlp --description 'alias ytl=yt-dlp'
+    yt-dlp -ciw --restrict-filename -o "%(upload_date>%Y-%m-%d)s %(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }} --progress --break-on-existing --download-archive "archive.txt" (cat $argv[1] | string split \n)
+end

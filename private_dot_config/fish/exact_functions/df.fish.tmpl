@@ -1,0 +1,17 @@
+# Defined in - @ line 1
+{{ if or .is_linux .is_wsl -}}
+if type -q dysk
+    function df --wraps='dysk' --description 'alias df=dysk'
+        dysk $argv
+    end
+else
+    echo "'dysk' is not installed on this system. Install it to replace 'df'."
+    function df --wraps='df -h' --description 'alias df="df -h"'
+        command df -h $argv
+    end
+end
+{{- else -}}
+function df --wraps='df -h' --description 'alias df=df -h'
+    command df -h $argv
+end
+{{- end }}

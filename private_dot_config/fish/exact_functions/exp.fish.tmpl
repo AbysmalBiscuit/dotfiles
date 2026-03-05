@@ -1,0 +1,24 @@
+function exp --description 'Opens the given path (default CWD) in a file explorer'
+    set -l dir_
+    if set -q argv[1]
+        set dir_ $argv[1]
+    else
+        set dir_ (pwd)
+    end
+
+    if set -q WSL_DISTRO_NAME
+        env PATH="$PATH_WINDOWS" explorer.exe (wslpath -w $dir_)
+        return 0
+    end
+
+    {{ if .is_linux -}}
+    xdg-open $dir_
+    return 0
+    {{- else if .is_macos -}}
+    open $dir_
+    return 0
+    {{- else -}}
+    echo "No file explorer known for '$OS'"
+    return 1
+    {{- end }}
+end

@@ -1,0 +1,4 @@
+# Defined in - @ line 1
+function ytp --wraps=yt-dlp --description 'alias ytp=yt-dlp'
+    yt-dlp -ciw --restrict-filename -o "%(upload_date>%Y-%m-%d)s %(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.ytp }} --progress $argv
+end
