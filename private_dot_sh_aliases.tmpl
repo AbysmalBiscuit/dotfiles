@@ -1,5 +1,9 @@
-#!/bin/{{ .shell }}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=sh
+# {{- else -}}
 # vim:filetype=sh.chezmoitmpl
+# {{- end }}
 # Setting up command aliases
 
 # ls aliases
@@ -30,12 +34,12 @@ alias dmesg='dmesg --color=auto'
 
 # youtube-dl aliases
 if has_command yt-dlp; then
-    alias yt='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
-    alias yt-mp3='yt-dlp -ciw -f bestaudio --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
-    alias yt-pl='yt-dlp -ciw --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
-    alias yt-pl-mp3='yt-dlp -f bestaudio -ciw --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies # {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-mp3='yt-dlp -ciw -f bestaudio --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies # {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-pl='yt-dlp -ciw --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies # {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
+    alias yt-pl-mp3='yt-dlp -f bestaudio -ciw --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies # {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }}'
     alias ytl='yt-dlp -g'
-    alias ytp='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.ytp }}'
+    alias ytp='yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --cookies # {{ joinPath .secrets.cookies.dir .secrets.cookies.ytp }}'
 fi
 
 # gnome-mpv alias
@@ -68,7 +72,7 @@ if has_command pacman; then
     alias pacmanq='pacman -Q | grep'
 fi
 
-{{- if .is_linux }}
+# {{- if .is_linux }}
 
 # making sensors start a loop to monitor temperatures similar to top
 alias sensorsl='while true; do clear; sensors; sleep 1; done'
@@ -79,15 +83,15 @@ alias nvidia-smil='while true; do clear; nvidia-smi; sleep 1; done'
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-{{- end }}
+# {{- end }}
 
 # Get external ip
 alias wanip='dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
 
 alias wanip6='dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
 
-{{- if .is_linux }}
+# {{- if .is_linux }}
 
 # systemctl aliases
 alias systemctlu='systemctl --user'
-{{ end -}}
+# {{ end -}}

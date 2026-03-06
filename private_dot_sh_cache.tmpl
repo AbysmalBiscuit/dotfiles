@@ -1,21 +1,26 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=sh
+# {{- else -}}
 # vim:filetype=sh.chezmoitmpl
-{{- $shell := .shell -}}
-{{- /* $shell := "zsh" */ -}}
-{{- /* Only cache env on personal and non-ephemeral systems */ -}}
-{{ "" }}
-sh_cache_dir="$HOME/.cache/{{ $shell }}"
+# {{- end }}
+# {{- $shell := .shell -}}
+# {{- /* $shell := "zsh" */ -}}
+# {{- /* Only cache env on personal and non-ephemeral systems */ -}}
+# {{ "" }}
+sh_cache_dir="$HOME/.cache/# {{ $shell }}"
 if ! [[ -d "$sh_cache_dir" ]]; then
     mkdir -p "$sh_cache_dir"
     chmod 700 "$sh_cache_dir"
 fi
 
-{{- /* env_cache is sourced for non-interactive sessions */}}
-{{- /* env_cache stores various environment variables */}}
-env_cache="$sh_cache_dir/env.{{ $shell }}"
+# {{- /* env_cache is sourced for non-interactive sessions */}}
+# {{- /* env_cache stores various environment variables */}}
+env_cache="$sh_cache_dir/env.# {{ $shell }}"
 
-{{- /* interactive_cache* are only sourced in interactive sessions */}}
-{{- /* interactive_cache contains the environment configuration for interactive sessions */}}
-interactive_cache="$sh_cache_dir/interactive.{{ $shell }}"
+# {{- /* interactive_cache* are only sourced in interactive sessions */}}
+# {{- /* interactive_cache contains the environment configuration for interactive sessions */}}
+interactive_cache="$sh_cache_dir/interactive.# {{ $shell }}"
 last_cache_file="$sh_cache_dir/last"
 
 # If not running interactively, source env cache and exit early
@@ -29,17 +34,17 @@ fi
 
 last_cache=$(cat "$last_cache_file" 2>/dev/null)
 
-if ! (
-    [[ ! -f "$interactive_cache" ]] ||
-        [[ "${sh_force_cache}" = "true" ]] ||
-        [[ "${sh_force_cache_once}" = "true" ]] ||
-        { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); }
+if ! ( \
+    [[ ! -f "$interactive_cache" ]] \
+    || [[ "${sh_force_cache}" = "true" ]] \
+    || [[ "${sh_force_cache_once}" = "true" ]] \
+    || { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); } \
 ); then
-    {{ template "sh/env_wsl.sh" . }}
+    # {{ template "sh/env_wsl.sh" . }}
     source "$interactive_cache"
-    {{ if eq $shell "bash" -}}
+    # {{ if eq $shell "bash" -}}
     source "$HOME/.bash_extensions"
-    {{- end }}
+    # {{- end }}
     return 0
 fi
 
@@ -64,53 +69,52 @@ if [[ "$SHLVL" -ge 2 ]]; then
         return 0
     fi
 fi
-echo "Building {{ $shell }} cache"
-echo "#!/bin/{{ $shell }}" >"$env_cache"
+echo "Building # {{ $shell }} cache"
 
-{{- if eq $shell "bash" }}
 [[ -f "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
-{{- end }}
 
-{{- if eq $shell "bash" }}
-# Store the more basic env cache
-echo "shopt -s extglob" >>"$env_cache"
-{{- end }}
+# {{ template "sh/env_wsl.sh" . }}
 
-declare -p | grep -vE '^declare -[^x]' >>"$env_cache"
-declare -p | grep -E '^declare -..? (__git_|__zoxide_)' >>"$env_cache"
-
-{{ template "sh/env_wsl.sh" . }}
+{
+    echo "#!/bin/# {{ $shell }}"
+    # {{- if eq $shell "bash" }}
+    # Store the more basic env cache
+    echo "shopt -s extglob"
+    # {{- end }}
+    declare -p | grep -vE '^declare -[^x]'
+    declare -p | grep -E '^declare -..? (__git_|__zoxide_)'
+} >"$env_cache"
 
 # If not running interactively, stop here
 [[ $- != *i* ]] && return
 
 # Build interactive session cache
-echo "#!/bin/{{ $shell }}" >"$interactive_cache"
+echo "#!/bin/# {{ $shell }}" >"$interactive_cache"
 
 # add alias definitions
 [[ -f "$HOME/.sh_aliases" ]] && source "$HOME/.sh_aliases"
 
-{{ if eq $shell "bash" -}}
-{{ template "bash/rc.bash" . }}
-{{- else if eq $shell "zsh" -}}
-{{ template "zsh/rc.zsh" . }}
-{{- end }}
+# {{ if eq $shell "bash" -}}
+# {{ template "bash/rc.bash" . }}
+# {{- else if eq $shell "zsh" -}}
+# {{ template "zsh/rc.zsh" . }}
+# {{- end }}
 
 {
-    {{ if eq $shell "bash" -}}
+    # {{ if eq $shell "bash" -}}
     echo "shopt -s extglob"
     declare -p | grep -vE '^declare -[^x]'
     alias -p
     declare -f
     shopt -p
-    {{- else if eq $shell "zsh" -}}
+    # {{- else if eq $shell "zsh" -}}
     # export -p
     declare -p | grep -vE '^(declare -[^x]|typeset -A (commands|functions)|typeset -.+ (EPOCH|epochtime))'
     alias -L
     echo "'builtin' 'unsetopt' 'aliases'"
     declare -f
     echo "'builtin' 'setopt' 'aliases'"
-    {{- end }}
+    # {{- end }}
 } >>"$interactive_cache"
 
 date +%s >"$last_cache_file"

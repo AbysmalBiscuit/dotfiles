@@ -1,4 +1,9 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=sh
+# {{- else -}}
 # vim:filetype=sh.chezmoitmpl
+# {{- end }}
 # Setting up various environment variables
 
 #
@@ -6,11 +11,12 @@
 #
 
 # set OS
-{{ if .is_wsl -}}
-export OS="wsl"
-{{- else -}}
-export OS={{ .chezmoi.os | quote }}
-{{- end }}
+# {{ if .is_wsl -}}
+OS="wsl"
+# {{- else -}}
+OS=# {{ .chezmoi.os | quote }}
+# {{- end }}
+export OS
 # export OSTYPE="${OS}$(uname -r)"
 
 # Color settings
@@ -18,15 +24,20 @@ export OS={{ .chezmoi.os | quote }}
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # colored less
-if [[ -x "$HOME/bin/source-highlight-esc.sh" ]]; then
-    export LESSOPEN="| $HOME/bin/source-highlight-esc.sh %s"
-elif [[ -x "$HOME/.local/bin/source-highlight-esc.sh" ]]; then
-    export LESSOPEN="| $HOME/bin/source-highlight-esc.sh %s"
-elif [[ -x "/usr/bin/source-highlight-esc.sh" ]]; then
-    export LESSOPEN="| /usr/bin/source-highlight-esc.sh %s"
-elif has_command source-highlight-esc; then
-    export LESSOPEN="| $(command -v source-highlight-esc) %s"
-fi
+# {{ if stat (joinPath .chezmoi.homeDir "bin" "source-highlight-esc.sh") -}}
+#if [[ -x "$HOME/bin/source-highlight-esc.sh" ]]; then
+export LESSOPEN="| $HOME/bin/source-highlight-esc.sh %s"
+# {{ else if stat (joinPath .chezmoi.homeDir ".local" "bin" "source-highlight-esc.sh") -}}
+# elif [[ -x "$HOME/.local/bin/source-highlight-esc.sh" ]]; then
+export LESSOPEN="| $HOME/.local/bin/source-highlight-esc.sh %s"
+# {{ else if stat (joinPath "/usr/bin/source-highlight-esc.sh") -}}
+# elif [[ -x "/usr/bin/source-highlight-esc.sh" ]]; then
+export LESSOPEN="| /usr/bin/source-highlight-esc.sh %s"
+# {{- else if .has.source_highlight_esc -}}
+# elif has_command source-highlight-esc; then
+export LESSOPEN="| $(command -v source-highlight-esc) %s"
+# fi
+# {{- end }}
 export LESS='-R '
 export LESS_TERMCAP_mb=$'\E[1;31m' # begin blink
 export LESS_TERMCAP_md=$'\E[1;36m' # begin bold
@@ -49,7 +60,7 @@ if [[ -d "$HOME/chroot" ]]; then
     export CHROOT="$HOME/chroot"
 fi
 
-{{ if .is_macos -}}
+# {{ if .is_macos -}}
 # Setting darwin only environment variables
 # Add /usr/local/bin to PATH (needed to find brew installed binaries)
 if [[ -d "/usr/local/bin" ]]; then
@@ -59,12 +70,14 @@ fi
 # Setting JAVA_HOME environment variable
 export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
 
-{{ else if .is_linux -}}
+# {{ else if .is_linux -}}
+# {{ if stat "/usr/lib/jvm/default-java"  -}}
 # Setting JAVA_HOME environment variable
-if [[ -d "/usr/lib/jvm/default-java" ]]; then
+# if [[ -d "/usr/lib/jvm/default-java" ]]; then
     export JAVA_HOME="/usr/lib/jvm/default-java"
-fi
-{{- end }}
+# fi
+# {{- end }}
+# {{- end }}
 
 # Setting VOC directory path environment variable
 if [[ -d "/usr/share/java/voc" ]]; then
@@ -77,28 +90,29 @@ export GTK_THEME="Adwaita:dark"
 export CLIPPY_CONF_DIR="$HOME/.config/clippy"
 export EZA_CONFIG_DIR="$HOME/.config/eza"
 
-{{- if stat "/opt/intel" }}
+# {{- if stat "/opt/intel" }}
 # Adding various Intel variables
-if [[ -d "/opt/intel" ]]; then
-    export TBBROOT="/opt/intel/tbb"
-    export PSTLROOT="/opt/intel/pstl"
-    export DAALROOT="/opt/intel/daal"
-    export PKG_CONFIG_PATH="/opt/intel/mkl/bin/pkgconfig"
-    export TBB_PATH="/opt/intel/tbb"
-    export MANPATH="/opt/intel/man/common:/opt/intel/documentation_2020/en/debugger/gdb-ia/man/:$MANPATH"
-    export DYLD_LIBRARY_PATH="/opt/intel/lib:/opt/intel/lib/intel64:/opt/intel/ipp/lib:/opt/intel/mkl/lib:/opt/intel/tbb/lib:/opt/intel/daal/lib:$DYLD_LIBRARY_PATH"
-    export INFOPATH="/opt/intel/documentation_2020/en/debugger/gdb-ia/info/:$INFOPATH"
-    export IPPROOT="/opt/intel/ipp"
-    export LIBRARY_PATH="/opt/intel/ipp/lib:/opt/intel/lib:/opt/intel/mkl/lib:/opt/intel/tbb/lib:/opt/intel/tbb/lib:/opt/intel/daal/lib:$LIBRARY_PATH"
-    export CLASSPATH="/opt/intel/daal/lib/daal.jar:$CLASSPATH"
-    export MKLROOT="/opt/intel/mkl"
-    export NLSPATH="/opt/intel/lib/locale/en_US/%N:/opt/intel/mkl/lib/locale/%l_%t/%N:/opt/intel/debugger_2020/gdb/intel64/share/locale/%l_%t/%N:$NLSPATH"
-    # PATH=/opt/intel/bin:/usr/local/lib/gnubin:/usr/local/opt/python/libexec/bin:/Users/admin/bin:/Users/admin/bin/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/Users/admin/.gem/ruby/2.6.0/bin:/opt/intel/bin:/Users/admin/.cache/dein/repos/github.com/kballard/vim-swift/syntax_checkers/swift:/usr/sbin:/sbin:/Library/TeX/texbin:/usr/local/MacGPG2/bin:/Library/Apple/usr/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Applications/Wireshark.app/Contents/MacOS
-    export INTEL_PYTHONHOME="/opt/intel/debugger_2020/python/intel64/"
-    export INTEL_LICENSE_FILE="/opt/intel/licenses:/Users/admin/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses"
-    export CPATH="/opt/intel/ipp/include:/opt/intel/mkl/include:/opt/intel/pstl/include:/opt/intel/pstl/stdlib:/opt/intel/tbb/include:/opt/intel/tbb/include:/opt/intel/daal/include:$CPATH"
-fi
-{{- end }}
+# if [[ -d "/opt/intel" ]]; then
+export TBBROOT="/opt/intel/tbb"
+export PSTLROOT="/opt/intel/pstl"
+export DAALROOT="/opt/intel/daal"
+export PKG_CONFIG_PATH="/opt/intel/mkl/bin/pkgconfig"
+export TBB_PATH="/opt/intel/tbb"
+export MANPATH="/opt/intel/man/common:/opt/intel/documentation_2020/en/debugger/gdb-ia/man/:$MANPATH"
+export DYLD_LIBRARY_PATH="/opt/intel/lib:/opt/intel/lib/intel64:/opt/intel/ipp/lib:/opt/intel/mkl/lib:/opt/intel/tbb/lib:/opt/intel/daal/lib:$DYLD_LIBRARY_PATH"
+export INFOPATH="/opt/intel/documentation_2020/en/debugger/gdb-ia/info/:$INFOPATH"
+export IPPROOT="/opt/intel/ipp"
+export LIBRARY_PATH="/opt/intel/ipp/lib:/opt/intel/lib:/opt/intel/mkl/lib:/opt/intel/tbb/lib:/opt/intel/tbb/lib:/opt/intel/daal/lib:$LIBRARY_PATH"
+export CLASSPATH="/opt/intel/daal/lib/daal.jar:$CLASSPATH"
+export MKLROOT="/opt/intel/mkl"
+export NLSPATH="/opt/intel/lib/locale/en_US/%N:/opt/intel/mkl/lib/locale/%l_%t/%N:/opt/intel/debugger_2020/gdb/intel64/share/locale/%l_%t/%N:$NLSPATH"
+# PATH=/opt/intel/bin:/usr/local/lib/gnubin:/usr/local/opt/python/libexec/bin:/Users/admin/bin:/Users/admin/bin/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/Users/admin/.gem/ruby/2.6.0/bin:/opt/intel/bin:/Users/admin/.cache/dein/repos/github.com/kballard/vim-swift/syntax_checkers/swift:/usr/sbin:/sbin:/Library/TeX/texbin:/usr/local/MacGPG2/bin:/Library/Apple/usr/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Applications/Wireshark.app/Contents/MacOS
+export INTEL_PYTHONHOME="/opt/intel/debugger_2020/python/intel64/"
+export INTEL_LICENSE_FILE="/opt/intel/licenses:/Users/admin/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses"
+export CPATH="/opt/intel/ipp/include:/opt/intel/mkl/include:/opt/intel/pstl/include:/opt/intel/pstl/stdlib:/opt/intel/tbb/include:/opt/intel/tbb/include:/opt/intel/daal/include:$CPATH"
+PATH="$PATH:/opt/intel/bin"
+# fi
+# {{- end }}
 
 # Add tesseract data
 if [[ -d "$HOME/tessdata" ]]; then
@@ -113,7 +127,7 @@ fi
 # Configuring PATH
 #
 # Store original system path
-{{ if .is_macos -}}
+# {{ if .is_macos -}}
 if [[ -x /usr/libexec/path_helper ]]; then
     PATH_SYS="$(/usr/libexec/path_helper)"
 else
@@ -124,9 +138,9 @@ fi
 if [[ -d "/usr/local/sbin" ]]; then
     PATH="$PATH:/usr/local/sbin"
 fi
-{{- else -}}
+# {{- else -}}
 PATH_SYS="$PATH"
-{{- end }}
+# {{- end }}
 export PATH_SYS
 
 # Source rust if it exists
@@ -183,38 +197,43 @@ if has_command ruby; then
     PATH="$gem_bin_dir:$PATH"
 fi
 
-# Adding intel compilers and libraries to PATH
-if [[ -d /opt/intel/bin ]]; then
-    PATH="$PATH:/opt/intel/bin"
-fi
+# {{- if and .has.linuxbrew (stat "/home/linuxbrew") }}
 
 # Adding linuxbrew libraries and binaries to PATH
-if [[ -d /home/linuxbrew && $(command -v 'linuxbrew') ]]; then
-    PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
-fi
+# if [[ -d /home/linuxbrew && $(command -v 'linuxbrew') ]]; then
+PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
+# fi
+# {{- end }}
 
+# {{- if stat (joinPath .chezmoi.homeDir ".luarocks/bin") }}
 # Add luarocks
-if [[ -d "$HOME/.luarocks/bin" ]]; then
-    PATH="$HOME/.luarocks/bin:$PATH"
-fi
+# if [[ -d "$HOME/.luarocks/bin" ]]; then
+PATH="$HOME/.luarocks/bin:$PATH"
+# fi
+# {{- end }}
 
+# {{ if .has.luarocks -}}
 # Setting up lua path for neovim
-if has_command luarocks; then
-    eval "$(luarocks path --no-bin --lua-version 5.1)"
-fi
+# if has_command luarocks; then
+eval "$(luarocks path --no-bin --lua-version 5.1)"
+# fi
+# {{- end }}
 
 # Composer
 [[ -d "$HOME/.config/composer/vendor/bin" ]] && PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 # Set up final PATH dirs that should overwrite everything else
+# {{- if stat (joinPath .chezmoi.homeDir "bin/bin") }}
 # Adding user bin and bin/bin directory to PATH
-[[ -d "$HOME/bin/bin" ]] && PATH="$HOME/bin:$HOME/bin/bin:$PATH"
+# [[ -d "$HOME/bin/bin" ]] &&
+PATH="$HOME/bin:$HOME/bin/bin:$PATH"
+# {{- end }}
 
 # Adding ~/.local/bin
 [[ -d "$HOME/.local/bin" ]] && PATH="$HOME/.local/bin:$PATH"
 
 
-{{- if .is_macos }}
+# {{- if .is_macos }}
 
 # Add brew ruby binaries to path
 if [[ -d '/usr/local/opt/ruby/bin' ]]; then
@@ -258,7 +277,7 @@ fi
 if [[ -d "/Library/TeX/Root/bin/universal-darwin" ]]; then
     PATH="$PATH:/Library/TeX/Root/bin/universal-darwin"
 fi
-{{- end }}
+# {{- end }}
 
 # Deduplicate PATH
 PATH=$(deduplicate_path "$PATH")
@@ -283,16 +302,16 @@ elif has_command python && command python --version 2>/dev/null | grep -q -Pe '.
     export PYTHON3_HOST_PROG="$(command -v python)"
 fi
 
-{{- if .is_wsl }}
+# {{- if .is_wsl }}
 
 # Exclude windows man paths as it makes man very slow
 export MANPATH="$(remove_windows_paths "$MANPATH")"
 
 # WSL Specific
-export WINHOME={{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
+export WINHOME=# {{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
 
 # Use Windows Browser
-export BROWSER={{ (index .secrets.system .system.hostname).browser | quote }}
+export BROWSER=# {{ (index .secrets.system .system.hostname).browser | quote }}
 
 # Split path into linux and windows parts
 OLDIFS=$IFS
@@ -322,22 +341,22 @@ export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
 
 # Remove windows paths from path
 # manpager_path="$(/usr/bin/printenv PATH | /usr/bin/perl -ne 'print join(":", grep { !/\/mnt\/[a-z]/ } split(/:/));' | awk -vRS=: '!a[$0]++' | paste -s -d:)"
-{{- else -}}
+# {{- else -}}
 # else
 export PATH_CLEAN="$PATH"
 export PATH_SYS_CLEAN="$PATH_SYS"
 export PATH_WINDOWS
 # export PATH_FULL="$"
-{{- end }}
+# {{- end }}
 
 export PATH
 
-{{ if .is_macos -}}
+# {{ if .is_macos -}}
 # Ensure that a non-login, non-interactive shell has a defined environment.
 # if [[ ( "$SHLVL" -eq 1 && ! -o LOGIN ) && -s "${ZDOTDIR:-$HOME}/.zprofile" ]]; then
     # source "${ZDOTDIR:-$HOME}/.zprofile"
 # fi
-{{ end -}}
+# {{ end -}}
 
 # check if neovim is installed, if it is set it as the default editor
 # and oni as the default visual editor if neovim is not available,
@@ -348,12 +367,12 @@ if has_command nvim; then
 
     # Set up manpager
     export MANWIDTH=999
-{{- if .is_wsl }}
+# {{- if .is_wsl }}
     # use cleaned path on WSL
     export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
-{{- else }}
+# {{- else }}
     export MANPAGER='nvim +Man!'
-{{- end }}
+# {{- end }}
 elif has_command nano; then
     EDITOR="$(command -v nano)"
 fi
@@ -369,9 +388,9 @@ elif has_command code; then
 fi
 export VISUAL
 
-{{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
+# {{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
 # API keys
-export AVANTE_GEMINI_API_KEY={{ .secrets.api_keys.avante.personal.gemini | quote }}
-{{- end }}
+export AVANTE_GEMINI_API_KEY=# {{ .secrets.api_keys.avante.personal.gemini | quote }}
+# {{- end }}
 
-{{ template "sh/env_compiler.sh" . }}
+# {{ template "sh/env_compiler.sh" . }}

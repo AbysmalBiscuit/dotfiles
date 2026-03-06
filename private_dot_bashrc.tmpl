@@ -1,35 +1,40 @@
-#!/bin/bash
-{{- $shell := "bash" }}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=bash
+# {{- else -}}
+# vim:filetype=bash.chezmoitmpl
+# {{- end }}
+# {{- $shell := "bash" }}
 # ~/.bashrc
 #
 
-{{ template "sh/debug_startup_start.sh" }}
+# {{ template "sh/debug_startup_start.sh" }}
 
-{{ template "sh/rc.sh" }}
+# {{ template "sh/rc.sh" }}
 
-{{ template "sh/utility_functions.sh" }}
+# {{ template "sh/utility_functions.sh" }}
 
-{{/* Only cache env on personal and non-ephemeral systems */ -}}
-{{ if .cache.build.shell }}
-{{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
+# {{/* Only cache env on personal and non-ephemeral systems */ -}}
+# {{ if .cache.build.shell }}
+# {{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
-{{- else -}}
+# {{- else -}}
 # add additional environment variables
 [[ -s "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
 
 # If not running interactively, stop here
 [[ $- != *i* ]] && return
 
-{{ template "sh/env_wsl.sh" . }}
-{{- end }}
+# {{ template "sh/env_wsl.sh" . }}
+# {{- end }}
 
 # enable gpg integration
 export GPG_TTY=$(tty)
 
 # Starting fish shell, and make sure to exit after
 if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCESH" != "1" && (! -v ZED_TERM || "$ZED_TERM" != "true") ]]; then
-    source "$env_cache"
-    {{ template "sh/debug_startup_end.sh" }}
+    source "# {{ .chezmoi.homeDir }}/.cache/# {{ $shell }}/env.# {{ $shell }}"
+    # {{ template "sh/debug_startup_end.sh" }}
 
     exec fish
 fi
@@ -40,8 +45,8 @@ fi
 #     exec fish $LOGIN_OPTION
 # fi
 
-{{ if not .cache.build.shell -}}
-{{ template "bash/rc.bash" }}
+# {{ if not .cache.build.shell -}}
+# {{ template "bash/rc.bash" }}
 
 # Configuration for the terminal prompt
 # set a fancy prompt (non-color, unless we know we "want" color)
@@ -88,10 +93,10 @@ xterm* | rxvt*)
 *) ;;
 esac
 
-{{ template "sh/extensions.sh" . }}
-{{- end }}
+# {{ template "sh/extensions.sh" . }}
+# {{- end }}
 
-{{ template "sh/debug_startup_end.sh" }}
+# {{ template "sh/debug_startup_end.sh" }}
 
 # Avoid error message after shell start
 return 0

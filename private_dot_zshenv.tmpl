@@ -1,11 +1,19 @@
-#!/bin/zsh
-# vim:set shiftwidth=4:
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=zsh:set shiftwidth=4:
+# {{- else -}}
+# vim:filetype=zsh.chezmoitmpl:set shiftwidth=4:
+# {{- end }}
 
-if [[ -f "$HOME/.cache/zsh/cache_env.zsh" ]]; then
-    source "$HOME/.cache/zsh/cache_env.zsh"
-    return 0
-fi
+# if [[ $- != *i* ]] && [[ -f "$HOME/.cache/zsh/cache_env.zsh" ]]; then
+    # source "$HOME/.cache/zsh/cache_env.zsh"
+    # return 0
+# fi
 
-{{ template "sh/utility_functions.sh" }}
+# {{ template "sh/utility_functions.sh" }}
 
-[[ -s {{ joinPath .chezmoi.homeDir ".sh_env" }} ]] && {{ joinPath .chezmoi.homeDir ".sh_env" }}
+# {{ if .cache.shell -}}
+[[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
+# {{- else -}}
+[[ -s "$HOME/.sh_env" ]] && source "$HOME/.sh_env"
+# {{- end }}

@@ -1,3 +1,9 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=tmux
+# {{- else -}}
+# vim:filetype=tmux.chezmoitmpl
+# {{- end }}
 set LANG="en_US.UTF-8"
 
 set -g base-index 1
@@ -49,13 +55,13 @@ bind -T root C-Right select-pane -R
 set-option -g status-position top
 
 # Re-enable home and end keys
-{{- if .is_wsl -}}
+# {{- if .is_wsl -}}
   bind-key -n Home send-keys \033[H
   bind-key -n End send-keys \033[F
-{{- else if .is_macos -}}
+# {{- else if .is_macos -}}
 bind-key -n Home send Escape "OH"
 bind-key -n End send Escape "OF"
-{{- end -}}
+# {{- end -}}
 # Add default opening methods as fallback
 # bind c new-window -c "#{pane_current_path}"
 # bind '"' split-window -c "#{pane_current_path}"
@@ -180,10 +186,10 @@ set -g status-right "#{E:@catppuccin_status_application}"
 set -ga status-right "#(tmux-spotify-info)"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 # 
-{{- if .is_macos -}}
+# {{- if .is_macos -}}
 set -ag status-right "#[bg=#{@thm_flamingo},fg=#{@thm_crust}]#[reverse]#[noreverse]󱀙  "
 set -ag status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(memory_pressure | awk '/percentage/{print $5}') "
-{{- end -}}
+# {{- end -}}
 # set -agF status-right "#{E:@catppuccin_status_ram}"
 # set -agF status-right "#{E:@catppuccin_status_load}"
 # set -ag status-right "#[bg=#{@thm_pink},fg=#{@thm_crust}]#[reverse]#[noreverse]  "

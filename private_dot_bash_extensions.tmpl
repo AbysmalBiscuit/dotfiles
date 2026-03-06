@@ -1,16 +1,21 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=bash
+# {{- else -}}
 # vim:filetype=bash.chezmoitmpl
-{{ if .has.starship -}}
-{{output "starship" "init" "bash" "--print-full-init" }}
+# {{- end }}
+# {{ if .has.starship -}}
+# {{output "starship" "init" "bash" "--print-full-init" }}
 
 export STARSHIP_LOG=error
-{{- end }}
-{{ if .has.sk -}}
-{{ output "sk" "--shell" "bash" "--shell-bindings" }}
+# {{- end }}
+# {{ if .has.sk -}}
+# {{ output "sk" "--shell" "bash" "--shell-bindings" }}
 
-{{ else if .has.fzf -}}
-{{ output "fzf" "--bash" }}
+# {{ else if .has.fzf -}}
+# {{ output "fzf" "--bash" }}
 
-{{ end }}
-{{ if .has.zoxide -}}
-{{ output "zoxide" "init" "bash" }}
-{{- end }}
+# {{ end }}
+# {{ if .has.zoxide -}}
+# {{ output "zoxide" "init" "bash" }}
+# {{- end }}

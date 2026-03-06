@@ -1,7 +1,12 @@
-#!/bin/bash
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=bash
+# {{- else -}}
+# vim:filetype=bash.chezmoitmpl
+# {{- end }}
 # ~/.bash_profile
 #
 
-{{ template "sh/profile.sh" . }}
+# {{ template "sh/profile.sh" . }}
 
 [[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"

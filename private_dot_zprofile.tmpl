@@ -1,12 +1,17 @@
-#!/bin/zsh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=zsh
+# {{- else -}}
+# vim:filetype=zsh.chezmoitmpl
+# {{- end }}
 # ~/.zprofile
 #
-{{ if stat "/opt/homebrew/bin/brew" -}}
+# {{ if stat "/opt/homebrew/bin/brew" -}}
 fpath+=("{{ output "/opt/homebrew/bin/brew" "--prefix" | trim }}/share/zsh/site-functions")
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
-{{ end -}}
-{{ template "sh/profile.sh" . }}
+# {{ end -}}
+# {{ template "sh/profile.sh" . }}
 # [[ -s "$HOME/.profile" ]] && source ~/.profile
 #
 # if [ -f ~/.zshrc ]; then . ~/.zshrc; fi
