@@ -68,6 +68,7 @@
   "cargo-install-update"
   "ccr"
   "claude"
+  "code"
   "cs"
   "dbeaver"
   "eza"
@@ -78,7 +79,11 @@
   "jj"
   "jless"
   "jq"
+  "kitty"
+  "linuxbrew"
+  "luarocks"
   "mpv"
+  "nano"
   "ncspot"
   "nvidia-smi"
   "nvim"
@@ -89,15 +94,19 @@
   "ruff"
   "sccache"
   "sk"
+  "source-highlight-esc"
   "spotify_player"
   "sqlc"
   "starship"
   "tdc"
+  "trash"
   "uv"
   "vcat"
+  "vim"
   "wl-copy"
   "ya"
   "yazi"
+  "zed"
   "zoxide"
 ) -}}
 {{- $cli_tools_wsl := list -}}
@@ -167,7 +176,7 @@
 {{- /* General per os settings */ -}}
 {{- if $is_linux -}}
   {{- $line_end = "\n" -}}
-  {{ if lookPath "wl-copy" }}
+  {{ if $has.wl_copy }}
     {{- $copy_command = "wl-copy" -}}
     {{- $paste_command = "wl-paste" -}}
   {{- else -}}
@@ -182,7 +191,7 @@
             "bash.exe"
             "wsl.exe"
     ) -}}
-    {{- if lookPath "wsl.exe" -}}
+    {{- if .has.wsl_exe -}}
       {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
       {{- range $line := splitList "\n" $wslList -}}
         {{- if contains "(Default)" $line -}}
@@ -199,7 +208,7 @@
   {{- $line_end = "\r\n" -}}
   {{- $copy_command = "Set-Clipboard" -}}
   {{- $paste_command = "Get-Clipboard" -}}
-  {{- if lookPath "wsl.exe" -}}
+  {{- if .has.wsl_exe -}}
     {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
     {{- range $line := splitList "\n" $wslList -}}
       {{- if contains "(Default)" $line -}}
@@ -216,16 +225,15 @@
 {{- end -}}
 
 {{- /* Identify editor */ -}}
-{{- if lookPath "nvim" }}
+{{- if $has.nvim }}
   {{- $editor = "nvim" }}
-  {{- $has_nvim := false }}
-{{- else if lookPath "vim" }}
+{{- else if $has.vim }}
   {{- $editor = "vim" }}
-{{- else if lookPath "zed" }}
+{{- else if $has.zed }}
   {{- $editor = "zed" }}
-{{- else if lookPath "nano" }}
+{{- else if $has.nano }}
   {{- $editor = "nano" }}
-{{- else if lookPath "code" }}
+{{- else if $has.code }}
   {{- $editor = "code" }}
   {{- $editor_args = list "--wait" }}
 {{- end }}

@@ -1,4 +1,5 @@
-{{- if .has.bun -}}
+# {{- if .has.bun -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # This is terribly complicated
 # It's because:
 # 1. bun run has to have dynamic completions
@@ -180,4 +181,4 @@ complete -c bun -n __fish_use_subcommand -a pm -d "Additional package management
 complete -c bun -n __fish_use_subcommand -a x -d "Execute a package binary, installing if needed" -f
 complete -c bun -n __fish_use_subcommand -a outdated -d "Display the latest versions of outdated dependencies" -f
 complete -c bun -n __fish_use_subcommand -a publish -d "Publish your package from local to npm" -f
-{{- end -}}
+# {{- end -}}

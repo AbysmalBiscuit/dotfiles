@@ -1,4 +1,5 @@
-{{- if .has.eza -}}
+# {{- if .has.eza -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # Meta-stuff
 complete -c eza -s v -l version -d "Show version of eza"
 complete -c eza -l help -d "Show list of command-line options"
@@ -130,4 +131,4 @@ complete -c eza -l git-repos -d "List each git-repos status and branch name"
 complete -c eza -l git-repos-no-status -d "List each git-repos branch name (much faster)"
 complete -c eza -s '@' -l extended -d "List each file's extended attributes and sizes"
 complete -c eza -s Z -l context -d "List each file's security context"
-{{- end -}}
+# {{- end -}}

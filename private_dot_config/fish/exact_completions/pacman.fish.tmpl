@@ -1,4 +1,5 @@
-{{- if .has.pacman -}}
+# {{- if .has.pacman -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # Completions for pacman
 # Author: Giorgio Lando <patroclo7@gmail.com>
 # Updated by maxfl, SanskritFritz, faho, f1u77y
@@ -22,8 +23,8 @@ set -l files '__fish_contains_opt -s F files'
 complete -c pacman -e
 complete -c pacman -f
 # HACK: We only need these two to coerce fish to stop file completion and complete options
-complete -c $progname -n $noopt -a "-D" -d "Modify the package database"
-complete -c $progname -n $noopt -a "-Q" -d "Query the package database"
+complete -c $progname -n $noopt -a -D -d "Modify the package database"
+complete -c $progname -n $noopt -a -Q -d "Query the package database"
 # Primary operations
 complete -c $progname -s D -f -l database -n $noopt -d 'Modify the package database'
 complete -c $progname -s Q -f -l query -n $noopt -d 'Query the package database'
@@ -136,4 +137,4 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 # In practice, it's going to be tar.xz or tar.gz
 # Using "pkg.tar.*" here would change __fish_complete_suffix's descriptions to "unknown"
 complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix .pkg.tar\{,.xz,.gz\})' -d 'Package file'
-{{- end -}}
+# {{- end -}}
