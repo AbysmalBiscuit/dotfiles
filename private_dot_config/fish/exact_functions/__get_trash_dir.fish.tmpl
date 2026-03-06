@@ -1,0 +1,28 @@
+# {{- if .has.trash -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+function __get_trash_dir
+    set -l real_pwd (realpath $PWD)
+    set -l trashdir
+    # {{ if .is_linux -}}
+    set -l home_dev (stat -c %d $HOME)
+    set -l pwd_dev (stat -c %d $real_pwd)
+    if test "$home_dev" = "$pwd_dev"
+        set trashdir (set -q XDG_DATA_HOME; and echo $XDG_DATA_HOME; or echo $HOME/.local/share)/Trash
+    else
+        set -l mountpoint (findmnt -n -o TARGET --target $real_pwd)
+        set trashdir "$mountpoint/.Trash-"(id -u)
+    end
+    # {{- else if .is_macos -}}
+    set -l home_dev (stat -f %d $HOME)
+    set -l pwd_dev (stat -f %d $real_pwd)
+    if test "$home_dev" = "$pwd_dev"
+        set trashdir $HOME/.Trash
+    else
+        set -l mountpoint (stat -f %m $real_pwd)
+        set trashdir "$mountpoint/.Trashes/"(id -u)
+    end
+    # {{- end }}
+    echo $trashdir
+    return 0
+end
+# {{- end -}}

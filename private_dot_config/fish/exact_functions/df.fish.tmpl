@@ -1,5 +1,5 @@
-# Defined in - @ line 1
-{{ if or .is_linux .is_wsl -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if or .is_linux .is_wsl -}}
 if type -q dysk
     function df --wraps='dysk' --description 'alias df=dysk'
         dysk $argv
@@ -10,8 +10,8 @@ else
         command df -h $argv
     end
 end
-{{- else -}}
+# {{- else -}}
 function df --wraps='df -h' --description 'alias df=df -h'
     command df -h $argv
 end
-{{- end }}
+# {{- end }}

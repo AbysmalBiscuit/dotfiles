@@ -1,3 +1,4 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 function exp --description 'Opens the given path (default CWD) in a file explorer'
     set -l dir_
     if set -q argv[1]
@@ -11,14 +12,14 @@ function exp --description 'Opens the given path (default CWD) in a file explore
         return 0
     end
 
-    {{ if .is_linux -}}
+    # {{ if .is_linux -}}
     xdg-open $dir_
     return 0
-    {{- else if .is_macos -}}
+    # {{- else if .is_macos -}}
     open $dir_
     return 0
-    {{- else -}}
+    # {{- else -}}
     echo "No file explorer known for '$OS'"
     return 1
-    {{- end }}
+    # {{- end }}
 end

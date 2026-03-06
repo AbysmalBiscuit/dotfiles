@@ -1,5 +1,4 @@
 # Defined in - @ line 1
 function yta --wraps='yt-dlp' --description 'alias yt=yt-dlp'
     yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }} --progress --download-archive archive.txt $argv
-
 end

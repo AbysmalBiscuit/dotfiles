@@ -1,5 +1,4 @@
 # Defined in - @ line 1
 function yt-pl --wraps='yt-dlp' --description 'alias yt-pl=yt-dlp'
     yt-dlp -ciw --restrict-filename -o "%(playlist)s-%(playlist_index)s_%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }} $argv
-
 end
