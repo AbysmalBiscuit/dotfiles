@@ -1,4 +1,5 @@
-function help2comp_rec
+function help2comp_rec --description 'Generates fish completions by using a cli tool\'s help, recurses into sub-commands'
+    argparse --move-unknown c/call-sub s/stdout -- $argv
     set -l bin $argv[1]
     set -l out_file "$bin.fish"
     set -l completions
@@ -7,7 +8,7 @@ function help2comp_rec
     echo "1. Extract subcommands"
     # set -l subcommands ($bin --help | sed -n '/\(Commands\|Arguments\):/,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}' | sort -u)
     set -l help_text ($bin --help | string collect)
-    set -l subcommands (echo $help_text | sed -n '/Commands:/,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}')
+    set -l subcommands (echo $help_text | sed -n '/[Cc]ommands:/,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}' | sort -u | string match -rv "^$bin\$")
 
     set --append completions "# Completions for $bin"
 
@@ -44,12 +45,12 @@ function help2comp_rec
         set --append completions "# top-level flags"
         set --append completions (help2comp --stdout "$bin" | string replace --regex "^complete -c $bin" "complete -c $bin"' -n "not __fish_seen_subcommand_from \$commands"')
 
-        printf '%s\n' $completions
-        return
+        # printf '%s\n' $completions
+        # return
 
         # 5. Subcommand Suggestions: Also only show at the top level
         echo "5. Processing subcommands"
-        set --append completions "# Subcommand effect completion"
+        set --append completions "# Subcommand completion"
         for sub in $subcommands
             echo "  - Processing $sub"
             # Get description (matches the line starting with the subcommand)
@@ -60,10 +61,18 @@ function help2comp_rec
         # 6. Subcommand-specific Flags
         echo "6. Processing subcommand flags"
         set --append completions "" "" "# Completions for each subcommand" ""
-        for sub in $subcommands
-            echo "  - Processing $sub"
-            # These flags ONLY show if the specific subcommand IS seen
-            set --append completions (help2comp --stdout "$bin $sub" | string replace --regex "complete -c '$bin $sub'" "complete -c $bin -f -n '__fish_seen_subcommand_from $sub'")
+        if set -q _flag_call_sub
+            for sub in $subcommands
+                echo "  - Processing $sub"
+                # These flags ONLY show if the specific subcommand IS seen
+                set --append completions (help2comp --stdout "$sub" | string replace --regex "complete -c '$bin $sub'" "complete -c $bin -f -n '__fish_seen_subcommand_from $sub'")
+            end
+        else
+            for sub in $subcommands
+                echo "  - Processing $sub"
+                # These flags ONLY show if the specific subcommand IS seen
+                set --append completions (help2comp --stdout "$bin $sub" | string replace --regex "complete -c '$bin $sub'" "complete -c $bin -f -n '__fish_seen_subcommand_from $sub'")
+            end
         end
     else
         echo "No subcommands detected!"

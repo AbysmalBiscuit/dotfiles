@@ -1,4 +1,4 @@
-function help2comp
+function help2comp --description 'Generates fish completions by using a cli tool\'s help'
     argparse --ignore-unknown s/stdout -- $argv
 
     set command_ $argv[1]
@@ -14,19 +14,12 @@ function help2comp
         set completion_file_path $__fish_cache_dir/generated_completions/$completion_file_name
     end
 
-    set tmp_command (mktemp -t "help2comp.XXXXX.sh")
+    set tmp_command (mktemp -t "$command_.XXXXX.sh")
     echo >$tmp_command "\
 #!/bin/bash
 $command_ "'"$@"'
 
     chmod u+x $tmp_command
-    # echo $tmp_command
-    # ll $tmp_command
-    # cat $tmp_command
-
-    # set tmp_man "$command_.1"
-    # fish_update_completions $tmp_man
-    # echo $completion_file_path
 
     set -l python (__fish_anypython)
     or begin
@@ -40,9 +33,9 @@ $command_ "'"$@"'
         help2man $tmp_command | $python -B $__fish_config_dir/tools/create_manpage_completions.py --keep --stdout --stdin >$completion_file_path
     end
 
-    # cat $tmp_man
-    # rm $tmp_command
-    # rm $tmp_man
+    if test -f $tmp_command
+        rm $tmp_command
+    end
 end
 
 # function __fish_update_completions_custom --description "Update man-page based completions"
