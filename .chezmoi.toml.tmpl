@@ -1,3 +1,6 @@
+{{- if false -}}
+# vim:filetype=toml.chezmoitmpl
+{{- end -}}
 {{- /* System information */ -}}
 {{- $is_work := false -}}{{/* true if this machine is a is_work machine */}}
 {{- $is_personal := false -}}{{/* true if this machine should have personal secrets */}}
@@ -57,14 +60,17 @@
 {{- $has_has := false -}}
 {{- $has_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" -}}
 {{- $has := dict -}}
-{{- if stat $secrets_path -}}
+{{- if stat $has_path -}}
   {{- $has_has = true -}}
   {{- $has = include $has_path | fromToml -}}
 {{- end -}}
-{{- $secrets = include $secrets_path | fromToml -}}
 {{- $cli_tools := (list
   "alacritty"
   "bun"
+  "bash"
+  "zsh"
+  "nu"
+  "btm"
   "cargo-install-update"
   "ccr"
   "claude"
@@ -108,8 +114,25 @@
   "yazi"
   "zed"
   "zoxide"
+
 ) -}}
-{{- $cli_tools_wsl := list -}}
+{{- $cli_tools_wsl := (list
+        "spotify_player.exe"
+        "ollama.exe"
+        "pwsh.exe"
+        "bash.exe"
+        "wsl.exe"
+) -}}
+
+{{- if eq (len $has) 0 -}}
+{{- $has = dict -}}
+{{- range $cli_tools -}}
+{{- $has = merge $has (dict ( . | replaceAllRegex "[-\\.]" "_" ) false) -}}
+{{- end -}}
+{{- range $cli_tools_wsl -}}
+{{- $has = merge $has (dict ( . | replaceAllRegex "[-\\.]" "_" ) false) -}}
+{{- end -}}
+{{- end -}}
 
 {{- $osID := .chezmoi.os -}}
 {{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
@@ -184,14 +207,7 @@
     {{- $paste_command = "xclip -o -selection clipboard" -}}
   {{- end -}}
   {{- if $is_wsl -}}
-    {{- $cli_tools_wsl = (list
-            "spotify_player.exe"
-            "ollama.exe"
-            "pwsh.exe"
-            "bash.exe"
-            "wsl.exe"
-    ) -}}
-    {{- if .has.wsl_exe -}}
+    {{- if $has.wsl_exe -}}
       {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
       {{- range $line := splitList "\n" $wslList -}}
         {{- if contains "(Default)" $line -}}
@@ -208,7 +224,7 @@
   {{- $line_end = "\r\n" -}}
   {{- $copy_command = "Set-Clipboard" -}}
   {{- $paste_command = "Get-Clipboard" -}}
-  {{- if .has.wsl_exe -}}
+  {{- if $has.wsl_exe -}}
     {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
     {{- range $line := splitList "\n" $wslList -}}
       {{- if contains "(Default)" $line -}}
@@ -356,7 +372,7 @@ args = ["-d", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Source
 # Data for use in templates
 [data]
 arch = {{ $arch | quote }}
-arch_go = {{ dict "x86_64" "amd64" "aarch64" "arm64" | dig .arch .arch | quote }}
+arch_go = {{ dict "x86_64" "amd64" "aarch64" "arm64" | dig .chezmoi.arch .chezmoi.arch | quote }}
 chost = {{ $chost | quote }}
 compiler_os = {{ $compiler_os | quote }}
 archive = {{ $archive | quote }}
