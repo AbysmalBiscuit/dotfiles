@@ -63,10 +63,22 @@ path = {{ printf "croc%s" .exe_ext | quote }}
 {{- end }}
 
 
+{{- $exe = printf "dasel%s" .exe_ext -}}
+{{- if not (stat (joinPath .path.go_bin_dir $exe)) }}
+
+[".local/bin/dasel{{ .exe_ext }}"]
+type = "file"
+url = {{ gitHubLatestReleaseAssetURL "TomWright/dasel" (printf "dasel_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext) | quote }}
+refreshPeriod = "72h"
+executable = true
+path = {{ printf "dasel_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext | quote }}
+{{- end }}
+
+
 {{- $exe = printf "gdu%s" .exe_ext -}}
 {{- if not (stat (joinPath .path.go_bin_dir $exe)) }}
 
-[".local/bin/gdu"]
+[".local/bin/gdu{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "dundee/gdu" (printf "gdu_%s_%s%s.tgz" .chezmoi.os .chezmoi.arch .exe_ext) | quote }}
 refreshPeriod = "72h"
@@ -104,6 +116,47 @@ path = "sqlc{{ .exe_ext }}"
 
 # Rust programs
 
+{{- $exe = printf "btm%s" .exe_ext -}}
+{{- if .has.btm -}}
+  {{- $btm_os := .compiler_os -}}
+  {{- if .is_linux -}}{{- $btm_os = $compiler_os_alt -}}{{- end -}}
+  {{- $btm_triple := printf "%s-%s" .arch $btm_os }}
+
+{{ if .has.bash -}}
+["{{ joinPath ".config" "bash_completion" "btm.bash" }}"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
+refreshPeriod = "72h"
+executable = true
+path = "./btm.bash"
+{{- end }}
+{{ if .has.fish -}}
+["{{ joinPath ".cache" "fish" "generated_completions" "btm.fish" }}"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
+refreshPeriod = "72h"
+executable = true
+path = "./btm.fish"
+{{- end }}
+{{ if .has.zsh -}}
+["{{ joinPath ".oh-my-zsh" "completions" "_btm" }}"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
+refreshPeriod = "72h"
+executable = true
+path = "./_btm"
+{{- end }}
+{{ if .is_windows -}}
+["{{ joinPath "Documents" "PowerShell" "conf.d" }}"]
+type = "archive-file"
+url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
+refreshPeriod = "72h"
+executable = true
+path = "./btm.ps1"
+{{- end }}
+{{- end }}
+
+
 {{- $exe = printf "eza%s" .exe_ext -}}
 {{- if not (stat (joinPath .path.cargo_bin_dir $exe)) }}
   {{- $eza_os := "" -}}
@@ -132,7 +185,7 @@ path = {{ printf "eza%s" .exe_ext | quote }}
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s%s" $jj_triple .archive) | quote }}
 refreshPeriod = "72h"
-ejj_osxecutable = true
+executable = true
 # path = {{ printf "jj-v*-%s/jj%s" $jj_triple .exe_ext | quote }}
 path = "./jj{{ .exe_ext }}"
 {{- end }}
