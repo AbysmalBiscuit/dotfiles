@@ -101,6 +101,29 @@ vim.api.nvim_create_autocmd("FileType", {
     end
   end,
 })
+vim.api.nvim_create_autocmd("BufWritePost", {
+  group = vim.api.nvim_create_augroup("chezmoi_group_custom3", { clear = false }),
+  pattern = "*/.chezmoidata/*tools.toml",
+  callback = function()
+    vim.fn.jobstart("chezmoi apply --include=scripts", {
+      on_exit = function(_, code)
+        vim.schedule(function()
+          if code == 0 then
+            vim.notify("tools.toml sorted")
+            local name = vim.api.nvim_buf_get_name(0)
+            if name ~= "" and string.match(name, ".*tools%.toml") then
+              vim.api.nvim_buf_call(0, function()
+                vim.cmd("edit!")
+              end)
+            end
+          else
+            vim.notify("sorting tools.toml failed", vim.log.levels.ERROR)
+          end
+        end)
+      end,
+    })
+  end,
+})
 
 --------------------------------------------------------------------------------
 -- Snacks
@@ -148,35 +171,68 @@ local chezmoi_filetypes = {
   "json",
   "jsonc",
   "nu",
+  "python",
   "sh",
   "toml",
   "yaml",
   "zsh",
-  -- "nanorc",
 }
 local ft_to_parser = {
   sh = "bash",
 }
-local chezmoi_filetypes_postfixed = {}
-for i = 1, #chezmoi_filetypes do
-  local filetype = chezmoi_filetypes[i]
-  local post_fixed = filetype .. ".chezmoitmpl"
-  table.insert(chezmoi_filetypes_postfixed, post_fixed)
-  table.insert(gotmpl_filetypes, post_fixed)
-  vim.treesitter.language.register("gotmpl", post_fixed)
-  if ft_to_parser[filetype] == nil then
-    ft_to_parser[filetype] = filetype
+
+-- Read query source files for a treesitter language
+local function get_query_source(lang, query_name)
+  local files = vim.treesitter.query.get_files(lang, query_name)
+  if #files == 0 then
+    return nil
   end
+  local sources = {}
+  for _, file in ipairs(files) do
+    table.insert(sources, table.concat(vim.fn.readfile(file), "\n"))
+  end
+  return table.concat(sources, "\n")
 end
 
-local function set_gotmpl_injections(lang)
+-- Cache base gotmpl queries once
+local propagated_queries = { "highlights", "folds", "indents", "locals" }
+local gotmpl_query_cache = {}
+local gotmpl_parser_path = vim.api.nvim_get_runtime_file("parser/gotmpl.so", false)[1]
+  or vim.api.nvim_get_runtime_file("parser/gotmpl.dll", false)[1]
+for _, name in ipairs(propagated_queries) do
+  gotmpl_query_cache[name] = get_query_source("gotmpl", name)
+end
+
+-- Register a per-filetype gotmpl variant with its own injection
+for _, filetype in ipairs(chezmoi_filetypes) do
+  local compound_ft = filetype .. ".chezmoitmpl"
+  local ts_lang = "gotmpl_" .. filetype
+  local inject_lang = ft_to_parser[filetype] or filetype
+
+  vim.treesitter.language.add(ts_lang, {
+    path = gotmpl_parser_path,
+    symbol_name = "gotmpl",
+  })
+
+  -- Map the compound filetype to our variant language
+  vim.treesitter.language.register(ts_lang, compound_ft)
+
+  for _, name in ipairs(propagated_queries) do
+    if gotmpl_query_cache[name] then
+      vim.treesitter.query.set(ts_lang, name, gotmpl_query_cache[name])
+    end
+  end
+
   vim.treesitter.query.set(
-    "gotmpl",
+    ts_lang,
     "injections",
-    string.format('((text) @injection.content (#set! injection.combined) (#set! injection.language "%s"))', lang)
+    string.format('((text) @injection.content (#set! injection.combined) (#set! injection.language "%s"))', inject_lang)
   )
+
+  table.insert(gotmpl_filetypes, compound_ft)
 end
 
+-- Override treesitter.start to respect buffer-local language
 local orig_ts_start = vim.treesitter.start
 vim.treesitter.start = function(buf, lang, ...)
   buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
@@ -186,29 +242,27 @@ vim.treesitter.start = function(buf, lang, ...)
   return orig_ts_start(buf, lang, ...)
 end
 
-vim.api.nvim_create_autocmd("BufReadPost", {
-  pattern = { "*.tmpl" },
-  callback = function(ev)
-    -- Mark this buffer early, before filetype is even set
-    vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
-  end,
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "*.chezmoitmpl",
-  callback = function(ev)
-    local ft = vim.bo[ev.buf].filetype
-    local base = ft:match("^(.+)%.chezmoitmpl$")
-    local lang = ft_to_parser[base] or "bash"
-    vim.b[ev.buf].chezmoi_base_parser = lang
-    set_gotmpl_injections(lang)
-  end,
-})
-
+-- Plain .tmpl files default to base gotmpl
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
   pattern = "*.tmpl",
   callback = function(ev)
     vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
+  end,
+})
+
+-- Compound filetypes get their specific variant
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "*.chezmoitmpl",
+  callback = function(ev)
+    local ft = vim.bo[ev.buf].filetype
+    local base = ft:match("^([^%.]+)%.chezmoitmpl$")
+    if base then
+      local ts_lang = "gotmpl_" .. base
+      vim.b[ev.buf].chezmoi_ts_lang = ts_lang
+      -- Restart with the correct variant
+      vim.treesitter.stop(ev.buf)
+      vim.treesitter.start(ev.buf, ts_lang)
+    end
   end,
 })
 
@@ -223,7 +277,67 @@ vim.lsp.config("gopls", {
       templateExtensions = { "tmpl" },
     },
   },
+
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    if fname == "" then
+      return
+    end
+    local chezmoi_source = vim.fn.expand("~") .. "/.local/share/chezmoi"
+    if vim.startswith(fname, chezmoi_source) then
+      if fname:match("%.tmpl$") or fname:match("%.go$") then
+        on_dir(chezmoi_source)
+      end
+      return
+    end
+    local root = require("lspconfig.util").root_pattern("go.work", "go.mod", ".git")(fname)
+    if root then
+      on_dir(root)
+    end
+  end,
+  -- root_dir = vim.fs.root(0, { ".git/" }),
+  -- root_dir = function(bufnr, fname)
+  -- if type(fname) ~= "string" then
+  -- return nil
+  -- end
+
+  -- -- Filetype may not be set when root_dir is called, so check filename
+  -- local dominated_file = fname:match("%.tmpl$")
+  -- or fname:match("%.go$")
+  -- or fname:match("go%.mod$")
+  -- or fname:match("go%.work$")
+
+  -- if not dominated_file then
+  -- -- Fallback: check filetype if buffer exists
+  -- local buf = (type(bufnr) == "number" and bufnr > 0) and bufnr or vim.fn.bufnr(fname)
+  -- if buf < 1 then
+  -- return nil
+  -- end
+  -- local ft = vim.bo[buf].filetype
+  -- if not vim.tbl_contains({ "go", "gomod", "gowork", "gotmpl" }, ft) and not ft:match("%.chezmoitmpl$") then
+  -- return nil
+  -- end
+  -- end
+
+  -- local chezmoi_source = vim.fn.expand("~") .. "/.local/share/chezmoi"
+  -- if vim.startswith(fname, chezmoi_source) then
+  -- return chezmoi_source
+  -- end
+  -- return require("lspconfig.util").root_pattern("go.work", "go.mod", ".git")(fname)
+  -- end,
 })
+
+vim.lsp.config("pyrefly", {
+  filetypes = { "python", "python.chezmoitmpl" },
+})
+
+vim.lsp.config("bashls", {
+  filetypes = { "bash", "bash.chezmoitmpl", "zsh", "zsh.chezmoitmpl", "sh", "sh.chezmoitmpl" },
+})
+
+-- vim.lsp.config("taplo", {
+-- filetypes = { "toml", "toml.chezmoitmpl" },
+-- })
 
 -- local ignored_vtsls_codes = { [80001] = true }
 -- local method = vim.lsp.protocol.Methods.textDocument_publishDiagnostics
