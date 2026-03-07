@@ -80,9 +80,11 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
 # {{- end }}
 
 # Setting VOC directory path environment variable
-if [[ -d "/usr/share/java/voc" ]]; then
-    export VOC_DIR="/usr/share/java/voc"
-fi
+# {{ if stat "/usr/share/java/voc" -}}
+# if [[ -d "/usr/share/java/voc" ]]; then
+export VOC_DIR="/usr/share/java/voc"
+# fi
+# {{- end }}
 
 export GTK_THEME="Adwaita:dark"
 
@@ -115,9 +117,11 @@ PATH="$PATH:/opt/intel/bin"
 # {{- end }}
 
 # Add tesseract data
-if [[ -d "$HOME/tessdata" ]]; then
-    export TESSDATA_PREFIX="$HOME/tessdata"
-fi
+# {{ if stat (joinPath .chezmoi.homeDir "tessdata") -}}
+# if [[ -d "$HOME/tessdata" ]]; then
+export TESSDATA_PREFIX="$HOME/tessdata"
+# fi
+# {{- end }}
 
 if has_command mold; then
     export MOLD="$(command -v mold)"
