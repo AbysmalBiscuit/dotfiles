@@ -1,0 +1,67 @@
+[[tools]]
+lang = "rust"
+name = "spotify-player"
+cmds = [
+    "spotify-player.exe"
+]
+desc = " A Spotify player in the terminal with full feature parity "
+url = ""
+git = "https://github.com/aome510/spotify-player"
+install_command = ""
+completions_command = "spotify-player.exe generate SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "go"
+name = "ollama"
+cmds = [
+    "ollama.exe"
+]
+desc = "Run large language models locally."
+url = "https://ollama.com"
+git = "https://github.com/ollama/ollama"
+install_command = "curl -fsSL https://ollama.com/install.sh | sh"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c#"
+name = "PowerShell"
+cmds = ["pwsh.exe", "powershell.exe"]
+desc = "PowerShell is a cross-platform (Windows, Linux, and macOS) automation and configuration tool/framework that works well with your existing tools and is optimized for dealing with structured data (e.g. JSON, CSV, XML, etc.), REST APIs, and object models. It includes a command-line shell, an associated scripting language, and a framework for processing cmdlets."
+url = "https://microsoft.com/PowerShell"
+git = "https://github.com/PowerShell/PowerShell"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "bash"
+cmds = ["bash.exe"]
+desc = "Bash is an interactive command interpreter and scripting language developed for Unix-like operating systems."
+url = "https://www.gnu.org/software/bash/manual/bash.html"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c++"
+name = "WSL"
+cmds = ["wsl.exe"]
+desc = "Windows Subsystem for Linux (WSL) is a powerful way for you to run your Linux command-line tools, utilities and applications, all unmodified and directly on Windows without the overhead of a traditional virtual machine or dual boot setup."
+url = "https://wsl.dev/"
+git = "https://github.com/microsoft/WSL"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []

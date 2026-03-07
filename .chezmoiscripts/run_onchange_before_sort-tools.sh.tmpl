@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# vim:filetype=python.chezmoitmpl
+# Hash to trigger re-run when tools.toml changes:
+# # {{ include ".chezmoidata/tools.toml" | sha256sum }}
+# {{ if not .has.uv -}}
+import sys
+sys.exit(0)
+# {{- end }}
+
+import json
+import sys
+import tomllib
+from pathlib import Path
+
+TOOLS_TOML: Path = Path("# {{ .chezmoi.sourceDir }}") / ".chezmoidata" / "tools.toml"
+
+FIELDS: list[str] = [
+    "lang",
+    "name",
+    "cmds",
+    "desc",
+    "url",
+    "git",
+    "install_command",
+    "completions_command",
+    "init_command",
+    "supported_shells",
+]
+FIELDS_TYPES = {
+    "lang": (str, ""),
+    "name": (str, ""),
+    "cmds": (list[str], []),
+    "desc": (str, ""),
+    "url": (str, ""),
+    "git": (str, ""),
+    "install_command": (str, ""),
+    "completions_command": (str, ""),
+    "init_command": (str, ""),
+    "supported_shells": (list[str], []),
+}
+
+
+def escape_toml_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def tool_to_toml(tool: dict) -> str:
+    lines = ["[[tools]]"]
+    for field in FIELDS:
+        field_type = FIELDS_TYPES[field]
+        value = tool.get(field, field_type[1])
+        if field == "supported_shells" and (tool.get("completions_command", "") != "" or tool.get("init_command", "") != "") and value == []:
+            value = ["bash", "fish", "zsh"]
+        elif field == "cmds" and value == []:
+            value = [tool.get("name")]
+
+        if type(value) is list:
+            value.sort()
+        if field_type[0] is str:
+            lines.append(f'{field} = "{escape_toml_string(str(value.strip()))}"')
+        else:
+            lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
+    return "\n".join(lines)
+
+
+def main() -> None:
+    with TOOLS_TOML.open("rb") as f:
+        data = tomllib.load(f)
+
+    tools = data.get("tools", [])
+    tools.sort(key=lambda p: (p.get("lang", ""), p.get("name", "")))
+
+    header = "# Managed by chezmoi — sort order maintained by run_onchange_before_sort-tools.sh.tmpl\n"
+    blocks = "\n\n".join(tool_to_toml(tool) for tool in tools)
+    output = header + blocks + "\n"
+
+    current = TOOLS_TOML.read_text(encoding="utf-8")
+    if current == output:
+        sys.exit(0)
+
+    TOOLS_TOML.write_text(output, encoding="utf-8")
+    print(f"Sorted {len(tools)} packages in {TOOLS_TOML}")
+
+
+if __name__ == "__main__":
+    main()

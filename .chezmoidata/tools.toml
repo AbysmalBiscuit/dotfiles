@@ -1,0 +1,1573 @@
+# Managed by chezmoi — sort order maintained by run_onchange_before_sort-tools.sh.tmpl
+[[tools]]
+lang = "bun"
+name = "cheerio-cli"
+cmds = [
+    "cheerio-cli"
+]
+desc = "cheerio in command line"
+url = ""
+git = "https://github.com/mlwmlw/cheerio-cli"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "bun"
+name = "claude"
+cmds = [
+    "claude"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "bun"
+name = "claude-code-router"
+cmds = [
+    "ccr"
+]
+desc = "Use Claude Code as the foundation for coding infrastructure, allowing you to decide how to interact with the model while enjoying updates from Anthropic."
+url = "https://musistudio.github.io/claude-code-router/"
+git = "https://github.com/musistudio/claude-code-router"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "bun"
+name = "claude-squad"
+cmds = [
+    "claude-squad",
+    "cs"
+]
+desc = "Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp."
+url = "https://smtg-ai.github.io/claude-squad/"
+git = "https://github.com/smtg-ai/claude-squad"
+install_command = ""
+completions_command = "cs completion SHELL | string replace -r '\\bclaude-squad\\b' 'cs'"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "bun"
+name = "fish-lsp"
+cmds = [
+    "fish-lsp"
+]
+desc = "fish language server"
+url = "https://fish-lsp.dev/"
+git = "https://github.com/ndonfris/fish-lsp"
+install_command = "bun add -g fish-lsp # or let mason install it with neovim"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "jq"
+cmds = [
+    "jq"
+]
+desc = ""
+url = "https://jqlang.org/"
+git = "https://github.com/jqlang/jq"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "kitty"
+cmds = [
+    "kitty"
+]
+desc = "If you live in the terminal, kitty is made for you! Cross-platform, fast, feature-rich, GPU based."
+url = "https://sw.kovidgoyal.net/kitty/"
+git = "https://github.com/kovidgoyal/kitty"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "mpv"
+cmds = [
+    "mpv"
+]
+desc = "🎥 Command line media player"
+url = "https://mpv.io/"
+git = "https://github.com/mpv-player/mpv"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "nano"
+cmds = [
+    "nano"
+]
+desc = "GNU nano -- a simple editor, inspired by Pico"
+url = "https://nano-editor.org/"
+git = "https://github.com/madnight/nano"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "neovim"
+cmds = [
+    "nvim"
+]
+desc = "Vim-fork focused on extensibility and usability"
+url = "https://neovim.io/"
+git = "https://github.com/neovim/neovim"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "nvidia-smi"
+cmds = [
+    "nvidia-smi"
+]
+desc = "The NVIDIA System Management Interface (nvidia-smi) is a command line utility, based on top of the NVIDIA Management Library (NVML), intended to aid in the management and monitoring of NVIDIA GPU devices."
+url = "https://developer.nvidia.com/system-management-interface"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "pacman"
+cmds = [
+    "pacman"
+]
+desc = "Pacman - package management combining a simple binary package format with an easy-to-use build system."
+url = ""
+git = "https://gitlab.archlinux.org/pacman/pacman"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "vim"
+cmds = [
+    "vim"
+]
+desc = "Vim is a greatly improved version of the good old UNIX editor Vi."
+url = "https://www.vim.org/"
+git = "https://github.com/vim/vim"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "wl-clipboard"
+cmds = [
+    "wl-copy",
+    "wl-paste"
+]
+desc = "Command-line copy/paste utilities for Wayland"
+url = ""
+git = "https://github.com/bugaevc/wl-clipboard"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c++"
+name = "source-highlight-esc"
+cmds = [
+    "source-highlight",
+    "source-highlight-esc.sh"
+]
+desc = "Wrapper around GNU source-highlight for use with less, auto-selecting between 8 and 256 ANSI color schemes."
+url = "https://www.gnu.org/software/src-highlite/source-highlight.html"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "age"
+cmds = [
+    "age"
+]
+desc = "A simple, modern, and secure file encryption tool."
+url = "https://github.com/FiloSottile/age"
+git = "https://github.com/FiloSottile/age"
+install_command = "go install filippo.io/age/cmd/...@latest"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "chezmoi"
+cmds = [
+    "chezmoi"
+]
+desc = "A multi-machine dotfile manager, written in Go."
+url = "https://www.chezmoi.io/reference/"
+git = "https://github.com/twpayne/chezmoi/tree/master"
+install_command = "go install github.com/twpayne/chezmoi@latest # alt: sh -c \"$(curl -fsLS get.chezmoi.io)\""
+completions_command = "chezmoi completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "go"
+name = "dasel"
+cmds = [
+    "dasel"
+]
+desc = "Dasel (short for Data-Select) is a command-line tool and library for querying, modifying, and transforming data structures such as JSON, YAML, TOML, XML, and CSV."
+url = "https://daseldocs.tomwright.me/"
+git = "https://github.com/TomWright/dasel"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "direnv"
+cmds = [
+    "direnv"
+]
+desc = "direnv is an extension for your shell. It augments existing shells with a new feature that can load and unload environment variables depending on the current directory."
+url = "https://direnv.net/"
+git = "https://github.com/direnv/direnv"
+install_command = "go install github.com/direnv/direnv@latest"
+completions_command = ""
+init_command = "direnv hook SHELL"
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "go"
+name = "fzf"
+cmds = [
+    "fzf"
+]
+desc = "Fuzzy finder."
+url = ""
+git = "https://github.com/junegunn/fzf"
+install_command = "go install github.com/junegunn/fzf@latest"
+completions_command = ""
+init_command = "fzf --SHELL"
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "go"
+name = "lazygit"
+cmds = [
+    "lazygit"
+]
+desc = ""
+url = ""
+git = ""
+install_command = "go install github.com/jesseduffield/lazygit@latest"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "mlr"
+cmds = [
+    "mlr"
+]
+desc = ""
+url = ""
+git = "https://github.com/johnkerl/miller"
+install_command = "go install github.com/johnkerl/miller/v6/cmd/mlr@latest"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "ollama"
+cmds = [
+    "ollama"
+]
+desc = "Run large language models locally."
+url = "https://ollama.com"
+git = "https://github.com/ollama/ollama"
+install_command = "curl -fsSL https://ollama.com/install.sh | sh"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "sqlc"
+cmds = [
+    "sqlc"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "wsl2-ssh-agent"
+cmds = [
+    "wsl2-ssh-agent"
+]
+desc = ""
+url = ""
+git = "https://github.com/mame/wsl2-ssh-agent"
+install_command = "go install github.com/mame/wsl2-ssh-agent@latest"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "go"
+name = "yq"
+cmds = [
+    "yq"
+]
+desc = "yq is a portable command-line YAML, JSON, XML, CSV, TOML, HCL and properties processor."
+url = "https://mikefarah.gitbook.io/yq/"
+git = "https://github.com/mikefarah/yq"
+install_command = ""
+completions_command = "yq shell-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "java"
+name = "dbeaver"
+cmds = [
+    "dbeaver"
+]
+desc = "Free universal database tool and SQL client"
+url = "https://dbeaver.io/"
+git = "https://github.com/dbeaver/dbeaver"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "lua"
+name = "highlight"
+cmds = [
+    "highlight"
+]
+desc = "Source code to formatted text converter"
+url = "http://andre-simon.de/"
+git = "https://gitlab.com/saalen/highlight"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "lua"
+name = "luarocks"
+cmds = [
+    "luarocks"
+]
+desc = "LuaRocks is the package manager for the Lua programming language."
+url = "https://luarocks.org/"
+git = "https://github.com/luarocks/luarocks"
+install_command = ""
+completions_command = "luarocks completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "objective-c"
+name = "iterm2"
+cmds = [
+    "iterm2"
+]
+desc = "iTerm2 is a terminal emulator for Mac OS X that does amazing things."
+url = "https://iterm2.com/"
+git = "https://github.com/gnachman/iTerm2"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "python"
+name = "ranger"
+cmds = [
+    "ranger"
+]
+desc = "A VIM-inspired filemanager for the console"
+url = "https://ranger.fm/"
+git = "https://github.com/ranger/ranger"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "python"
+name = "tdc"
+cmds = [
+    "tdc"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "python"
+name = "trash-cli"
+cmds = [
+    "trash",
+    "trash-empty",
+    "trash-list",
+    "trash-put",
+    "trash-restore"
+]
+desc = "Command line interface to the freedesktop.org trashcan."
+url = ""
+git = "https://github.com/andreafrancia/trash-cli"
+install_command = "uv tool install trash-cli --with completion"
+completions_command = ""
+init_command = ""
+supported_shells = [
+    "bash",
+    "tcsh",
+    "zsh"
+]
+
+[[tools]]
+lang = "python"
+name = "vcat"
+cmds = [
+    "vcat"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "ruby"
+name = "brew"
+cmds = [
+    "brew"
+]
+desc = "The missing package manager for macOS (or Linux)"
+url = "https://brew.sh/"
+git = "https://github.com/Homebrew/brew"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "alacritty"
+cmds = [
+    "alacritty"
+]
+desc = "Alacritty is a modern terminal emulator that comes with sensible defaults, but allows for extensive configuration."
+url = "https://alacritty.org/"
+git = "https://github.com/alacritty/alacritty"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "aoc-cli"
+cmds = [
+    "aoc"
+]
+desc = "Advent of Code command-line tool"
+url = ""
+git = "https://github.com/scarvalhojr/aoc-cli"
+install_command = "cargo install aoc-cli"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "argc"
+cmds = [
+    "argc"
+]
+desc = "A Bash CLI framework, also a Bash command runner."
+url = ""
+git = "https://github.com/sigoden/argc"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "bacon"
+cmds = [
+    "bacon"
+]
+desc = "A background code checker for Rust."
+url = "https://github.com/Canop/bacon"
+git = ""
+install_command = "cargo install bacon --features=clipboard,sound"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "bandwhich"
+cmds = [
+    "bandwhich"
+]
+desc = "Display the current network utilization by process, connection, or remote IP/hostname."
+url = "https://github.com/imsnif/bandwhich#usage"
+git = "https://github.com/imsnif/bandwhich"
+install_command = "cargo install --git https://github.com/cross-rs/cross.git cross"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "bottom"
+cmds = [
+    "btm"
+]
+desc = "Display system information about the CPU, memory, disks, network, and processes."
+url = "https://clementtsang.github.io/bottom/nightly/#usage-and-configuration"
+git = "https://github.com/ClementTsang/bottom"
+install_command = "cargo install bottom"
+completions_command = ""
+init_command = ""
+supported_shells = [
+    "PowerShell",
+    "bash",
+    "elv",
+    "fig",
+    "fish",
+    "nu",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "cargo-binstall"
+cmds = [
+    "cargo-binstall"
+]
+desc = "Binstall provides a low-complexity mechanism for installing Rust binaries as an alternative to building from source (via cargo install) or manually downloading packages."
+url = ""
+git = "https://github.com/cargo-bins/cargo-binstall"
+install_command = "cargo install cargo-binstall"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "cargo-install-update"
+cmds = [
+    "cargo-install-update"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "cargo-update"
+cmds = [
+    "cargo-update"
+]
+desc = "A cargo subcommand for checking and applying updates to installed executables"
+url = ""
+git = "https://github.com/nabijaczleweli/cargo-update"
+install_command = "cargo install cargo-update"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "choose"
+cmds = [
+    "choose"
+]
+desc = "A human-friendly and fast alternative to cut and (sometimes) awk."
+url = "https://github.com/theryangeary/choose#usage"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "complgen"
+cmds = [
+    "complgen"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "delta"
+cmds = [
+    "delta"
+]
+desc = "A viewer for Git and diff output."
+url = "https://dandavison.github.io/delta/full---help-output.html"
+git = ""
+install_command = ""
+completions_command = "delta --generate-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "difft"
+cmds = [
+    "difft"
+]
+desc = "Compare files or directories based on the syntax of the programming language."
+url = "https://difftastic.wilfred.me.uk/introduction.html"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "dotter"
+cmds = [
+    "dotter"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = "dotter gen-completions --shell SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "dua"
+cmds = [
+    "dua"
+]
+desc = "Dua (Disk Usage Analyzer): get the disk space usage of a directory."
+url = "https://github.com/Byron/dua-cli"
+git = "https://github.com/Byron/dua-cli"
+install_command = "cargo +nightly install dua-cli"
+completions_command = "dua completions SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "dust"
+cmds = [
+    "dust"
+]
+desc = "Give an instant overview of which directories are using disk space."
+url = "https://github.com/bootandy/dust#usage"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "dysk"
+cmds = [
+    "dysk"
+]
+desc = "Display filesystem information in a table."
+url = "https://manned.org/dysk"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "eza"
+cmds = [
+    "eza"
+]
+desc = "Modern, maintained replacement for `ls`, built on `exa`."
+url = "https://github.com/eza-community/eza"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "fish"
+cmds = [
+    "fish"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "git-credential-keepassxc"
+cmds = [
+    "git-credential-keepassxc"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "gitui"
+cmds = [
+    "gitui"
+]
+desc = "A lightweight keyboard-only TUI for Git."
+url = "https://github.com/gitui-org/gitui"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "grex"
+cmds = [
+    "grex"
+]
+desc = "Generate `regex`s."
+url = "https://github.com/pemistahl/grex#5-how-to-use"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "htmlq"
+cmds = [
+    "htmlq"
+]
+desc = "Use CSS selectors to extract content from HTML files."
+url = "https://github.com/mgdm/htmlq#usage"
+git = "https://github.com/mgdm/htmlq"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "instruction-set-analyzer"
+cmds = [
+    "instruction-set-analyzer"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "jj"
+cmds = [
+    "jj"
+]
+desc = "Jujutsu, a version control system."
+url = "https://docs.jj-vcs.dev/latest/cli-reference/"
+git = "https://github.com/jj-vcs/jj"
+install_command = "cargo install --locked --bin jj jj-cli"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "jless"
+cmds = [
+    "jless"
+]
+desc = "jless is a command-line JSON viewer designed for reading, exploring, and searching through JSON data."
+url = "https://jless.io/"
+git = "https://github.com/PaulJuliusMartinez/jless"
+install_command = "cargo install jless"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "just"
+cmds = [
+    "just"
+]
+desc = "just is a handy way to save and run project-specific commands."
+url = "https://just.systems/"
+git = "https://github.com/casey/just"
+install_command = ""
+completions_command = "just --completions SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "kalker"
+cmds = [
+    "kalker"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "kanata"
+cmds = [
+    "kanata"
+]
+desc = "Improve keyboard comfort and usability with advanced customization"
+url = "https://jtroo.github.io/config.html"
+git = "https://github.com/jtroo/kanata"
+install_command = "cargo install kanata"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "lsd"
+cmds = [
+    "lsd"
+]
+desc = "List directory contents."
+url = "https://github.com/lsd-rs/lsd/blob/main/doc/lsd.md"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "navi"
+cmds = [
+    "navi"
+]
+desc = "An interactive cheatsheet tool for the command-line and application launchers."
+url = "https://github.com/denisidoro/navi"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "ncspot"
+cmds = [
+    "ncspot"
+]
+desc = "Cross-platform ncurses Spotify client written in Rust, inspired by ncmpc and the likes."
+url = ""
+git = "https://github.com/hrkfdn/ncspot"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "nu"
+cmds = [
+    "nu"
+]
+desc = "Nushell (\"a new type of shell\") takes a modern, structured approach to your command-line."
+url = "https://www.nushell.sh/book/configuration.html#flag-behavior"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "pdu"
+cmds = [
+    "pdu"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "procs"
+cmds = [
+    "procs"
+]
+desc = "Display information about the active processes."
+url = "https://github.com/dalance/procs/blob/master/man/procs.1.adoc"
+git = ""
+install_command = ""
+completions_command = "procs --gen-completion-out SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "qsv"
+cmds = [
+    "qsv"
+]
+desc = "qsv is a command line program for querying, slicing, indexing, analyzing, filtering, enriching, transforming, sorting, validating, joining, formatting, converting & FAIRifying tabular data (CSV, spreadsheets, DBs, etc)."
+url = "https://qsv.dathere.com/"
+git = "https://github.com/dathere/qsv"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "qsvdp"
+cmds = [
+    "qsvdp"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "qsvlite"
+cmds = [
+    "qsvlite"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "rage"
+cmds = [
+    "rage"
+]
+desc = "A simple, secure, and modern file encryption tool (and Rust library) with small explicit keys, no configuration options, and UNIX-style composability."
+url = "https://github.com/str4d/rage"
+git = "https://github.com/str4d/rage"
+install_command = "cargo install rage"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "rg"
+cmds = [
+    "rg"
+]
+desc = "ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern."
+url = ""
+git = "https://github.com/BurntSushi/ripgrep?tab=readme-ov-file#installation"
+install_command = "cargo install ripgrep"
+completions_command = "rg --generate complete-SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "rga"
+cmds = [
+    "rga"
+]
+desc = "Ripgrep wrapper with rich file type searching capabilities."
+url = "https://github.com/phiresky/ripgrep-all"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "rink"
+cmds = [
+    "rink"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "rip"
+cmds = [
+    "rip"
+]
+desc = "Remove files or directories by sending them to the graveyard, allowing for them to be recovered."
+url = "https://github.com/nivekuil/rip#-usage"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "ruff"
+cmds = [
+    "ruff"
+]
+desc = "An extremely fast Python linter and code formatter, written in Rust."
+url = "https://docs.astral.sh/ruff/tutorial/"
+git = ""
+install_command = "cargo install ruff"
+completions_command = "ruff generate-shell-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "rustlings"
+cmds = [
+    "rustlings"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "rustup"
+cmds = [
+    "rustup"
+]
+desc = "Install, manage, and update Rust toolchains."
+url = "https://rust-lang.github.io/rustup/"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "sccache"
+cmds = [
+    "sccache"
+]
+desc = "Sccache is a ccache-like tool. It is used as a compiler wrapper and avoids compilation when possible. Sccache has the capability to utilize caching in remote storage environments, including various cloud storage options, or alternatively, in local storage."
+url = ""
+git = "https://github.com/mozilla/sccache"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "sd"
+cmds = [
+    "sd"
+]
+desc = "Intuitive find and replace."
+url = "https://manned.org/sd"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "sk"
+cmds = [
+    "sk"
+]
+desc = "Fuzzy finder written in Rust."
+url = "https://github.com/skim-rs/skim"
+git = "https://github.com/skim-rs/skim"
+install_command = "cargo install --git https://github.com/skim-rs/skim.git"
+completions_command = "sk --shell SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "spotify-player"
+cmds = [
+    "spotify-player"
+]
+desc = "A Spotify player in the terminal with full feature parity"
+url = ""
+git = "https://github.com/aome510/spotify-player"
+install_command = ""
+completions_command = "spotify-player generate SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "starship"
+cmds = [
+    "starship"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = "starship completions SHELL"
+init_command = "starship init SHELL --print-full-init"
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "tdf"
+cmds = [
+    "tdf"
+]
+desc = "A tui PDF viewer."
+url = "https://github.com/itsjunetime/tdf"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "tldr"
+cmds = [
+    "tldr"
+]
+desc = "Display simple help pages for command-line tools from the tldr-pages project."
+url = "https://tealdeer-rs.github.io/tealdeer/intro.html"
+git = "https://github.com/tealdeer-rs/tealdeer?tab=readme-ov-file"
+install_command = "cargo install tealdeer"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "tokei"
+cmds = [
+    "tokei"
+]
+desc = "Display statistics about code."
+url = "https://github.com/XAMPPRocky/tokei"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "tree-sitter"
+cmds = [
+    "tree-sitter"
+]
+desc = "An incremental parsing system for programming tools"
+url = "https://tree-sitter.github.io/"
+git = "https://github.com/tree-sitter/tree-sitter"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "unf"
+cmds = [
+    "unf"
+]
+desc = "Efficiently create an identifiable hash for a dataset that is independent of column or row ordering."
+url = ""
+git = "https://github.com/lissahyacinth/unf"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "uv"
+cmds = [
+    "uv"
+]
+desc = "A fast Python package and project manager."
+url = "https://docs.astral.sh/uv/reference/cli/"
+git = ""
+install_command = ""
+completions_command = "uv generate-shell-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "uvx"
+cmds = [
+    "uvx"
+]
+desc = "This command is an alias of `uv tool run`."
+url = ""
+git = ""
+install_command = "NONE: installed with uv"
+completions_command = "uvx --generate-shell-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "viu"
+cmds = [
+    "viu"
+]
+desc = "View images on the terminal."
+url = "https://github.com/atanunq/viu#command-line-options"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "vtracer"
+cmds = [
+    "vtracer"
+]
+desc = "https://www.visioncortex.org/vtracer/"
+url = "https://www.visioncortex.org/vtracer/"
+git = "https://github.com/visioncortex/vtracer"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "watchexec"
+cmds = [
+    "watchexec"
+]
+desc = "Run arbitrary commands when files change."
+url = "https://manned.org/watchexec"
+git = ""
+install_command = "cargo install --locked watchexec-cli"
+completions_command = "watchexec --completions SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "wr"
+cmds = [
+    "wr"
+]
+desc = "A CLI tool to drive test-driven Rust workshops"
+url = "https://mainmatter.github.io/rust-workshop-runner/"
+git = "https://github.com/mainmatter/rust-workshop-runner"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "xsv"
+cmds = [
+    "xsv"
+]
+desc = "A CSV toolkit written in Rust."
+url = "https://github.com/BurntSushi/xsv"
+git = "https://github.com/BurntSushi/xsv"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "ya"
+cmds = [
+    "ya"
+]
+desc = "Manage Yazi plugins and flavors, publish or subscribe to DDS messages."
+url = "https://yazi-rs.github.io/docs/cli/"
+git = ""
+install_command = "NONE: installed automatically with yazi"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "yazi"
+cmds = [
+    "yazi"
+]
+desc = "Blazing fast terminal file manager written in Rust."
+url = "https://github.com/sxyazi/yazi"
+git = ""
+install_command = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "zed"
+cmds = [
+    "zed"
+]
+desc = "Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter."
+url = "https://zed.dev/"
+git = "https://github.com/zed-industries/zed"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "zellij"
+cmds = [
+    "zellij"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = "zellij setup --generate-completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
+name = "zoxide"
+cmds = [
+    "zoxide"
+]
+desc = "Keep track of the most frequently used directories."
+url = "https://manned.org/zoxide"
+git = "https://github.com/ajeetdsouza/zoxide?tab=readme-ov-file#installation"
+install_command = "cargo install zoxide --locked"
+completions_command = ""
+init_command = "zoxide init SHELL"
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "typescript"
+name = "code"
+cmds = [
+    "code"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "zig"
+name = "bun"
+cmds = [
+    "bun"
+]
+desc = ""
+url = ""
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
