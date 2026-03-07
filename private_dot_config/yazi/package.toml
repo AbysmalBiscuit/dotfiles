@@ -48,6 +48,11 @@ use = "yazi-rs/plugins:types"
 rev = "1962818"
 hash = "4161cfa043b5ba3341d82c6869007b41"
 
+[[plugin.deps]]
+use = "uhs-robert/recycle-bin"
+rev = "fa68711"
+hash = "8714306b5cac6359edbacbf545fbd691"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
 rev = "c02c804"

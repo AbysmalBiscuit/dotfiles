@@ -1,4 +1,47 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+# {{ if .has.trash -}}
+[[mgr.prepend_keymap]]
+on = "u"
+run = "plugin restore"
+desc = "Restore last deleted files/folders"
+
+[[mgr.prepend_keymap]]
+on = "U"
+run = "plugin restore -- --interactive"
+desc = "Restore deleted files/folders (Interactive)"
+
+[[mgr.prepend_keymap]]
+on = ["R","o"]
+run = "plugin recycle-bin -- open"
+desc = "Open Trash"
+
+[[mgr.prepend_keymap]]
+on = ["R","e"]
+run = "plugin recycle-bin -- empty"
+desc = "Empty Trash"
+
+[[mgr.prepend_keymap]]
+on = ["R","D"]
+run = "plugin recycle-bin -- emptyDays"
+desc = "Empty by days deleted"
+
+[[mgr.prepend_keymap]]
+on = ["R","d"]
+run = "plugin recycle-bin -- delete"
+desc = "Delete from Trash"
+
+[[mgr.prepend_keymap]]
+on = ["R","r"]
+run = "plugin recycle-bin -- restore"
+desc = "Restore from Trash"
+
+[[mgr.prepend_keymap]]
+on = ["R","b"]
+run = "plugin recycle-bin"
+desc = "Open Recycle Bin menu"
+# {{- end }}
 
 # [[mgr.prepend_keymap]]
 # on = "T"
@@ -64,12 +107,21 @@ on = ["<C-PageDown>"]
 run = "tab_switch --relative 1"
 desc = "Go to next tab"
 
-{{ if not .is_windows -}}
+# {{ if not .is_windows -}}
 [[mgr.prepend_keymap]]
 on = "!"
 for = "unix"
 run = 'shell "$SHELL" --block'
 desc = "Open $SHELL here"
+
+# {{- $url_yank := "" -}}
+# {{ if .is_linux -}}
+# {{- $url_yank = " -t text/uri-list" -}}
+# Also copy file paths to system clipboard
+# {{- end }}
+[[mgr.prepend_keymap]]
+on  = "y"
+run = [ 'shell -- for path in %s; do echo "file://$path"; done | # {{ .system.copy_command }}# {{ $url_yank }}', "yank" ]
 
 # Yank file content
 [[mgr.prepend_keymap]]
@@ -89,8 +141,8 @@ done
     cat "$path"
     echo
   done
-} | {{ .system.copy_command }}''', "yank" ]
-{{- else -}}
+} | # {{ .system.copy_command }}''', "yank" ]
+# {{- else -}}
 # If you also using Yazi on Windows:
 [[mgr.prepend_keymap]]
 on = "!"
@@ -107,14 +159,8 @@ run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $paths | For
 [[mgr.prepend_keymap]]
 on  = "Y"
 run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $sep = '#' * 80; $out = @(); foreach ($p in $paths) { if ($paths.Count -gt 1) { $out += $sep; $out += '# ' + $p }; $out += (Get-Content -Raw $p) }; ($out -join \"`n\") | Set-Clipboard"''', "yank" ]
-{{- end }}
+# {{- end }}
 
-{{ if .is_linux -}}
-# Also copy file paths to system clipboard
-[[mgr.prepend_keymap]]
-on  = "y"
-run = [ 'shell -- for path in %s; do echo "file://$path"; done | {{ .system.copy_command }} -t text/uri-list', "yank" ]
-{{- end }}
 
 # [mgr]
 # keymap = [
