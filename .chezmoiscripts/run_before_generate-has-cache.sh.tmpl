@@ -1,32 +1,30 @@
-{{- if or .is_linux .is_macos -}}
 #!/bin/bash
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=bash.chezmoitmpl
+# {{- end }}
+# {{- if or .is_linux .is_macos -}}
 
-{{ output "bash" "-c" "echo $(date +%s%N) >> /tmp/render-count.txt" }}
+# {{ output "bash" "-c" "echo $(date +%s%N) >> /tmp/render-count.txt" }}
 
-cache_file={{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" | quote }}
+cache_file="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
 
 SED=$(command -v "sed")
 
-{{ if .is_wsl -}}
+# {{ if .is_wsl -}}
 OLD_PATH="$PATH"
 if [ -n "$PATH_CLEAN" ]; then
     export PATH="$PATH_CLEAN"
 fi
-{{- end }}
-
+# {{- end }}
 
 {
-# echo "[has]"
-{{ range .cli_tools -}}
-printf '{{ . | replaceAllRegex "[-.]" "_" }} = %s\n' $(command -v {{ . | quote }} >/dev/null 2>&1 && echo true || echo false)
-{{ end }}
-{{ if .is_wsl -}}
-# echo ""
-# echo "[wsl]"
-{{- end }}
+    # {{ range .cli_tools -}}
+    printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' $(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)
+    # {{ end }}
 } >"$cache_file"
 
-{{ if .is_wsl -}}
+# {{ if .is_wsl -}}
 if [ -n "$PATH_WINDOWS" ]; then
     export PATH="$PATH_WINDOWS"
 fi
@@ -34,19 +32,18 @@ fi
 PWSH=$(command -v "powershell.exe" 2>/dev/null || command -v "pwsh.exe" 2>/dev/null)
 if [ -n "$PWSH" ]; then
     "$PWSH" -NoProfile -NonInteractive -Command '
-        {{ range .cli_tools_wsl -}}
-        "{{ . | replaceAllRegex "[-.]" "_" }} = $(if (Get-Command {{ . | quote }} -ErrorAction SilentlyContinue) { "true" } else { "false" })"
-        {{ end -}}
-    ' | "$SED" 's/\r//g' >>{{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" | quote }}
+        # {{ range .cli_tools_wsl -}}
+        "# {{ . | replaceAllRegex "[-.]" "_" }} = $(if (Get-Command "# {{ . }}" -ErrorAction SilentlyContinue) { "true" } else { "false" })"
+        # {{ end -}}
+    ' | "$SED" 's/\r//g' >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
 else
     {
-        {{ range .cli_tools_wsl -}}
-        printf '{{ . | replaceAllRegex "[-.]" "_" }} = %s\n' $(command -v {{ . | quote }} >/dev/null 2>&1 && echo true || echo false)
-        {{ end }}
-    } >>{{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" | quote }}
+        # {{ range .cli_tools_wsl -}}
+        printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' $(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)
+        # {{ end }}
+    } >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
 fi
 
-
 export PATH="$OLD_PATH"
-{{- end }}
-{{- end }}
+# {{- end }}
+# {{- end }}
