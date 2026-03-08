@@ -42,9 +42,6 @@ if ! ( \
 ); then
     # {{ template "sh/env_wsl.sh" . }}
     source "$interactive_cache"
-    # {{ if eq $shell "bash" -}}
-    source "$HOME/.bash_extensions"
-    # {{- end }}
     return 0
 fi
 
