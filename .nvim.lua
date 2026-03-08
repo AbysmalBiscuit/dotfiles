@@ -105,7 +105,15 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("chezmoi_group_custom3", { clear = false }),
   pattern = "*/.chezmoidata/*tools.toml",
   callback = function()
+    local stderr_chunks = {}
     vim.fn.jobstart("chezmoi apply --include=scripts", {
+      stderr_buffered = true,
+      on_stderr = function(_, data)
+        if data then
+          vim.list_extend(stderr_chunks, data)
+          reload_buffers()
+        end
+      end,
       on_exit = function(_, code)
         vim.schedule(function()
           if code == 0 then
@@ -118,6 +126,8 @@ vim.api.nvim_create_autocmd("BufWritePost", {
             end
           else
             vim.notify("sorting tools.toml failed", vim.log.levels.ERROR)
+            local msg = table.concat(stderr_chunks, "\n")
+            vim.notify(msg, vim.log.levels.ERROR)
           end
         end)
       end,
@@ -232,20 +242,11 @@ for _, filetype in ipairs(chezmoi_filetypes) do
   table.insert(gotmpl_filetypes, compound_ft)
 end
 
--- Override treesitter.start to respect buffer-local language
-local orig_ts_start = vim.treesitter.start
-vim.treesitter.start = function(buf, lang, ...)
-  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
-  if vim.b[buf].chezmoi_ts_lang then
-    lang = vim.b[buf].chezmoi_ts_lang
-  end
-  return orig_ts_start(buf, lang, ...)
-end
-
 -- Plain .tmpl files default to base gotmpl
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
   pattern = "*.tmpl",
   callback = function(ev)
+    vim.b[ev.buf].chezmoi_ts_pending = true
     vim.b[ev.buf].chezmoi_ts_lang = "gotmpl"
   end,
 })
@@ -259,8 +260,8 @@ vim.api.nvim_create_autocmd("FileType", {
     if base then
       local ts_lang = "gotmpl_" .. base
       vim.b[ev.buf].chezmoi_ts_lang = ts_lang
-      -- Restart with the correct variant
-      vim.treesitter.stop(ev.buf)
+      vim.b[ev.buf].chezmoi_ts_pending = nil
+      -- Single clean start — no stop/start race
       vim.treesitter.start(ev.buf, ts_lang)
     end
   end,
@@ -328,11 +329,21 @@ vim.lsp.config("gopls", {
 })
 
 vim.lsp.config("pyrefly", {
-  filetypes = { "python", "python.chezmoitmpl" },
+  filetypes = { "python", "python.chezmoitmpl", "python.chezmoitmpl.chezmoitmpl" },
 })
 
 vim.lsp.config("bashls", {
-  filetypes = { "bash", "bash.chezmoitmpl", "zsh", "zsh.chezmoitmpl", "sh", "sh.chezmoitmpl" },
+  filetypes = {
+    "bash",
+    "bash.chezmoitmpl",
+    "bash.chezmoitmpl.chezmoitmpl",
+    "zsh",
+    "zsh.chezmoitmpl",
+    "zsh.chezmoitmpl.chezmoitmpl",
+    "sh",
+    "sh.chezmoitmpl",
+    "sh.chezmoitmpl.chezmoitmpl",
+  },
 })
 
 -- vim.lsp.config("taplo", {
