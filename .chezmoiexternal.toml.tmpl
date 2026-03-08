@@ -6,22 +6,6 @@
 {{- $compiler_os_alt = .compiler_os | replaceAllRegex "^pc" "unknown" -}}
 {{- end -}}
 
-# [".local/bin/cue{{ .exe_ext }}"]
-# type = "archive-file"
-# url = {{/* gitHubLatestReleaseAssetURL "cue-lang/cue" (printf "cue_v*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote */}}
-# refreshPeriod = "72h"
-# executable = true
-# path = "cue"
-
-# [".local/bin/golangci-lint{{ .exe_ext }}"]
-# type = "archive-file"
-# url = {{/* gitHubLatestReleaseAssetURL "golangci/golangci-lint" (printf "golangci-lint-*-%s-%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote */}}
-# refreshPeriod = "72h"
-# executable = true
-# stripComponents = 1
-# path = "golangci-lint"
-
-
 
 # Go programs
 {{- $exe = printf "age%s" .exe_ext -}}
@@ -31,14 +15,14 @@
 [".local/bin/age{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "FiloSottile/age" $age_asset | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = "age/age{{ .exe_ext }}"
 
 [".local/bin/age_keygen{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "FiloSottile/age" $age_asset | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = "age/age-keygen{{ .exe_ext }}"
 {{- end }}
@@ -57,7 +41,7 @@ path = "age/age-keygen{{ .exe_ext }}"
 [".local/bin/croc{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "schollz/croc" (printf "croc_v*_%s%s" $croc_os .archive) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = {{ printf "croc%s" .exe_ext | quote }}
 {{- end }}
@@ -69,7 +53,7 @@ path = {{ printf "croc%s" .exe_ext | quote }}
 [".local/bin/dasel{{ .exe_ext }}"]
 type = "file"
 url = {{ gitHubLatestReleaseAssetURL "TomWright/dasel" (printf "dasel_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = {{ printf "dasel_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext | quote }}
 {{- end }}
@@ -81,7 +65,7 @@ path = {{ printf "dasel_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext | quote }}
 [".local/bin/gdu{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "dundee/gdu" (printf "gdu_%s_%s%s.tgz" .chezmoi.os .chezmoi.arch .exe_ext) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = {{ printf "gdu_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext | quote }}
 {{- end }}
@@ -96,7 +80,7 @@ path = {{ printf "gdu_%s_%s%s" .chezmoi.os .chezmoi.arch .exe_ext | quote }}
 [".local/bin/glow{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "charmbracelet/glow" $glow_asset | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 stripComponents = 1
 path = "glow{{ .exe_ext }}"
@@ -109,54 +93,12 @@ path = "glow{{ .exe_ext }}"
 [".local/bin/sqlc{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "sqlc-dev/sqlc" (printf "sqlc_*_%s_%s.tar.gz" .chezmoi.os .chezmoi.arch) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = "sqlc{{ .exe_ext }}"
 {{- end }}
 
 # Rust programs
-
-{{- $exe = printf "btm%s" .exe_ext -}}
-{{- if .has.btm -}}
-  {{- $btm_os := .compiler_os -}}
-  {{- if .is_linux -}}{{- $btm_os = $compiler_os_alt -}}{{- end -}}
-  {{- $btm_triple := printf "%s-%s" .arch $btm_os }}
-
-{{ if .has.bash -}}
-["{{ joinPath ".config" "bash_completion" "btm.bash" }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
-refreshPeriod = "72h"
-executable = true
-path = "./btm.bash"
-{{- end }}
-{{ if .has.fish -}}
-["{{ joinPath ".cache" "fish" "generated_completions" "btm.fish" }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
-refreshPeriod = "72h"
-executable = true
-path = "./btm.fish"
-{{- end }}
-{{ if .has.zsh -}}
-["{{ joinPath ".oh-my-zsh" "completions" "_btm" }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
-refreshPeriod = "72h"
-executable = true
-path = "./_btm"
-{{- end }}
-{{ if .is_windows -}}
-["{{ joinPath "Documents" "PowerShell" "conf.d" }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "ClementTsang/bottom" "completion.tar.gz"  | quote }}
-refreshPeriod = "72h"
-executable = true
-path = "./btm.ps1"
-{{- end }}
-{{- end }}
-
-
 {{- $exe = printf "eza%s" .exe_ext -}}
 {{- if not (stat (joinPath .path.cargo_bin_dir $exe)) }}
   {{- $eza_os := "" -}}
@@ -168,7 +110,7 @@ path = "./btm.ps1"
 [".local/bin/eza{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "eza-community/eza" (printf "eza%s_%s-%s%s" .exe_ext .arch $eza_os .archive) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = {{ printf "eza%s" .exe_ext | quote }}
   {{- end }}
@@ -184,7 +126,7 @@ path = {{ printf "eza%s" .exe_ext | quote }}
 [".local/bin/jj{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s%s" $jj_triple .archive) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 # path = {{ printf "jj-v*-%s/jj%s" $jj_triple .exe_ext | quote }}
 path = "./jj{{ .exe_ext }}"
@@ -205,7 +147,7 @@ path = "./jj{{ .exe_ext }}"
 [".local/bin/jless{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "PaulJuliusMartinez/jless" $jless_asset | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = "jless{{ .exe_ext }}"
 {{- end }}
@@ -219,7 +161,7 @@ path = "jless{{ .exe_ext }}"
 [".local/bin/starship{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "starship/starship" $asset | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = "starship{{ .exe_ext }}"
 {{- end }}
@@ -231,7 +173,7 @@ path = "starship{{ .exe_ext }}"
 [".local/bin/uv{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-%s%s" .arch $compiler_os_alt .archive) | quote }}
-refreshPeriod = "72h"
+refreshPeriod = "168h"
 executable = true
 path = {{ printf "uv-%s-%s/uv%s" .arch $compiler_os_alt .exe_ext | quote }}
 {{- end }}
@@ -247,44 +189,22 @@ path = {{ printf "uv-%s-%s/uv%s" .arch $compiler_os_alt .exe_ext | quote }}
   {{- else if .is_windows -}}
     {{- $fontDir = "AppData/Local/Microsoft/Windows/Fonts" -}}
   {{- end }}
-  {{- range (list
-          "MesloLGMNerdFontPropo-Regular.ttf"
-          "MesloLGMNerdFontPropo-Bold.ttf"
-          "MesloLGMNerdFontPropo-Italic.ttf"
-          "MesloLGMNerdFontPropo-BoldItalic.ttf") }}
-["{{ $fontDir }}/{{ . }}"]
-type = "archive-file"
+["{{ $fontDir }}/meslo"]
+type = "archive"
 url = {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Meslo.tar.xz" | quote }}
 refreshPeriod = "168h"
-path = {{ . | quote }}
-  {{- end }}
-  {{- range (list
-        "SymbolsNerdFont-Regular"
-        "SymbolsNerdFontMono-Regular") }}
-["{{ $fontDir }}/{{ . }}.ttf"]
-type = "archive-file"
+include = ["MesloLGMNerdFontPropo-*.ttf"]
+["{{ $fontDir }}/symbols"]
+type = "archive"
 url = {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "NerdFontsSymbolsOnly.tar.xz"  | quote }}
 refreshPeriod = "168h"
-path = "{{ . }}.ttf"
-  {{- end }}
+include = ["SymbolsNerdFont*-Regular.ttf"]
 {{ if not .is_windows -}}
-{{- range (list
-    "Bold.ttf"
-    "BoldItalic.ttf"
-    "ExtraLight.ttf"
-    "ExtraLightItalic.ttf"
-    "Italic.ttf"
-    "Light.ttf"
-    "LightItalic.ttf"
-    "Regular.ttf"
-    "SemiBold.ttf"
-    "SemiBoldItalic.ttf") }}
-["{{ $fontDir }}/SarasaFixedK-{{ . }}"]
-type = "archive-file"
+["{{ $fontDir }}/sarasa"]
+type = "archive"
 url = {{ printf "https://github.com/be5invis/Sarasa-Gothic/releases/download/v*/SarasaFixedK-TTF-*.7z" | quote }}
 refreshPeriod = "168h"
-path = "SarasaFixedK-{{ . }}"
-  {{- end }}
+include = ["SarasaFixedK-*"]
 {{- else -}}
 ["{{ $fontDir }}/Sarasa-SuperTTC.ttc"]
 type = "file"

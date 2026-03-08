@@ -1,0 +1,8 @@
+packages:
+  darwin:
+    brew:
+  linux:
+    arch:
+    debian:
+  windows:
+    winget:

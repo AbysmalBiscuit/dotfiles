@@ -64,101 +64,51 @@
   {{- $has_has = true -}}
   {{- $has = include $has_path | fromToml -}}
 {{- end -}}
-{{- $cli_tools := (list
-  "alacritty"
-  "bun"
-  "bash"
-  "zsh"
-  "nu"
-  "btm"
-  "cargo-install-update"
-  "ccr"
-  "claude"
-  "code"
-  "cs"
-  "dbeaver"
-  "eza"
-  "fish"
-  "fzf"
-  "highlight"
-  "iterm2"
-  "jj"
-  "jless"
-  "jq"
-  "kitty"
-  "linuxbrew"
-  "luarocks"
-  "mpv"
-  "nano"
-  "ncspot"
-  "nvidia-smi"
-  "nvim"
-  "ollama"
-  "pacman"
-  "qsv"
-  "ranger"
-  "ruff"
-  "sccache"
-  "sk"
-  "source-highlight-esc"
-  "spotify_player"
-  "sqlc"
-  "starship"
-  "tdc"
-  "trash"
-  "uv"
-  "vcat"
-  "vim"
-  "wl-copy"
-  "ya"
-  "yazi"
-  "zed"
-  "zoxide"
-
-) -}}
-{{- $cli_tools_wsl := (list
-        "spotify_player.exe"
-        "ollama.exe"
-        "pwsh.exe"
-        "bash.exe"
-        "wsl.exe"
-) -}}
+{{- $cli_tools_wsl := list -}}
 
 {{- if eq (len $has) 0 -}}
-{{- $has = dict -}}
-{{- range $cli_tools -}}
-{{- $has = merge $has (dict ( . | replaceAllRegex "[-\\.]" "_" ) false) -}}
+  {{- $has = dict -}}
+  {{- range $tool := .tools -}}
+    {{- range $cmds := $tool.cmds -}}
+      {{- range $cmd := $cmds -}}
+        {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+      {{- end -}}
+  {{- end -}}
 {{- end -}}
-{{- range $cli_tools_wsl -}}
-{{- $has = merge $has (dict ( . | replaceAllRegex "[-\\.]" "_" ) false) -}}
-{{- end -}}
+  {{- range $tool := .wsl_tools -}}
+    {{- range $cmds := $tool.cmds -}}
+      {{- range $cmd := $cmds -}}
+        {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- $osID := .chezmoi.os -}}
 {{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
-{{-   $osID = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
+  {{- $osID = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
 {{- end -}}
 
 {{/* detect GitHub codespaces, VSCode remote containers, Docker containers, Multipass VMs, and Vagrant boxes */}}
 {{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") (eq .chezmoi.username "root" "ubuntu" "vagrant" "vscode" "webmaster") -}}
-{{-   $is_ephemeral = true -}}
-{{-   $is_headless = true -}}
+  {{- $is_ephemeral = true -}}
+  {{- $is_headless = true -}}
 {{- end -}}
 
 {{/* work around unreliable hostname on darwin */}}
 {{- $hostname = .chezmoi.hostname -}}
 {{- if eq .chezmoi.os "darwin" -}}
-{{-   $hostname = output "scutil" "--get" "LocalHostName" | trim -}}
+  {{- $hostname = output "scutil" "--get" "LocalHostName" | trim -}}
 {{- end -}}
 
 {{- /* Identify if running on ephemeral machine */ -}}
 {{- if eq .chezmoi.os "" -}}
-{{-   $is_ephemeral = true -}}
+  {{- $is_ephemeral = true -}}
 {{- end -}}
 
 {{- /* detect WSL */ -}}
 {{- if env "WSL_DISTRO_NAME" -}}
-{{-   $is_wsl = true -}}
+  {{- $is_wsl = true -}}
 {{- end -}}
 
 {{- /*if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")*/ -}}
@@ -267,9 +217,11 @@
   {{- $gpg_key = $secrets.gpg.gpg_key -}}
   {{- $age_identities = $secrets.age.identities | toJson -}}
   {{- $age_recipients = $secrets.age.recipients | toJson -}}
-  {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
-  {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
-  {{- $keepassxc_args = (index $secrets.keepassxc $secrets_key).args | toJson -}}
+  {{- if index $secrets.keepassxc $secrets_key -}}
+    {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
+    {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
+    {{- $keepassxc_args = (index $secrets.keepassxc $secrets_key).args | toJson -}}
+  {{- end -}}
 
   {{- if $secrets_system.wsl_shell -}}
     {{- $shell = $secrets_system.wsl_shell -}}
@@ -353,6 +305,7 @@ recipients = {{ $age_recipients }}
 [edit]
 command = {{ $editor | quote }}
 args = {{ $editor_args }}
+hardlink = {{ not $is_wsl }}
 
 [github]
 refreshPeriod = "12h"
@@ -401,16 +354,16 @@ zshPlugins = [
     "vi-mode",
     "zsh-syntax-highlighting",
 ]
-cli_tools = [
-{{- range $cli_tools -}}
-  {{- printf "%s%s" . $exe_ext | quote -}},
-{{- end -}}
-]
-cli_tools_wsl = [
-{{- range $cli_tools_wsl -}}
-  {{- printf "%s" . | quote -}},
-{{- end -}}
-]
+# cli_tools = [
+{{- /* range $cli_tools */ -}}
+  {{- /* printf "%s%s" . $exe_ext | quote */ -}},
+{{- /* end */ -}}
+# ]
+# cli_tools_wsl = [
+# {{- range $cli_tools_wsl -}}
+  # {{- printf "%s" . | quote -}},
+# {{- end -}}
+# ]
 
 [data.font]
 monospace = [
@@ -478,30 +431,13 @@ path_sep = {{ .chezmoi.pathSeparator | quote }}
 copy_command = {{ $copy_command | quote }}
 paste_command = {{ $paste_command | quote }}
 
-{{- if $has_has }}
-
-{{ $data := dict "data" (dict "has" $has) -}}
-{{- toToml $data | replace "[data]\n" "" -}}
+# Has
 {{ "" }}
-{{- else }}
-
-[data.has]
+{{- $data_has := dict "data" (dict "has" $has) -}}
+{{- toToml $data_has | replace "[data]\n" "" -}}
 {{ "" }}
-  {{- range $cli_tools -}}
-  {{- $exe_name := printf "%s%s" . $exe_ext -}}
-{{ $exe_name | replaceAllRegex "(-|\\.)" "_" }} = {{ if lookPath . }}true{{ else }}false{{ end }}
-{{ end }}
-
-  {{- if $is_wsl }}
-# Windows
-{{ range $cli_tools_wsl -}}
-  {{- $exe_name := printf "%s" . -}}
-{{ $exe_name | replaceAllRegex "(-|\\.)" "_" }} = {{ if lookPath . }}true{{ else }}false{{ end }}
-{{ end }}
-  {{- end }}
-{{- end }}
 
 # Secrets
 {{ "" }}
-{{- $data := dict "data" (dict "secrets" $secrets) -}}
-{{- toToml $data | replace "[data]\n" "" -}}
+{{- $data_secrets := dict "data" (dict "secrets" $secrets) -}}
+{{- toToml $data_secrets | replace "[data]\n" "" -}}

@@ -6,13 +6,13 @@
 # {{- end }}
 
 # if [[ $- != *i* ]] && [[ -f "$HOME/.cache/zsh/cache_env.zsh" ]]; then
-    # source "$HOME/.cache/zsh/cache_env.zsh"
-    # return 0
+# source "$HOME/.cache/zsh/cache_env.zsh"
+# return 0
 # fi
 
 # {{ template "sh/utility_functions.sh" }}
 
-# {{ if .cache.shell -}}
+# {{ if .cache.build.shell -}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 # {{- else -}}
 [[ -s "$HOME/.sh_env" ]] && source "$HOME/.sh_env"

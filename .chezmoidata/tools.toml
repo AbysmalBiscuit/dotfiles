@@ -76,6 +76,20 @@ supported_shells = []
 
 [[tools]]
 lang = "c"
+name = "bash"
+cmds = [
+    "bash"
+]
+desc = "Bash is an interactive command interpreter and scripting language developed for Unix-like operating systems."
+url = "https://www.gnu.org/software/bash/manual/bash.html"
+git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
 name = "jq"
 cmds = [
     "jq"
@@ -196,6 +210,20 @@ cmds = [
 desc = "Command-line copy/paste utilities for Wayland"
 url = ""
 git = "https://github.com/bugaevc/wl-clipboard"
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "c"
+name = "zsh"
+cmds = [
+    "zsh"
+]
+desc = "The Z shell is a shell and a command-line interpreter for shell scripts. Zsh mostly maintains the Bourne shell's syntax and behavior, but makes several changes breaking from the POSIX standard and substantially more features."
+url = "https://www.zsh.org/"
+git = "https://github.com/zsh-users/zsh"
 install_command = ""
 completions_command = ""
 init_command = ""
@@ -523,6 +551,26 @@ install_command = ""
 completions_command = ""
 init_command = ""
 supported_shells = []
+
+[[tools]]
+lang = "rust"
+name = "Jujutsu"
+cmds = [
+    "jj"
+]
+desc = "A Git-compatible VCS that is both simple and powerful"
+url = "https://docs.jj-vcs.dev/latest/cli-reference/"
+git = "https://github.com/jj-vcs/jj"
+install_command = "cargo install --locked --bin jj jj-cli"
+completions_command = "jj util completion SHELL"
+init_command = ""
+supported_shells = [
+    "PowerShell",
+    "bash",
+    "fish",
+    "nu",
+    "zsh"
+]
 
 [[tools]]
 lang = "rust"
@@ -882,20 +930,6 @@ supported_shells = []
 
 [[tools]]
 lang = "rust"
-name = "jj"
-cmds = [
-    "jj"
-]
-desc = "Jujutsu, a version control system."
-url = "https://docs.jj-vcs.dev/latest/cli-reference/"
-git = "https://github.com/jj-vcs/jj"
-install_command = "cargo install --locked --bin jj jj-cli"
-completions_command = ""
-init_command = ""
-supported_shells = []
-
-[[tools]]
-lang = "rust"
 name = "jless"
 cmds = [
     "jless"
@@ -998,7 +1032,7 @@ supported_shells = []
 
 [[tools]]
 lang = "rust"
-name = "nu"
+name = "nushell"
 cmds = [
     "nu"
 ]
@@ -1567,6 +1601,20 @@ cmds = [
 desc = ""
 url = ""
 git = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+
+[[tools]]
+lang = "zig"
+name = "ghostty"
+cmds = [
+    "ghostty"
+]
+desc = "👻 Ghostty is a fast, feature-rich, and cross-platform terminal emulator that uses platform-native UI and GPU acceleration."
+url = "https://ghostty.org/"
+git = "https://github.com/ghostty-org/ghostty"
 install_command = ""
 completions_command = ""
 init_command = ""

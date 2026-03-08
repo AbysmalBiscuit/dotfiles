@@ -1,0 +1,56 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if .has.btm -}}
+# {{- $exe := printf "btm%s" .exe_ext -}}
+# {{- $version := output $exe "--version" | replaceAllRegex ".+(\\d+\\.\\d+\\.\\d+)\n" "$1" -}}
+# {{ "" }}
+# # {{ $version }}
+# {{- $compiler_os_alt := .compiler_os -}}
+# {{- $btm_os := .compiler_os -}}
+# {{- if .is_linux -}}
+# {{- $compiler_os_alt = .compiler_os | replaceAllRegex "^pc" "unknown" -}}
+# {{- $btm_os = $compiler_os_alt -}}
+# {{- end -}}
+# {{- $btm_triple := printf "%s-%s" .arch $btm_os }}
+
+last_cache_file='# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "btm_completions" }}'
+last_cache="$(cat "$last_cache_file" 2>/dev/null || echo '0.0.0' | sed 's/.//g')"
+if [ '# {{ $version }}' != "$last_cache" ]; then
+    exit 0
+fi
+
+archive_url='https://github.com/ClementTsang/bottom/releases/download/# {{ $version }}/completion.tar.gz'
+archive_dir="$(mktemp -d)"
+archive_file="$archive_dir/completion.tar.gz"
+curl -sL "$archive_url" --output "$archive_file"
+tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
+
+# {{ if .has.bash -}}
+to_dir='# {{ joinPath .chezmoi.homeDir ".config" "bash_completion_extra" }}'
+if [ ! -d "$to_dir" ]; then
+    mkdir -p "$to_dir"
+fi
+mv "$archive_dir/btm.bash" "$to_dir/"
+# {{- end }}
+
+# {{ if .has.fish -}}
+if [ ! -d "$to_dir" ]; then
+    mkdir -p "$to_dir"
+fi
+to_dir='# {{ joinPath .chezmoi.homeDir ".cache" "fish" "generated_completions" }}'
+mv "$archive_dir/btm.fish" "$to_dir/"
+# {{- end }}
+
+# {{ if and .has.zsh (stat (joinPath .chezmoi.homeDir ".oh-my-zsh")) -}}
+if [ ! -d "$to_dir" ]; then
+    mkdir -p "$to_dir"
+fi
+mv "$archive_dir/_btm" '# {{ joinPath ".oh-my-zsh" "completions" "_btm" }}'
+# {{- end }}
+
+echo '# {{ $version }}' >"$last_cache_file"
+
+if [ -d "$archive_dir" ]; then
+    rm -rf "$archive_dir"
+fi
+# {{- end }}

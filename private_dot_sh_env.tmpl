@@ -201,7 +201,7 @@ if has_command ruby; then
     PATH="$gem_bin_dir:$PATH"
 fi
 
-# {{- if and .has.linuxbrew (stat "/home/linuxbrew") }}
+# {{- if and .has.brew (stat "/home/linuxbrew/.linuxbrew") }}
 
 # Adding linuxbrew libraries and binaries to PATH
 # if [[ -d /home/linuxbrew && $(command -v 'linuxbrew') ]]; then

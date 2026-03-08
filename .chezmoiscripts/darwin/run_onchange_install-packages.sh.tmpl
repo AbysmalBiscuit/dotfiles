@@ -1,0 +1,11 @@
+#!/bin/bash
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+
+brew bundle --file=/dev/stdin <<EOF
+# {{ range .packages.darwin.brews -}}
+brew # {{ . | quote }}
+# {{ end -}}
+# {{ range .packages.darwin.casks -}}
+cask # {{ . | quote }}
+# {{ end -}}
+EOF

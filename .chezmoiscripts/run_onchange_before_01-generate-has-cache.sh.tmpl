@@ -1,0 +1,83 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=sh.chezmoitmpl
+# {{- end }}
+# {{- $is_wsl := false -}}
+# {{- if env "WSL_DISTRO_NAME" -}}
+# {{- $is_wsl = true -}}
+# {{- end -}}
+
+# # {{ include ".chezmoidata/tools.toml" | sha256sum }}
+# {{- $cli_tools := list -}}
+# {{- $cli_tools_wsl := list -}}
+# {{- range $tool := .tools -}}
+# {{- range $cmd := $tool.cmds -}}
+# {{- $cli_tools = append $cli_tools $cmd -}}
+# {{- end -}}
+# {{- end -}}
+# {{ if $is_wsl -}}
+# {{ "" }}
+# # {{ include ".chezmoidata/wsl_tools.toml" | sha256sum }}
+# {{- range $tool := .wsl_tools -}}
+# {{- range $cmd := $tool.cmds -}}
+# {{- $key := $cmd -}}
+# {{- /* if not (has $key $cli_tools) */ -}}
+# {{- $cli_tools_wsl = append $cli_tools_wsl $key -}}
+# {{- /* end */ -}}
+# {{- end -}}
+# {{- end -}}
+# {{- $cli_tools_wsl = $cli_tools_wsl | sortAlpha | uniq }}
+
+OLD_PATH="$PATH"
+if [ -n "$PATH_CLEAN" ]; then
+    export PATH="$PATH_CLEAN"
+fi
+# {{- end }}
+# {{- $cli_tools = $cli_tools | sortAlpha | uniq }}
+
+SED=$(command -v "sed")
+GREP=$(command -v "grep")
+
+{
+    # {{ range $cli_tools -}}
+    printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' "$(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
+    # {{ end }}
+} >"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+
+# {{ if $is_wsl -}}
+if [ -n "$PATH_WINDOWS" ]; then
+    export PATH="$PATH_WINDOWS"
+fi
+
+wsl_tools=""
+PWSH=$(command -v "powershell.exe" 2>/dev/null || command -v "pwsh.exe" 2>/dev/null)
+if [ -n "$PWSH" ]; then
+    wsl_tools="$("$PWSH" -NoProfile -NonInteractive -Command '
+# {{ range $cli_tools_wsl -}}
+        "# {{ . | replaceAllRegex "[-.]" "_" }} $(if (Get-Command "# {{ . }}" -ErrorAction SilentlyContinue) { "true" } else { "false" })"
+# {{ end -}}
+    ' | "$SED" 's/\r//g')"
+else
+    wsl_tools="$({
+        # {{ range $cli_tools_wsl -}}
+        printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' "$(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
+        # {{ end }}
+    })"
+fi
+while IFS=' ' read -r key val; do
+    if [ "$val" = "true" ]; then
+        # overwrite the existing line if it's false, or append if key is wsl-only
+        if "$GREP" -q "^${key} = " "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"; then
+            "$SED" -i "s/^${key} = false$/${key} = true/" "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+        else
+            printf '%s = true\n' "$key" >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+        fi
+    else
+        printf '%s = %s\n' "$key" "$val" >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+    fi
+done <<EOF
+$wsl_tools
+EOF
+export PATH="$OLD_PATH"
+# {{- end }}
