@@ -1,4 +1,8 @@
-{{ if .is_wsl -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if .is_wsl -}}
+# {{- if false -}}
+# vim:filetype=bash.chezmoitmpl
+# {{- end }}
 if [[ ! -f "/tmp/wsl_init_finished" ]]; then
     ## SSH Sock
     if has_command wsl2-ssh-agent; then
@@ -26,4 +30,4 @@ if [[ ! -f "/tmp/wsl_init_finished" ]]; then
 
     touch "/tmp/wsl_init_finshed"
 fi
-{{- end }}
+# {{- end }}

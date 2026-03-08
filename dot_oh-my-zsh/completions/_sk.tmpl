@@ -1,4 +1,7 @@
-{{ if .has.sk -}}
-# {{ output "sk" "--version" }}
-{{ output "sk" "--shell" "zsh" "--shell-bindings" }}
-{{- end }}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=zsh.chezmoitmpl
+# {{- end -}}
+# {{ if .has.sk -}}
+# {{ output "sk" "--shell" "zsh" "--shell-bindings" }}
+# {{- end }}
