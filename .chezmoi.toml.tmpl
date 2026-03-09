@@ -432,12 +432,11 @@ copy_command = {{ $copy_command | quote }}
 paste_command = {{ $paste_command | quote }}
 
 # Has
-{{ "" }}
-{{- $data_has := dict "data" (dict "has" $has) -}}
-{{- toToml $data_has | replace "[data]\n" "" -}}
+[data.has]
+{{ toToml $has -}}
 {{ "" }}
 
 # Secrets
 {{ "" }}
 {{- $data_secrets := dict "data" (dict "secrets" $secrets) -}}
-{{- toToml $data_secrets | replace "[data]\n" "" -}}
+{{- toToml $data_secrets | replace "[data]\n" "" | replaceAllRegex "^\\s+" "" | replaceAllRegex "\n\\s+" "\n" -}}
