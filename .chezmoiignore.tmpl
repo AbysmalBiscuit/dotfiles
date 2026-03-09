@@ -2,6 +2,7 @@
 
 # project files
 .editorconfig
+.git/**
 .gitattributes
 .gitignore
 .lazy.lua
@@ -32,6 +33,7 @@ fix_persmissions.sh
 
 
 # always exclude
+chezmoi_debug.py
 .ideavimrc
 **temp.sh
 **temp.fish
@@ -39,14 +41,6 @@ fix_persmissions.sh
 **/.keep
 .profile
 localSettings.yaml
-!.oh-my-zsh/plugins
-{{ range .zshPlugins }}
-!.oh-my-zsh/plugins/{{ . }}
-!.oh-my-zsh/plugins/{{ . }}/**
-{{- end }}
-.oh-my-zsh/cache/**
-.oh-my-zsh/plugins/**
-.oh-my-zsh/templates/**
 
 # os specific exclusions
 
@@ -75,15 +69,15 @@ localSettings.yaml
 .local/bin/nvim
 .local/share/fonts
 {{- else -}}
-{{ if not (lookPath "devilspie2") -}}
+{{ if not .has.devilspie2 -}}
 .config/devilspie2
 {{- end }}
-{{ if not (lookPath "gedit") -}}
+{{ if not .has.gedit -}}
 .config/gedit
 .local/share/gedit
 .local/share/gtksourceview-5
 {{- end }}
-{{ if not (lookPath "gnome-terminal") -}}
+{{ if not .has.gnome_terminal -}}
 .config/gnome-terminal
 {{- end }}
 {{ end }}
@@ -141,30 +135,39 @@ Documents
 .zprofile
 .oh-my-zsh/**
 {{- else -}}
-{{ if not .has.sk -}}
-.oh-my-zsh/completions/_sk
+!.oh-my-zsh/plugins
+{{ range .zshPlugins }}
+!.oh-my-zsh/plugins/{{ . }}
+!.oh-my-zsh/plugins/{{ . }}/**
 {{- end }}
-{{ if not .has.fzf -}}
-.oh-my-zsh/completions/_fzf
-{{- end }}
+.oh-my-zsh/cache/**
+.oh-my-zsh/plugins/**
+.oh-my-zsh/templates/**
 {{- end }}
 
 
 # specific cross-platform programs
+{{ if .is_headless -}}
+    {{- if not .has.dbeaver }}
+.config/dbeaver
+    {{ end -}}
+    {{- if not .has.iterm2 }}
+.config/iterm2
+    {{ end -}}
+    {{- if not .has.mpv }}
+.config/mpv
+    {{ end -}}
+{{- end }}
+
+# cli tools
 {{ if not .has.ranger -}}
 .config/ranger
-{{- end }}
-{{ if not .has.dbeaver -}}
-.config/dbeaver
 {{- end }}
 {{ if not .has.highlight -}}
 .local/share/highlight
 {{- end }}
-{{ if not (index .has "ccr") -}}
+{{ if not .has.ccr -}}
 .claude-code-router
-{{- end }}
-{{ if not .has.iterm2 -}}
-.config/iterm2
 {{- end }}
 {{ if not .has.jq -}}
 .jq
@@ -174,7 +177,4 @@ Documents
 {{- end }}
 {{ if not .has.ncspot -}}
 .config/ncspot
-{{- end }}
-{{ if not .has.mpv -}}
-.config/mpv
 {{- end }}
