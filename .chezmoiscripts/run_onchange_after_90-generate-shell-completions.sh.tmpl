@@ -60,7 +60,9 @@ set -e
     # {{-     $has_comp := $tool.completions_command | default "" | ne "" -}}
     # {{-     $has_init := $tool.init_command | default "" | ne "" -}}
     # {{-     if or $has_comp $has_init -}}
-    # {{-       $has_key := index $tool.cmds 0 | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+    # {{-       $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
+    # {{-       $exe := $cmd_str | splitList " " | first -}}
+    # {{-       $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
     # {{-       if index $.has $has_key | default false -}}
     # {{-         if has $shell $tool.supported_shells -}}
     # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
@@ -99,7 +101,6 @@ set -e
     # {{- /* ---- Append pipe ---- */ -}}
     # {{-             $append_key := printf "append_%s_completion" $shell -}}
     # {{-             $append := index $tool $append_key | default "" -}}
-    echo '# --- # {{ $tool.name }} ---'
     # {{ $gen_cmd }}# {{ $append }}
     echo
     # {{ "" }}

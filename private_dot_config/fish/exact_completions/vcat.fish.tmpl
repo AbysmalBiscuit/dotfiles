@@ -1,8 +1,0 @@
-# {{- if .has.vcat -}}
-# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-#!/bin/fish
-
-# complete -c myprog -s o -l output -a "yes no"
-complete -c vcat -a '(__fish_complete_path)'
-
-# {{- end -}}

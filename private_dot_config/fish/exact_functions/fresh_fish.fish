@@ -135,7 +135,7 @@ function fresh_fish --description "Generate completions and other useful items o
 
             set final_cargo_completions
             for comp in $cargo_src_completions
-                if not contains (basename --suffix=".fish" $comp) $all_completions
+                if not contains (path basename --suffix=".fish" $comp) $all_completions
                     set --append final_cargo_completions $comp
                 end
             end
@@ -175,58 +175,58 @@ function fresh_fish --description "Generate completions and other useful items o
     echo "Caught all the environment variables"
 
     # Generate CLI completion for various programs
-    for pkg_info in (tail -n +2 $__fish_config_dir/pkgs.csv)
-        if string match -q --regex '^\s*#.+' $pkg_info
-            continue
-        end
+    # for pkg_info in (tail -n +2 $__fish_config_dir/pkgs.csv)
+    # if string match -q --regex '^\s*#.+' $pkg_info
+    # continue
+    # end
 
-        # It's possible to at least get the package name, install command, and completions command
-        set -l pkg (__split_pkg $pkg_info)
-        # if not string match starship $pkg[2]
-        #     continue
-        # end
-        # echo $pkg
-        # return 0
-        # set -l lang $pkg[1]
-        set -l name $pkg[2]
-        # # offset is for this: `,,"` + 1 for 1-index
-        # set -l description_start_offset 4
-        # set -l description_start (math (string length $lang) + (string length $name) + $description_start_offset)
-        # # offset is for this: `,"","","",""`
-        # set -l description_end_offset 5
-        # set -l description_end (math (string length $argv) - (string length "$pkg[-4]""$pkg[-3]""$pkg[-2]""$pkg[-1]") - $description_end_offset)
-        # set -l description (string sub --start $description_start --end $description_end $argv)
-        # set -l website (string sub --start 2 --end -1 "$pkg[-4]")
-        # set -l git (string sub --start 2 --end -1 "$pkg[-3]")
-        # set -l install_command (string sub --start 2 --end -1 "$pkg[-2]")
-        # set -l completions_command (string sub --start 2 --end -1 $pkg[-1])
-        set -l completions_command $pkg[-2]
-        set -l init_command $pkg[-1]
-        if type -q $name
-            if test -n "$completions_command"
-                eval "$completions_command" >$_FISH_CACHE_COMPLETIONS_DIR/$name.fish
-                # set -l comp_command (string split ' ' "$completions_command")
-                # echo $comp_command
-                # $comp_command
-                # $comp_command >$_FISH_CACHE_COMPLETIONS_DIR/$name.fish
+    # # It's possible to at least get the package name, install command, and completions command
+    # set -l pkg (__split_pkg $pkg_info)
+    # # if not string match starship $pkg[2]
+    # #     continue
+    # # end
+    # # echo $pkg
+    # # return 0
+    # # set -l lang $pkg[1]
+    # set -l name $pkg[2]
+    # # # offset is for this: `,,"` + 1 for 1-index
+    # # set -l description_start_offset 4
+    # # set -l description_start (math (string length $lang) + (string length $name) + $description_start_offset)
+    # # # offset is for this: `,"","","",""`
+    # # set -l description_end_offset 5
+    # # set -l description_end (math (string length $argv) - (string length "$pkg[-4]""$pkg[-3]""$pkg[-2]""$pkg[-1]") - $description_end_offset)
+    # # set -l description (string sub --start $description_start --end $description_end $argv)
+    # # set -l website (string sub --start 2 --end -1 "$pkg[-4]")
+    # # set -l git (string sub --start 2 --end -1 "$pkg[-3]")
+    # # set -l install_command (string sub --start 2 --end -1 "$pkg[-2]")
+    # # set -l completions_command (string sub --start 2 --end -1 $pkg[-1])
+    # set -l completions_command $pkg[-2]
+    # set -l init_command $pkg[-1]
+    # if type -q $name
+    # if test -n "$completions_command"
+    # eval "$completions_command" >$_FISH_CACHE_COMPLETIONS_DIR/$name.fish
+    # # set -l comp_command (string split ' ' "$completions_command")
+    # # echo $comp_command
+    # # $comp_command
+    # # $comp_command >$_FISH_CACHE_COMPLETIONS_DIR/$name.fish
 
-            end
-            if test -n "$init_command"
-                eval "$init_command" >>$fresh_fish_env
-                # if string match -q '*;*' "$init_command"
-                #     for sub_com in (string split ';' "$init_command" | string trim)
-                #         set -l init_com (string split ' ' "$sub_com")
-                #         # echo $sub_com
-                #         # echo $init_com
-                #         $init_com >>$fresh_fish_env
-                #     end
-                # else
-                #     set -l init_com (string split ' ' "$init_command")
-                #     $init_com >>$fresh_fish_env
-                # end
-            end
-        end
-    end
+    # end
+    # if test -n "$init_command"
+    # eval "$init_command" >>$fresh_fish_env
+    # # if string match -q '*;*' "$init_command"
+    # #     for sub_com in (string split ';' "$init_command" | string trim)
+    # #         set -l init_com (string split ' ' "$sub_com")
+    # #         # echo $sub_com
+    # #         # echo $init_com
+    # #         $init_com >>$fresh_fish_env
+    # #     end
+    # # else
+    # #     set -l init_com (string split ' ' "$init_command")
+    # #     $init_com >>$fresh_fish_env
+    # # end
+    # end
+    # end
+    # end
 
     # if type -q starship
     #     _append_to_fresh_fish_env enable_transience

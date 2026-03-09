@@ -87,7 +87,7 @@ supported_shells = [
     "fish",
     "zsh"
 ]
-append_fish_completion = "| string replace -r '\\bclaude-squad\\b' 'cs'"
+append_fish_completion = "| sed -E 's/\\bclaude-squad\\b/cs/'"
 command_bash_name = ""
 command_fish_name = ""
 command_nu_name = ""
@@ -994,11 +994,15 @@ cmds = [
 desc = "Alacritty is a modern terminal emulator that comes with sensible defaults, but allows for extensive configuration."
 url = "https://alacritty.org/"
 git = "https://github.com/alacritty/alacritty"
-comment = ""
+comment = "Completions downloaded from GitHub: https://github.com/alacritty/alacritty/extra/completions"
 install_command = ""
 completions_command = ""
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
 append_fish_completion = ""
 command_bash_name = ""
 command_fish_name = ""
@@ -1109,13 +1113,13 @@ cmds = [
 desc = "Display system information about the CPU, memory, disks, network, and processes."
 url = "https://clementtsang.github.io/bottom/nightly/#usage-and-configuration"
 git = "https://github.com/ClementTsang/bottom"
-comment = ""
+comment = "Completions need to be downloaded"
 install_command = "cargo install bottom"
 completions_command = ""
 init_command = ""
 supported_shells = [
     "bash",
-    "elv",
+    "elvish",
     "fig",
     "fish",
     "nu",
@@ -1405,11 +1409,17 @@ cmds = [
 desc = "Modern, maintained replacement for `ls`, built on `exa`."
 url = "https://github.com/eza-community/eza"
 git = ""
-comment = ""
+comment = "Completions need to be downloaded"
 install_command = ""
 completions_command = ""
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "bash",
+    "fish",
+    "nu",
+    "powershell",
+    "zsh"
+]
 append_fish_completion = ""
 command_bash_name = ""
 command_fish_name = ""
@@ -1804,11 +1814,19 @@ cmds = [
 desc = "qsv is a command line program for querying, slicing, indexing, analyzing, filtering, enriching, transforming, sorting, validating, joining, formatting, converting & FAIRifying tabular data (CSV, spreadsheets, DBs, etc)."
 url = "https://qsv.dathere.com/"
 git = "https://github.com/dathere/qsv"
-comment = ""
+comment = "Completions need to be downloaded"
 install_command = ""
 completions_command = ""
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "bash",
+    "elvish",
+    "fig",
+    "fish",
+    "nu",
+    "powershell",
+    "zsh"
+]
 append_fish_completion = ""
 command_bash_name = ""
 command_fish_name = ""
@@ -2626,7 +2644,7 @@ cmds = [
 desc = "Incredibly fast JavaScript runtime, bundler, test runner, and package manager – all in one"
 url = "https://bun.com/"
 git = "https://github.com/oven-sh/bun"
-comment = ""
+comment = "Completions need to be downloaded"
 install_command = "curl -fsSL https://bun.sh/install | bash"
 completions_command = ""
 init_command = ""
