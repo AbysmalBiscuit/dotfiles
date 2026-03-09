@@ -2,6 +2,7 @@
 
 local home = vim.fn.expand("~")
 local chezmoi_source = home .. "/.local/share/chezmoi"
+local chezmoi_toml_tmpl_filetype = "chezmoi_toml.toml.chezmoitmpl"
 
 function reload_buffers()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
@@ -19,20 +20,6 @@ end
 --------------------------------------------------------------------------------
 -- Autocommands
 --------------------------------------------------------------------------------
--- vim.api.nvim_create_autocmd("BufWritePost", {
---     pattern = ".chezmoi.toml.tmpl", -- filename or glob pattern
---     callback = function()
---         vim.fn.jobstart("chezmoi init", {
---             on_exit = function(_, code)
---                 if code == 0 then
---                     vim.notify("Command succeeded")
---                 else
---                     vim.notify("Command failed (exit " .. code .. ")", vim.log.levels.ERROR)
---                 end
---             end,
---         })
---     end,
--- })
 vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("chezmoi_group_custom1", { clear = false }),
   pattern = ".chezmoi.toml.tmpl",
@@ -91,14 +78,16 @@ vim.api.nvim_create_autocmd("BufWritePost", {
     vim.schedule(reload_buffers)
   end,
 })
-vim.api.nvim_create_autocmd("FileType", {
+vim.api.nvim_create_autocmd("BufReadPost", {
   group = vim.api.nvim_create_augroup("chezmoi_toml_tmpl", { clear = true }),
-  pattern = "toml.chezmoitmpl",
+  once = true,
+  pattern = "*/.chezmoi.toml.tmpl",
   callback = function(args)
-    local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(args.buf), ":t")
-    if filename == ".chezmoi.toml.tmpl" then
-      vim.bo[args.buf].filetype = "chezmoi_toml.toml.chezmoitmpl"
-    end
+    vim.b[args.buf].chezmoi_ts_lang = chezmoi_toml_tmpl_filetype
+    vim.b[args.buf].chezmoi_ts_pending = nil
+    vim.wo[0].foldmethod = "manual"
+    vim.treesitter.start(args.buf, chezmoi_toml_tmpl_filetype)
+    vim.bo[args.buf].filetype = chezmoi_toml_tmpl_filetype
   end,
 })
 vim.api.nvim_create_autocmd("BufWritePost", {
@@ -163,11 +152,6 @@ for _, source_name in ipairs(snacks_sources) do
 end
 
 --------------------------------------------------------------------------------
--- Highlights
---------------------------------------------------------------------------------
-vim.api.nvim_set_hl(0, "LspReferenceRead", {})
-
---------------------------------------------------------------------------------
 -- Treesitter
 --------------------------------------------------------------------------------
 
@@ -207,17 +191,31 @@ end
 -- Cache base gotmpl queries once
 local propagated_queries = { "highlights", "folds", "indents", "locals" }
 local gotmpl_query_cache = {}
+local ts_lang_names = {}
 local gotmpl_parser_path = vim.api.nvim_get_runtime_file("parser/gotmpl.so", false)[1]
   or vim.api.nvim_get_runtime_file("parser/gotmpl.dll", false)[1]
 for _, name in ipairs(propagated_queries) do
   gotmpl_query_cache[name] = get_query_source("gotmpl", name)
 end
+-- Verify folds query exists
+-- local folds_q = gotmpl_query_cache["folds"]
+-- vim.schedule(function()
+-- vim.defer_fn(function()
+-- if folds_q then
+-- vim.notify("folds query exists for " .. chezmoi_toml_tmpl_filetype, "info")
+-- else
+-- vim.notify("folds query is NIL", "info")
+-- end
+-- end, 5000)
+-- end)
 
 -- Register a per-filetype gotmpl variant with its own injection
 for _, filetype in ipairs(chezmoi_filetypes) do
   local compound_ft = filetype .. ".chezmoitmpl"
   local ts_lang = "gotmpl_" .. filetype
   local inject_lang = ft_to_parser[filetype] or filetype
+
+  table.insert(ts_lang_names, ts_lang)
 
   vim.treesitter.language.add(ts_lang, {
     path = gotmpl_parser_path,
@@ -239,8 +237,33 @@ for _, filetype in ipairs(chezmoi_filetypes) do
     string.format('((text) @injection.content (#set! injection.combined) (#set! injection.language "%s"))', inject_lang)
   )
 
+  table.insert(gotmpl_filetypes, ts_lang)
+  table.insert(gotmpl_filetypes, ts_lang .. ".chezmoitmpl")
   table.insert(gotmpl_filetypes, compound_ft)
+  table.insert(gotmpl_filetypes, compound_ft .. ".chezmoitmpl")
+  table.insert(gotmpl_filetypes, ts_lang .. "." .. compound_ft)
 end
+
+-- Add the .chezmoi.toml.tmpl special filetype
+vim.treesitter.language.add(chezmoi_toml_tmpl_filetype, {
+  path = gotmpl_parser_path,
+  symbol_name = "gotmpl",
+})
+vim.treesitter.language.register(chezmoi_toml_tmpl_filetype, chezmoi_toml_tmpl_filetype)
+
+table.insert(gotmpl_filetypes, chezmoi_toml_tmpl_filetype)
+
+for _, name in ipairs(propagated_queries) do
+  if gotmpl_query_cache[name] then
+    vim.treesitter.query.set(chezmoi_toml_tmpl_filetype, name, gotmpl_query_cache[name])
+  end
+end
+
+vim.treesitter.query.set(
+  chezmoi_toml_tmpl_filetype,
+  "injections",
+  '((text) @injection.content (#set! injection.combined) (#set! injection.language "toml"))'
+)
 
 -- Plain .tmpl files default to base gotmpl
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
@@ -296,36 +319,6 @@ vim.lsp.config("gopls", {
       on_dir(root)
     end
   end,
-  -- root_dir = vim.fs.root(0, { ".git/" }),
-  -- root_dir = function(bufnr, fname)
-  -- if type(fname) ~= "string" then
-  -- return nil
-  -- end
-
-  -- -- Filetype may not be set when root_dir is called, so check filename
-  -- local dominated_file = fname:match("%.tmpl$")
-  -- or fname:match("%.go$")
-  -- or fname:match("go%.mod$")
-  -- or fname:match("go%.work$")
-
-  -- if not dominated_file then
-  -- -- Fallback: check filetype if buffer exists
-  -- local buf = (type(bufnr) == "number" and bufnr > 0) and bufnr or vim.fn.bufnr(fname)
-  -- if buf < 1 then
-  -- return nil
-  -- end
-  -- local ft = vim.bo[buf].filetype
-  -- if not vim.tbl_contains({ "go", "gomod", "gowork", "gotmpl" }, ft) and not ft:match("%.chezmoitmpl$") then
-  -- return nil
-  -- end
-  -- end
-
-  -- local chezmoi_source = vim.fn.expand("~") .. "/.local/share/chezmoi"
-  -- if vim.startswith(fname, chezmoi_source) then
-  -- return chezmoi_source
-  -- end
-  -- return require("lspconfig.util").root_pattern("go.work", "go.mod", ".git")(fname)
-  -- end,
 })
 
 vim.lsp.config("pyrefly", {
@@ -379,11 +372,13 @@ vim.lsp.config("bashls", {
 --------------------------------------------------------------------------------
 -- gotmpl comments
 --------------------------------------------------------------------------------
--- vim.api.nvim_create_autocmd("FileType", {
---     group = vim.api.nvim_create_augroup("gotmpl_comment", { clear = false }),
---     pattern = gotmpl_filetypes,
---     callback = function()
---         require("gotmpl_comment").setup()
---     end,
--- })
 require("gotmpl_comment").setup({ buffer = false, silent = true })
+
+--------------------------------------------------------------------------------
+-- Highlights
+--------------------------------------------------------------------------------
+vim.api.nvim_set_hl(0, "LspReferenceRead", {})
+
+for _, ts_lang in ipairs(ts_lang_names) do
+  vim.api.nvim_set_hl(0, "@function." .. ts_lang, { link = "@function.gotmpl" })
+end
