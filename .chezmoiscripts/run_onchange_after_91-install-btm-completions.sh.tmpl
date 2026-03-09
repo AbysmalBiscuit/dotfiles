@@ -1,0 +1,43 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if .has.btm -}}
+# {{ "" }}
+# btm:# {{ (stat (lookPath "btm")).modTime }}
+archive_dir="$(mktemp -d)"
+archive_file="$archive_dir/completion.tar.gz"
+curl -sL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' --output "$archive_file"
+tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
+
+# {{- if .has.bash }}
+{
+    echo
+    cat "$archive_dir/btm.bash"
+} >>'# {{ joinPath .chezmoi.homeDir ".config" "bash_completion" }}'
+# {{- end }}
+
+# {{- if .has.fish }}
+{
+    echo
+    cat "$archive_dir/btm.fish"
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".cache" "fish" "generated_completions" "_generated.fish" }}'
+
+# {{- end }}
+
+# {{- if and .has.zsh }}
+{
+    echo
+    cat "$archive_dir/_btm"
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated" }}'
+# {{- end }}
+
+# {{- if and .has.nu }}
+{
+    echo
+    cat "$archive_dir/btm.nu"
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu" }}'
+# {{- end }}
+
+# {{- end }}

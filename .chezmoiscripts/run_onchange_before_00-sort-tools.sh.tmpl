@@ -2,56 +2,73 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # vim:filetype=python.chezmoitmpl
 # Hash to trigger re-run when tools.toml changes:
-# # {{ include ".chezmoidata/tools.toml" | sha256sum }}
-# # {{ include ".chezmoidata/wsl_tools.toml" | sha256sum }}
-# {{/* if not .has.uv */ -}}
-# import sys
-# sys.exit(0)
-# {{- /* end */}}
-
+# # {{ (stat ".chezmoidata/tools.toml").modTime }}
+# # {{ (stat ".chezmoidata/wsl_tools.toml").modTime }}
 import json
-import sys
+import re
 import tomllib
+from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
-TOOLS_TOML: Path = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "tools.toml"
-WSL_TOOLS_TOML: Path = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "wsl_tools.toml"
+TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "tools.toml"
+WSL_TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "wsl_tools.toml"
+RE_JSON_KEY = re.compile(r"^(\s*)\"(.+?)\":")
 
 FIELDS_TYPES = {
-    "lang": (str, ""),
-    "name": (str, ""),
-    "cmds": (list[str], []),
-    "desc": (str, ""),
-    "url": (str, ""),
-    "git": (str, ""),
-    "install_command": (str, ""),
-    "completions_command": (str, ""),
-    "init_command": (str, ""),
-    "supported_shells": (list[str], []),
+    "lang": "",
+    "name": "",
+    "cmds": [],
+    "desc": "",
+    "url": "",
+    "git": "",
+    "comment": "",
+    "install_command": "",
+    "completions_command": "",
+    "init_command": "",
+    "supported_shells": [],
+    "append_fish_completion": "",
+    "command_bash_name": "",
+    "command_fish_name": "",
+    "command_nu_name": "",
+    "command_powershell_name": "",
+    "command_zsh_name": "",
+    "completions_command_only_if_no": [],
+    "init_command_only_if_no": [],
 }
 
 
-def escape_toml_string(value: str) -> str:
+def escape_toml_string(value):
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
+def append_value(lines: list[str], field: str, value: str | list[str] | dict[str, Any], default: Any):
+    if type(value) is str:
+        lines.append(f'{field} = "{escape_toml_string(str(value.strip()))}"')
+    elif type(value) is list:
+        value.sort()
+        lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
+    elif type(value) is dict:
+        # value = json.dumps(value, indent=4, sort_keys=True)
+        # value = [RE_JSON_KEY.sub("\1\2 =", line) for line in value.splitlines()]
+        merged = deepcopy(default)
+        merged.update(value)
+        for key, val in merged.items():
+            append_value(lines, f"extra.{key}", val, default.get(key))
 
 def tool_to_toml(tool_header: str, tool: dict) -> str:
     lines = [f"[[{tool_header}]]"]
-    for field, field_type in FIELDS_TYPES.items():
-        value = tool.get(field, field_type[1])
+    for field, default in FIELDS_TYPES.items():
+        value = tool.get(field, deepcopy(default))
         if field == "supported_shells" and (tool.get("completions_command", "") != "" or tool.get("init_command", "") != "") and value == []:
             value = ["bash", "fish", "zsh"]
         elif field == "cmds" and value == []:
             value = [tool.get("name")]
 
-        if field_type[0] is str:
-            lines.append(f'{field} = "{escape_toml_string(str(value.strip()))}"')
-        elif type(value) is list:
-            value.sort()
-            lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
+        append_value(lines, field, value, default)
+
     return "\n".join(lines)
 
-def sort_file(file: Path) -> None:
+def sort_file(file) -> None:
     with file.open("rb") as f:
         data = tomllib.load(f)
 

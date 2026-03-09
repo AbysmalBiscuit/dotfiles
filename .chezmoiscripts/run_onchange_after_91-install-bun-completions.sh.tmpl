@@ -1,0 +1,34 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if .has.btm }}
+# bun:# {{ (stat (lookPath "bun")).modTime }}
+archive_dir="$(mktemp -d)"
+archive_file="$archive_dir/completion.tar.gz"
+curl -sL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' --output "$archive_file"
+tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
+
+# {{- if .has.bash }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.bash'
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".config" "bash_completion" }}'
+# {{- end }}
+
+# {{- if .has.fish }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.fish'
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".cache" "fish" "generated_completions" "_generated.fish" }}'
+
+# {{- end }}
+
+# {{- if and .has.zsh }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.zsh'
+    echo
+} >>'# {{ joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated" }}'
+# {{- end }}
+# {{- end }}

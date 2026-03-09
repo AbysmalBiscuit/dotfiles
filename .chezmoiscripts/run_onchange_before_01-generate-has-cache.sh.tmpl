@@ -8,7 +8,6 @@
 # {{- $is_wsl = true -}}
 # {{- end -}}
 
-# # {{ include ".chezmoidata/tools.toml" | sha256sum }}
 # {{- $cli_tools := list -}}
 # {{- $cli_tools_wsl := list -}}
 # {{- range $tool := .tools -}}
@@ -18,7 +17,6 @@
 # {{- end -}}
 # {{ if $is_wsl -}}
 # {{ "" }}
-# # {{ include ".chezmoidata/wsl_tools.toml" | sha256sum }}
 # {{- range $tool := .wsl_tools -}}
 # {{- range $cmd := $tool.cmds -}}
 # {{- $key := $cmd -}}

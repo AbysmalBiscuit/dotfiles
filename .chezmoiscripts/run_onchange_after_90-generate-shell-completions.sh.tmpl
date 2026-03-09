@@ -1,0 +1,112 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- /* ========================================================== */ -}}
+# {{- /* Generate shell completions/init for configured tools.      */ -}}
+# {{- /*                                                            */ -}}
+# {{- /* Loop 1: stat mtime comments for run_onchange triggering.   */ -}}
+# {{- /* Loop 2: grouped by shell, batch-writes to single file.     */ -}}
+# {{- /* If init_command is set, it takes priority over completions. */ -}}
+# {{- /* No forks at template eval — stat/lookPath are internal.    */ -}}
+# {{- /*                                                            */ -}}
+# {{- /* Shell renaming: command_SHELL_name overrides the SHELL     */ -}}
+# {{- /* placeholder (e.g. command_nu_name = "nushell").             */ -}}
+# {{- /* ========================================================== */ -}}
+
+# {{- /* ---- Output file per shell ---- */ -}}
+# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".config" "bash_completion_extra" "_generated.bash") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "generated_completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
+
+# {{- /* ---- Filter to installed shells ---- */ -}}
+# {{- $shells := list -}}
+# {{- range $shell := list "bash" "fish" "zsh" "nu" -}}
+# {{-   if index $.has $shell | default false -}}
+# {{-     $shells = append $shells $shell -}}
+# {{-   end -}}
+# {{- end -}}
+
+# {{- /* ---- Merge tool lists ---- */ -}}
+# {{- $all_tools := .tools | default (list) -}}
+# {{- if .is_wsl -}}
+# {{-   $all_tools = concat $all_tools (.wsl_tools | default (list)) -}}
+# {{- end -}}
+
+# {{- /* ============================================================ */ -}}
+# {{- /* Loop 1: stat comments — triggers run_onchange on binary change */ -}}
+# {{- /* ============================================================ */ -}}
+# {{- range $tool := $all_tools -}}
+# {{-   $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
+# {{-   if $cmd_str -}}
+# {{-     $exe := $cmd_str | splitList " " | first -}}
+# {{-     $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-     if index $.has $has_key | default false -}}
+# {{-       $path := lookPath $exe -}}
+# {{-       if $path }}
+# # {{ $exe }}:# {{ (stat $path).modTime }}
+# {{-       end -}}
+# {{-     end -}}
+# {{-   end -}}
+# {{- end }}
+
+set -e
+
+# {{- /* ============================================================ */ -}}
+# {{- /* Loop 2: generate, grouped by shell, batch write per shell    */ -}}
+# {{- /* ============================================================ */ -}}
+# {{ range $shell := $shells -}}
+# {{-   $file := index $comp_file $shell }}
+{
+    echo
+    # {{ "" }}
+    # {{-   range $tool := $all_tools -}}
+    # {{-     $has_comp := $tool.completions_command | default "" | ne "" -}}
+    # {{-     $has_init := $tool.init_command | default "" | ne "" -}}
+    # {{-     if or $has_comp $has_init -}}
+    # {{-       $has_key := index $tool.cmds 0 | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+    # {{-       if index $.has $has_key | default false -}}
+    # {{-         if has $shell $tool.supported_shells -}}
+    # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
+    # {{-           $use_cmd := "" -}}
+    # {{-           $skip := false -}}
+    # {{-           if $has_init -}}
+    # {{-             $use_cmd = $tool.init_command -}}
+    # {{-             if $tool.init_command_only_if_no -}}
+    # {{-               range $blocker := $tool.init_command_only_if_no -}}
+    # {{-                 $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+    # {{-                 if index $.has $bkey | default false -}}
+    # {{-                   $skip = true -}}
+    # {{-                 end -}}
+    # {{-               end -}}
+    # {{-             end -}}
+    # {{-           else -}}
+    # {{-             $use_cmd = $tool.completions_command -}}
+    # {{-             if $tool.completions_command_only_if_no -}}
+    # {{-               range $blocker := $tool.completions_command_only_if_no -}}
+    # {{-                 $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+    # {{-                 if index $.has $bkey | default false -}}
+    # {{-                   $skip = true -}}
+    # {{-                 end -}}
+    # {{-               end -}}
+    # {{-             end -}}
+    # {{-           end -}}
+    # {{-           if not $skip -}}
+    # {{- /* ---- Shell arg: use command_SHELL_name if non-empty, else $shell ---- */ -}}
+    # {{-             $shell_arg := $shell -}}
+    # {{-             $name_key := printf "command_%s_name" $shell -}}
+    # {{-             $custom := index $tool $name_key | default "" -}}
+    # {{-             if $custom -}}
+    # {{-               $shell_arg = $custom -}}
+    # {{-             end -}}
+    # {{-             $gen_cmd := $use_cmd | replace "SHELL" $shell_arg | replaceAllRegex "\\\\n" "\n" -}}
+    # {{- /* ---- Append pipe ---- */ -}}
+    # {{-             $append_key := printf "append_%s_completion" $shell -}}
+    # {{-             $append := index $tool $append_key | default "" -}}
+    echo '# --- # {{ $tool.name }} ---'
+    # {{ $gen_cmd }}# {{ $append }}
+    echo
+    # {{ "" }}
+    # {{-           end -}}
+    # {{-         end -}}
+    # {{-       end -}}
+    # {{-     end -}}
+    # {{-   end }}
+} >'# {{ $file }}'
+# {{ end }}
