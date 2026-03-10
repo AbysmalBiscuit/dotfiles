@@ -1,0 +1,76 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
+# {{- /* TODO: add yazi, ya, pacman */ -}}
+# {{- if .has.btm -}}
+# {{ "" }}
+# btm:# {{ (stat (lookPath "btm")).modTime }}
+archive_dir="$(mktemp -d)"
+archive_file="$archive_dir/completion.tar.gz"
+curl -sL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' --output "$archive_file"
+tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
+
+# {{- if .has.bash }}
+{
+    echo
+    cat "$archive_dir/btm.bash"
+    echo
+} >>'# {{ $comp_file.bash }}'
+# {{- end }}
+
+# {{- if .has.fish }}
+{
+    echo
+    cat "$archive_dir/btm.fish"
+    echo
+} >>'# {{ $comp_file.fish }}'
+
+# {{- end }}
+
+# {{- if and .has.zsh }}
+{
+    echo
+    cat "$archive_dir/_btm"
+    echo
+} >>'# {{ $comp_file.zsh }}'
+# {{- end }}
+
+# {{- if and .has.nu }}
+{
+    echo
+    cat "$archive_dir/btm.nu"
+    echo
+} >>'# {{ $comp_file.nu }}'
+# {{- end }}
+if [ -d "$archive_dir" ]; then
+    rm -rf "$archive_dir"
+fi
+# {{- end }}
+
+# {{- if .has.bun }}
+# bun:# {{ (stat (lookPath "bun")).modTime }}
+# {{- if .has.bash }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.bash'
+    echo
+} >>'# {{ $comp_file.bash }}'
+# {{- end }}
+
+# {{- if .has.fish }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.fish'
+    echo
+} >>'# {{ $comp_file.fish }}'
+
+# {{- end }}
+
+# {{- if and .has.zsh }}
+{
+    echo
+    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.zsh'
+    echo
+} >>'# {{ $comp_file.zsh }}'
+# {{- end }}
+# {{- end }}
