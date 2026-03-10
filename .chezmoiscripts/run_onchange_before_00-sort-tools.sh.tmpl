@@ -2,8 +2,8 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # vim:filetype=python.chezmoitmpl
 # Hash to trigger re-run when tools.toml changes:
-# # {{ (stat ".chezmoidata/tools.toml").modTime }}
-# # {{ (stat ".chezmoidata/wsl_tools.toml").modTime }}
+# # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata/tools.toml")).modTime }}
+# # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata/wsl_tools.toml")).modTime }}
 import json
 import re
 import tomllib
