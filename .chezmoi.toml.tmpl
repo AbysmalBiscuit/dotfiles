@@ -57,32 +57,28 @@
   {{- $secrets = include $secrets_path | fromToml -}}
 {{- end -}}
 {{- "" -}}
+{{- $has := dict -}}
+{{- /* range $tool := .tools */ -}}
+  {{- /* range $cmds := $tool.cmds */ -}}
+    {{- /* range $cmd := $cmds */ -}}
+      {{- /* $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) */ -}}
+    {{- /* end */ -}}
+  {{- /* end */ -}}
+{{- /* end */ -}}
+{{- /* range $tool := .wsl_tools */ -}}
+  {{- /* range $cmds := $tool.cmds */ -}}
+    {{- /* range $cmd := $cmds */ -}}
+      {{- /* $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) */ -}}
+    {{- /* end */ -}}
+  {{- /* end */ -}}
+{{- /* end */ -}}
 {{- $has_has := false -}}
 {{- $has_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" -}}
-{{- $has := dict -}}
 {{- if stat $has_path -}}
   {{- $has_has = true -}}
   {{- $has = include $has_path | fromToml -}}
 {{- end -}}
-{{- $cli_tools_wsl := list -}}
 
-{{- if eq (len $has) 0 -}}
-  {{- $has = dict -}}
-  {{- range $tool := .tools -}}
-    {{- range $cmds := $tool.cmds -}}
-      {{- range $cmd := $cmds -}}
-        {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
-      {{- end -}}
-  {{- end -}}
-{{- end -}}
-  {{- range $tool := .wsl_tools -}}
-    {{- range $cmds := $tool.cmds -}}
-      {{- range $cmd := $cmds -}}
-        {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
 
 {{- $osID := .chezmoi.os -}}
 {{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
@@ -354,16 +350,6 @@ zshPlugins = [
     "vi-mode",
     "zsh-syntax-highlighting",
 ]
-# cli_tools = [
-{{- /* range $cli_tools */ -}}
-  {{- /* printf "%s%s" . $exe_ext | quote */ -}},
-{{- /* end */ -}}
-# ]
-# cli_tools_wsl = [
-# {{- range $cli_tools_wsl -}}
-  # {{- printf "%s" . | quote -}},
-# {{- end -}}
-# ]
 
 [data.font]
 monospace = [
@@ -422,6 +408,7 @@ lastname = {{ $lastname | quote }}
 gpg_key = {{ $gpg_key | quote }}
 
 [data.system]
+has_nightly_rust = {{ output "rustup" "toolchain" "list" | contains "nightly" }}
 has_battery = {{ not $is_desktop }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}

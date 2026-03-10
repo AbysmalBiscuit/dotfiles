@@ -74,7 +74,7 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
 # {{ if stat "/usr/lib/jvm/default-java"  -}}
 # Setting JAVA_HOME environment variable
 # if [[ -d "/usr/lib/jvm/default-java" ]]; then
-    export JAVA_HOME="/usr/lib/jvm/default-java"
+export JAVA_HOME="/usr/lib/jvm/default-java"
 # fi
 # {{- end }}
 # {{- end }}
@@ -91,10 +91,17 @@ export GTK_THEME="Adwaita:dark"
 # Configuring rust programs
 export CLIPPY_CONF_DIR="$HOME/.config/clippy"
 export EZA_CONFIG_DIR="$HOME/.config/eza"
+export FZF_DEFAULT_OPTS="--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8\
+    --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC\
+    --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8\
+    --color=selected-bg:#45475A\
+    --color=border:#6C7086,label:#CDD6F4"
+
+# Python environment variables
+export NUMBA_CACHE_DIR="$HOME/.cache/numba"
 
 # {{- if stat "/opt/intel" }}
 # Adding various Intel variables
-# if [[ -d "/opt/intel" ]]; then
 export TBBROOT="/opt/intel/tbb"
 export PSTLROOT="/opt/intel/pstl"
 export DAALROOT="/opt/intel/daal"
@@ -113,42 +120,48 @@ export INTEL_PYTHONHOME="/opt/intel/debugger_2020/python/intel64/"
 export INTEL_LICENSE_FILE="/opt/intel/licenses:/Users/admin/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses"
 export CPATH="/opt/intel/ipp/include:/opt/intel/mkl/include:/opt/intel/pstl/include:/opt/intel/pstl/stdlib:/opt/intel/tbb/include:/opt/intel/tbb/include:/opt/intel/daal/include:$CPATH"
 PATH="$PATH:/opt/intel/bin"
-# fi
 # {{- end }}
 
-# Add tesseract data
 # {{ if stat (joinPath .chezmoi.homeDir "tessdata") -}}
-# if [[ -d "$HOME/tessdata" ]]; then
+# Add tesseract data
 export TESSDATA_PREFIX="$HOME/tessdata"
-# fi
 # {{- end }}
 
-if has_command mold; then
-    export MOLD="$(command -v mold)"
-fi
+# {{ if .has.mold -}}
+# if has_command mold; then
+export MOLD='# {{ lookPath "mold" }}'
+# fi
+# {{- end }}
 
 #
 # Configuring PATH
 #
 # Store original system path
 # {{ if .is_macos -}}
-if [[ -x /usr/libexec/path_helper ]]; then
-    PATH_SYS="$(/usr/libexec/path_helper)"
-else
-    PATH_SYS="$PATH"
-fi
+# {{- if stat "/usr/libexec/path_helper" }}
+PATH_SYS="$(/usr/libexec/path_helper)"
+# {{- else -}}
+PATH_SYS="$PATH"
+# {{- end }}
 
 # Add /usr/local/sbin to PATH
-if [[ -d "/usr/local/sbin" ]]; then
-    PATH="$PATH:/usr/local/sbin"
-fi
+# {{- if stat "/usr/local/sbin" }}
+PATH="$PATH:/usr/local/sbin"
+# {{- end }}
+
 # {{- else -}}
+
 PATH_SYS="$PATH"
 # {{- end }}
 export PATH_SYS
 
 # Source rust if it exists
-[[ -s "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+# {{- if stat (joinPath .chezmoi.homeDir ".cargo" ) }}
+# [[ -s "$HOME/.cargo/env" ]] &&
+source "$HOME/.cargo/env"
+# {{- end }}
+
+export HAS_NIGHTLY_RUST='# {{ .system.has_nightly_rust }}'
 
 # Source deno if it exists
 [[ -s "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
@@ -238,49 +251,76 @@ PATH="$HOME/bin:$HOME/bin/bin:$PATH"
 
 
 # {{- if .is_macos }}
+# {{- $connect_iq := joinPath .chezmoi.homeDir "Library" "Application Support" "Garmin" "ConnectIQ" "Sdks" -}}
+# {{- if stat $connect_iq }}
+bin_dirs=$(find '# {{ $connect_iq }}' -type d -name "bin" | sort)
+while IFS= read -r dir; do
+    [[ -n "$dir" ]] && PATH="$PATH:$dir"
+done <<EOF
+$bin_dirs
+EOF
+# {{- end }}
 
 # Add brew ruby binaries to path
-if [[ -d '/usr/local/opt/ruby/bin' ]]; then
+# {{- if stat "/usr/local/opt/ruby/bin" }}
+# if [[ -d '/usr/local/opt/ruby/bin' ]]; then
     PATH="/usr/local/opt/ruby/bin:$PATH"
-fi
+# fi
+# {{- end }}
 
 # Put GNU binaries before macOS binaries
-if [[ -d "/usr/local/lib/gnubin" ]]; then
-    PATH="/usr/local/lib/gnubin:$PATH"
-fi
+# {{- if stat "/usr/local/lib/gnubin" }}
+# if [[ -d "/usr/local/lib/gnubin" ]]; then
+PATH="/usr/local/lib/gnubin:$PATH"
+# fi
+# {{- end }}
 
-if [[ -d "/usr/local/opt/make/libexec/gnubin" ]]; then
-    PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-fi
+# {{- if stat "/usr/local/opt/make/libexec/gnubin" }}
+# if [[ -d "/usr/local/opt/make/libexec/gnubin" ]]; then
+PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
+# fi
+# {{- end }}
 
-if [[ -d "/usr/local/opt/uutils-coreutils/libexec/uubin" ]]; then
-    PATH="/usr/local/opt/uutils-coreutils/libexec/uubin:$PATH"
-fi
+# {{- if stat "/usr/local/opt/uutils-coreutils/libexec/uubin" }}
+# if [[ -d "/usr/local/opt/uutils-coreutils/libexec/uubin" ]]; then
+PATH="/usr/local/opt/uutils-coreutils/libexec/uubin:$PATH"
+# fi
+# {{- end }}
 
 # Add perlbrew to PATH
-if [[ -d "$HOME/perl5/perlbrew/bin" ]]; then
-    PATH="$PATH:$HOME/perl5/perlbrew/bin"
-fi
+# {{- if stat "$HOME/perl5/perlbrew/bin" }}
+# if [[ -d "$HOME/perl5/perlbrew/bin" ]]; then
+PATH="$PATH:$HOME/perl5/perlbrew/bin"
+# fi
+# {{- end }}
 
 # Homebrew keg only packages
-if [[ -d "/usr/local/opt/binutils/bin" ]]; then
-    PATH="$PATH:/usr/local/opt/binutils/bin"
-fi
+# {{- if stat "/usr/local/opt/binutils/bin" }}
+# if [[ -d "/usr/local/opt/binutils/bin" ]]; then
+PATH="$PATH:/usr/local/opt/binutils/bin"
+# fi
+# {{- end }}
 
 # Add llvm to PATH
-if [[ -d "/usr/local/opt/llvm/bin" ]]; then
-    PATH="$PATH:/usr/local/opt/llvm/bin"
-fi
+# {{- if stat "/usr/local/opt/llvm/bin" }}
+# if [[ -d "/usr/local/opt/llvm/bin" ]]; then
+PATH="$PATH:/usr/local/opt/llvm/bin"
+# fi
+# {{- end }}
 
 # Add Qt to PATH
-if [[ -d "/usr/local/opt/qt/bin" ]]; then
-    PATH="$PATH:/usr/local/opt/qt/bin"
-fi
+# {{- if stat "/usr/local/opt/qt/bin" }}
+# if [[ -d "/usr/local/opt/qt/bin" ]]; then
+PATH="$PATH:/usr/local/opt/qt/bin"
+# fi
+# {{- end }}
 
 # Add mactex binaries to PATH
-if [[ -d "/Library/TeX/Root/bin/universal-darwin" ]]; then
-    PATH="$PATH:/Library/TeX/Root/bin/universal-darwin"
-fi
+# {{- if stat "/Library/TeX/Root/bin/universal-darwin" }}
+# if [[ -d "/Library/TeX/Root/bin/universal-darwin" ]]; then
+PATH="$PATH:/Library/TeX/Root/bin/universal-darwin"
+# fi
+# {{- end }}
 # {{- end }}
 
 # Deduplicate PATH
@@ -300,13 +340,20 @@ if [[ -z "${MANPATH}" ]]; then
 fi
 
 # Configure python paths
-if has_command python3; then
-    export PYTHON3_HOST_PROG="$(command -v python3)"
-elif has_command python && command python --version 2>/dev/null | grep -q -Pe '.*\b3\.\d+'; then
-    export PYTHON3_HOST_PROG="$(command -v python)"
-fi
+# {{- if .has.python3 }}
+export PYTHON3_HOST_PROG='# {{ lookPath "python3" }}'
+# {{- else if .has.python -}}
+# {{- $python3_host_prog := output "python" "--version" | replaceAllRegex ".*\\b(3)\\.\\d+\\.\\d+" "$1" -}}
+# {{- if eq $python3_host_prog "3" }}
+export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
+# {{- end }}
+# {{- end }}
 
 # {{- if .is_wsl }}
+
+# {{- if .has.yazi_exe }}
+# export YAZI_WINDOWS_EXECUTABLE='# {{/* lookPath "yazi.exe" */}}'
+# {{- end }}
 
 # Exclude windows man paths as it makes man very slow
 export MANPATH="$(remove_windows_paths "$MANPATH")"
@@ -334,23 +381,14 @@ IFS=$OLDIFS
 PATH_CLEAN="${PATH_CLEAN:1}"
 PATH_WINDOWS="${PATH_WINDOWS:1}"
 
-# export PATH_NO_WINDOWS="$(/usr/bin/printenv PATH | /usr/bin/perl -ne 'print join(":", grep { !/\/mnt\/[a-z]/ } split(/:/));' | awk -vRS=: '!a[$0]++' | paste -s -d:)"
-# export PATH_CLEAN="$(remove_windows_paths "$PATH")"
 export PATH_CLEAN
 export PATH_WINDOWS
-
-# PATH="$PATH_CLEAN"
 export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
-# export PATH_FULL="$PATH_CLEAN:$PATH_WINDOWS"
-
-# Remove windows paths from path
-# manpager_path="$(/usr/bin/printenv PATH | /usr/bin/perl -ne 'print join(":", grep { !/\/mnt\/[a-z]/ } split(/:/));' | awk -vRS=: '!a[$0]++' | paste -s -d:)"
 # {{- else -}}
 # else
 export PATH_CLEAN="$PATH"
 export PATH_SYS_CLEAN="$PATH_SYS"
 export PATH_WINDOWS
-# export PATH_FULL="$"
 # {{- end }}
 
 export PATH
@@ -366,20 +404,24 @@ export PATH
 # and oni as the default visual editor if neovim is not available,
 # nano gets set as the default text editor
 EDITOR=""
-if has_command nvim; then
-    EDITOR=$(command -v nvim)
+# {{ if .has.nvim -}}
+# EDITOR=$(command -v nvim)
+# {{- $local_nvim := joinPath .chezmoi.homeDir ".local" "bin" "nvim" | default (lookPath "nvim") }}
+EDITOR='# {{ $local_nvim }}'
+export NVIM_EXECUTABLE='# {{ $local_nvim }}'
+export _EDITOR="$EDITOR"
 
-    # Set up manpager
-    export MANWIDTH=999
+# Set up manpager
+export MANWIDTH=999
 # {{- if .is_wsl }}
-    # use cleaned path on WSL
-    export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
+# use cleaned path on WSL
+export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
 # {{- else }}
-    export MANPAGER='nvim +Man!'
+export MANPAGER='nvim +Man!'
 # {{- end }}
-elif has_command nano; then
-    EDITOR="$(command -v nano)"
-fi
+# {{- else if .has.nano -}}
+EDITOR="$(command -v nano)"
+# {{- end }}
 export EDITOR
 
 export SUDO_EDITOR="$EDITOR"
