@@ -3,12 +3,16 @@ function help2comp_rec --description 'Generates fish completions by using a cli 
     set -l bin $argv[1]
     set -l out_file "$bin.fish"
     set -l completions
+    set -l is_sub_command false
 
     # 1. Extract subcommands
     echo "1. Extract subcommands"
-    # set -l subcommands ($bin --help | sed -n '/\(Commands\|Arguments\):/,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}' | sort -u)
+    if string match -q "* *" $bin
+        set bin (string split " " $bin)
+        set is_sub_command true
+    end
     set -l help_text ($bin --help | string collect)
-    set -l subcommands (echo $help_text | sed -n '/[Cc]ommands:/,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}' | sort -u | string match -rv "^$bin\$")
+    set -l subcommands (echo $help_text | sed -En '/(sub)?commands:/I,$p' | grep -E '^\s+[a-z0-9-]+' | awk '{print $1}' | sort -u | string match -rv "^$bin\$")
 
     set --append completions "# Completions for $bin"
 
@@ -76,8 +80,16 @@ function help2comp_rec --description 'Generates fish completions by using a cli 
         end
     else
         echo "No subcommands detected!"
-        set --append completions (help2comp --stdout "$bin")
+        if $is_sub_command
+            set --append completions (help2comp --stdout "$bin" | string replace --regex "complete -c $bin[1]" "complete -c '$bin[1]' -f -n '__fish_seen_subcommand_from $bin[2..]'")
+        else
+            set --append completions (help2comp --stdout "$bin")
+        end
     end
 
-    printf '%s\n' $completions >$out_file
+    if set -q _flag_stdout
+        printf '%s\n' $completions
+    else
+        printf '%s\n' $completions >$out_file
+    end
 end

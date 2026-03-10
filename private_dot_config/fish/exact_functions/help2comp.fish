@@ -1,7 +1,14 @@
 function help2comp --description 'Generates fish completions by using a cli tool\'s help'
-    argparse --ignore-unknown s/stdout -- $argv
+    argparse --ignore-unknown s/stdout subcommand -- $argv
+    set -l is_sub_command false
+    set -l bin
 
     set command_ $argv[1]
+    if set -q _flag_subcommand; and string match -q "* *" $command_
+        set is_sub_command true
+        set bin (string split " " $command_)
+    end
+
     set completion_file_name (string replace --all ' ' '_' "$command_")".fish"
 
     if set -q argv[2]
@@ -28,7 +35,13 @@ $command_ "'"$@"'
     end
 
     if set -q _flag_stdout
-        help2man "$argv[1]" | $python -B $__fish_config_dir/tools/create_manpage_completions.py --keep --stdout --stdin
+        set result (help2man "$argv[1]" | $python -B $__fish_config_dir/tools/create_manpage_completions.py --keep --stdout --stdin)
+
+        if $is_sub_command
+            printf '%s\n' $result | string replace --regex "complete -c $bin[1]" "complete -c '$bin[1]' -f -n '__fish_seen_subcommand_from $bin[2..]'"
+        else
+            printf '%s\n' $result
+        end
     else
         help2man $tmp_command | $python -B $__fish_config_dir/tools/create_manpage_completions.py --keep --stdout --stdin >$completion_file_path
     end
