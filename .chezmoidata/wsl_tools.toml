@@ -98,6 +98,30 @@ init_command_only_if_no = []
 
 [[wsl_tools]]
 lang = "rust"
+name = "Yazi"
+cmds = [
+    "yazi.exe"
+]
+desc = "Blazing fast terminal file manager written in Rust."
+url = ""
+git = "https://github.com/sxyazi/yazi"
+comment = ""
+install_command = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[wsl_tools]]
+lang = "rust"
 name = "spotify-player"
 cmds = [
     "spotify-player.exe"

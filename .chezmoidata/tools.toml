@@ -111,9 +111,11 @@ url = "https://fish-lsp.dev/"
 git = "https://github.com/ndonfris/fish-lsp"
 comment = "or let mason install it with neovim"
 install_command = "bun add -g fish-lsp"
-completions_command = ""
+completions_command = "fish-lsp complete"
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "fish"
+]
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
@@ -390,6 +392,31 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "c"
+name = "python"
+cmds = [
+    "python",
+    "python3"
+]
+desc = ""
+url = ""
+git = ""
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "c"
 name = "vim"
 cmds = [
     "vim"
@@ -446,6 +473,30 @@ cmds = [
 desc = "The Z shell is a shell and a command-line interpreter for shell scripts. Zsh mostly maintains the Bourne shell's syntax and behavior, but makes several changes breaking from the POSIX standard and substantially more features."
 url = "https://www.zsh.org/"
 git = "https://github.com/zsh-users/zsh"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "c++"
+name = "mold"
+cmds = [
+    "mold"
+]
+desc = "mold is a faster drop-in replacement for existing Unix linkers. It is several times quicker than the LLVM lld linker, the second-fastest open-source linker, which I initially developed a few years ago."
+url = ""
+git = "https://github.com/rui314/mold"
 comment = ""
 install_command = ""
 completions_command = ""
@@ -619,6 +670,30 @@ completions_command_only_if_no = []
 init_command_only_if_no = [
     "sk"
 ]
+
+[[tools]]
+lang = "go"
+name = "go"
+cmds = [
+    "go"
+]
+desc = "The Go programming language"
+url = "https://go.dev/"
+git = "https://github.com/golang/go"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
 
 [[tools]]
 lang = "go"
@@ -1193,33 +1268,11 @@ url = ""
 git = "https://github.com/cargo-bins/cargo-binstall"
 comment = ""
 install_command = "cargo install cargo-binstall"
-completions_command = ""
+completions_command = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
 init_command = ""
-supported_shells = []
-append_fish_completion = ""
-append_fish_init = ""
-command_bash_name = ""
-command_fish_name = ""
-command_nu_name = ""
-command_powershell_name = ""
-command_zsh_name = ""
-completions_command_only_if_no = []
-init_command_only_if_no = []
-
-[[tools]]
-lang = "rust"
-name = "cargo-install-update"
-cmds = [
-    "cargo-install-update"
+supported_shells = [
+    "fish"
 ]
-desc = ""
-url = ""
-git = ""
-comment = ""
-install_command = ""
-completions_command = ""
-init_command = ""
-supported_shells = []
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
@@ -1234,16 +1287,18 @@ init_command_only_if_no = []
 lang = "rust"
 name = "cargo-update"
 cmds = [
-    "cargo-update"
+    "cargo-install-update"
 ]
 desc = "A cargo subcommand for checking and applying updates to installed executables"
 url = ""
 git = "https://github.com/nabijaczleweli/cargo-update"
 comment = ""
 install_command = "cargo install cargo-update"
-completions_command = ""
+completions_command = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "fish"
+]
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
@@ -2623,8 +2678,8 @@ cmds = [
     "yazi"
 ]
 desc = "Blazing fast terminal file manager written in Rust."
-url = "https://github.com/sxyazi/yazi"
-git = ""
+url = "https://yazi-rs.github.io/"
+git = "https://github.com/sxyazi/yazi"
 comment = ""
 install_command = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
 completions_command = ""
