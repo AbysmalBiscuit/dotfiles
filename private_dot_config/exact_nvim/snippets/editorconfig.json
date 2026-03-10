@@ -1,0 +1,115 @@
+{
+  "Basic default .editorconfig file": {
+    "prefix": [
+      "editorconfigBasic"
+    ],
+    "body": [
+      "root = true",
+      "",
+      "[*]",
+      "indent_style = space",
+      "indent_size = 4",
+      "end_of_line = lf",
+      "charset = utf-8",
+      "trim_trailing_whitespace = true",
+      "insert_final_newline = true",
+      ""
+    ],
+    "description": "Create a basic .editorconfig file with default values for all files"
+  },
+  "Basic default .editorconfig file for node": {
+    "prefix": [
+      "editorconfigNode"
+    ],
+    "body": [
+      "root = true",
+      "",
+      "[*]",
+      "indent_style = space",
+      "indent_size = 4",
+      "end_of_line = lf",
+      "charset = utf-8",
+      "trim_trailing_whitespace = true",
+      "insert_final_newline = true",
+      "",
+      "[*.{js,jsx,mjs,ts,tsx}]",
+      "indent_size = 2",
+      "",
+      "[*.{json,jsonl,jsonc}]",
+      "indent_size = 2"
+    ],
+    "description": "Create a basic .editorconfig file with default values for node projects"
+  },
+  "Set indent_style": {
+    "prefix": [
+      "indent_style"
+    ],
+    "body": [
+      "indent_style = ${1|space,tab|}"
+    ],
+    "description": "Sets the indentation style (tab or space)."
+  },
+  "Set indent_size": {
+    "prefix": [
+      "indent_size"
+    ],
+    "body": [
+      "indent_size = ${1|2,tab|}"
+    ],
+    "description": "Sets the indentation size (in spaces or 'tab'). If `indent_size` equals to `tab`, the `indent_size` will be set to the tab size, which should be `tab_width` if `tab_width` is specified, or the tab size set by editor if `tab_width` is not specified."
+  },
+  "Set tab_width": {
+    "prefix": [
+      "tab_width"
+    ],
+    "body": [
+      "tab_width = ${1:4}"
+    ],
+    "description": "Sets the width of a single tabstop character (defaults `indent_size` when `indent_size` is a number)."
+  },
+  "Set end_of_line": {
+    "prefix": [
+      "end_of_line"
+    ],
+    "body": [
+      "end_of_line = ${1|lf,crlf,cr|}"
+    ],
+    "description": "Sets the line ending file format."
+  },
+  "Set charset": {
+    "prefix": [
+      "charset"
+    ],
+    "body": [
+      "charset = ${1|utf-8,utf-16be,utf-16le,utf-8-bom,latin1|}"
+    ],
+    "description": "Sets the file character encoding."
+  },
+  "Set trim_trailing_whitespace": {
+    "prefix": [
+      "trim_trailing_whitespace"
+    ],
+    "body": [
+      "trim_trailing_whitespace = ${1|true,false|}"
+    ],
+    "description": "Denotes whether whitespace is removed from the end of lines."
+  },
+  "Set insert_final_newline": {
+    "prefix": [
+      "insert_final_newline"
+    ],
+    "body": [
+      "insert_final_newline = ${1|true,false|}"
+    ],
+    "description": "Denotes whether file should end with a newline."
+  },
+  "Set max_line_length": {
+    "prefix": [
+      "max_line_length"
+    ],
+    "body": [
+      "max_line_length = ${1|100,unset|}"
+    ],
+    "description": "Forces hard line wrapping after the specified amount of characters."
+  }
+}

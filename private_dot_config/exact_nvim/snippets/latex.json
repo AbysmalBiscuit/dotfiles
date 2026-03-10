@@ -1,0 +1,206 @@
+{
+    "Revision tags": {
+        "prefix": "revl",
+        "body": [
+            "\\revl{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a custom command tag that marks text up as revised."
+    },
+    "Strike out": {
+        "prefix": "sout",
+        "body": [
+            "\\sout{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a tag for creating strikeout text."
+    },
+    "Revision strike out": {
+        "prefix": "revsoutl",
+        "body": [
+            "\\revsoutl{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a tag for creating strikeout text."
+    },
+    "Bold underline": {
+        "prefix": "boldunderline",
+        "body": [
+            "\\boldunderline{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a custom command tag to format text as bold and underlined."
+    },
+    "Bold": {
+        "prefix": "textbf",
+        "body": [
+            "\\textbf{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a \\textbf{} tag for making text bold."
+    },
+    "Citation": {
+        "prefix": [
+            "cite"
+        ],
+        "body": [
+            "\\cite{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a \\cite{} tag for adding citations."
+    },
+    "Citation with tilde": {
+        "prefix": [
+            "cite2",
+            "~cite2",
+            "~\\cite2",
+            "\\cite2"
+        ],
+        "body": [
+            "~\\cite{$1}$0"
+        ],
+        "description": "Inserts a \\cite{} tag for adding citations."
+    },
+    "Citation t": {
+        "prefix": [
+            "citet",
+            "\\citet"
+        ],
+        "body": [
+            "\\citet{$1}$0"
+        ],
+        "description": "Inserts a \\citet{} tag for adding citations."
+    },
+    "Citation t with tilde": {
+        "prefix": [
+            "~\\citet2",
+            "\\citett2"
+        ],
+        "body": [
+            "~\\citet{${TM_SELECTED_TEXT}$1}$0"
+        ],
+        "description": "Inserts a \\citet{} tag for adding citations."
+    },
+    "Insert autoref command": {
+        "prefix": [
+            "arf",
+            "autoref",
+            "\\arf",
+            "\\autoref"
+        ],
+        "body": [
+            "\\autoref{$1}$0"
+        ],
+        "description": "Insert autoref command"
+    },
+    "Insert new glossary entry": {
+        "prefix": [
+            "newglossaryentry",
+            "\\newglossaryentry"
+        ],
+        "body": [
+            "\\newglossaryentry{$1}{$0",
+            "  name={$2},",
+            "  description={$3},",
+            "  see={$4},",
+            "}"
+        ],
+        "description": "Insert autoref command"
+    },
+    "tikz node": {
+        "prefix": [
+            "node",
+            "\\node"
+        ],
+        "body": [
+            "\\node ($1) [$2, $3=of $4] {$5};$0"
+        ],
+        "description": "Insert a tikz node command."
+    },
+    "tikz node box": {
+        "prefix": [
+            "nbox"
+        ],
+        "body": [
+            "\\node ($1) [box, $3=of $4] {$5};$0"
+        ],
+        "description": "Insert a tikz node command."
+    },
+    "tikz edge": {
+        "prefix": [
+            "edge"
+        ],
+        "body": [
+            "\\draw ($1) edge ($2);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz manual edge": {
+        "prefix": [
+            "medge"
+        ],
+        "body": [
+            "\\draw[manual_line$1] ($2) edge ($3);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz hybrid edge": {
+        "prefix": [
+            "hedge"
+        ],
+        "body": [
+            "\\draw[hybrid_line$1] ($2) edge ($3);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz data driven edge": {
+        "prefix": [
+            "dedge"
+        ],
+        "body": [
+            "\\draw[datadriven_line$1] ($2) edge ($3);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz arrow": {
+        "prefix": [
+            "arrow"
+        ],
+        "body": [
+            "\\draw ($1) -- ($2);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz manual arrow": {
+        "prefix": [
+            "marrow"
+        ],
+        "body": [
+            "\\draw[dashed,triangle tip] ($1) -- ($2);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz hybrid arrow": {
+        "prefix": [
+            "harrow"
+        ],
+        "body": [
+            "\\draw[dashdotted,triangle tip] ($1) -- ($2);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz data driven arrow": {
+        "prefix": [
+            "darrow"
+        ],
+        "body": [
+            "\\draw[dotted,triangle tip] ($1) -- ($2);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    },
+    "tikz arrow with opts": {
+        "prefix": [
+            "arrow2",
+            "optarrow",
+            "arrowopt"
+        ],
+        "body": [
+            "\\draw[$1] ($2) -- ($3);$0"
+        ],
+        "description": "Insert a tikz edge between two nodes."
+    }
+}

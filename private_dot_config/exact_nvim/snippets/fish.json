@@ -1,0 +1,89 @@
+{
+  "fish_alias": {
+    "prefix": "alias",
+    "body": [
+      "function ${1} --wraps='${2}${3}' --description 'alias ${1:alias}=${2:command}${3: args}'",
+      "    ${2}${3} \\$argv",
+      "end"
+    ],
+    "description": "Define aliases for Fish shell."
+  },
+  "fish_rust_cli_alias_with_fallback": {
+    "prefix": [
+      "rfalias",
+      "rust_fallback_alias"
+    ],
+    "body": [
+      "if type -q ${2}",
+      "    function ${1} --wraps='${2}${3}' --description 'alias ${1:alias}=${2:command}${3: args}'",
+      "        ${2}${3} \\$argv",
+      "    end",
+      "else",
+      "    echo \"'${2}' is not installed on this system. Install it to replace '${1}'.\"",
+      "    function ${1} --wraps='${4}${5}' --description 'alias ${1}=${4:fallback}${5: fallback_args}'",
+      "        ${4}${5} \\$argv",
+      "    end",
+      "end"
+    ],
+    "description": "Define an alias for Rust CLI programs with a fallback command."
+  },
+  "fish_rust_cli_alias_with_no_fallback": {
+    "prefix": [
+      "rnfalias",
+      "rust_no_fallback_alias"
+    ],
+    "body": [
+      "if type -q ${2}",
+      "    function ${1} --wraps='${2}${3}' --description 'alias ${1:alias}=${2:command}${3: args}'",
+      "        ${2}${3} \\$argv",
+      "    end",
+      "else",
+      "    function ${1}",
+      "        echo \"'${2}' is not installed.\"",
+      "    end",
+      "end"
+    ],
+    "description": "Define an alias for Rust CLI programs with a fallback command."
+  },
+  "fish function": {
+    "prefix": "function",
+    "body": [
+      "function ${1:name} --description '${2:description}'",
+      "    ${3:body}",
+      "end"
+    ],
+    "description": "Define aliases for Fish shell."
+  },
+  "for loop": {
+    "prefix": [
+      "for"
+    ],
+    "body": [
+      "for ${1:item} in ${2:list}",
+      "    ${3}",
+      "end"
+    ],
+    "description": "for loop"
+  },
+  "if block": {
+    "prefix": [
+      "if"
+    ],
+    "body": [
+      "if ${1:condition}",
+      "    ${2:if_body}",
+      "end"
+    ],
+    "description": "if block"
+  },
+  "script_dir": {
+    "prefix": [
+      "SDfish",
+      "SCRIPT_DIRfish"
+    ],
+    "body": [
+      "set SCRIPT_DIR (status dirname)"
+    ],
+    "description": "Insert a POSIX compliant one line variable that gets the directory of the current script."
+  }
+}

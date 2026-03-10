@@ -1,0 +1,403 @@
+{
+  "chezmoi expression": {
+    "prefix": [
+      "{{",
+      "tmpl",
+      "{"
+    ],
+    "body": [
+      "{{- ${1} -}}"
+    ],
+    "description": "Inline template expression"
+  },
+  "chezmoi if": {
+    "prefix": [
+      "{{if",
+      "{if",
+      "tmplif",
+      "if"
+    ],
+    "body": [
+      "{{- if ${1:condition} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If block"
+  },
+  "chezmoi if-else": {
+    "prefix": [
+      "{{ifelse",
+      "tmplifelse",
+      "ifelse"
+    ],
+    "body": [
+      "{{- if ${1:condition} -}}",
+      "$2",
+      "{{- else -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If-else block"
+  },
+  "chezmoi else": {
+    "prefix": [
+      "{{else",
+      "tmplelse",
+      "else"
+    ],
+    "body": [
+      "{{- else -}}",
+      "$0"
+    ],
+    "description": "else block"
+  },
+  "chezmoi if-else if": {
+    "prefix": [
+      "{{ifelseif",
+      "{ifelseif",
+      "tmplifelseif",
+      "elseif"
+    ],
+    "body": [
+      "{{- if ${1:condition} -}}",
+      "$2",
+      "{{- else if ${3:condition} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If-else if block"
+  },
+  "chezmoi range": {
+    "prefix": [
+      "{{range",
+      "{range",
+      "tmplrange",
+      "range"
+    ],
+    "body": [
+      "{{- range ${1:.items} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Range loop"
+  },
+  "chezmoi range index": {
+    "prefix": [
+      "{{rangei",
+      "{rangei",
+      "tmplrangei",
+      "rangei"
+    ],
+    "body": [
+      "{{- range \\$${1:i}, \\$${2:v} := ${3:.items} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Range loop with index and value"
+  },
+  "chezmoi os eq": {
+    "prefix": [
+      "{{os",
+      "{os",
+      "tmplos",
+      "os"
+    ],
+    "body": [
+      "{{- if eq .chezmoi.os \"${1|linux,darwin,windows|}\" -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "OS detection"
+  },
+  "chezmoi distro eq": {
+    "prefix": [
+      "{{distro",
+      "{distro",
+      "tmpldistro",
+      "distro"
+    ],
+    "body": [
+      "{{- if eq .chezmoi.osRelease.id \"${1|ubuntu,arch,fedora,debian,nixos|}\" -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Linux distro detection"
+  },
+  "chezmoi hostname eq": {
+    "prefix": [
+      "{{host",
+      "{host",
+      "tmplhost",
+      "host"
+    ],
+    "body": [
+      "{{- if eq .chezmoi.hostname \"${1:hostname}\" -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Hostname check"
+  },
+  "chezmoi stat": {
+    "prefix": [
+      "{{stat",
+      "{stat",
+      "tmplstat",
+      "isfile",
+      "stat"
+    ],
+    "body": [
+      "{{- if stat (joinPath .chezmoi.homeDir \"${1:.path}\") -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Check if file exists"
+  },
+  "chezmoi is dir": {
+    "prefix": [
+      "isdir"
+    ],
+    "body": [
+      "{{- if and (stat (joinPath .chezmoi.homeDir \"${1:dir}\")) (stat (joinPath .chezmoi.homeDir \"${1}\")).isDir -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "chezmoi is dir"
+  },
+  "chezmoi include": {
+    "prefix": [
+      "{{include",
+      "{include",
+      "tmplinclude",
+      "include"
+    ],
+    "body": [
+      "{{- include \"${1:filename}\" -}}"
+    ],
+    "description": "Include file contents"
+  },
+  "chezmoi template": {
+    "prefix": [
+      "{{template",
+      "{template",
+      "tmpltemplate",
+      "template"
+    ],
+    "body": [
+      "{{- template \"${1:name}\" ${2:.} -}}"
+    ],
+    "description": "Include named template"
+  },
+  "chezmoi env": {
+    "prefix": [
+      "{{env",
+      "{env",
+      "tmplenv",
+      "env"
+    ],
+    "body": [
+      "{{- env \"${1:VAR_NAME}\" -}}"
+    ],
+    "description": "Environment variable"
+  },
+  "chezmoi env default": {
+    "prefix": [
+      "{{envd",
+      "{envd",
+      "tmplenvd",
+      "envd"
+    ],
+    "body": [
+      "{{- env \"${1:VAR_NAME}\" | default \"${2:fallback}\" -}}"
+    ],
+    "description": "Environment variable with default"
+  },
+  "chezmoi quote": {
+    "prefix": [
+      "{{quote",
+      "{quote",
+      "tmplquote",
+      "quote"
+    ],
+    "body": [
+      "{{- ${1:.value} | quote -}}"
+    ],
+    "description": "Quoted value"
+  },
+  "chezmoi promptStringOnce": {
+    "prefix": [
+      "{{prompt",
+      "{prompt",
+      "tmplprompt",
+      "prompt"
+    ],
+    "body": [
+      "{{ promptStringOnce . \"${1:key}\" \"${2:What is your $1}\" | quote }}"
+    ],
+    "description": "Prompt for string during chezmoi init"
+  },
+  "chezmoi promptBoolOnce": {
+    "prefix": [
+      "{{promptbool",
+      "{promptbool",
+      "tmplpromptbool",
+      "promptbool"
+    ],
+    "body": [
+      "{{ promptBoolOnce . \"${1:key}\" \"${2:Enable $1}\" }}"
+    ],
+    "description": "Prompt for bool during chezmoi init"
+  },
+  "chezmoi comment": {
+    "prefix": [
+      "{{/*",
+      "{/*",
+      "/*",
+      "comment"
+    ],
+    "body": [
+      "{{- /* ${1:comment} */ -}}"
+    ],
+    "description": "Template comment"
+  },
+  "chezmoi if-and": {
+    "prefix": [
+      "{{and",
+      "{and",
+      "tmpland",
+      "and"
+    ],
+    "body": [
+      "{{- if and (${1:condition1}) (${2:condition2}) -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If with AND"
+  },
+  "chezmoi if-or": {
+    "prefix": [
+      "{{or",
+      "{or",
+      "tmplor",
+      "or"
+    ],
+    "body": [
+      "{{- if or (${1:condition1}) (${2:condition2}) -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If with OR"
+  },
+  "chezmoi if-not": {
+    "prefix": [
+      "{{not",
+      "{not",
+      "tmplnot",
+      "not"
+    ],
+    "body": [
+      "{{- if not ${1:condition} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "If NOT"
+  },
+  "chezmoi has executable": {
+    "prefix": [
+      "{{hasexecutable",
+      "{hasexecutable",
+      "hasexecutable"
+    ],
+    "body": [
+      "{{- if lookPath \"${1:executable}\" -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "Check the PATH to see if an executable exists"
+  },
+  "chezmoi end": {
+    "prefix": [
+      "end"
+    ],
+    "body": [
+      "{{- end -}}"
+    ],
+    "description": "end"
+  },
+  "chezmoi and": {
+    "prefix": [
+      "and"
+    ],
+    "body": [
+      "(and (${1:condition1}) (${2:condition2}))"
+    ],
+    "description": "AND"
+  },
+  "chezmoi not": {
+    "prefix": [
+      "not"
+    ],
+    "body": [
+      "not (${1})"
+    ],
+    "description": "NOT"
+  },
+  "chezmoi or": {
+    "prefix": [
+      "or"
+    ],
+    "body": [
+      "(or (${1:condition1}) (${2:condition2}))"
+    ],
+    "description": "OR"
+  },
+  "chezmoi output": {
+    "prefix": [
+      "{{output",
+      "{output",
+      "tmploutput",
+      "output"
+    ],
+    "body": [
+      "{{- output \"${1:command}\" \"${2:arg}\" | trim -}}"
+    ],
+    "description": "Capture command output"
+  },
+  "chezmoi with": {
+    "prefix": [
+      "{{with",
+      "{with",
+      "tmplwith",
+      "with"
+    ],
+    "body": [
+      "{{- with ${1:.value} -}}",
+      "$0",
+      "{{- end -}}"
+    ],
+    "description": "With block (sets dot and skips if empty)"
+  },
+  "chezmoi variable declaration": {
+    "prefix": [
+      "{{vardecl",
+      "{vardecl",
+      "tmplvardecl",
+      "vardecl"
+    ],
+    "body": [
+      "{{- \\$${1:variable_name} := ${2:value} -}}"
+    ],
+    "description": "Declare a variable"
+  },
+  "chezmoi variable assignment": {
+    "prefix": [
+      "{{varassignment",
+      "{varassignment",
+      "tmplvarassignment",
+      "varassignment"
+    ],
+    "body": [
+      "{{- \\$${1:variable_name} = ${2:value} -}}"
+    ],
+    "description": "Assign a variable value"
+  }
+}

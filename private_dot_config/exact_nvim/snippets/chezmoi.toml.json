@@ -1,0 +1,21 @@
+{
+  "insert a new pkg declaration": {
+    "prefix": [
+      "tools"
+    ],
+    "body": [
+      "[[tools]]",
+      "lang = \"${1|bun,go,rust,zig|}\"",
+      "name = \"${2}\"",
+      "cmds = [\"${3}\"]",
+      "desc = \"${4}\"",
+      "url = \"${5}\"",
+      "git = \"${6}\"",
+      "install_command = \"${7}\"",
+      "completions_command = \"${8}\"",
+      "init_command = \"${9}\"",
+      "supported_shells = [${10|bash,fish,zsh,nu|}]"
+    ],
+    "description": "insert a new pkg declaration"
+  }
+}

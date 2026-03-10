@@ -1,0 +1,132 @@
+{
+  "conventional commit": {
+    "prefix": "cc",
+    "body": [
+      "${1:type}(${2:scope}): ${3:title}",
+      "",
+      "$0"
+    ],
+    "description": "Any conventional commit."
+  },
+  "fix conventional commit": {
+    "prefix": "fix",
+    "body": [
+      "fix(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "A bug fix"
+  },
+  "feat conventional commit": {
+    "prefix": "feat",
+    "body": [
+      "feat(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "A new feature"
+  },
+  "build conventional commit": {
+    "prefix": "build",
+    "body": [
+      "build(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)"
+  },
+  "chore conventional commit": {
+    "prefix": "chore",
+    "body": [
+      "chore(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Changes which doesn't change source code or tests e.g. changes to the build process, auxiliary tools, libraries"
+  },
+  "ci conventional commit": {
+    "prefix": "ci",
+    "body": [
+      "ci(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)"
+  },
+  "docs conventional commit": {
+    "prefix": "docs",
+    "body": [
+      "docs(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Documentation only changes"
+  },
+  "style conventional commit": {
+    "prefix": "style",
+    "body": [
+      "style(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"
+  },
+  "refactor conventional commit": {
+    "prefix": "refactor",
+    "body": [
+      "refactor(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "A code change that neither fixes a bug nor adds a feature"
+  },
+  "perf conventional commit": {
+    "prefix": "perf",
+    "body": [
+      "perf(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "A code change that improves performance"
+  },
+  "test conventional commit": {
+    "prefix": "test",
+    "body": [
+      "test(${1:scope}): ${2:title}",
+      "",
+      "$0"
+    ],
+    "description": "Adding missing tests or correcting existing tests"
+  },
+  "breaking change conventional commit footer": {
+    "prefix": "BREAK CHANGE",
+    "body": [
+      "BREAKING CHANGE: $0"
+    ],
+    "description": "BREAKING CHANGE: with a space or two newlines. The rest of the commit message is then used for this."
+  },
+  "co-authored by": {
+    "prefix": "co",
+    "body": [
+      "Co-authored-by: ${1:name} <${2:email}>",
+      "$0"
+    ],
+    "description": ""
+  },
+  "signed off by": {
+    "prefix": "si",
+    "body": [
+      "Signed-off-by: ${1:name} <${2:email}>",
+      "$0"
+    ],
+    "description": ""
+  },
+  "on behalf of": {
+    "prefix": "on",
+    "body": [
+      "On-behalf-of: ${1:org} <${2:email}>",
+      "$0"
+    ],
+    "description": ""
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "insert_current_date": {
+    "prefix": "CD",
+    "body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE$0",
+    "description": "Insert the current date"
+  },
+  "insert_current_time": {
+    "prefix": "CT",
+    "body": "$CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECOND$0",
+    "description": "Insert the current time"
+  },
+  "insert_current_iso_timestamp": {
+    "prefix": "CTS",
+    "body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATET$CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECONDZ$0",
+    "description": "Insert the current datetime as ISO 8601"
+  },
+  "insert_current_unix_timestamp": {
+    "prefix": "CUTS",
+    "body": "$CURRENT_SECONDS_UNIX$0",
+    "description": "Insert the current UNIX timestamp"
+  }
+}

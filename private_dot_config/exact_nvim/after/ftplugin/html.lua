@@ -1,0 +1,27 @@
+-- local autocmd = vim.api.nvim_create_autocmd
+-- local mini_pairs_group = vim.api.nvim_create_augroup("custom_mini_pairs_rust", { clear = true })
+--
+-- autocmd({ "BufEnter", "BufWinEnter" }, {
+--   pattern = { "*.html" },
+--   group = mini_pairs_group,
+--   once = true,
+--   callback = function(_)
+--     local MiniPairs = require("mini.pairs")
+--     local no_cr_yes_bs = { cr = false, bs = true }
+--     for key, value in pairs({
+--       --lifetime annotations
+--       ["'"] = {
+--         action = "closeopen",
+--         pair = "''",
+--         neigh_pattern = "[^%a\\&\\<].",
+--         register = { cr = false, bs = true },
+--       },
+--       ["<"] = { action = "open", pair = "<>", neigh_pattern = "[^\\].", register = no_cr_yes_bs },
+--       [">"] = { action = "close", pair = "<>", neigh_pattern = "[^\\-].", register = no_cr_yes_bs },
+--     }) do
+--       MiniPairs.map_buf(0, "i", key, value)
+--     end
+--   end,
+--
+--   desc = "Set mini.pairs rules for rust",
+-- })

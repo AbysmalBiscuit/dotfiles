@@ -1,0 +1,34 @@
+-- local bufnr = vim.api.nvim_get_current_buf()
+
+-- vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+--   pattern = { "*.rs" },
+--   callback = function(event)
+--     vim.keymap.set({ "n", "i", "v" }, "<F5>", "<cmd>RustRun<cr>", { noremap = true, desc = "Run rust project" })
+--   end,
+-- })
+
+-- local autocmd = vim.api.nvim_create_autocmd
+-- local mini_pairs_group = vim.api.nvim_create_augroup("custom_mini_pairs_rust", { clear = true })
+--
+-- autocmd({ "BufEnter", "BufWinEnter" }, {
+--   pattern = { "*.rs" },
+--   group = mini_pairs_group,
+--   once = true,
+--   callback = function(_)
+--     local MiniPairs = require("mini.pairs")
+--     local no_cr_yes_bs = { cr = false, bs = true }
+--     for key, value in pairs({
+--       --lifetimes &'
+--       ["'"] = { action = "closeopen", pair = "''", neigh_pattern = "[^%a&\\<].", register = no_cr_yes_bs },
+--
+--       --turbo fish ::<>
+--       ["<"] = { action = "open", pair = "<>", neigh_pattern = "[:<].", register = no_cr_yes_bs },
+--
+--       --return types ->
+--       [">"] = { action = "close", pair = "<>", neigh_pattern = "[^\\-].", register = no_cr_yes_bs },
+--     }) do
+--       MiniPairs.map_buf(0, "i", key, value)
+--     end
+--   end,
+--   desc = "Set mini.pairs rules for rust",
+-- })

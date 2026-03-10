@@ -1,0 +1,12 @@
+{
+  "script_dir": {
+    "prefix": [
+      "SDbash",
+      "SCRIPT_DIRbash"
+    ],
+    "body": [
+      "SCRIPT_DIR=\"\\$(cd -- \"\\$(dirname -- \"\\${BASH_SOURCE[0]}\")\" &>/dev/null && pwd)\""
+    ],
+    "description": "Insert a Bash one line variable that gets the directory of the current script."
+  }
+}

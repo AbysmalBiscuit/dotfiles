@@ -1,0 +1,18 @@
+{
+  "Insert a snippet template.": {
+    "prefix": [
+      "snippet",
+      "template"
+    ],
+    "body": [
+      "\"${1:description}\": {",
+      "  \"prefix\": [${2:trigger prefix}],",
+      "  \"body\": [",
+      "    ${3:snippet body}",
+      "  ],",
+      "  \"description\": \"$1\"",
+      "}$0"
+    ],
+    "description": "Insert a snippet template."
+  }
+}

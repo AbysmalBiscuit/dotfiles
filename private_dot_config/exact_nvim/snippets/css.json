@@ -1,0 +1,11 @@
+{
+  "important": {
+    "prefix": [
+      "!important"
+    ],
+    "body": [
+      "!important"
+    ],
+    "description": "Insert !important"
+  }
+}

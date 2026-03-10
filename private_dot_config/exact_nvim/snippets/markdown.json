@@ -1,0 +1,9 @@
+{
+  "insert_checklist": {
+    "prefix": "checklist",
+    "body": [
+      "- [ ] $0"
+    ],
+    "description": "Insert a checklist item"
+  }
+}

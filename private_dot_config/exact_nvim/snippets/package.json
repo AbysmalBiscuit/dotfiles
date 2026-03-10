@@ -1,0 +1,139 @@
+{
+  "name": "example-snippets",
+  "contributes": {
+    "snippets": [
+      {
+        "language": [
+          "all"
+        ],
+        "path": "./global_snippets.json"
+      },
+      {
+        "language": [
+          "fish"
+        ],
+        "path": "./fish.json"
+      },
+      {
+        "language": [
+          "python"
+        ],
+        "path": "./python.json"
+      },
+      {
+        "language": [
+          "latex",
+          "tex"
+        ],
+        "path": "./latex.json"
+      },
+      {
+        "language": [
+          "markdown"
+        ],
+        "path": "./markdown.json"
+      },
+      {
+        "language": [
+          "json"
+        ],
+        "path": "./json.json"
+      },
+      {
+        "language": [
+          "editorconfig"
+        ],
+        "path": "./editorconfig.json"
+      },
+      {
+        "language": [
+          "gitcommit"
+        ],
+        "path": "./gitcommit.json"
+      },
+      {
+        "language": [
+          "css"
+        ],
+        "path": "./css.json"
+      },
+      {
+        "language": [
+          "astro"
+        ],
+        "path": "./astro.json"
+      },
+      {
+        "language": [
+          "astro"
+        ],
+        "path": "./astro_javascript.json"
+      },
+      {
+        "language": [
+          "astro"
+        ],
+        "path": "./astro_javascript_fs.json"
+      },
+      {
+        "language": [
+          "javascript"
+        ],
+        "path": "./javascript.json"
+      },
+      {
+        "language": [
+          "bash"
+        ],
+        "path": "./bash.json"
+      },
+      {
+        "language": [
+          "zsh"
+        ],
+        "path": "./zsh.json"
+      },
+      {
+        "language": [
+          "bash",
+          "sh",
+          "zsh"
+        ],
+        "path": "./posix.json"
+      },
+      {
+        "language": [
+          "chezmoi_toml.toml.chezmoitmpl"
+        ],
+        "path": "./chezmoi_chezmoi_toml.json"
+      },
+      {
+        "language": [
+          "bash.chezmoitmpl",
+          "conf.chezmoitmpl",
+          "fish.chezmoitmpl",
+          "gitconfig.chezmoitmpl",
+          "ini.chezmoitmpl",
+          "json.chezmoitmpl",
+          "jsonc.chezmoitmpl",
+          "nanorc.chezmoitmpl",
+          "nu.chezmoitmpl",
+          "python.chezmoitmpl",
+          "sh.chezmoitmpl",
+          "tmux.chezmoitmpl",
+          "toml.chezmoitmpl",
+          "yaml.chezmoitmpl",
+          "zsh.chezmoitmpl",
+          "chezmoitmpl"
+        ],
+        "path": "./chezmoi.json"
+      },
+      {
+        "language": [
+          "toml.chezmoitmpl"
+        ],
+        "path": "./chezmoi.toml.json"
+      }
+    ]
+  }
+}

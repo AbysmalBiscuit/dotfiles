@@ -1,0 +1,110 @@
+{
+  "Set quote_type": {
+    "prefix": [
+      "quote_type"
+    ],
+    "body": [
+      "quote_type = ${1|single,double,auto|}"
+    ],
+    "description": "Denotes preferred quoting style for string literals."
+  },
+  "Set c_include_path": {
+    "prefix": [
+      "c_include_path"
+    ],
+    "body": [
+      "c_include_path = ${1:/path/to/includes}"
+    ],
+    "description": "Denotes the include paths of header files for C-family languages."
+  },
+  "Set java_class_path": {
+    "prefix": [
+      "java_class_path"
+    ],
+    "body": [
+      "java_class_path = ${1:/path/to/classes}"
+    ],
+    "description": "Denotes the CLASSPATH used by Java source files."
+  },
+  "Set curly_bracket_next_line": {
+    "prefix": [
+      "curly_bracket_next_line"
+    ],
+    "body": [
+      "curly_bracket_next_line = ${1|true,false|}"
+    ],
+    "description": "Denotes whether the left curly bracket should be on the next line."
+  },
+  "Set spaces_around_operators": {
+    "prefix": [
+      "spaces_around_operators"
+    ],
+    "body": [
+      "spaces_around_operators = ${1|true,false,hybrid|}"
+    ],
+    "description": "Denotes whether spaces should be present around arithmetic and boolean operators."
+  },
+  "Set spaces_around_brackets": {
+    "prefix": [
+      "spaces_around_brackets"
+    ],
+    "body": [
+      "spaces_around_brackets = ${1|none,inside,outside,both|}"
+    ],
+    "description": "Denotes how spaces should be around brackets and parentheses."
+  },
+  "Set indent_brace_style": {
+    "prefix": [
+      "indent_brace_style"
+    ],
+    "body": [
+      "indent_brace_style = ${1|K&R,Allman,GNU,Horstmann|}"
+    ],
+    "description": "Denotes the style for using curly braces in code blocks."
+  },
+  "Set wildcard_import_limit": {
+    "prefix": [
+      "wildcard_import_limit"
+    ],
+    "body": [
+      "wildcard_import_limit = ${1:1}"
+    ],
+    "description": "Denotes the number of imports required before collapsing/expanding wildcards."
+  },
+  "Set continuation_indent_size": {
+    "prefix": [
+      "continuation_indent_size"
+    ],
+    "body": [
+      "continuation_indent_size = ${1:4}"
+    ],
+    "description": "Denotes the continuation indent size."
+  },
+  "Set block_comment_start": {
+    "prefix": [
+      "block_comment_start"
+    ],
+    "body": [
+      "block_comment_start = ${1:/*}"
+    ],
+    "description": "Denotes the block comment start marker."
+  },
+  "Set block_comment_end": {
+    "prefix": [
+      "block_comment_end"
+    ],
+    "body": [
+      "block_comment_end = ${1:*/}"
+    ],
+    "description": "Denotes the block comment end marker."
+  },
+  "Set line_comment": {
+    "prefix": [
+      "line_comment"
+    ],
+    "body": [
+      "line_comment = ${1://}"
+    ],
+    "description": "Denotes the line comment character."
+  }
+}

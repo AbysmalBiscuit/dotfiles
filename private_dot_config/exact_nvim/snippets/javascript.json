@@ -1,0 +1,9 @@
+{
+  "inline JSDoc type annotation": {
+    "prefix": "/type",
+    "body": [
+      "/** @type {${1}} */"
+    ],
+    "description": "inline JSDoc type annotation"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "script_dir": {
+    "prefix": [
+      "SD",
+      "SCRIPT_DIR"
+    ],
+    "body": [
+      "SCRIPT_DIR=\"\\$(CDPATH= cd -- \"\\$(dirname -- \"\\$0\")\" && pwd)\""
+    ],
+    "description": "Insert a POSIX compliant one line variable that gets the directory of the current script."
+  }
+}
