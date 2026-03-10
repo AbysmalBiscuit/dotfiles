@@ -1,4 +1,6 @@
+{{- if hasKey .secrets "cookies" -}}
 # Defined in - @ line 1
 function ytp --wraps=yt-dlp --description 'alias ytp=yt-dlp'
     yt-dlp -ciw --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.ytp }} --progress --download-archive archive.txt $argv
 end
+{{- end -}}

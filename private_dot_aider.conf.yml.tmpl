@@ -65,7 +65,7 @@ set-env:
   # - deepseek=    # Sets env var DEEPSEEK_API_KEY=baz
 {{ if .is_personal -}}
 api-key:
-{{- if .secrets.api_keys.aider.personal }}
+{{- if hasKey .secrets "api_keys" }}
   - gemini={{ .secrets.api_keys.aider.personal.gemini }}
 {{- end }}
 {{- end }}

@@ -38,9 +38,19 @@
 {{- $hostname := .chezmoi.hostname -}}
 {{- /* Encryption/Security */ -}}
 {{- $gpg_key := "" -}}
-{{- $has_age_key := false -}}
-{{- $age_identities := list | toJson -}}
-{{- $age_recipients := list | toJson -}}
+{{- $age_key_file := (joinPath .chezmoi.homeDir ".config" "chezmoi" "key.txt") -}}
+{{- $has_age_key := stat $age_key_file -}}
+{{- $age_identities := list -}}
+{{- $age_recipients := list -}}
+{{- if $has_age_key -}}
+  {{- $age_identities = append $age_identities $age_key_file -}}
+  {{- $age_key_contents := include $age_key_file -}}
+  {{- range $line := splitList "\n" $age_key_contents -}}
+    {{- if hasPrefix "# public key: " $line -}}
+      {{- $age_recipients = append $age_recipients (trimPrefix "# public key: " $line) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- $has_keepassxc := false -}}
 {{- $keepassxc_cli := "" -}}
 {{- $keepassxc_database := "" -}}
@@ -49,9 +59,6 @@
 {{- $secrets_key := "" -}}
 {{- $secrets_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "secrets.toml" -}}
 {{- $secrets := dict -}}
-{{- if stat (joinPath .chezmoi.homeDir ".config" "chezmoi" "key.txt")  }}
-  {{- $has_age_key = true -}}
-{{- end }}
 {{- if stat $secrets_path -}}
   {{- $has_secrets = true -}}
   {{- $secrets = include $secrets_path | fromToml -}}
@@ -107,10 +114,6 @@
   {{- $is_wsl = true -}}
 {{- end -}}
 
-{{- /*if stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")*/ -}}
-{{- /*   $has_age_key = true */ -}}
-{{- /* end */ -}}
-
 {{- /* Check for numbered keys (e.g., 1 to 5) */ -}}
 {{- /* range $i := (seq 1 5 | splitList " ") */ -}}
   {{- /* if stat (joinPath $.chezmoi.homeDir (printf ".config/chezmoi/key%d.txt" (int $i))) */ -}}
@@ -153,7 +156,7 @@
     {{- $paste_command = "xclip -o -selection clipboard" -}}
   {{- end -}}
   {{- if $is_wsl -}}
-    {{- if $has.wsl_exe -}}
+    {{- if and (index $has "wsl_exe") $has.wsl_exe -}}
       {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
       {{- range $line := splitList "\n" $wslList -}}
         {{- if contains "(Default)" $line -}}
@@ -170,7 +173,7 @@
   {{- $line_end = "\r\n" -}}
   {{- $copy_command = "Set-Clipboard" -}}
   {{- $paste_command = "Get-Clipboard" -}}
-  {{- if $has.wsl_exe -}}
+  {{- if and (index $has "wsl_exe") $has.wsl_exe -}}
     {{- $wslList := output "wsl.exe" "--list" | replace "\r" "" | replace "\x00" "" -}}
     {{- range $line := splitList "\n" $wslList -}}
       {{- if contains "(Default)" $line -}}
@@ -187,20 +190,20 @@
 {{- end -}}
 
 {{- /* Identify editor */ -}}
-{{- if $has.nvim }}
+{{- if index $has "nvim" | default (lookPath "nvim") }}
   {{- $editor = "nvim" }}
-{{- else if $has.vim }}
+{{- else if index $has "vim" | default (lookPath "vim") }}
   {{- $editor = "vim" }}
-{{- else if $has.zed }}
+{{- else if index $has "zed" | default (lookPath "zed") }}
   {{- $editor = "zed" }}
-{{- else if $has.nano }}
+{{- else if index $has "nano" | default (lookPath "nano") }}
   {{- $editor = "nano" }}
-{{- else if $has.code }}
+{{- else if index $has "code" | default (lookPath "code") }}
   {{- $editor = "code" }}
   {{- $editor_args = list "--wait" }}
 {{- end }}
 
-{{- if (index $secrets.system $hostname) -}}
+{{- if and (hasKey $secrets "system") (index $secrets.system $hostname) -}}
   {{- $secrets_system = (index $secrets.system $hostname) -}}
 {{- end -}}
 
@@ -211,14 +214,15 @@
   {{- $lastname = $secrets.name.lastname -}}
   {{- $email = $secrets.email.personal -}}
   {{- $gpg_key = $secrets.gpg.gpg_key -}}
-  {{- $age_identities = $secrets.age.identities | toJson -}}
-  {{- $age_recipients = $secrets.age.recipients | toJson -}}
   {{- if index $secrets.keepassxc $secrets_key -}}
     {{- $keepassxc_cli = (index $secrets.keepassxc $secrets_key).cli -}}
     {{- $keepassxc_database = (index $secrets.keepassxc $secrets_key).database -}}
     {{- $keepassxc_args = (index $secrets.keepassxc $secrets_key).args | toJson -}}
   {{- end -}}
 
+  {{- if $secrets_system.shell -}}
+    {{- $shell = index $secrets_system |  default "" -}}
+  {{- end -}}
   {{- if $secrets_system.wsl_shell -}}
     {{- $shell = $secrets_system.wsl_shell -}}
   {{- end -}}
@@ -270,7 +274,7 @@
 {{- end -}}
 
 
-{{ if hasKey $secrets.system $hostname -}}
+{{ if and (hasKey $secrets "system") (hasKey $secrets.system $hostname) -}}
   {{- /* (index $secrets.system $hostname) | toToml */ -}}
   {{- $secrets_system := (index $secrets.system $hostname) -}}
   {{- $is_desktop = $secrets_system.is_desktop -}}
@@ -287,12 +291,12 @@
 
 {{""}}
 {{- /* Start writing actual config file */ -}}
-{{- if (and ($has_age_key) ($has_secrets)) -}}
+{{- if ($has_age_key) -}}
 encryption = "age"
 
 [age]
-identities = {{ $age_identities }}
-recipients = {{ $age_recipients }}
+identities = {{ $age_identities | toToml }}
+recipients = {{ $age_recipients | toToml }}
 
 {{ end }}
 
@@ -330,7 +334,7 @@ exe_ext = {{ $exe_ext | quote }}
 is_wsl = {{ $is_wsl }}
 is_linux = {{ $is_linux }}
 is_macos = {{ $is_macos }}
-is_windows = {{ $is_macos }}
+is_windows = {{ $is_windows }}
 # System info
 is_work = {{ $is_work }}
 is_personal = {{ $is_personal }}
@@ -389,8 +393,8 @@ go_bin_dir = ""
 {{- end }}
 
 [data.age]
-identities = {{ $age_identities }}
-recipients = {{ $age_recipients }}
+identities = {{ $age_identities | toToml }}
+recipients = {{ $age_recipients | toToml }}
 
 [data.cache]
 [data.cache.build]

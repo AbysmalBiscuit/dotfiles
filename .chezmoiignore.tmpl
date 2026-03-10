@@ -33,6 +33,8 @@ fix_persmissions.sh
 
 
 # always exclude
+bootstrap.ps1
+bootstrap.sh
 chezmoi_debug_perf.py
 .ideavimrc
 **temp.sh
@@ -59,6 +61,7 @@ localSettings.yaml
 .config/homebrew
 .config/Apple-Terminal
 .config/karabiner
+.config/iterm2
 .hammerspoon
 {{ end }}
 
@@ -67,25 +70,35 @@ localSettings.yaml
 .hushlogin
 .local/bin/nvim
 .local/share/fonts
+.config/gnome-terminal
+.config/devilspie2
 {{- else -}}
-{{ if not .has.devilspie2 -}}
+{{ if not (index .has "devilspie2" | default false) -}}
 .config/devilspie2
 {{- end }}
-{{ if not .has.gedit -}}
+{{ if not (index .has "gedit" | default false) -}}
 .config/gedit
 .local/share/gedit
 .local/share/gtksourceview-5
 {{- end }}
-{{ if not .has.gnome_terminal -}}
+{{ if not (index .has "gnome_terminal" | default false) -}}
 .config/gnome-terminal
 {{- end }}
 {{ end }}
 
 {{ if .is_windows }}
-**\.sh
+**.sh
+**.sh.tmpl
+**\.sh*
 .bash*
+.cache/fish
+.chezmoiscripts/**.sh
+.chezmoiscripts/**.sh.tmpl
 .chezmoiscripts/linux/**
 .chezmoiscripts/macos/**
+.config/alacritty
+.config/fish
+.config/gedit/**
 .config/ghostty
 .config/git/cookies
 .config/gitui
@@ -94,9 +107,12 @@ localSettings.yaml
 .config/psql
 .config/readline
 .config/tmux
+.fimrc
 .gnupg
 .gnupg/**
 .inputrc
+.local/share/gedit/**
+.local/share/gtksourceview-5/**
 .oh-my-zsh
 .oh-my-zsh/**
 .p10k.zsh
@@ -105,6 +121,7 @@ localSettings.yaml
 .ssh/id_rsa
 .ssh/id_rsa.pub
 .tmux.conf
+.xinitrc
 .zprofile
 .zsh*
 {{- else -}}
@@ -147,33 +164,58 @@ Documents
 
 # specific cross-platform programs
 {{ if .is_headless -}}
-    {{- if not .has.dbeaver }}
+    {{- if not (index .has "dbeaver" | default false) }}
 .config/dbeaver
     {{ end -}}
-    {{- if not .has.iterm2 }}
+    {{- if not (index .has "iterm2" | default false) }}
 .config/iterm2
     {{ end -}}
-    {{- if not .has.mpv }}
+    {{- if not (index .has "mpv" | default false) }}
 .config/mpv
     {{ end -}}
 {{- end }}
 
 # cli tools
-{{ if not .has.ranger -}}
+{{ if not (index .has "aider" | default false) -}}
+.aider*
+{{- end }}
+{{ if not (index .has "ranger" | default false) -}}
 .config/ranger
 {{- end }}
-{{ if not .has.highlight -}}
+{{ if not (index .has "highlight" | default false) -}}
 .local/share/highlight
 {{- end }}
-{{ if not .has.ccr -}}
+{{ if not (index .has "ccr" | default false) -}}
 .claude-code-router
 {{- end }}
-{{ if not .has.jq -}}
+{{ if not (index .has "jq" | default false) -}}
 .jq
 {{- end }}
-{{ if not .has.spotify_player -}}
-.config/spotify-player
+# config tools
+{{- range $tool := list
+    "bat"
+    "bottom"
+    "ccstatusline"
+    "cspell"
+    "dbeaver"
+    "eza"
+    "kanata"
+    "lazygit"
+    "ncspot"
+    "neovide"
+    "nushell"
+    "ranger"
+    "rink"
+    "ruff"
+    "sccache"
+    "spotify-player"
+    "ueberzugpp"
+    "yazi"
+    "zathura"
+    "zed"
+    "zellij"
+    -}}
+{{- if not (index $.has $tool | default false) -}}
+.config/{{ $tool }}
 {{- end }}
-{{ if not .has.ncspot -}}
-.config/ncspot
-{{- end }}
+{{end}}

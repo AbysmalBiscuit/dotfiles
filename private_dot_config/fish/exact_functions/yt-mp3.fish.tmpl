@@ -1,4 +1,6 @@
+{{- if hasKey .secrets "cookies" -}}
 # Defined in - @ line 1
 function yt-mp3 --wraps='yt-dlp' --description 'alias yt-mp3=yt-dlp'
     yt-dlp -ciw -f bestaudio --embed-thumbnail --extract-audio --audio-format mp3 --restrict-filename -o "%(upload_date)s-%(title)s-%(id)s.%(ext)s" --add-metadata --cookies {{ joinPath .secrets.cookies.dir .secrets.cookies.yt }} $argv
 end
+{{- end -}}

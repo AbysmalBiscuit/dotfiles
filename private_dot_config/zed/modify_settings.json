@@ -384,7 +384,7 @@
     {{- if .has.fish }}
       "program": "fish"
     {{- else -}}
-      "program": {{ .system.shell | quote }}
+      "program": {{ .shell | quote }}
     {{- end }}
     },
     "detect_venv": {
@@ -392,7 +392,7 @@
         {{- if .has.fish }}
         "activate_script": "fish"
         {{- else -}}
-        "activate_script": {{ .system.shell | quote }}
+        "activate_script": {{ .shell | quote }}
         {{- end }}
       }
     }

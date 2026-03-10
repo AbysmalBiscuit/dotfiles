@@ -1,0 +1,21 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=ps1.chezmoitmpl
+# {{- end }}
+# {{- $cli_tools := list -}}
+# {{- range $tool := .tools -}}
+# {{- range $cmd := $tool.cmds -}}
+# {{- $cli_tools = append $cli_tools $cmd -}}
+# {{- end -}}
+# {{- end -}}
+# {{- $cli_tools = $cli_tools | sortAlpha | uniq }}
+
+$hasToml = "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+
+$lines = @(
+    # {{ range $cli_tools -}}
+    "# {{ . | replaceAllRegex "[-.]" "_" }} = $(if (Get-Command '# {{ . }}' -ErrorAction SilentlyContinue) { 'true' } else { 'false' })"
+    # {{ end }}
+)
+
+$lines | Set-Content $hasToml

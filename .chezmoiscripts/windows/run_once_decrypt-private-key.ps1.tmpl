@@ -1,0 +1,17 @@
+# {{ include "key.txt.age" | sha256sum }}
+$ChezmoiDir = "$env:USERPROFILE\.config\chezmoi"
+$SourceDir = "{{ .chezmoi.sourceDir }}"
+
+if (-not (Test-Path "$ChezmoiDir\key.txt")) {
+    New-Item -ItemType Directory -Force -Path $ChezmoiDir | Out-Null
+    chezmoi age decrypt --output "$ChezmoiDir\key.txt" --passphrase "$SourceDir\key.txt.age"
+    icacls "$ChezmoiDir\key.txt" /inheritance:r /grant:r "${env:USERNAME}:R" | Out-Null
+}
+
+if (-not (Test-Path "$ChezmoiDir\secrets.toml")) {
+    $agePath = Get-Command age -ErrorAction SilentlyContinue
+    if ($agePath) {
+        age -d -i "$ChezmoiDir\key.txt" -o "$ChezmoiDir\secrets.toml" "$SourceDir\secrets.toml.age"
+        icacls "$ChezmoiDir\secrets.toml" /inheritance:r /grant:r "${env:USERNAME}:R" | Out-Null
+    }
+}
