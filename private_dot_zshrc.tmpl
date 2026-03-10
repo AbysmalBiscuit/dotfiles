@@ -10,19 +10,18 @@
 
 # Sourcing external packages
 # {{ if .cache.build.shell }}
-# {{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 # {{- else -}}
 # {{ template "zsh/rc.zsh" . }}
 # {{- end }}
 
 # Starting fish shell
-if [[ \
-    -x $(command -v fish 2>/dev/null) \
-    && -z "$BASH_EXECUTION_STRING" \
-    && x"$FORCESH" != x"1" \
-    && (! -v ZED_TERM || "$ZED_TERM" != "true") \
-]]; then
+if [[
+    -x $(command -v fish 2>/dev/null) &&
+    -z "$BASH_EXECUTION_STRING" &&
+    x"$FORCESH" != x"1" &&
+    (! -v ZED_TERM || "$ZED_TERM" != "true") ]] \
+    ; then
     source "# {{ .chezmoi.homeDir }}/.cache/# {{ $shell }}/env.# {{ $shell }}"
     exec fish
 fi

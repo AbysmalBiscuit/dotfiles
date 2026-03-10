@@ -13,13 +13,17 @@
 # {{- /* ========================================================== */ -}}
 
 # {{- /* ---- Output file per shell ---- */ -}}
-# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".config" "bash_completion_extra" "_generated.bash") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "generated_completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
+# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
 
 # {{- /* ---- Filter to installed shells ---- */ -}}
 # {{- $shells := list -}}
 # {{- range $shell := list "bash" "fish" "zsh" "nu" -}}
 # {{-   if index $.has $shell | default false -}}
 # {{-     $shells = append $shells $shell -}}
+# {{- /* If the completion file is missing, the script should be re-run */ -}}
+# {{-     if not (stat (index $comp_file $shell)) }}
+# # {{-     $shell -}}
+# {{-     end -}}
 # {{-   end -}}
 # {{- end -}}
 
@@ -67,9 +71,12 @@ set -e
     # {{-         if has $shell $tool.supported_shells -}}
     # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
     # {{-           $use_cmd := "" -}}
+    # {{-           $append_key := "" -}}
+    # {{-           $append := "" -}}
     # {{-           $skip := false -}}
     # {{-           if $has_init -}}
     # {{-             $use_cmd = $tool.init_command -}}
+    # {{-             $append_key = printf "append_%s_init" $shell -}}
     # {{-             if $tool.init_command_only_if_no -}}
     # {{-               range $blocker := $tool.init_command_only_if_no -}}
     # {{-                 $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
@@ -78,8 +85,9 @@ set -e
     # {{-                 end -}}
     # {{-               end -}}
     # {{-             end -}}
-    # {{-           else -}}
+    # {{-           else if $has_comp -}}
     # {{-             $use_cmd = $tool.completions_command -}}
+    # {{-             $append_key = printf "append_%s_completion" $shell -}}
     # {{-             if $tool.completions_command_only_if_no -}}
     # {{-               range $blocker := $tool.completions_command_only_if_no -}}
     # {{-                 $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
@@ -88,6 +96,8 @@ set -e
     # {{-                 end -}}
     # {{-               end -}}
     # {{-             end -}}
+    # {{-           else -}}
+    # {{-             $skip = true -}}
     # {{-           end -}}
     # {{-           if not $skip -}}
     # {{- /* ---- Shell arg: use command_SHELL_name if non-empty, else $shell ---- */ -}}
@@ -97,11 +107,10 @@ set -e
     # {{-             if $custom -}}
     # {{-               $shell_arg = $custom -}}
     # {{-             end -}}
-    # {{-             $gen_cmd := $use_cmd | replace "SHELL" $shell_arg | replaceAllRegex "\\\\n" "\n" -}}
+    # {{-             $gen_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
     # {{- /* ---- Append pipe ---- */ -}}
-    # {{-             $append_key := printf "append_%s_completion" $shell -}}
     # {{-             $append := index $tool $append_key | default "" -}}
-    # {{ $gen_cmd }}# {{ $append }}
+    # {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }}
     echo
     # {{ "" }}
     # {{-           end -}}

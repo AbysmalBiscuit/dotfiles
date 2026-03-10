@@ -16,7 +16,6 @@
 
 # {{/* Only cache env on personal and non-ephemeral systems */ -}}
 # {{ if .cache.build.shell }}
-# {{/* template "sh/build_cache.sh" (merge (dict "tmplArgs" (dict "shell" $shell)) .) */}}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
 # {{- else -}}
 # add additional environment variables
@@ -33,7 +32,7 @@ export GPG_TTY=$(tty)
 
 # Starting fish shell, and make sure to exit after
 if [[ -x $(command -v fish 2>/dev/null) && -z "$BASH_EXECUTION_STRING" && "$FORCESH" != "1" && (! -v ZED_TERM || "$ZED_TERM" != "true") ]]; then
-    source "# {{ .chezmoi.homeDir }}/.cache/# {{ $shell }}/env.# {{ $shell }}"
+    source "# {{ .chezmoi.homeDir }}/.bash_cache"
     # {{ template "sh/debug_startup_end.sh" }}
 
     exec fish
@@ -45,8 +44,7 @@ fi
 #     exec fish $LOGIN_OPTION
 # fi
 
-# {{ if not .cache.build.shell -}}
-# {{ template "bash/rc.bash" }}
+# Interactive session configuration
 
 # Configuration for the terminal prompt
 # set a fancy prompt (non-color, unless we know we "want" color)
@@ -93,8 +91,44 @@ xterm* | rxvt*)
 *) ;;
 esac
 
-# {{ template "sh/extensions.sh" . }}
-# {{- end }}
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# enable auto "cd" when entering just a path
+shopt -s autocd
+
+# check there are no running jobs before exiting
+shopt -s checkjobs
+
+# enable color support of ls and also add handy aliases
+if [[ -x /usr/bin/dircolors ]]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+        source /usr/share/bash-completion/bash_completion
+    elif [[ -f /etc/bash_completion ]]; then
+        source /etc/bash_completion
+    fi
+fi
+
+[[ -f "$HOME/.sh_aliases" ]] && source "$HOME/.sh_aliases"
 
 # {{ template "sh/debug_startup_end.sh" }}
 
