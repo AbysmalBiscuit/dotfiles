@@ -26,7 +26,7 @@ last_cache_file="$sh_cache_dir/last"
 
 # If not running interactively, source env cache and exit early
 if [[ $- != *i* ]] && [[ -f "$env_cache" ]]; then
-    echo "non-interactive mode, sourcing env cache"
+    # echo "non-interactive mode, sourcing env cache"
     source "$env_cache"
     return 0
 fi
@@ -42,7 +42,7 @@ if ! {
         [[ "${sh_force_cache_once}" = "true" ]] ||
         { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); }
 }; then
-    echo "interactive mode, sourcing env cache"
+    # echo "interactive mode, sourcing env cache"
     source "$env_cache"
     return 0
 fi
