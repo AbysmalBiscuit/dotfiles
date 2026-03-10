@@ -1,0 +1,16 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=bash
+# {{- else -}}
+# vim:filetype=bash.chezmoitmpl
+# {{- end }}
+#
+# ~/.bash_logout
+#
+# {{- if .is_wsl }}
+if has_command wsl2-ssh-agent; then
+    wsl2-ssh-agent -stop
+    [[ -f "$HOME/.ssh/wsl2-ssh-agent.sock" ]] && rm "$HOME/.ssh/wsl2-ssh-agent.sock"
+    [[ -f "/tmp/wsl_init_finshed" ]] && rm "/tmp/wsl_init_finshed"
+fi
+# {{- end }}

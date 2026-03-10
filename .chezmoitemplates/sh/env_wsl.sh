@@ -15,6 +15,8 @@ if [[ ! -f "/tmp/wsl_init_finished" ]]; then
         if ! pidof wsl2-ssh-agent >/dev/null; then
             "$HOME/.ssh/wsl2-ssh-agent"
         fi
+    elif pidof wsl2-ssh-agent >/dev/null; then
+        export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
     fi
 
     if [[ $(cat /proc/sys/fs/inotify/max_user_watches) -lt 524288 ]]; then
