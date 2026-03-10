@@ -1,5 +1,5 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-# {{ if or .is_linux .is_wsl -}}
+# {{ if .is_linux -}}
 if type -q dysk
     function df --wraps='dysk' --description 'alias df=dysk'
         dysk $argv

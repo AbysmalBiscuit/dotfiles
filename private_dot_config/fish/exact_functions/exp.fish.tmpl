@@ -7,12 +7,10 @@ function exp --description 'Opens the given path (default CWD) in a file explore
         set dir_ (pwd)
     end
 
-    if set -q WSL_DISTRO_NAME
-        env PATH="$PATH_WINDOWS" explorer.exe (wslpath -w $dir_)
-        return 0
-    end
-
-    # {{ if .is_linux -}}
+    # {{ if .is_wsl -}}
+    env PATH="$PATH_WINDOWS" explorer.exe (wslpath -w $dir_)
+    return 0
+    # {{ else if .is_linux -}}
     xdg-open $dir_
     return 0
     # {{- else if .is_macos -}}

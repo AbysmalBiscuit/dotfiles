@@ -2,7 +2,10 @@
 # time begin
 
 # add extra completion paths
-# set -a fish_complete_path $__fish_cache_dir/completions $__fish_config_dir/completions_extra
+set -a fish_complete_path $__fish_cache_dir/completions $__fish_config_dir/completions_extra
+
+# set variables
+set -gx HAS_OCARGO 1
 
 if set -q ___fish_cache_dir
     set -xg __fish_cache_dir "$HOME/.cache/fish"

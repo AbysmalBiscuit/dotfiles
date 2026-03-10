@@ -4,7 +4,7 @@ function mv-vid
         set files (fd --type file --max-depth 1 "\.$ext\$")
         if test (count $files) -gt 0
             for f in $files
-                mv -t vid -- "$f"
+                mv -n -t vid -- "$f"
             end
         end
     end

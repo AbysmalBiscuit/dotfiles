@@ -73,7 +73,7 @@ function ocargo --wraps='cargo' --description 'alias ocargo=cargo'
     end
 
     if set -q _flag_nightly
-        if test $HAS_NIGHTLY_RUST -eq 1
+        if test $HAS_NIGHTLY_RUST = true
             set --prepend argv "+nightly"
         else
             echo "nightly rust is not available. to install it run:"
