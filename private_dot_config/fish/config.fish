@@ -1,7 +1,8 @@
 #!/bin/fish
-# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-
 # time begin
+
+# add extra completion paths
+# set -a fish_complete_path $__fish_cache_dir/completions $__fish_config_dir/completions_extra
 
 if set -q ___fish_cache_dir
     set -xg __fish_cache_dir "$HOME/.cache/fish"
@@ -79,11 +80,6 @@ set --global fish_key_bindings fish_vi_key_bindings
 #     set_color normal
 # end
 
-# {{ if .is_wsl -}}
-if status is-interactive
-    set -gx PATH $PATH_CLEAN $PATH_WINDOWS
-end
-# {{- end }}
 # set -gx STARSHIP_LOG trace
 
 # end
