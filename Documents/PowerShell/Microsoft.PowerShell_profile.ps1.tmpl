@@ -365,7 +365,7 @@ function y {
 jj util completion power-shell | Out-String | Invoke-Expression
 # {{- end }}
 
-# {{- if .has.jj }}
+# {{- if .has.chezmoi }}
 Invoke-Expression ((& chezmoi completion powershell) -join "`n")
 Set-Alias -Name cm -Value chezmoi
 # {{- end }}
