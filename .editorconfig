@@ -11,5 +11,5 @@ insert_final_newline = true
 [*.{txt,md,toml.tmpl,json}]
 indent_size = 2
 
-[*.ps1]
+[*.{bat,bat.tmpl,cmd,cmd.tmpl,ps1,ps1.tmpl,ps1xml,ps1xml.tmpl,psd1,psd1.tmpl,psm1,psm1.tmpl,vba,vba.tmpl,vbe,vbe.tmpl,vbp,vbp.tmpl,vbs,vbs.tmpl,wsf,wsf.tmpl}]
 end_of_line = crlf
