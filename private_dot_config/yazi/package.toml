@@ -25,8 +25,8 @@ hash = "424ada4807b20ccd4fc85d1d7c26d1e4"
 
 [[plugin.deps]]
 use = "boydaihungst/mediainfo"
-rev = "20ecff6"
-hash = "ad48b4d2fd8f429ce87b0fddf7f34c9"
+rev = "6fbed8d"
+hash = "57ae6b43c477e117802f176683b78e74"
 
 [[plugin.deps]]
 use = "Sonico98/exifaudio"
