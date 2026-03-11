@@ -1,7 +1,7 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = function()
+    opts = function(_, opts)
       local orig_start = vim.treesitter.start
       local orig_get_parser = vim.treesitter.get_parser
 
@@ -26,6 +26,18 @@ return {
         end
         return orig_start(buf, lang, ...)
       end
+
+      opts = vim.tbl_deep_extend("force", opts, {
+        ensure_installed = {
+          "go",
+          "goctl",
+          "gomod",
+          "gosum",
+          "gotmpl",
+          "gowork",
+        },
+      })
+      return opts
     end,
   },
   {

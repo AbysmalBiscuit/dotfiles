@@ -165,6 +165,7 @@ local chezmoi_filetypes = {
   "json",
   "jsonc",
   "nu",
+  "powershell",
   "python",
   "sh",
   "toml",
