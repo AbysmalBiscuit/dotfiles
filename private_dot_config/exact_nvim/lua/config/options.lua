@@ -22,23 +22,23 @@ if vim.env.PYTHON3_HOST_PROG ~= nil then
 end
 
 ---@type boolean Variable to track compiler awareness state
-g.has_nightly_rust = vim.env.HAS_NIGHTLY_RUST == "1"
+g.has_nightly_rust = vim.env.HAS_NIGHTLY_RUST == "true"
 
-if not g.has_nightly_rust and vim.fn.executable("rustup") == 1 then
+if not g.has_nightly_rust and vim.fn.executable(vim.fn.expand("~/.cargo/bin/rustup")) == 1 then
   local openPop = assert(io.popen("rustup toolchain list", "r"))
   local output = openPop:read("*all")
   openPop:close()
-  g.has_nightly_rust = string.match(output, ".*nightly.*")
+  g.has_nightly_rust = string.match(output, ".*nightly.*") ~= nil
 end
 
 ---@type boolean Variable to track if has fish shell and ocargo function
-g.has_ocargo = vim.env.HAS_OCARGO == "1"
+g.has_ocargo = vim.env.HAS_OCARGO == "true"
 
-if not g.has_ocargo and g.has_nightly_rust and vim.fn.executable("fish") == 1 then
+if not g.has_ocargo and g.has_nightly_rust and not vim.g.is_windows and vim.fn.executable("fish") == 1 then
   local openPop = assert(io.popen("fish --command 'functions --names'", "r"))
   local output = openPop:read("*all")
   openPop:close()
-  g.has_ocargo = string.match(output, ".* ocargo.*")
+  g.has_ocargo = string.match(output, ".* ocargo.*") ~= nil
 end
 
 ---@type boolean Tracks if macOS
@@ -346,26 +346,27 @@ end
 --------------------------------------------------------------------------------
 if g.is_windows then
   -- Windows-specific settings
-  if vim.fn.executable('"C:/Program Files/PowerShell/7/pwsh.exe"') == 1 then
-    vim.opt.shell = '"C:/Program Files/PowerShell/7/pwsh.exe"'
-    -- vim.opt.shellcmdflag = "-command"
-    vim.opt.shellcmdflag =
+  if LazyVim ~= nil then
+    LazyVim.terminal.setup("pwsh")
+  elseif vim.fn.executable("C:/Program Files/PowerShell/7/pwsh.exe") == 1 then
+    o.shell = "pwsh"
+    o.shellcmdflag =
       "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-    vim.opt.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
-    vim.opt.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    vim.opt.shellquote = '"'
-    vim.opt.shellxquote = ""
+    o.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
+    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    o.shellquote = ""
+    o.shellxquote = ""
   elseif vim.fn.executable("powershell.exe") == 1 then
-    vim.opt.shell = "powershell"
-    -- vim.opt.shellcmdflag = "-command"
-    vim.opt.shellcmdflag =
+    o.shell = "powershell"
+    -- o.shellcmdflag = "-command"
+    o.shellcmdflag =
       "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-    vim.opt.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
-    vim.opt.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    -- vim.opt.shellquote = '"'
-    -- vim.opt.shellxquote = ""
+    o.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
+    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+    -- o.shellquote = '"'
+    -- o.shellxquote = ""
   else
-    vim.opt.shell = "cmd"
+    o.shell = "cmd"
   end
 end
 

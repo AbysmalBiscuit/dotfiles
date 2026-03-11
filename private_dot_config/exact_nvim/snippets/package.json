@@ -118,6 +118,7 @@
           "jsonc.chezmoitmpl",
           "nanorc.chezmoitmpl",
           "nu.chezmoitmpl",
+          "powershell.chezmoitmpl",
           "python.chezmoitmpl",
           "sh.chezmoitmpl",
           "tmux.chezmoitmpl",

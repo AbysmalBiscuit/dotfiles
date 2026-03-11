@@ -134,6 +134,9 @@ return {
         desc = "Save Current Session",
       },
     },
+    opts = {
+      branch = not vim.g.is_windows,
+    },
   },
   {
     "nvzone/typr",

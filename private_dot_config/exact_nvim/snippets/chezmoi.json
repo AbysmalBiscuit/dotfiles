@@ -18,7 +18,7 @@
       "if"
     ],
     "body": [
-      "{{ if ${1:condition} -}}",
+      "{{- if ${1:condition} }}",
       "$0",
       "{{- end }}"
     ],
@@ -31,7 +31,7 @@
       "ifelse"
     ],
     "body": [
-      "{{ if ${1:condition} -}}",
+      "{{- if ${1:condition} }}",
       "$2",
       "{{- else -}}",
       "$0",
@@ -59,7 +59,7 @@
       "elseif"
     ],
     "body": [
-      "{{ if ${1:condition} -}}",
+      "{{- if ${1:condition} }}",
       "$2",
       "{{- else if ${3:condition} -}}",
       "$0",
@@ -75,7 +75,7 @@
       "range"
     ],
     "body": [
-      "{{ range ${1:.items} -}}",
+      "{{- range ${1:.items} }}",
       "$0",
       "{{- end }}"
     ],
@@ -89,7 +89,7 @@
       "rangei"
     ],
     "body": [
-      "{{ range \\$${1:i}, \\$${2:v} := ${3:.items} -}}",
+      "{{- range \\$${1:i}, \\$${2:v} := ${3:.items} }}",
       "$0",
       "{{- end }}"
     ],
@@ -103,7 +103,7 @@
       "os"
     ],
     "body": [
-      "{{ if eq .chezmoi.os \"${1|linux,darwin,windows|}\" -}}",
+      "{{- if eq .chezmoi.os \"${1|linux,darwin,windows|}\" }}",
       "$0",
       "{{- end }}"
     ],
@@ -117,7 +117,7 @@
       "distro"
     ],
     "body": [
-      "{{ if eq .chezmoi.osRelease.id \"${1|ubuntu,arch,fedora,debian,nixos|}\" -}}",
+      "{{- if eq .chezmoi.osRelease.id \"${1|ubuntu,arch,fedora,debian,nixos|}\" }}",
       "$0",
       "{{- end }}"
     ],
@@ -131,7 +131,7 @@
       "host"
     ],
     "body": [
-      "{{ if eq .chezmoi.hostname \"${1:hostname}\" -}}",
+      "{{- if eq .chezmoi.hostname \"${1:hostname}\" }}",
       "$0",
       "{{- end }}"
     ],
@@ -146,7 +146,7 @@
       "stat"
     ],
     "body": [
-      "{{ if stat (joinPath .chezmoi.homeDir \"${1:.path}\") -}}",
+      "{{- if stat (joinPath .chezmoi.homeDir \"${1:.path}\") }}",
       "$0",
       "{{- end }}"
     ],
@@ -157,7 +157,7 @@
       "isdir"
     ],
     "body": [
-      "{{ if and (stat (joinPath .chezmoi.homeDir \"${1:dir}\")) (stat (joinPath .chezmoi.homeDir \"${1}\")).isDir -}}",
+      "{{- if and (stat (joinPath .chezmoi.homeDir \"${1:dir}\")) (stat (joinPath .chezmoi.homeDir \"${1}\")).isDir }}",
       "$0",
       "{{- end }}"
     ],
@@ -267,7 +267,7 @@
       "and"
     ],
     "body": [
-      "{{ if and (${1:condition1}) (${2:condition2}) -}}",
+      "{{- if and (${1:condition1}) (${2:condition2}) }}",
       "$0",
       "{{- end }}"
     ],
@@ -281,7 +281,7 @@
       "or"
     ],
     "body": [
-      "{{ if or (${1:condition1}) (${2:condition2}) -}}",
+      "{{- if or (${1:condition1}) (${2:condition2}) }}",
       "$0",
       "{{- end }}"
     ],
@@ -295,7 +295,7 @@
       "not"
     ],
     "body": [
-      "{{ if not ${1:condition} -}}",
+      "{{- if not ${1:condition} }}",
       "$0",
       "{{- end }}"
     ],
@@ -308,7 +308,7 @@
       "hasexecutable"
     ],
     "body": [
-      "{{ if lookPath \"${1:executable}\" -}}",
+      "{{- if lookPath \"${1:executable}\" }}",
       "$0",
       "{{- end }}"
     ],
@@ -321,7 +321,7 @@
       "nothasexecutable"
     ],
     "body": [
-      "{{ if not (lookPath \"${1:executable}\") -}}",
+      "{{- if not (lookPath \"${1:executable}\") }}",
       "$0",
       "{{- end }}"
     ],
@@ -383,7 +383,7 @@
       "with"
     ],
     "body": [
-      "{{ with ${1:.value} -}}",
+      "{{- with ${1:.value} }}",
       "$0",
       "{{- end }}"
     ],
