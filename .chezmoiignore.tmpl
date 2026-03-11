@@ -124,6 +124,9 @@ localSettings.yaml
 .xinitrc
 .zprofile
 .zsh*
+{{ if not (lookPath "ConEmu.exe") -}}
+AppData/Roaming/ConEmu.xml
+{{- end }}
 {{- else -}}
 .chezmoiscripts/windows/**
 AppData/**
