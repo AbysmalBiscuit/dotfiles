@@ -9,4 +9,8 @@
 
 # {{ template "sh/profile.sh" . }}
 
+# {{- if .is_wsl }}
+# {{ template "sh/env_wsl.sh" . }}
+# {{- end }}
+
 [[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"

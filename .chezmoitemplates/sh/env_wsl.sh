@@ -3,17 +3,17 @@
 # {{- if false -}}
 # vim:filetype=bash.chezmoitmpl
 # {{- end }}
-if [[ ! -f "/tmp/wsl_init_finished" ]]; then
+if [[ ! -f "/tmp/wsl_init_finished" ]] || [[ -z "${SSH_AUTH_SOCK}" ]]; then
     ## SSH Sock
-    if has_command wsl2-ssh-agent; then
+    if [[ -x "$HOME/go/bin/wsl2-ssh-agent" ]]; then
         export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
         if ! pidof wsl2-ssh-agent >/dev/null; then
-            wsl2-ssh-agent
+            "$HOME/go/bin/wsl2-ssh-agent" >/dev/null
         fi
-    elif has_command "$HOME/.ssh/wsl2-ssh-agent"; then
+    elif [[ -x "$HOME/.ssh/wsl2-ssh-agent" ]]; then
         export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
         if ! pidof wsl2-ssh-agent >/dev/null; then
-            "$HOME/.ssh/wsl2-ssh-agent"
+            "$HOME/.ssh/wsl2-ssh-agent" >/dev/null
         fi
     elif pidof wsl2-ssh-agent >/dev/null; then
         export SSH_AUTH_SOCK="$HOME/.ssh/wsl2-ssh-agent.sock"
