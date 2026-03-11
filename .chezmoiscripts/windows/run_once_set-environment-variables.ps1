@@ -1,0 +1,9 @@
+$vars = @{
+    XDG_CONFIG_HOME = "$HOME\.config"
+    XDG_DATA_HOME   = "$HOME\.local\share"
+    XDG_CACHE_HOME  = "$HOME\.cache"
+    XDG_STATE_HOME  = "$HOME\.local\state"
+}
+foreach ($k in $vars.Keys) {
+    [System.Environment]::SetEnvironmentVariable($k, $vars[$k], "User")
+}
