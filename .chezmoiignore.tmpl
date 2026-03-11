@@ -183,6 +183,9 @@ Documents
 {{ if not (index .has "aider" | default false) -}}
 .aider*
 {{- end }}
+{{- if not (index .has "claude" | default false) }}
+.claude
+{{- end }}
 {{ if not (index .has "ranger" | default false) -}}
 .config/ranger
 {{- end }}
