@@ -63,8 +63,8 @@ $NvimBin = if ($IsWindows) {
     Join-Path $ExtractDir 'bin' $NvimExe
 }
 
-$LinkPath = Join-Path $BinDir $NvimExe
+$LinkPath = Join-Path $BinDir 'nvim.cmd'
 if (Test-Path $LinkPath) { Remove-Item $LinkPath -Force }
-New-Item -ItemType SymbolicLink -Path $LinkPath -Target $NvimBin | Out-Null
+Set-Content -Path $LinkPath -Value "@`"$NvimBin`" %*"
 
 Write-Host "Neovim installed: $(& $LinkPath --version | Select-Object -First 1)"
