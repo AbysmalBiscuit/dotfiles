@@ -13,5 +13,7 @@ if (-not (Test-Path "$ChezmoiDir\secrets.toml")) {
     if ($agePath) {
         age -d -i "$ChezmoiDir\key.txt" -o "$ChezmoiDir\secrets.toml" "$SourceDir\secrets.toml.age"
         icacls "$ChezmoiDir\secrets.toml" /inheritance:r /grant:r "${env:USERNAME}:R" | Out-Null
+    } else {
+        Write-Output "age.exe is not installed. Run chezmoi apply --include=externals to install it with chezmoi."
     }
 }

@@ -1,0 +1,14 @@
+{{- if and .is_windows .has.uv -}}
+{{- $bin := joinPath .chezmoi.homeDir ".local" "bin" -}}
+{{- $exe := "" -}}
+{{- if stat (joinPath $bin "python3.13.exe") -}}
+{{- $exe = (joinPath $bin "python3.13.exe") -}}
+{{- else if stat (joinPath $bin "python3.14.exe") -}}
+{{- $exe = (joinPath $bin "python3.14t.exe") -}}
+{{- else if stat (joinPath $bin "python3.14t.exe") -}}
+{{- end -}}
+{{- if $exe -}}
+@echo off
+{{ $exe }} %*
+{{- end -}}
+{{- end -}}

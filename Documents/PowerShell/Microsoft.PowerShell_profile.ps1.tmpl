@@ -1,4 +1,9 @@
-# vim:shiftwidth=4
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if true -}}
+# vim:filetype=powershell:shiftwidth=4
+# {{- else -}}
+# vim:filetype=powershell.chezmoitmpl:shiftwidth=4
+# {{- end }}
 
 function Enter-AdminPSSession {
 
@@ -333,36 +338,38 @@ function has_command {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
-if (has_command uv) {
-    (& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
-    (& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
-}
-if (has_command starship) {
-    Invoke-Expression (&starship init powershell)
-}
-if (has_command zoxide) {
-    Invoke-Expression (& { (zoxide init powershell | Out-String) })
-}
+# {{- if .has.uv }}
+(& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
+(& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
+# {{- end }}
+# {{- if .has.starship }}
+Invoke-Expression (&starship init powershell)
+# {{- end }}
+# {{- if .has.starship }}
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+# {{- end }}
 
-if (has_command yazi) {
-    function y {
-        $tmp = (New-TemporaryFile).FullName
-        yazi.exe $args --cwd-file="$tmp"
-        $cwd = Get-Content -Path $tmp -Encoding UTF8
-        if ($cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
-            Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
-        }
-        Remove-Item -Path $tmp
+# {{- if .has.yazi }}
+function y {
+    $tmp = (New-TemporaryFile).FullName
+    yazi.exe $args --cwd-file="$tmp"
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+    if ($cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
     }
+    Remove-Item -Path $tmp
 }
+# {{- end }}
 
-if (has_command jj) {
-    jj util completion power-shell | Out-String | Invoke-Expression
-}
+# {{- if .has.jj }}
+jj util completion power-shell | Out-String | Invoke-Expression
+# {{- end }}
 
-if (has_command chezmoi) {
-    Invoke-Expression ((& chezmoi completion powershell) -join "`n")
-    function cm {
-        chezmoi.exe $args
-    }
-}
+# {{- if .has.jj }}
+Invoke-Expression ((& chezmoi completion powershell) -join "`n")
+Set-Alias -Name cm -Value chezmoi
+# {{- end }}
+
+# {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
+$env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"
+# {{- end }}
