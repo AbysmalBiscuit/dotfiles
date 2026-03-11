@@ -12,15 +12,7 @@ return {
       completions = { lsp = { enabled = true } },
     },
   },
-  {
-    "tpope/vim-dadbod",
-    lazy = true,
-  },
-
-  { "vim-dadbod-ui", lazy = true },
-  { "vim-dadbod-completion", lazy = true },
-  -- {
-  --   "ngynkvn/gotmpl.nvim",
-  --   opts = {},
-  -- },
+  -- { "tpope/vim-dadbod", lazy = true },
+  -- { "vim-dadbod-ui", lazy = true },
+  -- { "vim-dadbod-completion", lazy = true },
 }
