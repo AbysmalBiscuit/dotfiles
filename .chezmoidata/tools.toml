@@ -1435,15 +1435,45 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "delta"
+cmds = [
+    "delta"
+]
+desc = "A syntax-highlighting pager for git, diff, grep, and blame output"
+url = "https://dandavison.github.io/delta/"
+git = "https://github.com/dandavison/delta?tab=readme-ov-file"
+comment = ""
+install_command = "cargo install git-delta"
+completions_command = ""
+init_command = ""
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "powershell",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "difft"
 cmds = [
     "difft"
 ]
 desc = "Compare files or directories based on the syntax of the programming language."
-url = "https://difftastic.wilfred.me.uk/introduction.html"
-git = ""
+url = "https://difftastic.wilfred.me.uk/"
+git = "https://github.com/Wilfred/difftastic"
 comment = ""
-install_command = ""
+install_command = "cargo install --locked difftastic"
 completions_command = ""
 init_command = ""
 supported_shells = []
