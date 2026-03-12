@@ -1,23 +1,43 @@
 #!/usr/bin/env pwsh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=ps1.chezmoitmpl
+# {{- end -}}
+# {{- $bin_dir := joinPath .chezmoi.homeDir ".local" "bin" -}}
+# {{- $arch := "" -}}
+# {{- $asset := "" -}}
+# {{- if eq .chezmoi.arch "arm64" -}}
+# {{- $arch = "arm64" }}
+# {{- $asset = "nvim-win-arm64" -}}
+# {{- else -}}
+# {{- $arch = "x86_64" -}}
+# {{- $asset = "nvim-win64" -}}
+# {{- end -}}
+# {{- $zip_file := joinPath $bin_dir (printf "%s.zip" $asset) -}}
+# {{- $nvim_bin := joinPath $bin_dir $asset "bin" "nvim.exe" -}}
+# {{- $link_path := joinPath $bin_dir "nvim.cmd" -}}
+# {{ "" }}
 # Updates neovim from GitHub releases (tar.gz)
-# {{ gitHubLatestRelease "neovim/neovim" | toJson | sha256sum }}
+# # {{ gitHubLatestRelease "neovim/neovim" | toJson | sha256sum }}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$BinDir = "$HOME\.local\bin"
-$Arch = if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq 'Arm64') { 'arm64' } else { 'x86_64' }
-
-$OS = if ($IsWindows) { 'win' } elseif ($IsMacOS) { 'macos' } else { 'linux' }
-
-$Asset = if ($IsWindows) {
-    if ($Arch -eq 'arm64') { 'nvim-win-arm64.zip' } else { 'nvim-win64.zip' }
-} else {
-    "nvim-$OS-$Arch.tar.gz"
+$CacheFile = "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "nvim_install" }}"
+$Now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+if (Test-Path $CacheFile) {
+    $LastCache = [long](Get-Content $CacheFile -Raw).Trim()
+    if (($Now - $LastCache) -lt (86400 * 3)) {
+        exit 0
+    }
 }
 
-$ExtractDir = Join-Path $BinDir "nvim-$OS-$Arch"
-$Url = "https://github.com/neovim/neovim/releases/download/nightly/$Asset"
+$BinDir = "# {{ joinPath .chezmoi.homeDir ".local" "bin" }}"
+$Arch = "# {{ $arch }}"
+$Asset = "# {{ $asset }}.zip"
+$ExtractDir = "# {{ joinPath $bin_dir $asset }}"
+
+$Url = "https://github.com/neovim/neovim/releases/download/nightly/# {{ $asset }}.zip"
 
 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 
@@ -26,16 +46,15 @@ $Release = Invoke-RestMethod -Uri 'https://api.github.com/repos/neovim/neovim/re
 $AssetInfo = $Release.assets | Where-Object { $_.name -eq $Asset } | Select-Object -First 1
 $Checksum = if ($AssetInfo) { $AssetInfo.digest -replace '^sha256:', '' } else { $null }
 
-$Tarball = Join-Path $BinDir $Asset
 Write-Host "Downloading $Asset..."
-Invoke-WebRequest -Uri $Url -OutFile $Tarball
+Invoke-WebRequest -Uri $Url -OutFile '# {{ $zip_file }}'
 
 if ($Checksum) {
     Write-Host "Verifying checksum..."
-    $Actual = (Get-FileHash -Algorithm SHA256 $Tarball).Hash.ToLower()
+    $Actual = (Get-FileHash -Algorithm SHA256 '# {{ $zip_file }}').Hash.ToLower()
     if ($Checksum -ne $Actual) {
         Write-Error "Checksum mismatch!`n  Expected: $Checksum`n  Got:      $Actual"
-        Remove-Item $Tarball -Force
+        Remove-Item '# {{ $zip_file }}' -Force
         exit 1
     }
     Write-Host "Checksums match."
@@ -45,26 +64,14 @@ if ($Checksum) {
 
 # Extract
 if (Test-Path $ExtractDir) { Remove-Item $ExtractDir -Recurse -Force }
-
-if ($Asset.EndsWith('.zip')) {
-    Expand-Archive -Path $Tarball -DestinationPath $BinDir -Force
-} else {
-    tar -xzf $Tarball -C $BinDir
-}
-Remove-Item $Tarball
+Expand-Archive -Path '# {{ $zip_file }}' -DestinationPath $BinDir -Force
+Remove-Item '# {{ $zip_file }}'
 
 # Link
-$NvimExe = if ($IsWindows) { 'nvim.exe' } else { 'nvim' }
-$NvimBin = if ($IsWindows) {
-    # Windows archives use nvim-win64 or nvim-win-arm64, not nvim-win-x86_64
-    $WinDir = if ($Arch -eq 'arm64') { 'nvim-win-arm64' } else { 'nvim-win64' }
-    Join-Path $BinDir $WinDir 'bin' $NvimExe
-} else {
-    Join-Path $ExtractDir 'bin' $NvimExe
-}
+if (Test-Path '# {{ $link_path }}') { Remove-Item '# {{ $link_path }}' -Force }
+Set-Content -Path '# {{ $link_path }}' -Value "@`"# {{ $nvim_bin }}`" %*"
 
-$LinkPath = Join-Path $BinDir 'nvim.cmd'
-if (Test-Path $LinkPath) { Remove-Item $LinkPath -Force }
-Set-Content -Path $LinkPath -Value "@`"$NvimBin`" %*"
+Write-Host "Neovim installed: $(& '# {{ $link_path }}' --version | Select-Object -First 1)"
 
-Write-Host "Neovim installed: $(& $LinkPath --version | Select-Object -First 1)"
+New-Item -ItemType Directory -Force -Path (Split-Path $CacheFile) | Out-Null
+Set-Content -Path $CacheFile -Value $Now -NoNewline
