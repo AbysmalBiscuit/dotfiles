@@ -176,6 +176,30 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "c"
+name = "GnuPG"
+cmds = [
+    "gpg"
+]
+desc = "GNU Privacy Guard (GnuPG or GPG) is a free-software replacement for Symantec's cryptographic software suite PGP."
+url = "https://gnupg.org/"
+git = "https://dev.gnupg.org/source/gnupg/"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "c"
 name = "bash"
 cmds = [
     "bash"
@@ -928,6 +952,30 @@ cmds = [
 desc = "iTerm2 is a terminal emulator for Mac OS X that does amazing things."
 url = "https://iterm2.com/"
 git = "https://github.com/gnachman/iTerm2"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "python"
+name = "Meld"
+cmds = [
+    "meld"
+]
+desc = "Meld is a visual diff and merge tool targeted at developers. (GNOME)"
+url = "https://meldmerge.org/"
+git = "https://gitlab.gnome.org/GNOME/meld"
 comment = ""
 install_command = ""
 completions_command = ""
