@@ -54,6 +54,7 @@ localSettings.yaml
 .config/spotify-player
 .wezterm.lua
 {{- else -}}
+.gnupg/pinentry-ide.sh
 {{- end }}
 
 {{ if not .is_macos }}
@@ -111,8 +112,6 @@ AppData/Roaming/Zed
 .config/readline
 .config/tmux
 .fimrc
-.gnupg
-.gnupg/**
 .inputrc
 .local/share/gedit/**
 .local/share/gtksourceview-5/**

@@ -1,0 +1,6 @@
+default-cache-ttl 86400
+max-cache-ttl 86400
+{{- if .is_wsl }}
+pinentry-program /home/lev/.gnupg/pinentry-ide.sh
+{{- end }}
+# pinentry-program /usr/bin/pinentry-curses
