@@ -656,7 +656,7 @@ vim.filetype.add({
     [".bash_logout"] = "bash",
   },
   pattern = {
-    [".*/*.als"] = "alloy",
+    [".*/*%.als"] = "alloy",
     [".*_bash_aliases"] = "bash",
     [".*_bash_env"] = "bash",
     [".*_bash_make"] = "bash",
@@ -664,8 +664,8 @@ vim.filetype.add({
     [".*_bash_prompt"] = "bash",
     [".*_bash_logout"] = "bash",
     -- ["%.bash_.*"] = "bash",
-    -- [".*"]
-    -- [".*.toml.tmpl"] = "toml",
+    [".*%.ps1%.tmpl"] = "ps1.chezmoitmpl",
+    -- [".*%.toml.tmpl"] = "toml",
   },
 })
 
