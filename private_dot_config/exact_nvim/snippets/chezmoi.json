@@ -301,18 +301,27 @@
     ],
     "description": "If NOT"
   },
-  "chezmoi has executable": {
+  "chezmoi has executable false": {
     "prefix": [
-      "{{hasexecutable",
-      "{hasexecutable",
-      "hasexecutable"
+      "hasExecutableFalse"
     ],
     "body": [
-      "{{- if lookPath \"${1:executable}\" }}",
+      "{{- if index .has \"${1:executable}\" | default false }}",
       "$0",
       "{{- end }}"
     ],
-    "description": "Check the PATH to see if an executable exists"
+    "description": "Check if executable exists via cache with default false"
+  },
+  "chezmoi has executable lookPath": {
+    "prefix": [
+      "hasExecutableLookPath"
+    ],
+    "body": [
+      "{{- if index .has \"${1:executable}\" | default (lookPath \"$1\") }}",
+      "$0",
+      "{{- end }}"
+    ],
+    "description": "Check if executable exists via cache with default lookPath fallback"
   },
   "chezmoi doesn't have executable": {
     "prefix": [
@@ -321,7 +330,7 @@
       "nothasexecutable"
     ],
     "body": [
-      "{{- if not (lookPath \"${1:executable}\") }}",
+      "{{- if index $has \"${1:executable}\" | default (lookPath \"${1:executable}\") }}",
       "$0",
       "{{- end }}"
     ],

@@ -119,6 +119,7 @@
           "nanorc.chezmoitmpl",
           "nu.chezmoitmpl",
           "powershell.chezmoitmpl",
+          "ps1.chezmoitmpl",
           "python.chezmoitmpl",
           "sh.chezmoitmpl",
           "tmux.chezmoitmpl",

@@ -308,7 +308,7 @@
       "hasexecutable"
     ],
     "body": [
-      "{{- if lookPath \"${1:executable}\" -}}",
+      "{{- if index \\$has \"${1:executable}\" | default (lookPath \"${1:executable}\") -}}",
       "$0",
       "{{- end -}}"
     ],
