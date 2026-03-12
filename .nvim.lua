@@ -283,6 +283,18 @@ vim.treesitter.query.set(
   '((text) @injection.content (#set! injection.combined) (#set! injection.language "toml"))'
 )
 
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "*",
+  callback = function(ev)
+    local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":t")
+    local ft = vim.bo[ev.buf].filetype
+    if fname:match("^modify_") and ft ~= "" and not ft:match("chezmoitmpl") then
+      vim.b[ev.buf].chezmoi_ts_pending = true
+      vim.bo[ev.buf].filetype = ft .. ".chezmoitmpl"
+    end
+  end,
+})
+
 -- Plain .tmpl files default to base gotmpl
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
   pattern = "*.tmpl",
