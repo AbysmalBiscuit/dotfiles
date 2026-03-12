@@ -11,7 +11,7 @@
   eol = lf
   autocrlf = input
   whitespace = warn
-  editor = nvim
+  editor = {{ .path.editor | replaceAllRegex "\\\\" "/" | quote }}
 [alias]
   lg = lg1
   lg1 = lg1-specific --all
@@ -41,22 +41,24 @@
   smudge = git-lfs smudge -- %f
   process = git-lfs filter-process
   required = true
+{{- if .has.nvim }}
 [diff]
-  tool = nvim
+  tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
 [difftool]
   prompt = false
-[difftool "meld"]
-  cmd = meld $LOCAL $REMOTE
 [merge]
-  tool = nvim
+  tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
   ff=false
   conflictStyle=diff3
 [mergetool]
   prompt = false
-[mergetool "nvim"]
-  cmd = nvim -d "$LOCAL" "$BASE" "$REMOTE" -c "wincmd J"
+{{- end }}
+{{- if index .has "meld" | default false }}
+[difftool "meld"]
+  cmd = meld $LOCAL $REMOTE
 [mergetool "meld"]
   cmd = meld $LOCAL $MERGED $REMOTE --output $MERGED
+{{- end }}
 [commit]
   template = ~/.git_commit_template
   gpgSign = true

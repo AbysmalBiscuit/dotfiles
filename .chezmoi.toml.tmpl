@@ -1,5 +1,5 @@
 {{- if false -}}
-# vim:filetype=toml.chezmoitmpl
+# vim:filetype=chezmoi_toml.toml.chezmoitmpl
 {{- end -}}
 {{- /* System information */ -}}
 {{- $is_work := false -}}{{/* true if this machine is a is_work machine */}}
@@ -24,20 +24,21 @@
 {{- $line_end := "\n" -}}
 {{- $home := .chezmoi.homeDir -}}
 {{- /* OS information */ -}}
-{{- $is_wsl := false -}}{{/* true if this machine is a WSL instance */}}
+{{- $is_wsl := not (eq (env "WSL_DISTRO_NAME") "") -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
 {{- $is_windows := eq .chezmoi.os "windows" -}}{{/* true if this machine is a Windows machine */}}
 {{- $is_macos := false -}}{{/* true if this machine is a macOS machine */}}
 {{- /* Default values/placeholders for variables */ -}}
-{{- $fullname := "" -}}
-{{- $firstname := "" -}}
-{{- $lastname := "" -}}
-{{- $email := "" -}}
+{{- $fullname := "Lev Velykoivanenko" -}}
+{{- $firstname := "Lev" -}}
+{{- $lastname := "Velykoivanenko" -}}
+{{- $email := "velykoivanenko.lev@gmail.com" -}}
 {{- $editor := "" }}
+{{- $editor_path := "" }}
 {{- $editor_args := list }}
 {{- $hostname := .chezmoi.hostname -}}
 {{- /* Encryption/Security */ -}}
-{{- $gpg_key := "" -}}
+{{- $gpg_key := "9D8D7DDC484386DE" -}}
 {{- $age_key_file := (joinPath .chezmoi.homeDir ".config" "chezmoi" "key.txt") -}}
 {{- $has_age_key := stat $age_key_file -}}
 {{- $age_identities := list -}}
@@ -65,20 +66,20 @@
 {{- end -}}
 {{- "" -}}
 {{- $has := dict -}}
-{{- /* range $tool := .tools */ -}}
-  {{- /* range $cmds := $tool.cmds */ -}}
-    {{- /* range $cmd := $cmds */ -}}
-      {{- /* $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) */ -}}
-    {{- /* end */ -}}
-  {{- /* end */ -}}
-{{- /* end */ -}}
-{{- /* range $tool := .wsl_tools */ -}}
-  {{- /* range $cmds := $tool.cmds */ -}}
-    {{- /* range $cmd := $cmds */ -}}
-      {{- /* $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) */ -}}
-    {{- /* end */ -}}
-  {{- /* end */ -}}
-{{- /* end */ -}}
+{{- $tools := include ".chezmoidata/tools.toml" | fromToml -}}
+{{- range $tool := $tools.tools -}}
+  {{- range $cmd := $tool.cmds -}}
+    {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+  {{- end -}}
+{{- end -}}
+{{- if $is_wsl -}}
+  {{- $wsl_tools := include ".chezmoidata/wsl_tools.toml" | fromToml -}}
+  {{- range $tool := $wsl_tools.wsl_tools -}}
+    {{- range $cmd := $tool.cmds -}}
+      {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- $has_has := false -}}
 {{- $has_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" -}}
 {{- if stat $has_path -}}
@@ -107,11 +108,6 @@
 {{- /* Identify if running on ephemeral machine */ -}}
 {{- if eq .chezmoi.os "" -}}
   {{- $is_ephemeral = true -}}
-{{- end -}}
-
-{{- /* detect WSL */ -}}
-{{- if env "WSL_DISTRO_NAME" -}}
-  {{- $is_wsl = true -}}
 {{- end -}}
 
 {{- /* Check for numbered keys (e.g., 1 to 5) */ -}}
@@ -148,7 +144,7 @@
 {{- /* General per os settings */ -}}
 {{- if $is_linux -}}
   {{- $line_end = "\n" -}}
-  {{ if $has.wl_copy }}
+  {{- if index $has "wl_copy" | default (lookPath "wl_copy") -}}
     {{- $copy_command = "wl-copy" -}}
     {{- $paste_command = "wl-paste" -}}
   {{- else -}}
@@ -189,17 +185,44 @@
 {{- if (and $is_windows $is_personal) -}}
 {{- end -}}
 
+{{- if $is_linux -}}
+{{- else if $is_windows -}}
+{{- $archive = ".zip" -}}
+{{- $exe_ext = ".exe" -}}
+{{- end -}}
+
 {{- /* Identify editor */ -}}
 {{- if index $has "nvim" | default (lookPath "nvim") }}
   {{- $editor = "nvim" }}
+  {{- $editor_path = "nvim" }}
+  {{- $nvim_arch := "x86_64" -}}
+  {{- if eq .chezmoi.arch "arm64" -}}
+    {{- $nvim_arch = "arm64" -}}
+  {{- end -}}
+  {{- $nvim_os := .chezmoi.os -}}
+  {{- if $is_macos -}}
+    {{- $nvim_os = "macos" -}}
+  {{- end -}}
+  {{- $nvim_asset := printf "nvim-$s-%s" $nvim_os $nvim_arch -}}
+  {{- if and $is_windows (eq $nvim_arch "x86_64") -}}
+    {{- $nvim_asset = "nvim-win64" -}}
+  {{- end -}}
+  {{- $nvim_bin := joinPath .chezmoi.homeDir ".local" "bin" $nvim_asset "bin" (printf "nvim%s" $exe_ext ) -}}
+  {{- if stat $nvim_bin -}}
+    {{- $editor_path = $nvim_bin -}}
+  {{- end -}}
 {{- else if index $has "vim" | default (lookPath "vim") }}
   {{- $editor = "vim" }}
+  {{- $editor_path = lookPath "vim" }}
 {{- else if index $has "zed" | default (lookPath "zed") }}
   {{- $editor = "zed" }}
+  {{- $editor_path = lookPath "zed" }}
 {{- else if index $has "nano" | default (lookPath "nano") }}
-  {{- $editor = "nano" }}
+  {{- $editor = lookPath "nano" }}
+  {{- $editor_path = "nano" }}
 {{- else if index $has "code" | default (lookPath "code") }}
   {{- $editor = "code" }}
+  {{- $editor_path = lookPath "code" }}
   {{- $editor_args = list "--wait" }}
 {{- end }}
 
@@ -267,11 +290,6 @@
 {{- end -}}
 {{- $chost = printf "%s-%s" $arch $compiler_os -}}
 
-{{- if $is_linux -}}
-{{- else if $is_windows -}}
-{{- $archive = ".zip" -}}
-{{- $exe_ext = ".exe" -}}
-{{- end -}}
 
 
 {{ if and (hasKey $secrets "system") (hasKey $secrets.system $hostname) -}}
@@ -384,12 +402,18 @@ cargo_bin_dir = {{ joinPath $home ".cargo" "bin" | quote}}
 cargo_dir = ""
 cargo_bin_dir = ""
 {{- end }}
+editor = {{ $editor_path | quote }}
 {{ if stat (joinPath $home "go") -}}
 go_dir = {{ joinPath $home "go" | quote}}
 go_bin_dir = {{ joinPath $home "go" "bin" | quote}}
 {{- else -}}
 go_dir = ""
 go_bin_dir = ""
+{{- end }}
+{{- if eq $editor "nvim" }}
+nvim = {{ $editor_path | replaceAllRegex "\\\\" "/" | quote }}
+{{- else -}}
+nvim = ""
 {{- end }}
 
 [data.age]
