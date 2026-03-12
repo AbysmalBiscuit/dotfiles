@@ -11,11 +11,26 @@
 # {{- $cli_tools = $cli_tools | sortAlpha | uniq }}
 
 $hasToml = "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+$allCmds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+$pathDirs = $env:PATH -split [System.IO.Path]::PathSeparator
+$pathExts = $env:PATHEXT -split ';'
+
+foreach ($dir in $pathDirs) {
+    if (-not $dir -or -not (Test-Path -LiteralPath $dir)) { continue }
+    try {
+        foreach ($file in [System.IO.Directory]::EnumerateFiles($dir)) {
+            $ext = [System.IO.Path]::GetExtension($file)
+            if ($pathExts -contains $ext) {
+                [void]$allCmds.Add([System.IO.Path]::GetFileName($file))
+                [void]$allCmds.Add([System.IO.Path]::GetFileNameWithoutExtension($file))
+            }
+        }
+    } catch { }
+}
 
 $lines = @(
-    # {{ range $cli_tools -}}
-    "# {{ . | replaceAllRegex "[-.]" "_" }} = $(if (Get-Command '# {{ . }}' -ErrorAction SilentlyContinue) { 'true' } else { 'false' })"
-    # {{ end }}
+# {{ range $cli_tools -}}
+    "# {{ . | replaceAllRegex "[-.]" "_" }} = $(if ($allCmds.Contains('# {{ . }}')) { 'true' } else { 'false' })"
+# {{ end -}}
 )
-
 $lines | Set-Content $hasToml

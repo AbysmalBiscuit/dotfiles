@@ -3,7 +3,7 @@
 # {{ if false -}}
 # vim:filetype=sh.chezmoitmpl
 # {{- end }}
-# {{- $is_wsl := false -}}
+# {{- $is_wsl := true -}}
 # {{- if env "WSL_DISTRO_NAME" -}}
 # {{- $is_wsl = true -}}
 # {{- end -}}
@@ -49,13 +49,23 @@ if [ -n "$PATH_WINDOWS" ]; then
 fi
 
 wsl_tools=""
-PWSH=$(command -v "powershell.exe" 2>/dev/null || command -v "pwsh.exe" 2>/dev/null)
+PWSH=$(command -v "pwsh.exe" 2>/dev/null || command -v "powershell.exe" 2>/dev/null)
 if [ -n "$PWSH" ]; then
     wsl_tools="$("$PWSH" -NoProfile -NonInteractive -Command '
+    $found = @{}
+    $tools = @(
 # {{ range $cli_tools_wsl -}}
-        "# {{ . | replaceAllRegex "[-.]" "_" }} $(if (Get-Command "# {{ . }}" -ErrorAction SilentlyContinue) { "true" } else { "false" })"
+        "# {{ . }}"
 # {{ end -}}
-    ' | "$SED" 's/\r//g')"
+    )
+    Get-Command $tools -ErrorAction SilentlyContinue | ForEach-Object {
+        $found[$_.Name] = $true
+        $found[[System.IO.Path]::GetFileNameWithoutExtension($_.Name)] = $true
+    }
+# {{ range $cli_tools_wsl -}}
+    "# {{ . | replaceAllRegex "[-.]" "_" }} $(if ($found.ContainsKey("# {{ . }}")) { "true" } else { "false" })"
+# {{ end -}}
+' | "$SED" 's/\r//g')"
 else
     wsl_tools="$({
         # {{ range $cli_tools_wsl -}}
