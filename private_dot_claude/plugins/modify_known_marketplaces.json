@@ -1,0 +1,9 @@
+// chezmoi:modify-template
+{{- $current := .chezmoi.stdin | fromJson -}}
+{{- $baseline := include ".chezmoitemplates/modify/claude_known_marketplaces.json" | fromJson -}}
+{{- $merged := merge $current $baseline -}}
+{{- if deepEqual $baseline $merged -}}
+{{-   .chezmoi.stdin }}
+{{- else -}}
+{{-   $merged | toPrettyJson }}
+{{- end -}}
