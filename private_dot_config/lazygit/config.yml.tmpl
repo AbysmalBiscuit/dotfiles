@@ -1,5 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # git:
 #   overrideGpg: true
+
+
+# {{ if and .is_windows (index .has "nvim" | default false) }}
+os:
+  editPreset: "nvim"
+# {{- end }}
 gui:
   # Use the mocha catppuccin theme
   theme:
