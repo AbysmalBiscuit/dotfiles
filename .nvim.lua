@@ -30,22 +30,27 @@ vim.api.nvim_create_autocmd("BufWritePost", {
       env.PATH = env.PATH_CLEAN .. ":" .. env.PATH_WINDOWS
     end
 
+    local has_command = ""
+    if vim.g.is_windows then
+      has_command =
+        'chezmoi execute-template (Get-Content "$HOME/.local/share/chezmoi/.chezmoiscripts/windows/run_onchange_before_01-generate-has-cache.ps1.tmpl" -Raw) | Out-String | Invoke-Expression'
+    else
+      has_command =
+        "chezmoi execute-template < ~/.local/share/chezmoi/.chezmoiscripts/run_before_generate-has-cache.sh.tmpl | sh"
+    end
     local function run_has_cache()
-      vim.fn.jobstart(
-        "chezmoi execute-template < ~/.local/share/chezmoi/.chezmoiscripts/run_before_generate-has-cache.sh.tmpl | sh",
-        {
-          env = env,
-          on_exit = function(_, code)
-            vim.schedule(function()
-              if code == 0 then
-                vim.notify("has cache rebuilt")
-              else
-                vim.notify("has cache rebuild failed", vim.log.levels.ERROR)
-              end
-            end)
-          end,
-        }
-      )
+      vim.fn.jobstart(has_command, {
+        env = env,
+        on_exit = function(_, code)
+          vim.schedule(function()
+            if code == 0 then
+              vim.notify("has cache rebuilt")
+            else
+              vim.notify("has cache rebuild failed", vim.log.levels.ERROR)
+            end
+          end)
+        end,
+      })
     end
 
     vim.fn.jobstart("chezmoi init", {
@@ -88,14 +93,25 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     vim.wo[0].foldmethod = "manual"
     vim.treesitter.start(args.buf, chezmoi_toml_tmpl_filetype)
     vim.bo[args.buf].filetype = chezmoi_toml_tmpl_filetype
+    vim.schedule(function()
+      vim.bo[args.buf].filetype = chezmoi_toml_tmpl_filetype
+    end)
   end,
 })
 vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("chezmoi_group_custom3", { clear = false }),
   pattern = "*/.chezmoidata/*tools.toml",
   callback = function()
+    local sort_command = ""
+    if vim.g.is_windows then
+      sort_command =
+        'chezmoi execute-template (Get-Content "$HOME/.local/share/chezmoi/.chezmoiscripts/run_onchange_before_00-sort-tools.sh.tmpl" -Raw) | Out-String | python3'
+    else
+      sort_command = "chezmoi execute-template < ~/.local/share/chezmoi/.chezmoiscripts/run_before_generate-has-cache.sh.tmpl | "
+        .. vim.g.python3_host_prog
+    end
     local stderr_chunks = {}
-    vim.fn.jobstart("chezmoi apply --include=scripts", {
+    vim.fn.jobstart(sort_command, {
       stderr_buffered = true,
       on_stderr = function(_, data)
         if data then
@@ -166,6 +182,7 @@ local chezmoi_filetypes = {
   "jsonc",
   "nu",
   "powershell",
+  "ps1",
   "python",
   "sh",
   "toml",
