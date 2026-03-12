@@ -5,6 +5,19 @@
 
 local cmdline_position = { row = "98%", col = "50%" }
 
+local lazygit_os = {}
+if vim.g.is_windows then
+  lazygit_os = {
+    edit = "lazygit-edit-nvim.cmd {{filename}}",
+    editAtLine = "edit-nvim.cmd {{filename}}",
+    editInTerminal = false,
+  }
+else
+  lazygit_os = {
+    editPreset = "nvim-remote",
+  }
+end
+
 local snacks_sources = {
   "files",
   "explorer",
@@ -99,7 +112,14 @@ return {
         false,
       },
     },
+    ---@type snacks.Config
     opts = {
+      ---@type snacks.lazygit.Config
+      lazygit = {
+        config = {
+          os = lazygit_os,
+        },
+      },
       explorer = {
         replace_netrw = false,
       },
