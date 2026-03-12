@@ -126,10 +126,15 @@ AppData/Roaming/Zed
 .xinitrc
 .zprofile
 .zsh*
-{{ if not (lookPath "ConEmu.exe") -}}
+{{- if not (index .has "uv") | default false }}
+.local/bin/python3.bat
+{{- end }}
+{{- if not (lookPath "ConEmu.exe") }}
 AppData/Roaming/ConEmu.xml
 {{- end }}
 {{- else -}}
+.local/bin/lazygit-edit-nvim.cmd
+.local/bin/python3.bat.tmpl
 .chezmoiscripts/windows/**
 AppData/**
 Documents

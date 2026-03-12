@@ -1,4 +1,3 @@
-{{- if and .is_windows .has.uv -}}
 {{- $bin := joinPath .chezmoi.homeDir ".local" "bin" -}}
 {{- $exe := "" -}}
 {{- if stat (joinPath $bin "python3.13.exe") -}}
@@ -10,5 +9,4 @@
 {{- if $exe -}}
 @echo off
 {{ $exe }} %*
-{{- end -}}
 {{- end -}}
