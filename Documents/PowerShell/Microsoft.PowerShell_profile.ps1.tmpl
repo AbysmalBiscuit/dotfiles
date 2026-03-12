@@ -373,3 +373,6 @@ Set-Alias -Name cm -Value chezmoi
 # {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
 $env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"
 # {{- end }}
+# {{- if .has.nvim }}
+$env:EDITOR = "nvim"
+# {{- end }}
