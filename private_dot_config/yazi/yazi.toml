@@ -16,6 +16,21 @@ image_filter = "triangle"
 # max_width = 2000
 # max_height = 2000
 
+[opener]
+# Docs: https://yazi-rs.github.io/docs/next/configuration/yazi/#opener
+edit = [
+    { run = "$EDITOR %s", block = true, for = "unix", desc = "Edit file using $EDITOR" },
+    { run = 'powershell -Command "& $env:EDITOR %s"', block = true, for = "windows", desc = "Edit file using $env:EDITOR" },
+]
+open = [
+    { run = 'xdg-open %s', desc = "Open", for = "unix" },
+    { run = 'start %s', desc = "Open", for = "windows" },
+]
+block-rename = [
+    { run = "$EDITOR %s", block = true, for = "unix", desc = "Bulk rename files using $EDITOR" },
+    { run = "$env:EDITOR %s", block = true, for = "windows", desc = "Bulk rename files using $env:EDITOR" },
+]
+
 [plugin]
 prepend_preloaders = [
     # Replace magick, image, video with mediainfo
