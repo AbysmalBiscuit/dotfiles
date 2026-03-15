@@ -341,7 +341,20 @@ function has_command {
 
 $completions_cache = "$HOME\.cache\shell-completions\powershell.ps1"
 if (Test-Path "$completions_cache")  { . "$completions_cache" }
-
+# {{- if index .has "yazi" | default false }}
+function y {
+    $tmp = (New-TemporaryFile).FullName
+    yazi.exe $args --cwd-file="$tmp"
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+    if ($cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+    }
+    Remove-Item -Path $tmp
+}
+# {{- end }}
+# {{- if index .has "chezmoi" | default false }}
+Set-Alias -Name cm -Value chezmoi
+# {{- end }}
 # {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
 $env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"
 # {{- end }}
