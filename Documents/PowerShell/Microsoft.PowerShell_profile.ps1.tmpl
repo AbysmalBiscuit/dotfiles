@@ -1,13 +1,14 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # {{- if true -}}
-# vim:filetype=powershell:shiftwidth=4
+# vim:filetype=ps1:shiftwidth=4
 # {{- else -}}
-# vim:filetype=powershell.chezmoitmpl:shiftwidth=4
+# vim:filetype=ps1.chezmoitmpl:shiftwidth=4
 # {{- end }}
 
+# $sw1 = [System.Diagnostics.Stopwatch]::StartNew()
+
+
 function Enter-AdminPSSession {
-
-
 <#
 .SYNOPSIS
 Starts a new PowerShell session that runs with administrative privileges on the
@@ -338,37 +339,8 @@ function has_command {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
-# {{- if .has.uv }}
-(& uv generate-shell-completion powershell) | Out-String | Invoke-Expression
-(& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression
-# {{- end }}
-# {{- if .has.starship }}
-Invoke-Expression (&starship init powershell)
-# {{- end }}
-# {{- if .has.starship }}
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
-# {{- end }}
-
-# {{- if .has.yazi }}
-function y {
-    $tmp = (New-TemporaryFile).FullName
-    yazi.exe $args --cwd-file="$tmp"
-    $cwd = Get-Content -Path $tmp -Encoding UTF8
-    if ($cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
-        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
-    }
-    Remove-Item -Path $tmp
-}
-# {{- end }}
-
-# {{- if .has.jj }}
-jj util completion power-shell | Out-String | Invoke-Expression
-# {{- end }}
-
-# {{- if .has.chezmoi }}
-Invoke-Expression ((& chezmoi completion powershell) -join "`n")
-Set-Alias -Name cm -Value chezmoi
-# {{- end }}
+$completions_cache = "$HOME\.cache\shell-completions\powershell.ps1"
+if (Test-Path "$completions_cache")  { . "$completions_cache" }
 
 # {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
 $env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"
@@ -383,3 +355,6 @@ $env:FZF_DEFAULT_OPTS="--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8
     --color=selected-bg:#45475A\
     --color=border:#6C7086,label:#CDD6F4"
 # {{- end }}
+
+# $sw1.Stop()
+# Write-Host "Version 1 took: $($sw1.Elapsed.TotalSeconds) seconds" -ForegroundColor Yellow

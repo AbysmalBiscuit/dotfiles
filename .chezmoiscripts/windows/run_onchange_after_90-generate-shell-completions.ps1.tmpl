@@ -1,0 +1,114 @@
+#!/usr/bin/env pwsh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=ps1.chezmoitmpl
+# {{- end -}}
+# {{- /* ========================================================== */ -}}
+# {{- /* Generate shell completions/init for PowerShell.            */ -}}
+# {{- /*                                                            */ -}}
+# {{- /* Loop 1: stat mtime comments for run_onchange triggering.   */ -}}
+# {{- /* Loop 2: batch-writes all completions to a single file.     */ -}}
+# {{- /* If init_command is set, it takes priority over completions. */ -}}
+# {{- /* No forks at template eval — stat/lookPath are internal.    */ -}}
+# {{- /*                                                            */ -}}
+# {{- /* Shell renaming: command_powershell_name overrides the      */ -}}
+# {{- /* SHELL placeholder (e.g. "power-shell" for jj).             */ -}}
+# {{- /* ========================================================== */ -}}
+
+# {{- $shell := "powershell" -}}
+# {{- $comp_file := joinPath .chezmoi.homeDir ".cache" "shell-completions" "powershell.ps1" -}}
+
+# {{- /* ---- Prepare tools lists ---- */ -}}
+# {{- $all_tools := .tools | default (list) -}}
+# {{- $final_tools := list -}}
+
+# {{- /* ============================================================== */ -}}
+# {{- /* Loop 1: stat comments — triggers run_onchange on binary change */ -}}
+# {{- /* ============================================================== */ -}}
+# {{- range $tool := $all_tools -}}
+# {{-   $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
+# {{-   if $cmd_str -}}
+# {{-     $exe := $cmd_str | splitList " " | first -}}
+# {{-     $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-     if index $.has $has_key | default false -}}
+# {{-       if has $shell $tool.supported_shells -}}
+# {{-         $path := lookPath $exe -}}
+# {{-         if $path }}
+# {{- /*           $_ := set $tool "path" $path */}}
+# {{-           $final_tools = append $final_tools $tool }}
+# # {{ $exe }}:# {{ (stat $path).modTime }}
+# {{-         end -}}
+# {{-       end -}}
+# {{-     end -}}
+# {{-   end -}}
+# {{- end }}
+
+# {{- /* Re-run if completion file is missing */ -}}
+# {{- if not (stat $comp_file) }}
+# missing: # {{ $comp_file }}
+# {{- end }}
+
+$ErrorActionPreference = 'Stop'
+
+$outFile = '# {{ $comp_file }}'
+$outDir = Split-Path $outFile
+if (-not (Test-Path $outDir)) {
+    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+}
+
+& {
+# {{- range $tool := $final_tools -}}
+# {{-   $has_comp := $tool.completions_command | default "" | ne "" -}}
+# {{-   $has_init := $tool.init_command | default "" | ne "" -}}
+# {{-   if or $has_comp $has_init -}}
+# {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
+# {{-     $use_cmd := "" -}}
+# {{-     $append_key := "" -}}
+# {{-     $skip := false -}}
+# {{-     if $has_init -}}
+# {{-       $use_cmd = $tool.init_command -}}
+# {{-       $append_key = printf "append_%s_init" $shell -}}
+# {{-       if $tool.init_command_only_if_no -}}
+# {{-         range $blocker := $tool.init_command_only_if_no -}}
+# {{-           $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-           if index $.has $bkey | default false -}}
+# {{-             $skip = true -}}
+# {{-           end -}}
+# {{-         end -}}
+# {{-       end -}}
+# {{-     else if $has_comp -}}
+# {{-       $use_cmd = $tool.completions_command -}}
+# {{-       $append_key = printf "append_%s_completion" $shell -}}
+# {{-       if $tool.completions_command_only_if_no -}}
+# {{-         range $blocker := $tool.completions_command_only_if_no -}}
+# {{-           $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-           if index $.has $bkey | default false -}}
+# {{-             $skip = true -}}
+# {{-           end -}}
+# {{-         end -}}
+# {{-       end -}}
+# {{-     else -}}
+# {{-       $skip = true -}}
+# {{-     end -}}
+# {{-     if not $skip -}}
+# {{- /* Shell arg: use command_powershell_name if set, else "powershell" */ -}}
+# {{-       $shell_arg := $shell -}}
+# {{-       $name_key := printf "command_%s_name" $shell -}}
+# {{-       $custom := index $tool $name_key | default "" -}}
+# {{-       if $custom -}}
+# {{-         $shell_arg = $custom -}}
+# {{-       end -}}
+# {{-       $gen_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
+# {{-       $append := index $tool $append_key | default "" }}
+    # {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }}
+    ""
+# {{-     end -}}
+# {{-   end -}}
+# {{- end }}
+} | Set-Content -Path $outFile -Encoding UTF8
+
+# Hoist 'using' statements to top of file (required by PowerShell parser)
+$lines = Get-Content $outFile
+$using = $lines | Where-Object { $_ -match '^\s*using\s+' } | Select-Object -Unique
+$rest  = $lines | Where-Object { $_ -notmatch '^\s*using\s+' }
+@($using) + @($rest) | Set-Content -Path $outFile -Encoding UTF8
