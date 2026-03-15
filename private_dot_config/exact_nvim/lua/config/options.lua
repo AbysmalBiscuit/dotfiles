@@ -645,6 +645,12 @@ vim.filetype.add({
     -- pyx = "pyrex",
     -- pxd = "pyrex",
     -- pxi = "pyrex",
+
+    -- godot projects
+    godot = "godot_resource",
+    tscn = "godot_resource",
+    tres = "godot_resource",
+    import = "godot_resource",
   },
   filename = {
     ["ltex.hiddenFalsePositives.en-US.txt"] = "json",

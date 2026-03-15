@@ -15,6 +15,9 @@ return {
       },
       ensure_installed = {
         "fish",
+        "gdscript",
+        "gdshader",
+        "godot_resource",
         -- "rust",
         -- "starlark",
       },
