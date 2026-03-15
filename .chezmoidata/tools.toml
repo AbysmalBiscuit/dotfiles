@@ -601,6 +601,7 @@ init_command = ""
 supported_shells = [
     "bash",
     "fish",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -1144,7 +1145,7 @@ append_fish_init = ""
 command_bash_name = ""
 command_fish_name = ""
 command_nu_name = "nushell"
-command_powershell_name = ""
+command_powershell_name = "power-shell"
 command_zsh_name = ""
 completions_command_only_if_no = []
 init_command_only_if_no = []
@@ -1554,7 +1555,9 @@ completions_command = "dua completions SHELL"
 init_command = ""
 supported_shells = [
     "bash",
+    "elvish",
     "fish",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2157,6 +2160,7 @@ init_command = ""
 supported_shells = [
     "bash",
     "fish",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2427,16 +2431,23 @@ name = "starship"
 cmds = [
     "starship"
 ]
-desc = ""
-url = ""
-git = ""
+desc = "The minimal, blazing-fast, and infinitely customizable prompt for any shell!"
+url = "https://starship.rs"
+git = "https://github.com/starship/starship"
 comment = ""
-install_command = ""
+install_command = "cargo install starship --locked"
 completions_command = "starship completions SHELL"
 init_command = "starship init SHELL --print-full-init"
 supported_shells = [
     "bash",
+    "cmd",
+    "elvish",
     "fish",
+    "ion",
+    "nushell",
+    "powershell",
+    "tsch",
+    "xonsh",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2584,7 +2595,10 @@ completions_command = "uv generate-shell-completion SHELL"
 init_command = ""
 supported_shells = [
     "bash",
+    "elvish",
     "fish",
+    "nushell",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2612,7 +2626,10 @@ completions_command = "uvx --generate-shell-completion SHELL"
 init_command = ""
 supported_shells = [
     "bash",
+    "elvish",
     "fish",
+    "nushell",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2688,7 +2705,10 @@ completions_command = "watchexec --completions SHELL"
 init_command = ""
 supported_shells = [
     "bash",
+    "elvish",
     "fish",
+    "nu",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2864,7 +2884,13 @@ completions_command = ""
 init_command = "zoxide init SHELL"
 supported_shells = [
     "bash",
+    "elvish",
     "fish",
+    "nushell",
+    "posix",
+    "powershell",
+    "tcsh",
+    "xonsh",
     "zsh"
 ]
 append_fish_completion = ""
