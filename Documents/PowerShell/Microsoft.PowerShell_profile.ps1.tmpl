@@ -339,8 +339,12 @@ function has_command {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
-$completions_cache = "$HOME\.cache\shell-completions\powershell.ps1"
-if (Test-Path "$completions_cache")  { . "$completions_cache" }
+$completions_cache = "# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}"
+if (Test-Path "$completions_cache")  {
+    foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1') {
+        . $f.FullName
+    }
+}
 # {{- if index .has "yazi" | default false }}
 function y {
     $tmp = (New-TemporaryFile).FullName
@@ -370,4 +374,4 @@ $env:FZF_DEFAULT_OPTS="--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8
 # {{- end }}
 
 # $sw1.Stop()
-# Write-Host "Version 1 took: $($sw1.Elapsed.TotalSeconds) seconds" -ForegroundColor Yellow
+# Write-Host "PowerShell profile took: $($sw1.Elapsed.TotalSeconds) seconds" -ForegroundColor Yellow

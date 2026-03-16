@@ -16,7 +16,8 @@
 # {{- /* ========================================================== */ -}}
 
 # {{- $shell := "powershell" -}}
-# {{- $comp_file := joinPath .chezmoi.homeDir ".cache" "shell-completions" "powershell.ps1" -}}
+# {{- /* $comp_file := joinPath .chezmoi.homeDir ".cache" "shell-completions" "powershell.ps1" */ -}}
+# {{- $out_dir := joinPath .chezmoi.homeDir ".cache" "shell-completions" -}}
 
 # {{- /* ---- Prepare tools lists ---- */ -}}
 # {{- $all_tools := .tools | default (list) -}}
@@ -35,6 +36,7 @@
 # {{-         $path := lookPath $exe -}}
 # {{-         if $path }}
 # {{- /*           $_ := set $tool "path" $path */}}
+# {{-           $_ := set $tool "exe" $exe }}
 # {{-           $final_tools = append $final_tools $tool }}
 # # {{ $exe }}:# {{ (stat $path).modTime }}
 # {{-         end -}}
@@ -44,19 +46,20 @@
 # {{- end }}
 
 # {{- /* Re-run if completion file is missing */ -}}
-# {{- if not (stat $comp_file) }}
-# missing: # {{ $comp_file }}
-# {{- end }}
+# {{- /* if not (stat $comp_file) */}}
+# missing: # {{/* $comp_file */}}
+# {{- /* end */}}
 
 $ErrorActionPreference = 'Stop'
 
-$outFile = '# {{ $comp_file }}'
-$outDir = Split-Path $outFile
-if (-not (Test-Path $outDir)) {
-    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+# $outFile = '# {{/* $comp_file */}}'
+$outDir = "# {{ $out_dir }}"
+if (Test-Path $outDir) {
+    Remove-Item "# {{ $out_dir }}" -Force -Recurse
 }
+New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 
-& {
+# & {
 # {{- range $tool := $final_tools -}}
 # {{-   $has_comp := $tool.completions_command | default "" | ne "" -}}
 # {{-   $has_init := $tool.init_command | default "" | ne "" -}}
@@ -90,8 +93,19 @@ if (-not (Test-Path $outDir)) {
 # {{-     else -}}
 # {{-       $skip = true -}}
 # {{-     end -}}
+# {{- /*     if not $skip */ -}}
+# {{- /*       $shell_arg := $shell */ -}}
+# {{- /*       $name_key := printf "command_%s_name" $shell */ -}}
+# {{- /*       $custom := index $tool $name_key | default "" */ -}}
+# {{- /*       if $custom */ -}}
+# {{- /*         $shell_arg = $custom */ -}}
+# {{- /*       end */ -}}
+# {{- /*       $gen_cmd := $use_cmd | replace "SHELL" $shell_arg */ -}}
+# {{- /*       $append := index $tool $append_key | default "" */}}
+    # {{/* $gen_cmd */}}# {{/* $append | replaceAllRegex "\\\\n" "\n" */}}
+    # ""
+# {{- /*     end */ -}}
 # {{-     if not $skip -}}
-# {{- /* Shell arg: use command_powershell_name if set, else "powershell" */ -}}
 # {{-       $shell_arg := $shell -}}
 # {{-       $name_key := printf "command_%s_name" $shell -}}
 # {{-       $custom := index $tool $name_key | default "" -}}
@@ -100,15 +114,20 @@ if (-not (Test-Path $outDir)) {
 # {{-       end -}}
 # {{-       $gen_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
 # {{-       $append := index $tool $append_key | default "" }}
-    # {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }}
-    ""
+# {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }} | Out-String | ForEach-Object {
+    [System.IO.File]::WriteAllText(
+        "# {{ joinPath $out_dir (printf "%s.ps1" $tool.exe) }}",
+        $_,
+        [System.Text.UTF8Encoding]::new($true)
+    )
+}
 # {{-     end -}}
 # {{-   end -}}
 # {{- end }}
-} | Set-Content -Path $outFile -Encoding UTF8
+# } | Set-Content -Path $outFile -Encoding UTF8
 
 # Hoist 'using' statements to top of file (required by PowerShell parser)
-$lines = Get-Content $outFile
-$using = $lines | Where-Object { $_ -match '^\s*using\s+' } | Select-Object -Unique
-$rest  = $lines | Where-Object { $_ -notmatch '^\s*using\s+' }
-@($using) + @($rest) | Set-Content -Path $outFile -Encoding UTF8
+# $lines = Get-Content $outFile
+# $using = $lines | Where-Object { $_ -match '^\s*using\s+' } | Select-Object -Unique
+# $rest  = $lines | Where-Object { $_ -notmatch '^\s*using\s+' }
+# @($using) + @($rest) | Set-Content -Path $outFile -Encoding UTF8
