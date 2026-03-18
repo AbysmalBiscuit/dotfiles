@@ -46,6 +46,8 @@
   tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
 [difftool]
   prompt = false
+[difftool "nvim"]
+  cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
 [merge]
   tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
   ff=false
@@ -71,5 +73,5 @@
   # gpgSign = true
 [pull]
   rebase = true
-[difftool "nvim"]
-  cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
+[credential "https://git.overleaf.com"]
+  provider = generic
