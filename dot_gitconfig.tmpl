@@ -43,13 +43,15 @@
   required = true
 {{- if .has.nvim }}
 [diff]
-  tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
+  tool = "nvim"
 [difftool]
   prompt = false
 [difftool "nvim"]
   cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
 [merge]
-  tool = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }}
+  tool = nvim
+[mergetool "nvim"]
+  cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
   ff=false
   conflictStyle=diff3
 [mergetool]
