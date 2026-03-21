@@ -51,7 +51,7 @@
 [merge]
   tool = nvim
 [mergetool "nvim"]
-  cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d \"$LOCAL\" \"$REMOTE\" \"$BASE\" \"$MERGED\"
+  cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\"
   ff=false
   conflictStyle=diff3
 [mergetool]
