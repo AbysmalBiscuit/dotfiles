@@ -1436,40 +1436,12 @@ name = "delta"
 cmds = [
     "delta"
 ]
-desc = "A viewer for Git and diff output."
-url = "https://dandavison.github.io/delta/full---help-output.html"
-git = ""
-comment = ""
-install_command = ""
-completions_command = "delta --generate-completion SHELL"
-init_command = ""
-supported_shells = [
-    "bash",
-    "fish",
-    "zsh"
-]
-append_fish_completion = ""
-append_fish_init = ""
-command_bash_name = ""
-command_fish_name = ""
-command_nu_name = ""
-command_powershell_name = ""
-command_zsh_name = ""
-completions_command_only_if_no = []
-init_command_only_if_no = []
-
-[[tools]]
-lang = "rust"
-name = "delta"
-cmds = [
-    "delta"
-]
 desc = "A syntax-highlighting pager for git, diff, grep, and blame output"
 url = "https://dandavison.github.io/delta/"
-git = "https://github.com/dandavison/delta?tab=readme-ov-file"
+git = "https://github.com/dandavison/delta"
 comment = ""
 install_command = "cargo install git-delta"
-completions_command = ""
+completions_command = "delta --generate-completion SHELL"
 init_command = ""
 supported_shells = [
     "bash",
@@ -1635,6 +1607,36 @@ supported_shells = [
     "bash",
     "fish",
     "nu",
+    "powershell",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
+name = "fd"
+cmds = [
+    "fd",
+    "fdfind"
+]
+desc = "A simple, fast and user-friendly alternative to 'find'"
+url = ""
+git = "https://github.com/sharkdp/fd"
+comment = ""
+install_command = "cargo install fd-find"
+completions_command = "fd --gen-completions SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
     "powershell",
     "zsh"
 ]
@@ -2651,30 +2653,6 @@ cmds = [
 desc = "View images on the terminal."
 url = "https://github.com/atanunq/viu#command-line-options"
 git = ""
-comment = ""
-install_command = ""
-completions_command = ""
-init_command = ""
-supported_shells = []
-append_fish_completion = ""
-append_fish_init = ""
-command_bash_name = ""
-command_fish_name = ""
-command_nu_name = ""
-command_powershell_name = ""
-command_zsh_name = ""
-completions_command_only_if_no = []
-init_command_only_if_no = []
-
-[[tools]]
-lang = "rust"
-name = "vtracer"
-cmds = [
-    "vtracer"
-]
-desc = "https://www.visioncortex.org/vtracer/"
-url = "https://www.visioncortex.org/vtracer/"
-git = "https://github.com/visioncortex/vtracer"
 comment = ""
 install_command = ""
 completions_command = ""

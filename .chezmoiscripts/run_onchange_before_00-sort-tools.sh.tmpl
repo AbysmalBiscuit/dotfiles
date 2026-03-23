@@ -7,6 +7,7 @@
 import json
 import re
 import tomllib
+from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -76,6 +77,13 @@ def sort_file(file) -> None:
     table_name = file.stem
     tools = data.get(table_name, [])
     tools.sort(key=lambda tool: (tool.get("lang", ""), tool.get("name", "")))
+    if len(tools) < len(set(tool["name"] for tool in tools)):
+        dupe_dict = defaultdict(int)
+        for tool in tools:
+            dupe_dict[tool["name"]] += 1
+        dupes = ','.join([f"'{k}'" for k, v in dupe_dict.items() if v > 1])
+        msg = f"The following tools are duplicates: {dupes}. Manually clean the '{file.name}' file first."
+        raise ValueError(msg)
 
     header = "# Managed by chezmoi — sort order maintained by run_onchange_before_sort-tools.sh.tmpl\n"
     blocks = "\n\n".join(tool_to_toml(table_name, tool) for tool in tools)
