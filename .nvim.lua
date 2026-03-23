@@ -4,7 +4,7 @@ local home = vim.fn.expand("~")
 local chezmoi_source = home .. "/.local/share/chezmoi"
 local chezmoi_toml_tmpl_filetype = "chezmoi_toml.toml.chezmoitmpl"
 
-function reload_buffers()
+local function reload_buffers()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) then
       local name = vim.api.nvim_buf_get_name(buf)
@@ -107,10 +107,11 @@ vim.api.nvim_create_autocmd("BufWritePost", {
       sort_command =
         'chezmoi execute-template (Get-Content "$HOME/.local/share/chezmoi/.chezmoiscripts/run_onchange_before_00-sort-tools.sh.tmpl" -Raw) | Out-String | python3'
     else
-      sort_command = "chezmoi execute-template < ~/.local/share/chezmoi/.chezmoiscripts/run_before_generate-has-cache.sh.tmpl | "
+      sort_command = 'chezmoi execute-template < "$HOME/.local/share/chezmoi/.chezmoiscripts/run_onchange_before_00-sort-tools.sh.tmpl" | '
         .. vim.g.python3_host_prog
     end
     local stderr_chunks = {}
+    print(sort_command)
     vim.fn.jobstart(sort_command, {
       stderr_buffered = true,
       on_stderr = function(_, data)
@@ -180,6 +181,7 @@ local chezmoi_filetypes = {
   "ini",
   "json",
   "jsonc",
+  "markdown",
   "nu",
   "powershell",
   "ps1",
@@ -412,3 +414,5 @@ vim.api.nvim_set_hl(0, "LspReferenceRead", {})
 for _, ts_lang in ipairs(ts_lang_names) do
   vim.api.nvim_set_hl(0, "@function." .. ts_lang, { link = "@function.gotmpl" })
 end
+
+vim.api.nvim_set_hl(0, "@function.chezmoi_toml.toml.chezmoitmpl", { link = "@function.gotmpl" })
