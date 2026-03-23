@@ -1,3 +1,7 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=ps1.chezmoitmpl:shiftwidth=4
+# {{- end }}
 $vars = @{
     # XDG variables
     XDG_CONFIG_HOME = "$HOME\.config"
@@ -5,9 +9,9 @@ $vars = @{
     XDG_CACHE_HOME  = "$HOME\.cache"
     XDG_STATE_HOME  = "$HOME\.local\state"
     # tool variables
-    {{- if .tool.yazi }}
+    # {{- if .has.yazi }}
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
-    {{- end}}
+    # {{- end}}
 }
 foreach ($k in $vars.Keys) {
     [System.Environment]::SetEnvironmentVariable($k, $vars[$k], "User")
