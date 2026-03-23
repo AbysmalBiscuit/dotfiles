@@ -5,7 +5,7 @@ $vars = @{
     XDG_CACHE_HOME  = "$HOME\.cache"
     XDG_STATE_HOME  = "$HOME\.local\state"
     # tool variables
-    {{- if .has.yazi }}
+    {{- if .tool.yazi }}
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
     {{- end}}
 }

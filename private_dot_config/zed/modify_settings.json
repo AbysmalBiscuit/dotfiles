@@ -24,7 +24,7 @@
     "show_diagnostics": "off"
   },
   "language_models": {
-    {{- if or .has.ollama .has.ollama_exe }}
+    {{- if or .tool.ollama .has.ollama_exe }}
     "ollama": {
       "api_url": "http://localhost:11434"
     }
@@ -381,7 +381,7 @@
   "terminal": {
     "blinking": "terminal_controlled",
     "shell": {
-    {{- if .has.fish }}
+    {{- if .tool.fish }}
       "program": "fish"
     {{- else -}}
       "program": {{ .shell | quote }}
@@ -389,7 +389,7 @@
     },
     "detect_venv": {
       "on": {
-        {{- if .has.fish }}
+        {{- if .tool.fish }}
         "activate_script": "fish"
         {{- else -}}
         "activate_script": {{ .shell | quote }}

@@ -66,17 +66,20 @@
 {{- end -}}
 {{- "" -}}
 {{- $has := dict -}}
+{{- $has_tool := dict -}}
 {{- $tools := include ".chezmoidata/tools.toml" | fromToml -}}
 {{- range $tool := $tools.tools -}}
+  {{- $has_tool = merge $has_tool (dict ($tool.name | replaceAllRegex "[-. ]" "_" | lower) "") -}}
   {{- range $cmd := $tool.cmds -}}
-    {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+    {{- $has = merge $has (dict ($cmd | replaceAllRegex "[-. ]" "_") false) -}}
   {{- end -}}
 {{- end -}}
 {{- if $is_wsl -}}
   {{- $wsl_tools := include ".chezmoidata/wsl_tools.toml" | fromToml -}}
   {{- range $tool := $wsl_tools.wsl_tools -}}
+    {{- $has_tool = merge $has_tool (dict ($tool.name | replaceAllRegex "[-. ]" "_" | lower) "") -}}
     {{- range $cmd := $tool.cmds -}}
-      {{- $has = merge $has (dict ( $cmd | replaceAllRegex "[-\\.]" "_" ) false) -}}
+      {{- $has = merge $has (dict ($cmd | replaceAllRegex "[-. ]" "_") false) -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -85,6 +88,12 @@
 {{- if stat $has_path -}}
   {{- $has_has = true -}}
   {{- $has = include $has_path | fromToml -}}
+{{- end -}}
+{{- $has_has_tool := false -}}
+{{- $has_tool_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" -}}
+{{- if stat $has_path -}}
+  {{- $has_has_tool = true -}}
+  {{- $has_tool = include $has_tool_path | fromToml -}}
 {{- end -}}
 
 
@@ -449,6 +458,11 @@ paste_command = {{ $paste_command | quote }}
 # Has
 [data.has]
 {{ toToml $has -}}
+{{ "" }}
+
+# Has tool
+[data.tool]
+{{ toToml $has_tool -}}
 {{ "" }}
 
 # Secrets

@@ -90,7 +90,7 @@ export LESSOPEN="| $HOME/.local/bin/source-highlight-esc.sh %s"
 # {{ else if stat (joinPath "/usr/bin/source-highlight-esc.sh") -}}
 # elif [[ -x "/usr/bin/source-highlight-esc.sh" ]]; then
 export LESSOPEN="| /usr/bin/source-highlight-esc.sh %s"
-# {{- else if .has.source_highlight_esc -}}
+# {{- else if .tool.source_highlight_esc -}}
 # elif has_command source-highlight-esc; then
 export LESSOPEN="| $(command -v source-highlight-esc) %s"
 # fi
@@ -184,7 +184,7 @@ PATH="$PATH:/opt/intel/bin"
 export TESSDATA_PREFIX="$HOME/tessdata"
 # {{- end }}
 
-# {{ if .has.mold -}}
+# {{ if .tool.mold -}}
 # if has_command mold; then
 export MOLD='# {{ lookPath "mold" }}'
 # fi
@@ -271,7 +271,7 @@ if has_command ruby; then
     PATH="$gem_bin_dir:$PATH"
 fi
 
-# {{- if and .has.brew (stat "/home/linuxbrew/.linuxbrew") }}
+# {{- if and .tool.brew (stat "/home/linuxbrew/.linuxbrew") }}
 
 # Adding linuxbrew libraries and binaries to PATH
 # if [[ -d /home/linuxbrew && $(command -v 'linuxbrew') ]]; then
@@ -286,7 +286,7 @@ PATH="$HOME/.luarocks/bin:$PATH"
 # fi
 # {{- end }}
 
-# {{ if .has.luarocks -}}
+# {{ if .tool.luarocks -}}
 # Setting up lua path for neovim
 # if has_command luarocks; then
 eval "$(luarocks path --no-bin --lua-version 5.1)"
@@ -397,8 +397,8 @@ if [[ -z "${MANPATH}" ]]; then
 fi
 
 # Configure python paths
-# {{- if .has.python3 }}
-export PYTHON3_HOST_PROG='# {{ lookPath "python3" }}'
+# {{- if .tool.python }}
+export PYTHON3_HOST_PROG='# {{ lookPath .tool.python }}'
 # {{- else if .has.python -}}
 # {{- $python3_host_prog := output "python" "--version" | replaceAllRegex ".*\\b(3)\\.\\d+\\.\\d+" "$1" -}}
 # {{- if eq $python3_host_prog "3" }}
@@ -408,7 +408,7 @@ export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 
 # {{- if .is_wsl }}
 
-# {{- if .has.yazi_exe }}
+# {{- if .tool.yazi_exe }}
 # export YAZI_WINDOWS_EXECUTABLE='# {{/* lookPath "yazi.exe" */}}'
 # {{- end }}
 
@@ -461,7 +461,7 @@ export PATH
 # and oni as the default visual editor if neovim is not available,
 # nano gets set as the default text editor
 EDITOR=""
-# {{ if .has.nvim -}}
+# {{ if .tool.neovim -}}
 # EDITOR=$(command -v nvim)
 # {{- $local_nvim := joinPath .chezmoi.homeDir ".local" "bin" "nvim" | default (lookPath "nvim") }}
 EDITOR='# {{ $local_nvim }}'
@@ -476,7 +476,7 @@ export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
 # {{- else }}
 export MANPAGER='nvim +Man!'
 # {{- end }}
-# {{- else if .has.nano -}}
+# {{- else if .tool.nano -}}
 EDITOR="$(command -v nano)"
 # {{- end }}
 export EDITOR

@@ -72,7 +72,7 @@ export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/llvm/include"
 # {{- end }}
 
 # go
-# {{- if .has.go }}
+# {{- if .tool.go }}
 # if has_command go; then
 GOAMD64="v1"
 temp_file=$(mktemp 'XXXXX.go')

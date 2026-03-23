@@ -110,12 +110,14 @@
       {
         "language": [
           "bash.chezmoitmpl",
+          "chezmoitmpl",
           "conf.chezmoitmpl",
           "fish.chezmoitmpl",
           "gitconfig.chezmoitmpl",
           "ini.chezmoitmpl",
           "json.chezmoitmpl",
           "jsonc.chezmoitmpl",
+          "markdown.chezmoitmpl",
           "nanorc.chezmoitmpl",
           "nu.chezmoitmpl",
           "powershell.chezmoitmpl",
@@ -125,8 +127,7 @@
           "tmux.chezmoitmpl",
           "toml.chezmoitmpl",
           "yaml.chezmoitmpl",
-          "zsh.chezmoitmpl",
-          "chezmoitmpl"
+          "zsh.chezmoitmpl"
         ],
         "path": "./chezmoi.json"
       },

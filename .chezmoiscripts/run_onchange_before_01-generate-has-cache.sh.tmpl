@@ -3,7 +3,7 @@
 # {{ if false -}}
 # vim:filetype=sh.chezmoitmpl
 # {{- end }}
-# {{- $is_wsl := true -}}
+# {{- $is_wsl := false -}}
 # {{- if env "WSL_DISTRO_NAME" -}}
 # {{- $is_wsl = true -}}
 # {{- end -}}
@@ -20,9 +20,7 @@
 # {{- range $tool := .wsl_tools -}}
 # {{- range $cmd := $tool.cmds -}}
 # {{- $key := $cmd -}}
-# {{- /* if not (has $key $cli_tools) */ -}}
 # {{- $cli_tools_wsl = append $cli_tools_wsl $key -}}
-# {{- /* end */ -}}
 # {{- end -}}
 # {{- end -}}
 # {{- $cli_tools_wsl = $cli_tools_wsl | sortAlpha | uniq }}
@@ -36,12 +34,15 @@ fi
 
 SED=$(command -v "sed")
 GREP=$(command -v "grep")
+HAS_FILE="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+HAS_TOOL_FILE="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" }}"
 
+# per-cmd entries
 {
     # {{ range $cli_tools -}}
-    printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' "$(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
+    echo "# {{ . | replaceAllRegex "[-. ]" "_" }} = $(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
     # {{ end }}
-} >"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+} >"$HAS_FILE"
 
 # {{ if $is_wsl -}}
 if [ -n "$PATH_WINDOWS" ]; then
@@ -63,29 +64,51 @@ if [ -n "$PWSH" ]; then
         $found[[System.IO.Path]::GetFileNameWithoutExtension($_.Name)] = $true
     }
 # {{ range $cli_tools_wsl -}}
-    "# {{ . | replaceAllRegex "[-.]" "_" }} $(if ($found.ContainsKey("# {{ . }}")) { "true" } else { "false" })"
+    "# {{ . | replaceAllRegex "[-. ]" "_" }} $(if ($found.ContainsKey("# {{ . }}")) { "true" } else { "false" })"
 # {{ end -}}
 ' | "$SED" 's/\r//g')"
 else
     wsl_tools="$({
         # {{ range $cli_tools_wsl -}}
-        printf '# {{ . | replaceAllRegex "[-.]" "_" }} = %s\n' "$(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
+        echo "# {{ . | replaceAllRegex "[-. ]" "_" }} $(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
         # {{ end }}
     })"
 fi
 while IFS=' ' read -r key val; do
     if [ "$val" = "true" ]; then
-        # overwrite the existing line if it's false, or append if key is wsl-only
-        if "$GREP" -q "^${key} = " "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"; then
-            "$SED" -i "s/^${key} = false$/${key} = true/" "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+        if "$GREP" -q "^${key} = " "$HAS_FILE"; then
+            "$SED" -i "s/^${key} = false$/${key} = true/" "$HAS_FILE"
         else
-            printf '%s = true\n' "$key" >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+            echo "$key = true" >>"$HAS_FILE"
         fi
     else
-        printf '%s = %s\n' "$key" "$val" >>"# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+        echo "$key = $val" >>"$HAS_FILE"
     fi
 done <<EOF
 $wsl_tools
 EOF
 export PATH="$OLD_PATH"
 # {{- end }}
+
+# tool-level (matched cmd or empty)
+echo >"$HAS_TOOL_FILE"
+{
+    # {{ range $tool := .tools -}}
+    # {{- $safe_name := $tool.name | replaceAllRegex "[-. ]" "_" | lower -}}
+    _tool_cmd=""
+    # {{ range $cmd := $tool.cmds -}}
+    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" }} = true$' "$HAS_FILE" && _tool_cmd="# {{ $cmd }}"
+    # {{ end -}}
+    echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'
+    # {{ end }}
+    # {{ if $is_wsl -}}
+    # {{ range $tool := .wsl_tools -}}
+    # {{- $safe_name := printf "%s_exe" ($tool.name | replaceAllRegex "[-. ]" "_" | lower) -}}
+    _tool_cmd=""
+    # {{ range $cmd := $tool.cmds -}}
+    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" | lower }} = true$' "$HAS_FILE" && _tool_cmd="# {{ $cmd }}"
+    # {{ end -}}
+    echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'
+    # {{ end -}}
+    # {{- end }}
+} >"$HAS_TOOL_FILE"

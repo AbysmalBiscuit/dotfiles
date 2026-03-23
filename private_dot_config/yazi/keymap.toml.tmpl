@@ -1,7 +1,7 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
-# {{ if .has.trash -}}
+# {{ if .tool.trash_cli -}}
 [[mgr.prepend_keymap]]
 on = "u"
 run = "plugin restore"

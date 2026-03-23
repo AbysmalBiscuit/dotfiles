@@ -1,4 +1,4 @@
-# {{- if .has.trash -}}
+# {{- if .tool.trash_cli -}}
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 function __get_trash_dir
     set -l real_pwd (realpath $PWD)

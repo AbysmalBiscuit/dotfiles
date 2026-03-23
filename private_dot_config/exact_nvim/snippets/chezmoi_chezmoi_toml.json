@@ -303,9 +303,7 @@
   },
   "chezmoi has executable": {
     "prefix": [
-      "{{hasexecutable",
-      "{hasexecutable",
-      "hasexecutable"
+      "hasExecutable"
     ],
     "body": [
       "{{- if index \\$has \"${1:executable}\" | default (lookPath \"${1:executable}\") -}}",

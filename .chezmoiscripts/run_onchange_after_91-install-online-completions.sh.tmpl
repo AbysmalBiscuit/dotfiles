@@ -2,7 +2,7 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
 # {{- /* TODO: add yazi, ya, pacman */ -}}
-# {{- if .has.btm -}}
+# {{- if .tool.bottom -}}
 # {{ "" }}
 # btm:# {{ (stat (lookPath "btm")).modTime }}
 archive_dir="$(mktemp -d)"
@@ -10,7 +10,7 @@ archive_file="$archive_dir/completion.tar.gz"
 curl -sL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' --output "$archive_file"
 tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
 
-# {{- if .has.bash }}
+# {{- if .tool.bash }}
 {
     echo
     cat "$archive_dir/btm.bash"
@@ -18,7 +18,7 @@ tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
 } >>'# {{ $comp_file.bash }}'
 # {{- end }}
 
-# {{- if .has.fish }}
+# {{- if .tool.fish }}
 {
     echo
     cat "$archive_dir/btm.fish"
@@ -27,7 +27,7 @@ tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
 
 # {{- end }}
 
-# {{- if and .has.zsh }}
+# {{- if and .tool.zsh }}
 {
     echo
     cat "$archive_dir/_btm"
@@ -35,7 +35,7 @@ tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
 } >>'# {{ $comp_file.zsh }}'
 # {{- end }}
 
-# {{- if and .has.nu }}
+# {{- if and .tool.nushell }}
 {
     echo
     cat "$archive_dir/btm.nu"
@@ -47,9 +47,9 @@ if [ -d "$archive_dir" ]; then
 fi
 # {{- end }}
 
-# {{- if .has.bun }}
+# {{- if .tool.bun }}
 # bun:# {{ (stat (lookPath "bun")).modTime }}
-# {{- if .has.bash }}
+# {{- if .tool.bash }}
 {
     echo
     curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.bash'
@@ -57,7 +57,7 @@ fi
 } >>'# {{ $comp_file.bash }}'
 # {{- end }}
 
-# {{- if .has.fish }}
+# {{- if .tool.fish }}
 {
     echo
     curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.fish'
@@ -66,7 +66,7 @@ fi
 
 # {{- end }}
 
-# {{- if and .has.zsh }}
+# {{- if and .tool.zsh }}
 {
     echo
     curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.zsh'

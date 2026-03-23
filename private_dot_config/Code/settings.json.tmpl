@@ -1028,7 +1028,7 @@
   "vim.smartRelativeLine": true,
   "vim.sneak": true,
   "vim.useSystemClipboard": true,
-  {{ if .has.nvim -}}
+  {{ if .tool.neovim -}}
   "vscode-neovim.neovimExecutablePaths.darwin": {{ .system.editor }},
   "vscode-neovim.neovimInitVimPaths.darwin": {{ joinPath .chezmoi.homeDir ".config" "nvim" "init.lua" }},
   {{- end }}

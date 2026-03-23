@@ -306,7 +306,7 @@
       "hasExecutableFalse"
     ],
     "body": [
-      "{{- if index .has \"${1:executable}\" | default false }}",
+      "{{- if index .exe \"${1:executable}\" | default false }}",
       "$0",
       "{{- end }}"
     ],
@@ -317,11 +317,44 @@
       "hasExecutableLookPath"
     ],
     "body": [
-      "{{- if index .has \"${1:executable}\" | default (lookPath \"$1\") }}",
+      "{{- if index .exe \"${1:executable}\" | default (lookPath \"$1\") }}",
       "$0",
       "{{- end }}"
     ],
     "description": "Check if executable exists via cache with default lookPath fallback"
+  },
+  "chezmoi has tool false": {
+    "prefix": [
+      "hasToolFalse"
+    ],
+    "body": [
+      "{{- if index .has \"${1:tool}\" | default false }}",
+      "$0",
+      "{{- end }}"
+    ],
+    "description": "Check if executable exists via cache with default false"
+  },
+  "chezmoi has tool lookPath": {
+    "prefix": [
+      "hasToolLookPath"
+    ],
+    "body": [
+      "{{- if index .tool \"${1:tool}\" | default (lookPath \"$1\") }}",
+      "$0",
+      "{{- end }}"
+    ],
+    "description": "Check if executable exists via cache with default lookPath fallback"
+  },
+  "chezmoi doesn't have tool": {
+    "prefix": [
+      "notHasTool"
+    ],
+    "body": [
+      "{{- if index .has \"${1:tool}\" | default (lookPath \"${1:tool}\") }}",
+      "$0",
+      "{{- end }}"
+    ],
+    "description": "Check the PATH to see if an executable doesn't exists"
   },
   "chezmoi doesn't have executable": {
     "prefix": [

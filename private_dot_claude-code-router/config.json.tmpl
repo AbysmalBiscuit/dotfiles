@@ -11,7 +11,7 @@
   "PROXY_URL": "",
   "transformers": [],
   "Providers": [
-{{ if .has.ccr -}}
+{{ if .tool.claude_code_router -}}
 {{ if .personal -}}
 {{ .secrets.claude_code_router.personal | join ",\n" }}
 {{- end }}
