@@ -306,7 +306,7 @@
       "hasExecutableFalse"
     ],
     "body": [
-      "{{- if index .exe \"${1:executable}\" | default false }}",
+      "{{- if index .tool \"${1:executable}\" | default false }}",
       "$0",
       "{{- end }}"
     ],
@@ -317,7 +317,7 @@
       "hasExecutableLookPath"
     ],
     "body": [
-      "{{- if index .exe \"${1:executable}\" | default (lookPath \"$1\") }}",
+      "{{- if index .tool \"${1:executable}\" | default (lookPath \"$1\") }}",
       "$0",
       "{{- end }}"
     ],
