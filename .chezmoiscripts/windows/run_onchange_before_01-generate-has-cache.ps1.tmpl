@@ -11,6 +11,7 @@
 # {{- $cli_tools = $cli_tools | sortAlpha | uniq }}
 
 $hasToml = "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
+$hasToolToml = "# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" }}"
 $allCmds = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $pathDirs = $env:PATH -split [System.IO.Path]::PathSeparator
 $pathExts = $env:PATHEXT -split ';'
@@ -28,9 +29,26 @@ foreach ($dir in $pathDirs) {
     } catch { }
 }
 
+# per-cmd entries
 $lines = @(
 # {{ range $cli_tools -}}
     "# {{ . | replaceAllRegex "[-.]" "_" }} = $(if ($allCmds.Contains('# {{ . }}')) { 'true' } else { 'false' })"
 # {{ end -}}
 )
 $lines | Set-Content $hasToml
+
+# tool-level (matched cmd or empty)
+$toolLines = @(
+# {{ range $tool := .tools -}}
+# {{- $safe_name := $tool.name | replaceAllRegex "[-. ]" "_" | lower -}}
+# {{- $cmds := $tool.cmds -}}
+# {{- $first_cmd := index $cmds 0 -}}
+    "# {{ $safe_name }} = ""$(
+# {{- range $i, $cmd := $cmds -}}
+# {{ if $i }} else# {{ end }}if ($allCmds.Contains('# {{ $cmd }}')) { '# {{ $cmd }}' }
+# {{- end }} else { '' }
+    )"""
+# {{ end -}}
+)
+$toolLines | Set-Content $hasToolToml
+
