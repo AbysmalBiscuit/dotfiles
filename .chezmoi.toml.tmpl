@@ -91,7 +91,7 @@
 {{- end -}}
 {{- $has_has_tool := false -}}
 {{- $has_tool_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" -}}
-{{- if stat $has_path -}}
+{{- if stat $has_tool_path -}}
   {{- $has_has_tool = true -}}
   {{- $has_tool = include $has_tool_path | fromToml -}}
 {{- end -}}
