@@ -151,14 +151,14 @@ run = 'shell "powershell.exe" --block'
 desc = "Open PowerShell here"
 
 # Yank file paths as URI list
-[[mgr.prepend_keymap]]
-on  = "y"
-run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $paths | ForEach-Object { 'file:///' + ($_ -replace '\\','/') } | Set-Clipboard"''', "yank" ]
+# [[mgr.prepend_keymap]]
+# on  = "y"
+# run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $paths | ForEach-Object { 'file:///' + ($_ -replace '\\','/') } | Set-Clipboard"''', "yank" ]
 
 # Yank file content
-[[mgr.prepend_keymap]]
-on  = "Y"
-run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $sep = '#' * 80; $out = @(); foreach ($p in $paths) { if ($paths.Count -gt 1) { $out += $sep; $out += '# ' + $p }; $out += (Get-Content -Raw $p) }; ($out -join \"`n\") | Set-Clipboard"''', "yank" ]
+# [[mgr.prepend_keymap]]
+# on  = "Y"
+# run = [ '''shell -- powershell -NoProfile -Command "$paths = @(%s); $sep = '#' * 80; $out = @(); foreach ($p in $paths) { if ($paths.Count -gt 1) { $out += $sep; $out += '# ' + $p }; $out += (Get-Content -Raw $p) }; ($out -join \"`n\") | Set-Clipboard"''', "yank" ]
 # {{- end }}
 
 
