@@ -50,13 +50,13 @@ Description of the change.
 
 ```bash
 {{- if index .tool "fd" | default false }}
-fd . -t f           # Lists ALL files recursively (FASTEST)
+fd [PATTERN] -t f           # Lists ALL files recursively (FASTEST), optional PATTERN
 {{- end }}
 {{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
 # OR
 {{- end }}
 {{- if index .tool "rg" | default false }}
-rg --files          # Lists files (respects .gitignore)
+rg --files PATTERN         # Lists files (respects .gitignore), optional PATTERN
 {{- end }}
 ```
 
@@ -65,7 +65,7 @@ rg --files          # Lists files (respects .gitignore)
 **Task: "Search for content in files"**
 
 ```bash
-rg "search_term"    # Search everywhere (FASTEST)
+rg "PATTERN"    # Search in all files (FASTEST)
 ```
 {{- end }}
 
@@ -84,8 +84,8 @@ fd "filename"       # Find by name pattern (FASTEST)
 ```bash
 # FIRST CHOICE - List all files/dirs recursively:
 {{- if index .tool "fd" | default false }}
-fd . -t f           # All files (fastest)
-fd . -t d           # All directories
+fd PATTERN -t f           # All files (fastest)
+fd PATTERN -t d           # All directories
 {{- end }}
 {{- if index .tool "rg" | default false }}
 rg --files          # All files (respects .gitignore)
@@ -98,6 +98,7 @@ ls -la              # OK for single directory view
 ### BANNED - Never Use These Slow Tools
 
 {{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
+* ❌ `fd . PATH | rg PATTERN` - use `fd PATTERN` or `rg --files PATTERN`
 * ❌ `find` - use `fd` or `rg --files`
 * ❌ `ls -R` - use `fd` or `rg --files`
 {{- else if index .tool "fd" | default false -}}
