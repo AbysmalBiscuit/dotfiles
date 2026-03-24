@@ -1,0 +1,11 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[user]
+name = {{ .personal.fullname }}
+email = {{ .personal.email }}
+
+[ui]
+{{- if index .tool "delta" }}
+# pager = "delta"
+# diff-formatter = ":git"
+{{- end }}
