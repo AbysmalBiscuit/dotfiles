@@ -46,6 +46,52 @@ Description of the change.
 
 {{- if or (index .tool "fd" | default false) (index .tool "rg" | default false) }}
 
+### Preferred Command-Line Tools
+
+This machine has modern alternatives to traditional Unix tools installed, ALWAYS prefer using them over the traditional ones unless there's a strong reason not to.
+
+#### Search Tools
+
+{{- if index .tool "rg" | default false }}
+
+- **ripgrep (`rg`)** instead of `grep`:
+- Faster recursive search with smart defaults
+- Automatically respects `.gitignore`
+- Example: `rg "pattern"` instead of `grep -r "pattern"`
+{{- end }}
+
+{{- if index .tool "fd" | default false }}
+
+- **fd** instead of `find`:
+- Faster file search with intuitive syntax
+- Respects `.gitignore` by default
+- Example: `fd "filename"` instead of `find . -name "filename"`
+{{- end }}
+
+**Data processing**:
+{{- if index .tool "jq" }}
+- `jq` - JSON processor
+{{- end }}
+{{- if index .tool "yq" }}
+- `yq` - YAML processor (same syntax as jq)
+{{- end }}
+
+**Search & selection**:
+{{- if index .tool "rg" }}
+- `rg` (ripgrep) - fast grep
+{{- end }}
+{{- if index .tool "fd" }}
+- `fd` - fast find
+{{- end }}
+
+**System**:
+- `hyperfine` - benchmarking
+{{- if index .tool "watchexec" }}
+- `watchexec` - run commands when files change (e.g., `watchexec "COMMAND"`)
+{{- end }}
+
+#### Tools for Specific Tasks
+
 **Task: "List/summarize all files and directories"**
 
 ```bash
@@ -99,6 +145,7 @@ ls -la              # OK for single directory view
 
 {{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
 * ❌ `fd . PATH | rg PATTERN` - use `fd PATTERN` or `rg --files PATTERN`
+* ❌ `fd . PATH | grep PATTERN` - use `fd PATTERN` or `rg --files PATTERN`
 * ❌ `find` - use `fd` or `rg --files`
 * ❌ `ls -R` - use `fd` or `rg --files`
 {{- else if index .tool "fd" | default false -}}
@@ -112,7 +159,6 @@ ls -la              # OK for single directory view
 * ❌ `grep` or `grep -r` - use `rg` instead
 * ❌ `cat file | grep` - use `rg pattern file`
 {{- end }}
-
 {{- end }}
 
 ### Use These Faster Tools Instead
