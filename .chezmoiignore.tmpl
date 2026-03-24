@@ -77,15 +77,15 @@ localSettings.yaml
 .config/gnome-terminal
 .config/devilspie2
 {{- else -}}
-{{ if not (index .has "devilspie2" | default false) -}}
+{{ if not (index .tool "devilspie2") -}}
 .config/devilspie2
 {{- end }}
-{{ if not (index .has "gedit" | default false) -}}
+{{- if not (index .tool "gedit") }}
 .config/gedit
 .local/share/gedit
 .local/share/gtksourceview-5
 {{- end }}
-{{ if not (index .has "gnome_terminal" | default false) -}}
+{{- if not (index .tool "gnome_terminal") }}
 .config/gnome-terminal
 {{- end }}
 {{ end }}
@@ -174,36 +174,20 @@ Documents
 {{- end }}
 
 
-# specific cross-platform programs
-{{ if .is_headless -}}
-    {{- if not (index .has "dbeaver" | default false) }}
-.config/dbeaver
-    {{ end -}}
-    {{- if not (index .has "iterm2" | default false) }}
-.config/iterm2
-    {{ end -}}
-    {{- if not (index .has "mpv" | default false) }}
-.config/mpv
-    {{ end -}}
-{{- end }}
-
 # cli tools
-{{ if not (index .has "aider" | default false) -}}
+{{ if not (index .has "aider") -}}
 .aider*
 {{- end }}
-{{- if not (index .has "claude" | default false) }}
+{{- if not (index .has "claude") }}
 .claude
 {{- end }}
-{{ if not (index .has "ranger" | default false) -}}
-.config/ranger
-{{- end }}
-{{ if not (index .has "highlight" | default false) -}}
+{{ if not (index .has "highlight") -}}
 .local/share/highlight
 {{- end }}
-{{ if not (index .has "ccr" | default false) -}}
+{{ if not (index .has "ccr") -}}
 .claude-code-router
 {{- end }}
-{{ if not (index .has "jq" | default false) -}}
+{{ if not (index .tool "jq") -}}
 .jq
 {{- end }}
 # config tools
@@ -214,8 +198,12 @@ Documents
     "cspell"
     "dbeaver"
     "eza"
+    "iterm2"
+    "jujutsu"
     "kanata"
+    "kitty"
     "lazygit"
+    "mpv"
     "ncspot"
     "neovide"
     "nushell"
@@ -229,7 +217,7 @@ Documents
     "zed"
     "zellij"
     -}}
-{{- if not (index $.has $tool | default false) -}}
+{{- if not (index $.tool $tool) -}}
 .config/{{ $tool }}
 {{- end }}
 {{end}}
