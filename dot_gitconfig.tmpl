@@ -12,6 +12,11 @@
   autocrlf = input
   whitespace = warn
   editor = {{ .path.editor | replaceAllRegex "\\\\" "/" | quote }}
+{{- if index .tool "delta" }}
+  pager = delta
+{{- else if index .tool "bat" }}
+  pager = bat
+{{- end }}
 [alias]
   lg = lg1
   lg1 = lg1-specific --all
@@ -36,35 +41,15 @@
 {{- else if .is_macos }}
   helper = /usr/share/git/credential/libsecret/git-credential-libsecret
 {{- end }}
+[credential "https://git.overleaf.com"]
+  provider = generic
 [filter "lfs"]
   clean = git-lfs clean -- %f
   smudge = git-lfs smudge -- %f
   process = git-lfs filter-process
   required = true
-{{- if .tool.neovim }}
-[diff]
-  tool = "nvim"
-[difftool]
-  prompt = false
-[difftool "nvim"]
-  cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
-[merge]
-  tool = nvim
-[mergetool "nvim"]
-  cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d \"$LOCAL\" \"$MERGED\" \"$REMOTE\"
-  ff=false
-  conflictStyle=diff3
-[mergetool]
-  prompt = false
-{{- end }}
-{{- if index .has "meld" | default false }}
-[difftool "meld"]
-  cmd = meld $LOCAL $REMOTE
-[mergetool "meld"]
-  cmd = meld $LOCAL $MERGED $REMOTE --output $MERGED
-{{- end }}
 [commit]
-  template = ~/.git_commit_template
+  template = {{ joinPath .chezmoi.homeDir ".git_commit_template" }}
   gpgSign = true
 [init]
   defaultBranch = main
@@ -75,5 +60,32 @@
   # gpgSign = true
 [pull]
   rebase = true
-[credential "https://git.overleaf.com"]
-  provider = generic
+[difftool]
+  prompt = false
+[mergetool]
+  prompt = false
+# per tool configurations
+{{- if index .tool "neovim" }}
+[diff]
+  tool = {{ .tool.neovim }}
+[merge]
+  tool = nvim
+{{- else if index .tool "meld" }}
+[diff]
+  tool = {{ .tool.meld }}
+[merge]
+    tool = meld
+{{- end }}
+[delta]
+  navigate = true  # use n and N to move between diff sections
+  dark = true      # or light = true, or omit for auto-detection
+[difftool "meld"]
+  cmd = meld $LOCAL $REMOTE
+[mergetool "meld"]
+  cmd = meld $LOCAL $MERGED $REMOTE --output $MERGED
+[difftool "nvim"]
+  cmd = nvim -d $LOCAL $REMOTE
+[mergetool "nvim"]
+  cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d $LOCAL $MERGED $REMOTE
+  ff=false
+  conflictStyle=diff3
