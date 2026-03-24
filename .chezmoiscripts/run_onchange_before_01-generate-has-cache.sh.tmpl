@@ -7,6 +7,8 @@
 # {{- if env "WSL_DISTRO_NAME" -}}
 # {{- $is_wsl = true -}}
 # {{- end -}}
+# {{- $has_file := joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" -}}
+# {{- $has_tool_file := joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" -}}
 
 # {{- $cli_tools := list -}}
 # {{- $cli_tools_wsl := list -}}
@@ -34,15 +36,13 @@ fi
 
 SED=$(command -v "sed")
 GREP=$(command -v "grep")
-HAS_FILE="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has.toml" }}"
-HAS_TOOL_FILE="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "has_tool.toml" }}"
 
 # per-cmd entries
 {
     # {{ range $cli_tools -}}
     echo "# {{ . | replaceAllRegex "[-. ]" "_" }} = $(command -v "# {{ . }}" >/dev/null 2>&1 && echo true || echo false)"
     # {{ end }}
-} >"$HAS_FILE"
+} >"# {{ $has_file }}"
 
 # {{ if $is_wsl -}}
 if [ -n "$PATH_WINDOWS" ]; then
@@ -76,13 +76,13 @@ else
 fi
 while IFS=' ' read -r key val; do
     if [ "$val" = "true" ]; then
-        if "$GREP" -q "^${key} = " "$HAS_FILE"; then
-            "$SED" -i "s/^${key} = false$/${key} = true/" "$HAS_FILE"
+        if "$GREP" -q "^${key} = " "# {{ $has_file }}"; then
+            "$SED" -i "s/^${key} = false$/${key} = true/" "# {{ $has_file }}"
         else
-            echo "$key = true" >>"$HAS_FILE"
+            echo "$key = true" >>"# {{ $has_file }}"
         fi
     else
-        echo "$key = $val" >>"$HAS_FILE"
+        echo "$key = $val" >>"# {{ $has_file }}"
     fi
 done <<EOF
 $wsl_tools
@@ -91,13 +91,13 @@ export PATH="$OLD_PATH"
 # {{- end }}
 
 # tool-level (matched cmd or empty)
-echo >"$HAS_TOOL_FILE"
+echo >"# {{ $has_tool_file }}"
 {
     # {{ range $tool := .tools -}}
     # {{- $safe_name := $tool.name | replaceAllRegex "[-. ]" "_" | lower -}}
     _tool_cmd=""
     # {{ range $cmd := $tool.cmds -}}
-    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" }} = true$' "$HAS_FILE" && _tool_cmd="# {{ $cmd }}"
+    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" }} = true$' "# {{ $has_file }}" && _tool_cmd="# {{ $cmd }}"
     # {{ end -}}
     echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'
     # {{ end }}
@@ -106,9 +106,9 @@ echo >"$HAS_TOOL_FILE"
     # {{- $safe_name := printf "%s_exe" ($tool.name | replaceAllRegex "[-. ]" "_" | lower) -}}
     _tool_cmd=""
     # {{ range $cmd := $tool.cmds -}}
-    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" | lower }} = true$' "$HAS_FILE" && _tool_cmd="# {{ $cmd }}"
+    [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" | lower }} = true$' "# {{ $has_file }}" && _tool_cmd="# {{ $cmd }}"
     # {{ end -}}
     echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'
     # {{ end -}}
     # {{- end }}
-} >"$HAS_TOOL_FILE"
+} >"# {{ $has_tool_file }}"
