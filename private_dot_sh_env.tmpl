@@ -408,10 +408,6 @@ export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 
 # {{- if .is_wsl }}
 
-# {{- if .tool.yazi_exe }}
-# export YAZI_WINDOWS_EXECUTABLE='# {{/* lookPath "yazi.exe" */}}'
-# {{- end }}
-
 # Exclude windows man paths as it makes man very slow
 export MANPATH="$(remove_windows_paths "$MANPATH")"
 
