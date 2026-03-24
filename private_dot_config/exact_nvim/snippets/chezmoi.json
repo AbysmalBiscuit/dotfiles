@@ -12,9 +12,6 @@
   },
   "chezmoi if": {
     "prefix": [
-      "{{if",
-      "{if",
-      "tmplif",
       "if"
     ],
     "body": [
@@ -24,25 +21,18 @@
     ],
     "description": "If block"
   },
-  "chezmoi if-else": {
+  "chezmoi else if": {
     "prefix": [
-      "{{ifelse",
-      "tmplifelse",
-      "ifelse"
+      "else_if"
     ],
     "body": [
-      "{{- if ${1:condition} }}",
-      "$2",
-      "{{- else -}}",
-      "$0",
-      "{{- end }}"
+      "{{- else if ${1:condition} -}}",
+      "$0"
     ],
-    "description": "If-else block"
+    "description": "else block"
   },
   "chezmoi else": {
     "prefix": [
-      "{{else",
-      "tmplelse",
       "else"
     ],
     "body": [
@@ -51,26 +41,58 @@
     ],
     "description": "else block"
   },
-  "chezmoi if-else if": {
+  "chezmoi end": {
     "prefix": [
-      "{{ifelseif",
-      "{ifelseif",
-      "tmplifelseif",
-      "elseif"
+      "end"
+    ],
+    "body": [
+      "{{- end }}"
+    ],
+    "description": "end"
+  },
+  "chezmoi if-else": {
+    "prefix": [
+      "ifelse"
     ],
     "body": [
       "{{- if ${1:condition} }}",
-      "$2",
-      "{{- else if ${3:condition} -}}",
       "$0",
+      "{{- else -}}",
+      "",
       "{{- end }}"
     ],
-    "description": "If-else if block"
+    "description": "If-else block"
+  },
+  "chezmoi if, else if": {
+    "prefix": [
+      "if_else_if"
+    ],
+    "body": [
+      "{{- if ${1:condition} }}",
+      "$0",
+      "{{- else if ${2:condition} -}}",
+      "",
+      "{{- end }}"
+    ],
+    "description": "If, else if block"
+  },
+  "chezmoi if, else if, else": {
+    "prefix": [
+      "if_else_if_else"
+    ],
+    "body": [
+      "{{- if ${1:condition} }}",
+      "$0",
+      "{{- else if ${2:condition} -}}",
+      "",
+      "{{- else -}}",
+      "",
+      "{{- end }}"
+    ],
+    "description": "If, else if, else block"
   },
   "chezmoi range": {
     "prefix": [
-      "{{range",
-      "{range",
       "tmplrange",
       "range"
     ],
@@ -83,8 +105,6 @@
   },
   "chezmoi range index": {
     "prefix": [
-      "{{rangei",
-      "{rangei",
       "tmplrangei",
       "rangei"
     ],
@@ -201,8 +221,6 @@
   },
   "chezmoi env default": {
     "prefix": [
-      "{{envdefault",
-      "{envdefault",
       "tmplenvdefault",
       "envdefault"
     ],
@@ -237,8 +255,6 @@
   },
   "chezmoi promptBoolOnce": {
     "prefix": [
-      "{{promptbool",
-      "{promptbool",
       "tmplpromptbool",
       "promptbool"
     ],
@@ -249,9 +265,6 @@
   },
   "chezmoi comment": {
     "prefix": [
-      "{{/*",
-      "{/*",
-      "/*",
       "comment"
     ],
     "body": [
@@ -301,12 +314,12 @@
     ],
     "description": "If NOT"
   },
-  "chezmoi has executable false": {
+  "chezmoi has executable": {
     "prefix": [
-      "hasExecutableFalse"
+      "has_executable"
     ],
     "body": [
-      "{{- if index .tool \"${1:executable}\" | default false }}",
+      "{{- if index .has \"${1:executable}\" }}",
       "$0",
       "{{- end }}"
     ],
@@ -314,69 +327,58 @@
   },
   "chezmoi has executable lookPath": {
     "prefix": [
-      "hasExecutableLookPath"
+      "has_tool_look_path"
     ],
     "body": [
-      "{{- if index .tool \"${1:executable}\" | default (lookPath \"$1\") }}",
+      "{{- if index .has \"${1:executable}\" | default (lookPath \"$1\") }}",
       "$0",
       "{{- end }}"
     ],
     "description": "Check if executable exists via cache with default lookPath fallback"
   },
-  "chezmoi has tool false": {
+  "chezmoi has tool": {
     "prefix": [
-      "hasToolFalse"
+      "has_tool"
     ],
     "body": [
-      "{{- if index .has \"${1:tool}\" | default false }}",
+      "{{- if index .tool \"${1:tool}\" }}",
       "$0",
       "{{- end }}"
     ],
-    "description": "Check if executable exists via cache with default false"
+    "description": "Check if tool exists via cache"
   },
   "chezmoi has tool lookPath": {
     "prefix": [
-      "hasToolLookPath"
+      "has_tool_look_path"
     ],
     "body": [
       "{{- if index .tool \"${1:tool}\" | default (lookPath \"$1\") }}",
       "$0",
       "{{- end }}"
     ],
-    "description": "Check if executable exists via cache with default lookPath fallback"
+    "description": "Check if tool exists via cache with default lookPath fallback"
   },
   "chezmoi doesn't have tool": {
     "prefix": [
-      "notHasTool"
+      "not_has_tool"
     ],
     "body": [
-      "{{- if index .has \"${1:tool}\" | default (lookPath \"${1:tool}\") }}",
+      "{{- if not (index .tool \"${1:tool}\") }}",
       "$0",
       "{{- end }}"
     ],
-    "description": "Check the PATH to see if an executable doesn't exists"
+    "description": "Check tool cache to see if a tool doesn't exists"
   },
   "chezmoi doesn't have executable": {
     "prefix": [
-      "{{nothasexecutable",
-      "{nothasexecutable",
-      "nothasexecutable"
+      "not_has_executable"
     ],
     "body": [
-      "{{- if index $has \"${1:executable}\" | default (lookPath \"${1:executable}\") }}",
+      "{{- if not (index .has \"${1:executable}\") }}",
       "$0",
       "{{- end }}"
     ],
-    "description": "Check the PATH to see if an executable doesn't exists"
-  },
-  "chezmoi end": {
-    "prefix": [
-      "end"
-    ],
-    "body": [
-      "{{- end }}"
-    ],
-    "description": "end"
+    "description": "Check the executable cache to see if an executable doesn't exists"
   },
   "chezmoi and": {
     "prefix": [
