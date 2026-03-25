@@ -49,7 +49,7 @@
   process = git-lfs filter-process
   required = true
 [commit]
-  template = {{ joinPath .chezmoi.homeDir ".git_commit_template" }}
+  template = {{ joinPath .chezmoi.homeDir ".git_commit_template" | replaceAllRegex "\\\\" "\\\\" }}
   gpgSign = true
 [init]
   defaultBranch = main
