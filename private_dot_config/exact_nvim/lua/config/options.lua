@@ -572,6 +572,8 @@ vim.g.lazyvim_python_ruff = "ruff"
 vim.lsp.enable({ "ltex_plus" })
 vim.lsp.enable({ "pyrefly" })
 vim.lsp.enable({ "cspell_ls" })
+vim.lsp.enable({ "gdscript" })
+vim.lsp.enable({ "gdshader_lsp" })
 -- vim.lsp.set_log_level("debug")
 -- vim.lsp.enable({ "taplo" })
 -- vim.lsp.enable({ "starlark_rust" })
