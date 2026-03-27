@@ -10,10 +10,7 @@ return {
     optional = true,
     opts = {
       linters_by_ft = {
-        gdscript = vim.list_extend(
-          { "gdradon" },
-          vim.fn.executable("gdscript-formatter") == 1 and { "gdscript_formatter" } or { "gdlint" }
-        ),
+        gdscript = { "gdradon", "gdscript_formatter", "gdlint" },
       },
       linters = {
         ["markdownlint-cli2"] = {
@@ -25,12 +22,13 @@ return {
           args = {},
           env = {
             PYTHONIOENCODING = "utf-8",
+            LOCALAPPDATA = vim.g.is_windows and vim.fn.getenv("LOCALAPPDATA") or "",
           },
           stream = "both",
           ignore_exitcode = true,
           condition = function(_)
             local cwd = vim.uv.cwd()
-            return vim.fn.executable("gdscript-formatter") ~= 1 and vim.fn.filereadable(cwd .. "/project.godot") == 1
+            return vim.fn.filereadable(cwd .. "/project.godot") == 1
           end,
           parser = require("lint.parser").from_pattern(
             -- Pattern: file:line: severity: message (code)
@@ -49,7 +47,10 @@ return {
           args = { "cc" },
           stream = "stdout",
           ignore_exitcode = true,
-          env = { PYTHONIOENCODING = "utf-8" },
+          env = {
+            PYTHONIOENCODING = "utf-8",
+            LOCALAPPDATA = vim.g.is_windows and vim.fn.getenv("LOCALAPPDATA") or "",
+          },
           condition = function(_)
             local cwd = vim.uv.cwd()
             return vim.fn.filereadable(cwd .. "/project.godot") == 1
@@ -103,7 +104,7 @@ return {
         gdscript_formatter = {
           cmd = "gdscript-formatter",
           stdin = false,
-          args = { "lint" },
+          args = { "lint", "--max-line-length", "120" },
           stream = "stdout",
           ignore_exitcode = true,
           condition = function(_)
