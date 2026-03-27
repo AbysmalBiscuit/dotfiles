@@ -40,4 +40,11 @@ return {
       },
     },
   },
+  {
+    "godlygeek/tabular",
+    cmd = {
+      "Tabularize",
+      "AddTabularPattern",
+    },
+  },
 }
