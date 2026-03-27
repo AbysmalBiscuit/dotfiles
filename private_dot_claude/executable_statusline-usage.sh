@@ -3,6 +3,7 @@
 DEV="0"
 CACHE_DIR="$HOME/.cache/ccstatusline-usage"
 CACHE_FILE="$CACHE_DIR/ccstatusline-usage.txt"
+CACHE_FILE_WEEKLY="$CACHE_DIR/ccstatusline-usage-weekly.txt"
 # SESSION_BAR_CACHE="$CACHE_DIR/session_bar.txt"
 # WEEKLY_BAR_CACHE="$CACHE_DIR/weekly_bar.txt"
 # SESSION_RESET_CACHE="$CACHE_DIR/session_reset.txt"
@@ -148,4 +149,5 @@ SESSION_FMT=$(printf "%-19s" "$SESSION_FMT")
 SESSION_UNTIL_RESET=$(time_until_reset "$SESSION_RESET")
 WEEKLY_UNTIL_RESET=$(time_until_reset "$WEEKLY_RESET")
 
-echo -e "Session: $SESSION_BAR ${SESSION_PAD}% | Reset: ${SESSION_FMT} (in ${SESSION_UNTIL_RESET})\nWeekly:  $WEEKLY_BAR ${WEEKLY_PAD}% | Reset: ${WEEKLY_FMT} (in ${WEEKLY_UNTIL_RESET})" | tee "$CACHE_FILE"
+echo -e "Weekly:  $WEEKLY_BAR ${WEEKLY_PAD}% | Reset: ${WEEKLY_FMT} (in ${WEEKLY_UNTIL_RESET})" >"$CACHE_FILE_WEEKLY"
+echo -e "Session: $SESSION_BAR ${SESSION_PAD}% | Reset: ${SESSION_FMT} (in ${SESSION_UNTIL_RESET})" | tee "$CACHE_FILE"
