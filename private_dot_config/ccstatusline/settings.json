@@ -40,11 +40,10 @@
         "type": "separator"
       },
       {
-        "id": "6",
-        "type": "git-branch",
+        "id": "d5efaea6-4aac-4bce-8f61-b63fc952ef3e",
+        "type": "git-worktree",
         "color": "brightBlue",
-        "bold": true,
-        "rawValue": false
+        "bold": true
       },
       {
         "id": "7",
@@ -71,18 +70,71 @@
     ],
     [
       {
-        "id": "ba9e4319-52c9-4439-a1f9-51796275b9ec",
-        "type": "custom-command",
-        "commandPath": "~/.claude/statusline-usage.sh"
+        "id": "c57068b4-598f-46b7-8789-216ca2e4d315",
+        "type": "session-usage",
+        "rawValue": false
       },
       {
-        "id": "66ba0983-b84d-447a-b6d1-5b9b0c02c7c7",
+        "id": "c2ac8e4a-e132-432b-8952-6a4495698b7c",
+        "type": "custom-text",
+        "customText": " ("
+      },
+      {
+        "id": "07c42557-b3e5-4cb2-adee-e3f02043292a",
+        "type": "reset-timer",
+        "rawValue": true
+      },
+      {
+        "id": "b44ac305-b4c3-4109-b2e6-ff75e741a06e",
+        "type": "custom-text",
+        "customText": ")"
+      },
+      {
+        "id": "002ed364-24bc-443c-a6cc-c02f09f3a889",
         "type": "separator"
       },
       {
-        "id": "3dd8f0f7-c266-41ce-94e4-3f92e4620bfc",
-        "type": "block-timer",
-        "rawValue": false
+        "id": "4738623b-eb8f-4d53-9f59-3cbeb81b6b43",
+        "type": "weekly-usage"
+      },
+      {
+        "id": "b5934ce5-d28d-4420-9270-32dc4277d52e",
+        "type": "custom-text",
+        "customText": " ("
+      },
+      {
+        "id": "221ae534-a74c-4c1f-93d6-fbed37c396b4",
+        "type": "weekly-reset-timer",
+        "rawValue": true
+      },
+      {
+        "id": "f8a37405-3fd2-4758-88fb-76d76f0cfb1d",
+        "type": "custom-text",
+        "customText": ")"
+      }
+    ],
+    [
+      {
+        "id": "5bb4361d-d3a9-409e-a061-34c1893ae74d",
+        "type": "input-speed"
+      },
+      {
+        "id": "0939ad4b-263f-4290-9965-0c99ea480297",
+        "type": "separator",
+        "character": "|"
+      },
+      {
+        "id": "fdf626a5-3e90-4c84-9c34-dfdbaabea55b",
+        "type": "output-speed"
+      },
+      {
+        "id": "eeb3c3e6-8f71-4543-83bd-79bd94f153ff",
+        "type": "separator",
+        "character": "|"
+      },
+      {
+        "id": "dda71383-e2dc-4d06-b1dc-ca5ad3a359a2",
+        "type": "total-speed"
       }
     ]
   ],
