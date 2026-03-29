@@ -26,7 +26,7 @@
     "superpowers@superpowers-marketplace": true,
     "episodic-memory@superpowers-marketplace": true,
     "elements-of-style@superpowers-marketplace": true,
-    "double-shot-latte@superpowers-marketplace": true
+    "double-shot-latte@superpowers-marketplace": false
   },
   "companyAnnouncements": []
 }
