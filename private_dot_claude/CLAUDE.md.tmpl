@@ -44,192 +44,108 @@ Description of the change.
 
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
-{{- if or (index .tool "fd" | default false) (index .tool "rg" | default false) }}
+{{- if or (index .tool "fd") (index .tool "rg") }}
 
 ### Preferred Command-Line Tools
 
-This machine has modern alternatives to traditional Unix tools installed, ALWAYS prefer using them over the traditional ones unless there's a strong reason not to.
+This machine has modern alternatives to traditional Unix tools. **ALWAYS** use them.
 
-#### Search Tools
+#### The One-Tool Principle
 
-{{- if index .tool "rg" | default false }}
+Each task needs **ONE** tool, not a pipeline. If you're piping `fd` into `rg` or vice versa, you're doing it wrong.
 
-- **ripgrep (`rg`)** instead of `grep`:
-- Faster recursive search with smart defaults
-- Automatically respects `.gitignore`
-- Example: `rg "pattern"` instead of `grep -r "pattern"`
-{{- end }}
-
-{{- if index .tool "fd" | default false }}
-
-- **fd** instead of `find`:
-- Faster file search with intuitive syntax
-- Respects `.gitignore` by default
-- Example: `fd "filename"` instead of `find . -name "filename"`
-{{- end }}
-
-**Data processing**:
-{{- if index .tool "jq" }}
-- `jq` - JSON processor
-{{- end }}
-{{- if index .tool "yq" }}
-- `yq` - YAML processor (same syntax as jq)
-{{- end }}
-
-**Search & selection**:
+| Task | Tool | NOT this |
+|------|------|----------|
 {{- if index .tool "rg" }}
-- `rg` (ripgrep) - fast grep
+| Search file **contents** | `rg "pattern"` | ~~`grep -r`~~ |
+| Search contents in specific file types | `rg -t py "pattern"` or `rg -g "*.py" "pattern"` | ~~`fd -e py \| xargs rg "pattern"`~~ |
+| Filenames with matches | `rg -l "pattern"` | ~~`rg "pattern" \| cut -d: -f1`~~ |
 {{- end }}
 {{- if index .tool "fd" }}
-- `fd` - fast find
+| Find files **by name** | `fd "name"` | ~~`find . -name`~~ |
+| Find files **by extension** | `fd -e js` | ~~`find . -name "*.js"`~~ |
+| List all files | `fd -t f` | ~~`find .`~~, ~~`ls -R`~~ |
+| List directories | `fd -t d` | ~~`find . -type d`~~ |
 {{- end }}
+| Current dir only | `ls -la` | |
 
-**System**:
-- `hyperfine` - benchmarking
-{{- if index .tool "watchexec" }}
-- `watchexec` - run commands when files change (e.g., `watchexec "COMMAND"`)
-{{- end }}
+### BANNED — Never Use These
 
-#### Tools for Specific Tasks
-
-**Task: "List/summarize all files and directories"**
-
-```bash
-{{- if index .tool "fd" | default false }}
-fd [PATTERN] -t f           # Lists ALL files recursively (FASTEST), optional PATTERN
-{{- end }}
-{{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
-# OR
-{{- end }}
-{{- if index .tool "rg" | default false }}
-rg --files PATTERN         # Lists files (respects .gitignore), optional PATTERN
-{{- end }}
 ```
+{{- if and (index .tool "fd") (index .tool "rg") }}
+# Piping fd into rg (rg already recurses!)
+❌ fd -e py | xargs rg "pattern"     →  ✅ rg -t py "pattern"
+❌ fd "*.ts" | xargs rg -l "import"  →  ✅ rg -t ts -l "import"
+❌ fd . path | rg "pattern"          →  ✅ fd "pattern" path
+❌ fd . path | grep "pattern"        →  ✅ fd "pattern" path
+❌ rg --files | rg "pattern"         →  ✅ fd "pattern"
+{{- end }}
 
-{{- if index .tool "rg" | default false }}
-
-**Task: "Search for content in files"**
-
-```bash
-rg "PATTERN"    # Search in all files (FASTEST)
+# Legacy tools
+{{- if index .tool "fd" }}
+❌ find                              →  ✅ fd
+{{- end }}
+{{- if index .tool "rg" }}
+❌ grep / grep -r                    →  ✅ rg
+❌ cat file | grep "x"               →  ✅ rg "x" file
+❌ cat file | rg "x"                 →  ✅ rg "x" file
+{{- end }}
+❌ ls -R                             →  ✅ {{ if index .tool "fd" | default false }}fd -t f{{ else }}rg --files{{ end }}
 ```
 {{- end }}
 
+{{- if index .tool "rg" }}
 
-{{- if index .tool "fd" | default false }}
-
-**Task: "Find files by name"**
-
-```bash
-fd "filename"       # Find by name pattern (FASTEST)
-```
-{{- end }}
-
-### Directory/File Exploration
+### rg Quick Reference
 
 ```bash
-# FIRST CHOICE - List all files/dirs recursively:
-{{- if index .tool "fd" | default false }}
-fd PATTERN -t f           # All files (fastest)
-fd PATTERN -t d           # All directories
-{{- end }}
-{{- if index .tool "rg" | default false }}
-rg --files          # All files (respects .gitignore)
-{{- end }}
-
-# For current directory only:
-ls -la              # OK for single directory view
-```
-
-### BANNED - Never Use These Slow Tools
-
-{{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
-* ❌ `fd . PATH | rg PATTERN` - use `fd PATTERN` or `rg --files PATTERN`
-* ❌ `fd . PATH | grep PATTERN` - use `fd PATTERN` or `rg --files PATTERN`
-* ❌ `find` - use `fd` or `rg --files`
-* ❌ `ls -R` - use `fd` or `rg --files`
-{{- else if index .tool "fd" | default false -}}
-* ❌ `find` - use `fd`
-* ❌ `ls -R` - use `fd`
-{{- else if index .tool "rg" | default false -}}
-* ❌ `find` - use `rg --files`
-* ❌ `ls -R` - use `rg`
-{{- end }}
-{{- if index .tool "rg" | default false }}
-* ❌ `grep` or `grep -r` - use `rg` instead
-* ❌ `cat file | grep` - use `rg pattern file`
-{{- end }}
-{{- end }}
-
-### Use These Faster Tools Instead
-
-```bash
-{{- if index .tool "rg" | default false }}
-# ripgrep (rg) - content search
-rg "search_term"                # Search in all files
-rg -i "case_insensitive"        # Case-insensitive
-rg "pattern" -t py              # Only Python files
-rg "pattern" -g "*.md"          # Only Markdown
-rg -1 "pattern"                 # Filenames with matches
+rg "pattern"                    # Recursive search (respects .gitignore)
+rg -i "pattern"                 # Case-insensitive
+rg -t py "pattern"              # Only Python files
+rg -g "*.md" "pattern"          # Only matching glob
+rg -l "pattern"                 # Filenames with matches only
 rg -c "pattern"                 # Count matches per file
 rg -n "pattern"                 # Show line numbers
-rg -A 3 -B 3 "error"            # Context lines
-rg " (TODO|FIXME|HACK)"      # Multiple patterns
-
-# ripgrep (rg) - file listing
-rg --files                      # List files (respects •gitignore)
-rg --files | rg "pattern"       # Find files by name
-rg --files -t md                # Only Markdown files
-{{- end }}
-
-{{- if index .tool "fd" | default false }}
-# fd - file finding
-fd -e js                        # All •js files (fast find)
-fd -x command {}                # Exec per-file
-fd -e md -x ls -la {}           # Example with ls
-{{- end }}
-
-{{- if index .tool "jq" | default false }}
-# jq - JSON processing
-jq. data.json                   # Pretty-print
-jq -r .name file.json           # Extract field
-jq '.id = 0' x.json             # Modify field
-{{- end }}
+rg -A 3 -B 3 "pattern"         # Context lines
+rg "(TODO|FIXME|HACK)"         # Multiple patterns
+rg "pattern" src/               # Limit scope to directory
+rg --files                      # List all files (like fd -t f)
 ```
-
-{{- if index .tool "rg" | default false }}
 
 ### Search Strategy
 
-1. Start broad, then narrow: `rg "partial" | rg "specific"`
-2. Filter by type early: `rg -t python "def function_name"`
+1. Start with one tool — don't pipeline unless truly necessary
+2. Filter by type early: `rg -t py "def function_name"`
 3. Batch patterns: `rg "(pattern1|pattern2|pattern3)"`
-4. Limit scope: `rg "pattern" src/`
+4. Limit scope with a path argument: `rg "pattern" src/`
 {{- end }}
 
-### INSTANT DECISION TREE
+{{- if index .tool "fd" }}
 
+### fd Quick Reference
+
+```bash
+fd "name"                       # Find by name pattern
+fd -e js                        # Find by extension
+fd -t f                         # All files recursively
+fd -t d                         # All directories
+fd -x command {}                # Execute per file
+fd "pattern" src/               # Limit scope to directory
 ```
-{{- if and (index .tool "fd" | default false) (index .tool "rg" | default false) }}
-User asks to "list/show/summarize/explore files"?
-    → USE: fd . -t f  (fastest, shows all files)
-    → OR: rg --files  (respects .gitignore)
 {{- end }}
 
-{{- if index .tool "rg" | default false }}
+### Other Tools
 
-User asks to "search/grep/find text content"?
-    → USE: rg "pattern"  (NOT grep!)
+```bash
+{{- if index .tool "jq" }}
+jq .field data.json             # JSON: pretty-print / extract
+jq -r '.name' file.json         # JSON: extract field raw
 {{- end }}
-
-{{- if index .tool "fd" | default false }}
-User asks to "find file/directory by name"?
-    → USE: fd "name"  (NOT find!)
-
-User asks for "directory structure/tree"?
-    → USE: fd . -t d  (directories) + fd . -t f  (files)
+{{- if index .tool "yq" }}
+yq .field data.yaml             # YAML processing (same syntax as jq)
 {{- end }}
-
-Need just current directory?
-    → USE: ls -la  (OK for single dir)
+hyperfine "command"             # Benchmarking
+{{- if index .tool "watchexec" }}
+watchexec "command"             # Run on file changes
+{{- end }}
 ```
