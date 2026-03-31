@@ -253,9 +253,9 @@
   {{- end -}}
 
   {{- if $secrets_system.shell -}}
-    {{- $shell = index $secrets_system |  default "" -}}
+    {{- $shell = index $secrets_system.shell |  default "" -}}
   {{- end -}}
-  {{- if $secrets_system.wsl_shell -}}
+  {{- if and $is_wsl $secrets_system.wsl_shell -}}
     {{- $shell = $secrets_system.wsl_shell -}}
   {{- end -}}
   {{- /* if $is_wsl */ -}}

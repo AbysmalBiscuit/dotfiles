@@ -1,11 +1,5 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* $current := .chezmoi.stdin | mustFromJson */ -}}
-{{- /* $source := include (joinPath .chezmoi.sourceDir "settings.json.base") | mustFromJson */ -}}
-{{- /* $merged := $source */ -}}
-{{- /* if hasKey $current "wsl_connections" */ -}}
-{{- /*   $merged = merge (dict "wsl_connections" $current.wsl_connections) $source */ -}}
-{{- /* end */ -}}
-{{- /* $merged | toPrettyJson */ -}}
 // Zed settings
 //
 // For information on how to configure Zed, see the Zed
@@ -31,6 +25,7 @@
     {{- end }}
   },
   "edit_predictions": {
+    "provider": "zed",
     "disabled_globs": ["*.aider.conf.yml"]
   },
   "inlay_hints": {
@@ -138,9 +133,6 @@
     "after_delay": {
       "milliseconds": 1000
     }
-  },
-  "features": {
-    "edit_prediction_provider": "zed"
   },
   "format_on_save": "on",
   "telemetry": {
@@ -356,7 +348,7 @@
           "latexindent": {
             // instead of explicitly setting CLI args directly, configure behaviour here
             "modifyLineBreaks": false,
-            "local": "{{ .chezmoi.homeDir }}{{ .system.path_sep }}.latexIndentSettings.yaml",
+            "local": "{{ joinPath .chezmoi.homeDir ".latexIndentSettings.yaml" | replaceAllRegex "\\\\" "\\\\"}}",
             "replacement": null // place for flags like -rr -rv -r
           }
         }
@@ -383,6 +375,12 @@
     "shell": {
     {{- if .tool.fish }}
       "program": "fish"
+    {{- else if eq .shell "powershell" -}}
+    {{- if lookPath "pwsh.exe" }}
+      "program": "pwsh",
+    {{- else -}}
+      "program": "powershell",
+    {{- end }}
     {{- else -}}
       "program": {{ .shell | quote }}
     {{- end }}
@@ -391,7 +389,9 @@
       "on": {
         {{- if .tool.fish }}
         "activate_script": "fish"
-        {{- else -}}
+        {{- else if eq .shell "powershell" }}
+         "activate_script": "power_shell",
+        {{- else }}
         "activate_script": {{ .shell | quote }}
         {{- end }}
       }
