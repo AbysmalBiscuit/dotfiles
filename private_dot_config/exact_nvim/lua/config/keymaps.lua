@@ -661,6 +661,29 @@ _G.get_completion_leadergA = function(arg_lead, cmd_line, cursor_pos)
 end
 
 --------------------------------------------------------------------------------
+--- Managing buffers
+--------------------------------------------------------------------------------
+
+vim.api.nvim_create_user_command("CleanBuffers", function()
+  local bufs = vim.api.nvim_list_bufs()
+  local deleted_count = 0
+
+  for _, buf in ipairs(bufs) do
+    local name = vim.api.nvim_buf_get_name(buf)
+    -- If it's a normal file (not a scratch pad) and the file is gone
+    if name ~= "" and vim.bo[buf].buftype == "" then
+      if vim.fn.filereadable(name) == 0 then
+        -- bwipeout removes it from the picker's view entirely
+        vim.api.nvim_command("bwipeout! " .. buf)
+        deleted_count = deleted_count + 1
+      end
+    end
+  end
+
+  vim.notify("Cleaned " .. deleted_count .. " buffers with missing files.")
+end, { desc = "Wipe out buffers for files deleted from disk" })
+
+--------------------------------------------------------------------------------
 --- yank using patterns
 --------------------------------------------------------------------------------
 set("n", "<leader>'y", function()
