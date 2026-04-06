@@ -615,6 +615,30 @@ vim.keymap.del("n", "<leader>qS")
 vim.keymap.del("n", "<leader>qd")
 
 --------------------------------------------------------------------------------
+-- files
+--------------------------------------------------------------------------------
+vim.api.nvim_create_user_command("RevealFile", function()
+  local cmd = ""
+  local path = vim.fn.expand("%:p:h")
+
+  if vim.g.is_windows or vim.g.is_wsl then
+    cmd = "explorer.exe"
+  elseif vim.g.is_macos then
+    cmd = "open"
+  elseif vim.g.is_linux then
+    cmd = "xdg-open"
+  end
+
+  if cmd ~= "" then
+    vim.cmd(string.format("silent !%s %s", cmd, vim.fn.shellescape(path)))
+  else
+    vim.notify("Unsupported platform for RevealFile", vim.log.levels.ERROR)
+  end
+end, {
+  desc = "Open current file directory in system explorer",
+})
+
+--------------------------------------------------------------------------------
 -- git
 --------------------------------------------------------------------------------
 set("n", "<leader>gq", function()
