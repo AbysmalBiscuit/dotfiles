@@ -618,10 +618,14 @@ vim.keymap.del("n", "<leader>qd")
 -- files
 --------------------------------------------------------------------------------
 vim.api.nvim_create_user_command("RevealFile", function()
-  local cmd = ""
   local path = vim.fn.expand("%:p:h")
+  local cmd = ""
 
-  if vim.g.is_windows or vim.g.is_wsl then
+  if vim.g.is_wsl then
+    local win_path = vim.fn.system(string.format("wslpath -w %s", vim.fn.shellescape(path))):gsub("[\r\n]", "")
+    vim.fn.jobstart({ "/mnt/c/Windows/explorer.exe", win_path }, { detach = true })
+    return
+  elseif vim.g.is_windows then
     cmd = "explorer.exe"
   elseif vim.g.is_macos then
     cmd = "open"
@@ -630,13 +634,11 @@ vim.api.nvim_create_user_command("RevealFile", function()
   end
 
   if cmd ~= "" then
-    vim.cmd(string.format("silent !%s %s", cmd, vim.fn.shellescape(path)))
+    vim.fn.jobstart({ cmd, path }, { detach = true })
   else
-    vim.notify("Unsupported platform for RevealFile", vim.log.levels.ERROR)
+    vim.notify("Unsupported platform", vim.log.levels.ERROR)
   end
-end, {
-  desc = "Open current file directory in system explorer",
-})
+end, { desc = "Open directory in system explorer" })
 
 --------------------------------------------------------------------------------
 -- git
