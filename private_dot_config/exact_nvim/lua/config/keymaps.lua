@@ -631,6 +631,7 @@ vim.api.nvim_create_user_command("RevealFile", function()
   end
 
   if vim.g.is_windows then
+    path = path:gsub("/", "\\")
     vim.cmd(string.format("silent !explorer.exe %s", path))
     return
   end
