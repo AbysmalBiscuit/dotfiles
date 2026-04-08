@@ -618,23 +618,29 @@ vim.keymap.del("n", "<leader>qd")
 -- files
 --------------------------------------------------------------------------------
 vim.api.nvim_create_user_command("RevealFile", function()
-  local path = vim.fn.expand("%:p:h")
-  local cmd = ""
+  local path = vim.fn.shellescape(vim.fn.expand("%:p:h"))
 
   if vim.g.is_wsl then
-    local win_path = vim.fn.system(string.format("wslpath -w %s", vim.fn.shellescape(path))):gsub("[\r\n]", "")
+    local win_path = vim.fn.system(string.format("wslpath -w %s", path)):gsub("[\r\n]", "")
     vim.fn.jobstart({ "/mnt/c/Windows/explorer.exe", win_path }, { detach = true })
     return
-  elseif vim.g.is_windows then
-    cmd = "explorer.exe"
-  elseif vim.g.is_macos then
+  end
+
+  if vim.g.is_windows then
+    vim.cmd(string.format("silent !explorer.exe %s", path))
+    return
+  end
+
+  local cmd = ""
+  if vim.g.is_macos then
     cmd = "open"
   elseif vim.g.is_linux then
     cmd = "xdg-open"
   end
 
   if cmd ~= "" then
-    vim.fn.jobstart({ cmd, path }, { detach = true })
+    vim.cmd(string.format("silent !%s %s", path))
+    -- vim.fn.jobstart({ cmd, path }, { detach = true })
   else
     vim.notify("Unsupported platform", vim.log.levels.ERROR)
   end
