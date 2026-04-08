@@ -3,10 +3,14 @@
 --   return {}
 -- end
 
+local has_gdscript_formatter = vim.fn.executable("gdscript-formatter") == 1
+local has_gdformat = vim.fn.executable("gdformat") == 1
+
 ---@type LazyPluginSpec[]
 return {
   {
     "stevearc/conform.nvim",
+    ---@type conform.setupOpts
     opts = {
       formatters_by_ft = {
         latex = { "latexindent" },
@@ -14,28 +18,40 @@ return {
         -- rust = { "rustfmt" },
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
         -- typescript = { "prettierd", "prettier", stop_after_first = true },
-        gdscript = function()
-          if vim.fn.executable("gdscript-formatter") == 1 then
-            return { "gdscript_formatter" }
-          end
-          return { "gdformat" }
-        end,
+        gdscript = { "gdformat_custom", "gdscript-formatter_custom" },
       },
       formatters = {
-        gdformat = {
-          command = "gdformat",
-          args = { "-" },
-          env = {
-            PYTHONIOENCODING = "utf-8",
-          },
-          condition = function(_, _)
-            return vim.fn.filereadable(vim.uv.cwd() .. "/project.godot") == 1
+        -- gdformat = {
+        -- command = "gdformat",
+        -- args = { "-" },
+        -- env = {
+        -- PYTHONIOENCODING = "utf-8",
+        -- },
+        -- condition = function(_, _)
+        -- return vim.fn.filereadable(vim.uv.cwd() .. "/project.godot") == 1
+        -- end,
+        -- },
+        -- ["gdscript-formatter"] = {
+        -- command = "gdscript-formatter",
+        -- args = { "--safe" },
+        -- stdin = true,
+        -- },
+        gdformat_custom = {
+          inherit = "gdformat",
+          condition = function(ctx)
+            return has_gdformat and not has_gdscript_formatter
           end,
         },
-        gdscript_formatter = {
-          command = "gdscript-formatter",
-          args = { "--safe" },
-          stdin = true,
+        ["gdscript-formatter_custom"] = {
+          inherit = "gdscript-formatter",
+          condition = function(ctx)
+            return has_gdscript_formatter
+          end,
+          prepend_args = { "--safe" },
+        },
+        ["gdscript-reorder"] = {
+          inherit = "gdscript-formatter",
+          prepend_args = { "--reorder-code" },
         },
       },
     },

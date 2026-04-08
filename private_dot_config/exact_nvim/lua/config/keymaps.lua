@@ -70,7 +70,11 @@ command("FormatAllBuffers", function()
   end
 end, { desc = "Formats all open buffers" })
 
-set("v", "<leader>o", ":sort<cr>", { desc = "Sort selection" })
+set("n", "<leader>oa", function()
+  require("conform").format({ formatters = { "gdscript-reorder" } })
+end, { desc = "[O]rder [A]ll code" })
+
+set("v", "<leader>o", ":sort<cr>", { desc = "[O]rder (sort) selection" })
 
 --------------------------------------------------------------------------------
 --- LSP
@@ -615,7 +619,7 @@ vim.keymap.del("n", "<leader>qS")
 vim.keymap.del("n", "<leader>qd")
 
 --------------------------------------------------------------------------------
--- files
+-- Files
 --------------------------------------------------------------------------------
 vim.api.nvim_create_user_command("RevealFile", function()
   local path = vim.fn.shellescape(vim.fn.expand("%:p:h"))

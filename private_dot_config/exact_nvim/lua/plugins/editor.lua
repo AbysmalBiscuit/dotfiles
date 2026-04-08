@@ -536,4 +536,13 @@ return {
     },
     cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
   },
+  {
+    dir = vim.fn.stdpath("config"),
+    name = "extra_diff",
+    lazy = true,
+    cmd = { "GdscriptDiff" },
+    config = function(_, opts)
+      require("extra_diff").setup(opts)
+    end,
+  },
 }
