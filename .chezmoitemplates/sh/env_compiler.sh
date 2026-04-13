@@ -72,26 +72,24 @@ export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/llvm/include"
 # {{- end }}
 
 # go
-# {{- if .tool.go }}
-# if has_command go; then
-GOAMD64="v1"
-temp_file=$(mktemp 'XXXXX.go')
-printf 'package main\nfunc main() { println("testing go level") }\n' >"$temp_file"
+# {{- /* if .tool.go */}}
+# GOAMD64="v1"
+# temp_file=$(mktemp 'XXXXX.go')
+# printf 'package main\nfunc main() { println("testing go level") }\n' >"$temp_file"
 
-for level in 4 3 2 1; do
-    if GO111MODULE=off GOAMD64="v$level" go run "$temp_file" &>/dev/null; then
-        GOAMD64="v$level"
-        break
-    fi
-done
+# for level in 4 3 2 1; do
+# if GO111MODULE=off GOAMD64="v$level" go run "$temp_file" &>/dev/null; then
+# GOAMD64="v$level"
+# break
+# fi
+# done
 
 # Final cleanup if the loop finishes without success
-if [[ -f "$temp_file" ]]; then
-    rm "$temp_file"
-fi
-export GOAMD64
+# if [[ -f "$temp_file" ]]; then
+# rm "$temp_file"
 # fi
-# {{- end }}
+# export GOAMD64
+# {{- /* end */}}
 
 # if [[ -f "$HOME/.cargo/bin/sccache" ]]; then
 # export RUSTC_WRAPPER="$HOME/.cargo/bin/sccache"

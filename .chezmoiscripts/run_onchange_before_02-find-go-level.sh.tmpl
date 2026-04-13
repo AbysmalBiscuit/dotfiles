@@ -1,0 +1,42 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=sh.chezmoitmpl
+# {{- end }}
+# {{- $is_wsl := false -}}
+# {{- if env "WSL_DISTRO_NAME" -}}
+# {{- $is_wsl = true -}}
+# {{- end -}}
+
+set -e
+
+last_cache_file="# {{ joinPath .chezmoi.homeDir ".config" "chezmoi" "go_lvl" }}"
+last_cache=$(cat "$last_cache_file" 2>/dev/null || echo 0)
+now=$(date +%s)
+age=$((now - last_cache))
+if [ "$age" -lt $((86400 * 100)) ]; then
+    exit 0
+fi
+
+# go
+# {{- if .tool.go }}
+# if has_command go; then
+GOAMD64="v1"
+temp_file=$(mktemp 'XXXXX.go')
+printf 'package main\nfunc main() { println("testing go level") }\n' >"$temp_file"
+
+for level in 4 3 2 1; do
+    if GO111MODULE=off GOAMD64="v$level" go run "$temp_file" >/dev/null 2>&1; then
+        GOAMD64="v$level"
+        break
+    fi
+done
+
+# Final cleanup if the loop finishes without success
+if [ -f "$temp_file" ]; then
+    rm "$temp_file"
+fi
+
+echo "$GOAMD64" >"$HOME/.config/chezmoi/go_level.txt"
+date +%s >"$last_cache_file"
+# {{- end }}
