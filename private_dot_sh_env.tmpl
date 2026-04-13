@@ -4,76 +4,83 @@
 # {{- else -}}
 # vim:filetype=sh.chezmoitmpl
 # {{- end }}
+# {{- $path_prepend := list -}}
+# {{- $path_append := list -}}
 # {{- $shell := .shell -}}
 # {{- /* $shell := "zsh" */ -}}
 # {{- /* Only cache env on personal and non-ephemeral systems */ -}}
 # {{ "" }}
 # {{ template "sh/env_wsl.sh" . }}
 
-# {{ if .cache.build.shell -}}
-# {{- /* env_cache is sourced for non-interactive sessions */}}
-# {{- /* env_cache stores various environment variables */}}
-env_cache='# {{ .chezmoi.homeDir }}/.sh_env_cache'
-
-last_cache_file='# {{ joinPath .chezmoi.homeDir ".sh_last_cache" }}'
-
-# If not running interactively, source env cache and exit early
-if [[ $- != *i* ]] && [[ -f "$env_cache" ]]; then
-    # echo "non-interactive mode, sourcing env cache"
-    source "$env_cache"
-    return 0
-fi
-
-[[ -f "$HOME/.sh_force_cache" || -f "$HOME/sh_force_cache" ]] && sh_force_cache=true || sh_force_cache=false
-[[ -f "$HOME/sh_force_cache_once" ]] && sh_force_cache_once=true || sh_force_cache_once=false
-
-last_cache=$(cat "$last_cache_file" 2>/dev/null)
-
-if ! {
-    [[ ! -f "$env_cache" ]] ||
-        [[ "${sh_force_cache}" = "true" ]] ||
-        [[ "${sh_force_cache_once}" = "true" ]] ||
-        { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); }
-}; then
-    source "$env_cache"
-    return 0
-fi
-
-if [[ "$sh_force_cache_once" = "true" ]] && [[ -f "$HOME/sh_force_cache_once" ]]; then
-    rm "$HOME/sh_force_cache_once"
-fi
-
-if [[ "$SHLVL" -ge 2 ]]; then
-    if [[ $- != *i* ]]; then
-        if [[ ! -f "$env_cache" ]]; then
-            echo "Not running in a fresh shell, but SH environment cache is missing."
-            echo "Cache will be built, but may be dirty. Rebuild it via sh_force_cache"
-        else
-            source "$env_cache"
-            return 0
-        fi
-    elif [[ ! -f "$env_cache" ]]; then
-        echo "Not running in a fresh shell, but # {{ $shell }} cache is missing."
-        echo "Cache will be built, but may be dirty. Rebuild it via sh_force_cache"
-    else
-        source "$env_cache"
-        return 0
-    fi
-fi
-echo "Building # {{ $shell }} cache"
-# {{- end }}
+# # {{ if .cache.build.shell -}}
+# # {{- /* env_cache is sourced for non-interactive sessions */}}
+# # {{- /* env_cache stores various environment variables */}}
+# env_cache='# {{ .chezmoi.homeDir }}/.sh_env_cache'
+#
+# last_cache_file='# {{ joinPath .chezmoi.homeDir ".sh_last_cache" }}'
+#
+# # If not running interactively, source env cache and exit early
+# if [[ $- != *i* ]] && [[ -f "$env_cache" ]]; then
+#     # echo "non-interactive mode, sourcing env cache"
+#     source "$env_cache"
+#     return 0
+# fi
+#
+# [[ -f "$HOME/.sh_force_cache" || -f "$HOME/sh_force_cache" ]] && sh_force_cache=true || sh_force_cache=false
+# [[ -f "$HOME/sh_force_cache_once" ]] && sh_force_cache_once=true || sh_force_cache_once=false
+#
+# last_cache=$(cat "$last_cache_file" 2>/dev/null)
+#
+# if ! {
+#     [[ ! -f "$env_cache" ]] ||
+#         [[ "${sh_force_cache}" = "true" ]] ||
+#         [[ "${sh_force_cache_once}" = "true" ]] ||
+#         { [[ -n "${last_cache}" ]] && (($(date +%s) - last_cache >= 86400)); }
+# }; then
+#     source "$env_cache"
+#     return 0
+# fi
+#
+# if [[ "$sh_force_cache_once" = "true" ]] && [[ -f "$HOME/sh_force_cache_once" ]]; then
+#     rm "$HOME/sh_force_cache_once"
+# fi
+#
+# if [[ "$SHLVL" -ge 2 ]]; then
+#     if [[ $- != *i* ]]; then
+#         if [[ ! -f "$env_cache" ]]; then
+#             echo "Not running in a fresh shell, but SH environment cache is missing."
+#             echo "Cache will be built, but may be dirty. Rebuild it via sh_force_cache"
+#         else
+#             source "$env_cache"
+#             return 0
+#         fi
+#     elif [[ ! -f "$env_cache" ]]; then
+#         echo "Not running in a fresh shell, but # {{ $shell }} cache is missing."
+#         echo "Cache will be built, but may be dirty. Rebuild it via sh_force_cache"
+#     else
+#         source "$env_cache"
+#         return 0
+#     fi
+# fi
+# echo "Building # {{ $shell }} cache"
+# # {{- end }}
 
 #
 # Miscellaneous variables
 #
 
+# {{- $path_sys := list }}
+# {{- $path_sys_path := joinPath .chezmoi.homeDir ".path_sys" }}
+# {{- if stat $path_sys_path }}
+# {{- $path_sys = include $path_sys_path | trim | splitList ":" }}
+# {{- end }}
+
 # set OS
 # {{ if .is_wsl -}}
-OS="wsl"
+export OS="wsl"
 # {{- else -}}
-OS=# {{ .chezmoi.os | quote }}
+export OS=# {{ .chezmoi.os | quote }}
 # {{- end }}
-export OS
 # export OSTYPE="${OS}$(uname -r)"
 
 # Color settings
@@ -113,16 +120,17 @@ export LS_COLORS
 export COLOREDLOGS_FIELD_STYLES='asctime=2;hostname=5;levelname=7,bold;name=4;programname=6;username=3'
 
 # Adding CHROOT location environment variable
-if [[ -d "$HOME/chroot" ]]; then
-    export CHROOT="$HOME/chroot"
-fi
+# {{- if stat (joinPath .chezmoi.homeDir "chroot") }}
+export CHROOT="$HOME/chroot"
+# {{- end }}
 
 # {{ if .is_macos -}}
 # Setting darwin only environment variables
 # Add /usr/local/bin to PATH (needed to find brew installed binaries)
-if [[ -d "/usr/local/bin" ]]; then
-    PATH="/usr/local/bin:$PATH"
-fi
+# {{- if stat "/usr/local/bin" }}
+# PATH="/usr/local/bin:$PATH"
+# {{- $path_prepend := append $path_prepend "/usr/local/bin" -}}
+# {{- end }}
 
 # Setting JAVA_HOME environment variable
 export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
@@ -130,14 +138,12 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 24)"
 # {{ else if .is_linux -}}
 # {{ if stat "/usr/lib/jvm/default-java"  -}}
 # Setting JAVA_HOME environment variable
-# if [[ -d "/usr/lib/jvm/default-java" ]]; then
 export JAVA_HOME="/usr/lib/jvm/default-java"
-# fi
 # {{- end }}
 # {{- end }}
 
-# Setting VOC directory path environment variable
 # {{ if stat "/usr/share/java/voc" -}}
+# Setting VOC directory path environment variable
 # if [[ -d "/usr/share/java/voc" ]]; then
 export VOC_DIR="/usr/share/java/voc"
 # fi
@@ -146,16 +152,58 @@ export VOC_DIR="/usr/share/java/voc"
 export GTK_THEME="Adwaita:dark"
 
 # Configuring rust programs
+# {{- if index .has "cargo" }}
 export CLIPPY_CONF_DIR="$HOME/.config/clippy"
+# {{- end }}
+# {{- if index .has "eza" }}
 export EZA_CONFIG_DIR="$HOME/.config/eza"
+# {{- end }}
+# {{- if index .has "fzf" }}
 export FZF_DEFAULT_OPTS="--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8\
     --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC\
     --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8\
     --color=selected-bg:#45475A\
     --color=border:#6C7086,label:#CDD6F4"
+# {{- end }}
 
 # Python environment variables
 export NUMBA_CACHE_DIR="$HOME/.cache/numba"
+
+
+# {{ if stat (joinPath .chezmoi.homeDir "tessdata") -}}
+# Add tesseract data
+export TESSDATA_PREFIX="$HOME/tessdata"
+# {{- end }}
+
+# {{- if index .has "mold" }}
+export MOLD='# {{ lookPath .tool.mold }}'
+# {{- end }}
+
+#
+# Configuring PATH
+#
+# Store original system path
+# {{ if .is_macos -}}
+# {{- if stat "/usr/libexec/path_helper" }}
+# PATH_SYS='# {{ output "/usr/libexec/path_helper" | trim }}'
+# {{- $path_sys = output "/usr/libexec/path_helper" | trim | splitList ":" }}
+# {{- else -}}
+# PATH_SYS="$PATH"
+# {{- end }}
+
+# Add /usr/local/sbin to PATH
+# {{- if stat "/usr/local/sbin" }}
+# PATH="$PATH:/usr/local/sbin"
+# {{- $path_append := append $path_append "/usr/local/sbin" -}}
+# {{- end }}
+
+# {{- else -}}
+# Not macos
+
+# PATH_SYS="$PATH"
+# {{- end }}
+# export PATH_SYS
+
 
 # {{- if stat "/opt/intel" }}
 # Adding various Intel variables
@@ -176,135 +224,115 @@ export NLSPATH="/opt/intel/lib/locale/en_US/%N:/opt/intel/mkl/lib/locale/%l_%t/%
 export INTEL_PYTHONHOME="/opt/intel/debugger_2020/python/intel64/"
 export INTEL_LICENSE_FILE="/opt/intel/licenses:/Users/admin/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses"
 export CPATH="/opt/intel/ipp/include:/opt/intel/mkl/include:/opt/intel/pstl/include:/opt/intel/pstl/stdlib:/opt/intel/tbb/include:/opt/intel/tbb/include:/opt/intel/daal/include:$CPATH"
-PATH="$PATH:/opt/intel/bin"
+# PATH="$PATH:/opt/intel/bin"
+# {{- $path_append = append $path_append "/opt/intel/bin" -}}
 # {{- end }}
-
-# {{ if stat (joinPath .chezmoi.homeDir "tessdata") -}}
-# Add tesseract data
-export TESSDATA_PREFIX="$HOME/tessdata"
-# {{- end }}
-
-# {{ if .tool.mold -}}
-# if has_command mold; then
-export MOLD='# {{ lookPath "mold" }}'
-# fi
-# {{- end }}
-
-#
-# Configuring PATH
-#
-# Store original system path
-# {{ if .is_macos -}}
-# {{- if stat "/usr/libexec/path_helper" }}
-PATH_SYS="$(/usr/libexec/path_helper)"
-# {{- else -}}
-PATH_SYS="$PATH"
-# {{- end }}
-
-# Add /usr/local/sbin to PATH
-# {{- if stat "/usr/local/sbin" }}
-PATH="$PATH:/usr/local/sbin"
-# {{- end }}
-
-# {{- else -}}
-
-PATH_SYS="$PATH"
-# {{- end }}
-export PATH_SYS
 
 # Source rust if it exists
-# {{- if stat (joinPath .chezmoi.homeDir ".cargo" ) }}
-# [[ -s "$HOME/.cargo/env" ]] &&
-source "$HOME/.cargo/env"
+# {{- if stat (joinPath .chezmoi.homeDir ".cargo") }}
+# PATH="$HOME/.cargo/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".cargo" "bin") -}}
 # {{- end }}
 
 export HAS_NIGHTLY_RUST='# {{ .system.has_nightly_rust }}'
 
 # Source deno if it exists
-[[ -s "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
+# {{- if stat (joinPath .chezmoi.homeDir ".deno") }}
+# export PATH="$HOME/.deno/env:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".deno" "bin") -}}
+# {{- end }}
 
 # bun
-if [[ -d "$HOME/.bun" ]]; then
-    export BUN_INSTALL="$HOME/.bun"
-    PATH="$BUN_INSTALL/bin:$PATH"
-fi
+# {{- if stat (joinPath .chezmoi.homeDir ".bun") }}
+export BUN_INSTALL="$HOME/.bun"
+# PATH="$BUN_INSTALL/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".bun" "bin") -}}
+# {{- end }}
 
+# {{- if stat (joinPath .chezmoi.homeDir "Android" "Sdk") }}
 # Setting ANDROID_HOME environment variable
-if [[ -d "$HOME/Android/Sdk" ]]; then
-    export ANDROID_HOME="$HOME/Android/Sdk"
-    # Adding android sdk paths to PATH
-    PATH="$PATH:$ANDROID_HOME/tools"
-fi
+export ANDROID_HOME="$HOME/Android/Sdk"
+# Adding android sdk paths to PATH
+# PATH="$PATH:$ANDROID_HOME/tools"
+# {{- $path_append = append $path_append (joinPath .chezmoi.homeDir "Android" "Sdk" "tools") -}}
+# {{- end }}
 
 # Adding ccache binaries to PATH
 # if [[ -d /usr/lib/ccache/bin ]]; then
     # PATH="/usr/lib/ccache/bin/:$PATH"
 # fi
 
-if [[ -d "$HOME/perl5/bin" ]]; then
-    # PATH="${PATH:+:${PATH}}:$HOME/perl5/bin"
-    PATH="$PATH:$HOME/perl5/bin"
-    export PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
-    export PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
-    export PERL_MB_OPT="--install_base \"$HOME/perl5\""
-    export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
-fi
+# {{- if stat (joinPath .chezmoi.homeDir "perl5" "bin") }}
+# PATH="${PATH:+:${PATH}}:$HOME/perl5/bin"
+# PATH="$PATH:$HOME/perl5/bin"
+# {{- $path_append = append $path_append (joinPath .chezmoi.homeDir "perl5" "bin") -}}
+export PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"
+export PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+export PERL_MB_OPT="--install_base \"$HOME/perl5\""
+export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
+# {{- end }}
 
-if [[ -d "$HOME/go/bin" ]]; then
-    PATH="$HOME/go/bin:$PATH"
-fi
+# {{- if stat (joinPath .chezmoi.homeDir "go" "bin") }}
+# PATH="$HOME/go/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir "go" "bin") -}}
+# {{- end }}
 
-if [[ -d "$HOME/.config/nvm" ]]; then
-    export NVM_DIR="$HOME/.config/nvm"
-    [[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"                   # This loads nvm
-    [[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-fi
+# {{- if stat (joinPath .chezmoi.homeDir ".config" "nvm") }}
+export NVM_DIR="$HOME/.config/nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"                   # This loads nvm
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+# {{- end }}
 
-if [[ -d "$HOME/.yarn/bin" ]]; then
-    PATH="$HOME/.yarn/bin:$PATH"
-fi
+# {{- if stat (joinPath .chezmoi.homeDir ".yarn" "bin") }}
+# PATH="$HOME/.yarn/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".yarn" "bin") -}}
+# {{- end }}
 
 # Adding ruby libraries and binaries to PATH
-if has_command ruby; then
-    gem_bin_dir="$(ruby -e 'print Gem.user_dir')/bin"
-    mkdir -p "$gem_bin_dir"
-    PATH="$gem_bin_dir:$PATH"
+# {{- if index .has "ruby" }}
+# gem_bin_dir="$(ruby -e 'print Gem.user_dir')/bin"
+# PATH="$gem_bin_dir:$PATH"
+# {{- $gem_bin_dir := joinPath (output "ruby" "-e" "print Gem.user_dir" | trim) "bin"  }}
+if [ ! -d '# {{ $gem_bin_dir }}' ]; then
+    mkdir -p "# {{ $gem_bin_dir }}"
 fi
+# {{- $path_prepend = append $path_prepend $gem_bin_dir -}}
+# {{- end }}
 
 # {{- if and .tool.brew (stat "/home/linuxbrew/.linuxbrew") }}
-
 # Adding linuxbrew libraries and binaries to PATH
-# if [[ -d /home/linuxbrew && $(command -v 'linuxbrew') ]]; then
-PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
-# fi
+# PATH="$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin"
+# {{- $path_append = append $path_append "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" -}}
 # {{- end }}
 
-# {{- if stat (joinPath .chezmoi.homeDir ".luarocks/bin") }}
+# {{- if stat (joinPath .chezmoi.homeDir ".luarocks" "bin") }}
 # Add luarocks
-# if [[ -d "$HOME/.luarocks/bin" ]]; then
-PATH="$HOME/.luarocks/bin:$PATH"
-# fi
+# PATH="$HOME/.luarocks/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".luarocks/bin") -}}
 # {{- end }}
 
-# {{ if .tool.luarocks -}}
+# {{- if .tool.luarocks -}}
 # Setting up lua path for neovim
-# if has_command luarocks; then
-eval "$(luarocks path --no-bin --lua-version 5.1)"
-# fi
+# eval "$(luarocks path --no-bin --lua-version 5.1)"
+# {{ output "luarocks" "path" "--no-bin" "--lua-version" "5.1" }}
 # {{- end }}
 
 # Composer
-[[ -d "$HOME/.config/composer/vendor/bin" ]] && PATH="$HOME/.config/composer/vendor/bin:$PATH"
+# {{- if stat (joinPath .chezmoi.homeDir ".config" "composer" "vendor" "bin") }}
+# [[ -d "$HOME/.config/composer/vendor/bin" ]] && PATH="$HOME/.config/composer/vendor/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".config" "composer" "vendor" "bin") -}}
+# {{- end }}
 
 # Set up final PATH dirs that should overwrite everything else
-# {{- if stat (joinPath .chezmoi.homeDir "bin/bin") }}
+# {{- if stat (joinPath .chezmoi.homeDir "bin" "bin") }}
 # Adding user bin and bin/bin directory to PATH
-# [[ -d "$HOME/bin/bin" ]] &&
-PATH="$HOME/bin:$HOME/bin/bin:$PATH"
+# PATH="$HOME/bin:$HOME/bin/bin:$PATH"
+# {{- $path_prepend = concat $path_prepend (list (joinPath .chezmoi.homeDir "bin") (joinPath .chezmoi.homeDir "bin" "bin")) -}}
 # {{- end }}
 
 # Adding ~/.local/bin
-[[ -d "$HOME/.local/bin" ]] && PATH="$HOME/.local/bin:$PATH"
+# [[ -d "$HOME/.local/bin" ]] && PATH="$HOME/.local/bin:$PATH"
+# {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".local" "bin") -}}
 
 
 # {{- if .is_macos }}
@@ -320,87 +348,93 @@ EOF
 
 # Add brew ruby binaries to path
 # {{- if stat "/usr/local/opt/ruby/bin" }}
-# if [[ -d '/usr/local/opt/ruby/bin' ]]; then
-    PATH="/usr/local/opt/ruby/bin:$PATH"
-# fi
+# PATH="/usr/local/opt/ruby/bin:$PATH"
+# {{- $path_prepend = append $path_prepend "/usr/local/opt/ruby/bin" -}}
 # {{- end }}
 
 # Put GNU binaries before macOS binaries
 # {{- if stat "/usr/local/lib/gnubin" }}
-# if [[ -d "/usr/local/lib/gnubin" ]]; then
-PATH="/usr/local/lib/gnubin:$PATH"
-# fi
+# PATH="/usr/local/lib/gnubin:$PATH"
+# {{- $path_prepend = append $path_prepend "/usr/local/lib/gnubin" -}}
 # {{- end }}
 
 # {{- if stat "/usr/local/opt/make/libexec/gnubin" }}
-# if [[ -d "/usr/local/opt/make/libexec/gnubin" ]]; then
-PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-# fi
+# PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
+# {{- $path_prepend = append $path_prepend "/usr/local/opt/make/libexec/gnubin" -}}
 # {{- end }}
 
 # {{- if stat "/usr/local/opt/uutils-coreutils/libexec/uubin" }}
-# if [[ -d "/usr/local/opt/uutils-coreutils/libexec/uubin" ]]; then
-PATH="/usr/local/opt/uutils-coreutils/libexec/uubin:$PATH"
-# fi
+# PATH="/usr/local/opt/uutils-coreutils/libexec/uubin:$PATH"
+# {{- $path_prepend = append $path_prepend "/usr/local/opt/uutils-coreutils/libexec/uubin" -}}
 # {{- end }}
 
 # Add perlbrew to PATH
 # {{- if stat "$HOME/perl5/perlbrew/bin" }}
-# if [[ -d "$HOME/perl5/perlbrew/bin" ]]; then
-PATH="$PATH:$HOME/perl5/perlbrew/bin"
-# fi
+# PATH="$PATH:$HOME/perl5/perlbrew/bin"
+# {{- $path_append = append $path_append "$HOME/perl5/perlbrew/bin" -}}
 # {{- end }}
 
 # Homebrew keg only packages
 # {{- if stat "/usr/local/opt/binutils/bin" }}
-# if [[ -d "/usr/local/opt/binutils/bin" ]]; then
-PATH="$PATH:/usr/local/opt/binutils/bin"
-# fi
+# PATH="$PATH:/usr/local/opt/binutils/bin"
+# {{- $path_append = append $path_append "/usr/local/opt/binutils/bin" -}}
 # {{- end }}
 
 # Add llvm to PATH
 # {{- if stat "/usr/local/opt/llvm/bin" }}
-# if [[ -d "/usr/local/opt/llvm/bin" ]]; then
-PATH="$PATH:/usr/local/opt/llvm/bin"
-# fi
+# PATH="$PATH:/usr/local/opt/llvm/bin"
+# {{- $path_append = append $path_append "/usr/local/opt/llvm/bin" -}}
 # {{- end }}
 
 # Add Qt to PATH
 # {{- if stat "/usr/local/opt/qt/bin" }}
-# if [[ -d "/usr/local/opt/qt/bin" ]]; then
-PATH="$PATH:/usr/local/opt/qt/bin"
-# fi
+# PATH="$PATH:/usr/local/opt/qt/bin"
+# {{- $path_append = append $path_append "/usr/local/opt/qt/bin" -}}
 # {{- end }}
 
 # Add mactex binaries to PATH
 # {{- if stat "/Library/TeX/Root/bin/universal-darwin" }}
-# if [[ -d "/Library/TeX/Root/bin/universal-darwin" ]]; then
-PATH="$PATH:/Library/TeX/Root/bin/universal-darwin"
-# fi
+# PATH="$PATH:/Library/TeX/Root/bin/universal-darwin"
+    # {{- $path_append = append $path_append "/Library/TeX/Root/bin/universal-darwin" -}}
 # {{- end }}
 # {{- end }}
 
 # Deduplicate PATH
-PATH=$(deduplicate_path "$PATH")
+# {{- $path := env "PATH" | splitList ":" }}
+# {{- if $path_sys }}
+    # {{- $path = $path_sys }}
+# {{- end }}
+# {{- if $path_prepend }}
+    # {{- $path = concat ($path_prepend | reverse) $path }}
+# {{- end }}
+# {{- if $path_append }}
+    # {{- $path = concat $path $path_append }}
+# {{- end }}
+# PATH=$(deduplicate_path "# {{/* $path_prepend | join ":" */}}:$PATH:# {{/* $path_append | join ":" */}}")
+# {{- $path = $path | compact | uniq }}
+# PATH_SYS='# {{/* $path_sys | join ":" */}}'
+# PATH='# {{/* $path | join ":" */}}'
 
 # echo $PATH
 # PATH
 # PATH_WINDOWS
 # PATH_FULL
-PATH_CLEAN=""
-PATH_WINDOWS=""
+# PATH_CLEAN=""
+# PATH_WINDOWS=""
 # PATH_FULL=""
 # export PATH_SAVE="$PATH"
 
-if [[ -z "${MANPATH}" ]]; then
-    MANPATH=$(man --path)
-fi
+# if [[ -z "${MANPATH}" ]]; then
+    # MANPATH=$(man --path)
+# fi
+# MANPATH='# {{/* output "man" "--path" | trim */}}'
+# {{ $man_path := output "man" "--path" | trim }}
 
 # Configure python paths
 # {{- if .tool.python }}
 export PYTHON3_HOST_PROG='# {{ lookPath .tool.python }}'
 # {{- else if .has.python -}}
-# {{- $python3_host_prog := output "python" "--version" | replaceAllRegex ".*\\b(3)\\.\\d+\\.\\d+" "$1" -}}
+# {{- $python3_host_prog := output "python" "--version" | trim | replaceAllRegex ".*\\b(3)\\.\\d+\\.\\d+" "$1" -}}
 # {{- if eq $python3_host_prog "3" }}
 export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 # {{- end }}
@@ -409,7 +443,18 @@ export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 # {{- if .is_wsl }}
 
 # Exclude windows man paths as it makes man very slow
-export MANPATH="$(remove_windows_paths "$MANPATH")"
+# export MANPATH="$(remove_windows_paths "$MANPATH")"
+
+# {{- $items := splitList ":" $man_path -}}
+# {{- $filtered := list -}}
+
+# {{- range $items -}}
+    # {{- if not (regexMatch "^/mnt/[a-z]" .) -}}
+        # {{- $filtered = append $filtered . -}}
+    # {{- end -}}
+# {{- end -}}
+
+# {{- $man_path = $filtered | uniq | join ":" }}
 
 # WSL Specific
 export WINHOME=# {{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
@@ -418,33 +463,49 @@ export WINHOME=# {{ (index .secrets.system .system.hostname).wsl_winhome | quote
 export BROWSER=# {{ (index .secrets.system .system.hostname).browser | quote }}
 
 # Split path into linux and windows parts
-OLDIFS=$IFS
-IFS=':'
-for p in $PATH; do
-    if [[ "$p" == "/mnt/"* ]]; then
-        # Append to Windows path
-        PATH_WINDOWS="$PATH_WINDOWS:$p"
-    else
-        # Append to Clean path
-        PATH_CLEAN="$PATH_CLEAN:$p"
-    fi
-done
-IFS=$OLDIFS
+# OLDIFS=$IFS
+# IFS=':'
+# for p in $PATH; do
+    # if [[ "$p" == "/mnt/"* ]]; then
+        # # Append to Windows path
+        # PATH_WINDOWS="$PATH_WINDOWS:$p"
+    # else
+        # # Append to Clean path
+        # PATH_CLEAN="$PATH_CLEAN:$p"
+    # fi
+# done
+# IFS=$OLDIFS
 
-PATH_CLEAN="${PATH_CLEAN:1}"
-PATH_WINDOWS="${PATH_WINDOWS:1}"
+# PATH_CLEAN="${PATH_CLEAN:1}"
+# PATH_WINDOWS="${PATH_WINDOWS:1}"
 
-export PATH_CLEAN
-export PATH_WINDOWS
-export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
+
+# {{- $items := $path -}}
+# {{- $path_clean := list -}}
+# {{- $path_windows := list -}}
+
+# {{- range $items -}}
+    # {{- if not (regexMatch "^/mnt/[a-z]" .) -}}
+        # {{- $path_clean = append $path_clean . -}}
+    # {{- else -}}
+        # {{- $path_windows = append $path_windows . -}}
+    # {{- end -}}
+# {{- end -}}
+
+# {{- $path_clean = $path_clean | compact | uniq | join ":" }}
+# {{- $path_windows = $path_windows | compact | uniq | join ":" }}
+
+export PATH_CLEAN='# {{ $path_clean }}'
+export PATH_WINDOWS='# {{ $path_windows }}'
+# export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
 # {{- else -}}
 # else
-export PATH_CLEAN="$PATH"
-export PATH_SYS_CLEAN="$PATH_SYS"
+export PATH_CLEAN='# {{ $path | join ":" }}'
+# export PATH_SYS_CLEAN="$PATH_SYS"
 export PATH_WINDOWS
 # {{- end }}
 
-export PATH
+export PATH='# {{ $path | join ":" }}'
 
 # {{ if .is_macos -}}
 # Ensure that a non-login, non-interactive shell has a defined environment.
@@ -452,6 +513,8 @@ export PATH
     # source "${ZDOTDIR:-$HOME}/.zprofile"
 # fi
 # {{ end -}}
+
+export MANPATH='# {{ $man_path }}'
 
 # check if neovim is installed, if it is set it as the default editor
 # and oni as the default visual editor if neovim is not available,
@@ -473,18 +536,20 @@ export MANPAGER="env PATH='$PATH_CLEAN' nvim +Man!"
 export MANPAGER='nvim +Man!'
 # {{- end }}
 # {{- else if .tool.nano -}}
-EDITOR="$(command -v nano)"
+EDITOR='# {{ .tool.nano }}'
+
 # {{- end }}
 export EDITOR
 
 export SUDO_EDITOR="$EDITOR"
 
+# {{- if index .has "zed" }}
+VISUAL="# {{ .tool.zed }}"
+# {{- else if index .has "code" -}}
+VISUAL="# {{ .tool.code }}"
+# {{- else -}}
 VISUAL=""
-if has_command zed; then
-    VISUAL="$(command -v zed)"
-elif has_command code; then
-    VISUAL="$(command -v code)"
-fi
+# {{- end }}
 export VISUAL
 
 # {{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
@@ -496,17 +561,17 @@ export AVANTE_GEMINI_API_KEY=# {{ .secrets.api_keys.avante.personal.gemini | quo
 
 
 # {{ if .cache.build.shell -}}
-{
-    echo "#!/bin/# {{ $shell }}"
-    # echo 'echo "sourcing env"'
-    # {{- if eq $shell "bash" }}
-    echo "shopt -s extglob"
-    # {{- end }}
-    declare -p | grep -vE '^declare -[^x]'
-    declare -p | grep -E '^declare -..? (__git_|__zoxide_)'
-} >"$env_cache"
+# {
+#     echo "#!/bin/# {{ $shell }}"
+#     # echo 'echo "sourcing env"'
+#     # {{- if eq $shell "bash" }}
+#     echo "shopt -s extglob"
+#     # {{- end }}
+#     declare -p | grep -vE '^declare -[^x]'
+#     declare -p | grep -E '^declare -..? (__git_|__zoxide_)'
+# } >"$env_cache"
 
-date +%s >"$last_cache_file"
-chmod 600 "$last_cache_file"
-chmod 600 "$env_cache"
+# date +%s >"$last_cache_file"
+# chmod 600 "$last_cache_file"
+# chmod 600 "$env_cache"
 # {{- end -}}

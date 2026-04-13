@@ -5,10 +5,8 @@
 # https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/blob/main/makepkg.conf
 
 # system and architecture
-ARCH='# {{ .arch | quote }}'
-CHOST='# {{ .chost | quote }}'
-export ARCH
-export CHOST
+export ARCH='# {{ .arch }}'
+export CHOST='# {{ .chost }}'
 
 #-- Compiler and Linker Flags
 # -march (or -mcpu) builds exclusively for an architecture
@@ -30,22 +28,21 @@ export DEBUG_CFLAGS="-g -fvar-tracking-assignments"
 export DEBUG_CXXFLAGS="-g -fvar-tracking-assignments"
 
 #-- Make Flags: change this for DistCC/SMP systems
-MAKEFLAGS="-j$(nproc)"
-export MAKEFLAGS
+# {{- $nproc := output "nproc" | trimSuffix "\n" }}
+export MAKEFLAGS="-j# {{ $nproc }}"
 
 #-- Numpy build flags:
-export NPY_NUM_BUILD_JOBS="$(nproc)"
+export NPY_NUM_BUILD_JOBS="# {{ $nproc }}"
 
 # rust
 # -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes
 export RUSTFLAGS='-C target-cpu=native'
 # {{ if .is_windows -}}
 # {{- /* Windows linker doesn't support the linker args */ -}}
-RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
+export RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
 # {{- else -}}
-RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1 -C link-arg=-z -C link-arg=pack-relative-relocs"
+export RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1 -C link-arg=-z -C link-arg=pack-relative-relocs"
 # {{- end }}
-export RUSTFLAGS_RELEASE
 
 # {{- if .is_macos }}
 # Setting compiler variables for specific libraries

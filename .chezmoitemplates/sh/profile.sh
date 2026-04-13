@@ -1,6 +1,7 @@
-{{ if .is_linux -}}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if .is_linux -}}
 export IBUS_ENABLE_SYNC_MODE=1
-{{- end }}
+# {{- end }}
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -25,3 +26,8 @@ export LC_ADDRESS=fr_CH.UTF-8
 export LC_TELEPHONE=fr_CH.UTF-8
 export LC_MEASUREMENT=fr_CH.UTF-8
 export LC_IDENTIFICATION=fr_CH.UTF-8
+
+# {{- if not (stat (joinPath .chezmoi.homeDir ".path_sys")) }}
+echo "$PATH" >"$HOME/.path_sys"
+chmod 600 "$HOME/.path_sys"
+# {{- end }}

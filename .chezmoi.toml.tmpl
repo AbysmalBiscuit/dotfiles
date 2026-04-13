@@ -96,6 +96,11 @@
   {{- $has_tool = include $has_tool_path | fromToml -}}
 {{- end -}}
 
+{{- $go_level := "v1" -}}
+{{- $go_level_path := joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt" -}}
+{{- if stat $go_level_path -}}
+  {{- $go_level = include $go_level_path | trim -}}
+{{- end -}}
 
 {{- $osID := .chezmoi.os -}}
 {{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
@@ -445,6 +450,7 @@ lastname = {{ $lastname | quote }}
 gpg_key = {{ $gpg_key | quote }}
 
 [data.system]
+go_level = {{ $go_level | quote }}
 has_nightly_rust = {{ output "rustup" "toolchain" "list" | contains "nightly" }}
 has_battery = {{ not $is_desktop }}
 hostname = {{ $hostname | quote }}
