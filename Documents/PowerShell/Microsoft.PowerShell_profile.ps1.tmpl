@@ -330,6 +330,11 @@ Set-PSReadLineKeyHandler -Chord Ctrl+d -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
+# Functions
+function unlockgpg {
+    echo "test" | gpg --clearsign
+}
+
 # Aliases
 New-Alias which get-command
 
