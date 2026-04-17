@@ -622,7 +622,9 @@ return {
         ttl = { glyph = "󰳗", hl = "MiniIconsGreen" },
         vlang = { glyph = "", hl = "MiniIconsBlue" },
         yql                    = { glyph = "󰬆", hl = "MiniIconsGreen"  },
-        sh                     = { glyph = '', hl = 'MiniIconsGrey'   },
+        sh                     = { glyph = "", hl = "MiniIconsGrey"   },
+        gduid = { glyph = '', hl = 'MiniIconsGrey' },
+        glb = { glyph = '', hl = 'MiniIconsGrey' },
       },
       -- stylua ignore end
       -- lsp = {},
