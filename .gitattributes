@@ -24,3 +24,6 @@
 *.wsf.tmpl text eol=crlf
 *.ps1xml text eol=crlf
 *.ps1xml.tmpl text eol=crlf
+
+# Precompile nvim colorscheme files
+private_dot_config/exact_nvim/colors/abc* binary
