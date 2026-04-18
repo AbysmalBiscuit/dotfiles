@@ -690,3 +690,27 @@ g.has_tabnine = LazyVim.has("tabnine.nvim")
 --------------------------------------------------------------------------------
 
 vim.treesitter.language.register("cython", { "pyx", "pxd", "pxi" })
+
+-- Patching gdscript
+local function patch_parsers()
+  package.loaded["nvim-treesitter.parsers"] = nil
+  package.preload["nvim-treesitter.parsers"] = nil
+  local parsers = require("nvim-treesitter.parsers")
+  parsers.gdscript.install_info.revision = "89e66b6bdc002ab976283f277cbb48b780c5d0e9"
+  parsers.gdscript.install_info.url = "https://github.com/PrestonKnopp/tree-sitter-gdscript"
+  package.preload["nvim-treesitter.parsers"] = patch_parsers
+  return parsers
+end
+
+package.preload["nvim-treesitter.parsers"] = patch_parsers
+
+local query_names = { "highlights", "indents", "injections", "folds", "locals" }
+for _, name in ipairs(query_names) do
+  local path = vim.fn.stdpath("config") .. "/after/queries/gdscript/" .. name .. ".scm"
+  local f = io.open(path, "r")
+  if f then
+    local content = f:read("*a")
+    f:close()
+    vim.treesitter.query.set("gdscript", name, content)
+  end
+end

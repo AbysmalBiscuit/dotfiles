@@ -503,6 +503,10 @@ M.integrations = {
       ["@variable.parameter.fish"] = { fg = C.yellow5 },
     },
 
+    gdscript = {
+      ["@attribute.gdscript"] = { link = "@decorator.name" },
+    },
+
     gotmpl = {
       ["@function.gotmpl"] = { link = "goTmplFunctions" },
     },
