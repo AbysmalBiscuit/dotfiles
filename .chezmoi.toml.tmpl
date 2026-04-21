@@ -240,8 +240,12 @@
   {{- $editor_args = list "--wait" }}
 {{- end }}
 
-{{- if and (hasKey $secrets "system") (index $secrets.system $hostname) -}}
-  {{- $secrets_system = (index $secrets.system $hostname) -}}
+{{- if hasKey $secrets "system" -}}
+  {{- range $name, $data := $secrets.system -}}
+    {{- if or (hasPrefix $name $hostname) (hasPrefix $hostname $name) -}}
+      {{- $secrets_system = $data -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- /* Set values based on secrets */ -}}
@@ -426,7 +430,7 @@ go_bin_dir = ""
 {{- end }}
 {{- if eq $editor "nvim" }}
 nvim = {{ $editor_path | replaceAllRegex "\\\\" "/" | quote }}
-{{- else -}}
+{{- else }}
 nvim = ""
 {{- end }}
 

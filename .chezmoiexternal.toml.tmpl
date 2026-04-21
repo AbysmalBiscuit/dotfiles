@@ -150,28 +150,29 @@ path = "jless{{ .exe_ext }}"
 {{- end }}
 
 
-{{- $exe = printf "starship%s" .exe_ext -}}
-{{ if not (stat (joinPath .path.cargo_bin_dir $exe)) -}}
-  {{- $asset = printf "starship-%s-%s%s" .rust_arch .rust_os .archive }}
+{{/*- $exe = printf "starship%s" .exe_ext -*/}}
+{{/* if not (stat (joinPath .chezmoi.homeDir ".cargo" "bin" $exe)) -*/}}
+  {{/*- $asset = printf "starship-%s-%s%s" .chezmoi.data.arch .chezmoi.os .archive */}}
 
-[".local/bin/starship{{ .exe_ext }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "starship/starship" $asset | quote }}
-refreshPeriod = "168h"
-executable = true
-path = "starship{{ .exe_ext }}"
-{{- end }}
+# [".local/bin/starship{{ .exe_ext }}"]
+# type = "archive-file"
+# url = {{/* gitHubLatestReleaseAssetURL "starship/starship" $asset | quote */}}
+# refreshPeriod = "168h"
+# executable = true
+# path = "starship{{ .exe_ext }}"
+{{- /* end */}}
 
 
 {{- $exe = printf "uv%s" .exe_ext -}}
 {{- if not (stat (joinPath .path.cargo_bin_dir $exe)) }}
 
-[".local/bin/uv{{ .exe_ext }}"]
-type = "archive-file"
-url = {{ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-%s%s" .arch $compiler_os_alt .archive) | quote }}
-refreshPeriod = "168h"
-executable = true
-path = {{ printf "uv-%s-%s/uv%s" .arch $compiler_os_alt .exe_ext | quote }}
+# [".local/bin"]
+# type = "archive"
+# url = {{ gitHubLatestReleaseAssetURL "astral-sh/uv" (printf "uv-%s-%s%s" .arch $compiler_os_alt .archive) | quote }}
+# refreshPeriod = "168h"
+# executable = true
+# include = ["uv*"]
+# path = {{ printf "uv-%s-%s/uv%s" .arch $compiler_os_alt .exe_ext | quote }}
 {{- end }}
 
 

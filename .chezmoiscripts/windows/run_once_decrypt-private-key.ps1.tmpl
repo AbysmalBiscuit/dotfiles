@@ -1,6 +1,7 @@
-# {{ include "key.txt.age" | sha256sum }}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# # {{ include "key.txt.age" | sha256sum }}
 $ChezmoiDir = "$env:USERPROFILE\.config\chezmoi"
-$SourceDir = "{{ .chezmoi.sourceDir }}"
+$SourceDir = "# {{ .chezmoi.sourceDir }}"
 
 if (-not (Test-Path "$ChezmoiDir\key.txt")) {
     New-Item -ItemType Directory -Force -Path $ChezmoiDir | Out-Null

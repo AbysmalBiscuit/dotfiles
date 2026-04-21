@@ -1,7 +1,3 @@
-$chezmoiDir = chezmoi source-path
-$scriptPath = Join-Path $chezmoiDir ".chezmoiscripts\run_onchange_before_01-generate-has-cache.ps1.tmpl"
-$tempFile = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName() + ".ps1")
-Get-Content $scriptPath -Raw | chezmoi execute-template | Set-Content $tempFile -Encoding UTF8
-& pwsh -NoProfile -NonInteractive -File $tempFile
-if (Test-Path $tempFile) { Remove-Item $tempFile }
-chezmoi init
+$SourceDir = "$env:USERPROFILE\.local\share\chezmoi"
+
+Get-Content "$SourceDir\.chezmoiscripts\windows\run_onchange_before_01-generate-has-cache.ps1.tmpl" -Raw | chezmoi execute-template | powershell -Command -
