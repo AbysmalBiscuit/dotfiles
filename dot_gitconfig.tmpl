@@ -17,6 +17,10 @@
 {{- else if index .tool "bat" }}
   pager = bat
 {{- end }}
+{{- if and .is_windows (stat "C:/Program Files/GnuPG/bin/gpg.exe") }}
+[gpg]
+  program = "C:/Program Files/GnuPG/bin/gpg.exe"
+{{- end }}
 [alias]
   lg = lg1
   lg1 = lg1-specific --all
