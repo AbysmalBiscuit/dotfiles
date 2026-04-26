@@ -204,6 +204,19 @@
     "Python": {
       "show_edit_predictions": false,
       "language_servers": ["pyrefly", "ruff"]
+    },
+    "GDScript": {
+      "formatter": {
+        "external": {
+        {{- if lookPath "gdscript-formatter" }}
+          "command": "gdscript-formatter",
+          "arguments": ["--safe"]
+        {{- else if lookPath "gdformat" }}
+          "command": "gdformat",
+          "arguments": ["-"]
+        {{- end }}
+        }
+      }
     }
   },
   "lsp": {
