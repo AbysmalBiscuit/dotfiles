@@ -3,21 +3,14 @@
   "$schema": "https://aka.ms/terminal-profiles-schema-preview",
   "actions": [
     {
-      "command": "paste",
-      "id": "User.paste"
-    },
-    {
       "command": {
         "action": "newTab"
       },
       "id": "User.newTab.5DEADB41"
     },
     {
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[27;5;46~"
-      },
-      "id": "User.sendInput.1973306"
+      "command": "paste",
+      "id": "User.paste"
     },
     {
       "command": {
@@ -29,16 +22,9 @@
     {
       "command": {
         "action": "sendInput",
-        "input": "\u001b[27;5;56~"
+        "input": "\u001b[27;5;46~"
       },
-      "id": "User.sendInput.CTRL8"
-    },
-    {
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[27;5;44~"
-      },
-      "id": "User.sendInput.D0196038"
+      "id": "User.sendInput.1973306"
     },
     {
       "command": {
@@ -50,9 +36,16 @@
     {
       "command": {
         "action": "sendInput",
-        "input": "\u001b[32;6u"
+        "input": "\u001b[27;5;44~"
       },
-      "id": "User.sendInput.DAD07D2"
+      "id": "User.sendInput.D0196038"
+    },
+    {
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[27;5;56~"
+      },
+      "id": "User.sendInput.CTRL8"
     },
     {
       "command": {
@@ -64,15 +57,16 @@
     {
       "command": {
         "action": "sendInput",
-        "input": "\u001b[27;5;50~"
+        "input": "\u001b[32;6u"
       },
-      "id": "User.sendInput.CTRL2"
+      "id": "User.sendInput.DAD07D2"
     },
     {
       "command": {
-        "action": "nextTab"
+        "action": "sendInput",
+        "input": "\u001b[27;5;50~"
       },
-      "id": "User.nextTab.0"
+      "id": "User.sendInput.CTRL2"
     },
     {
       "command": {
@@ -80,6 +74,12 @@
         "input": "\u001b[27;5;51~"
       },
       "id": "User.sendInput.CTRL3"
+    },
+    {
+      "command": {
+        "action": "nextTab"
+      },
+      "id": "User.nextTab.0"
     },
     {
       "command": {
@@ -104,17 +104,17 @@
     },
     {
       "command": {
-        "action": "copy",
-        "singleLine": false
-      },
-      "id": "User.copy.644BA8F2"
-    },
-    {
-      "command": {
         "action": "sendInput",
         "input": "\u001b[27;5;55~"
       },
       "id": "User.sendInput.CTRL7"
+    },
+    {
+      "command": {
+        "action": "copy",
+        "singleLine": false
+      },
+      "id": "User.copy.644BA8F2"
     },
     {
       "command": {
@@ -125,18 +125,18 @@
     },
     {
       "command": {
+        "action": "sendInput",
+        "input": "\u001b[27;5;48~"
+      },
+      "id": "User.sendInput.CTRL0"
+    },
+    {
+      "command": {
         "action": "splitPane",
         "split": "auto",
         "splitMode": "duplicate"
       },
       "id": "User.splitPane.A6751878"
-    },
-    {
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[27;5;48~"
-      },
-      "id": "User.sendInput.CTRL0"
     },
     {
       "command": "find",
@@ -228,20 +228,20 @@
       "keys": "alt+shift+down"
     },
     {
-      "id": "Terminal.MoveFocusUp",
-      "keys": "ctrl+up"
-    },
-    {
       "id": "User.swapPane.F747588A",
       "keys": "ctrl+alt+shift+down"
     },
     {
-      "id": "User.sendInput.CTRL6",
-      "keys": "ctrl+6"
+      "id": "Terminal.MoveFocusUp",
+      "keys": "ctrl+up"
     },
     {
       "id": "Terminal.ResizePaneLeft",
       "keys": "alt+shift+left"
+    },
+    {
+      "id": "User.sendInput.CTRL6",
+      "keys": "ctrl+6"
     },
     {
       "id": "Terminal.ResizePaneRight",
@@ -256,20 +256,20 @@
       "keys": "alt+shift+d"
     },
     {
-      "id": "User.find",
-      "keys": "ctrl+shift+f"
-    },
-    {
       "id": "User.sendInput.D0196038",
       "keys": "ctrl+comma"
     },
     {
-      "id": null,
-      "keys": "alt+down"
+      "id": "User.find",
+      "keys": "ctrl+shift+f"
     },
     {
       "id": "User.newTab.5DEADB41",
       "keys": "ctrl+shift+t"
+    },
+    {
+      "id": null,
+      "keys": "alt+down"
     },
     {
       "id": "Terminal.DuplicatePaneRight",
@@ -284,12 +284,12 @@
       "keys": "ctrl+down"
     },
     {
-      "id": "Terminal.MoveFocusLeft",
-      "keys": "ctrl+left"
-    },
-    {
       "id": "User.sendInput.2E6304F7",
       "keys": "ctrl+;"
+    },
+    {
+      "id": "Terminal.MoveFocusLeft",
+      "keys": "ctrl+left"
     },
     {
       "id": null,
@@ -308,44 +308,44 @@
       "keys": "alt+up"
     },
     {
-      "id": "User.sendInput.CTRL4",
-      "keys": "ctrl+4"
-    },
-    {
       "id": "User.swapPane.6CD791B",
       "keys": "ctrl+alt+shift+up"
+    },
+    {
+      "id": "User.sendInput.CTRL4",
+      "keys": "ctrl+4"
     },
     {
       "id": "User.swapPane.2A0DA8E0",
       "keys": "ctrl+alt+shift+left"
     },
     {
-      "id": "User.sendInput.CTRL9",
-      "keys": "ctrl+9"
-    },
-    {
       "id": "User.swapPane.87C324ED",
       "keys": "ctrl+alt+shift+right"
     },
     {
-      "id": "User.nextTab.0",
-      "keys": "ctrl+shift+pgdn"
-    },
-    {
-      "id": "User.prevTab.0",
-      "keys": "ctrl+shift+pgup"
+      "id": "User.sendInput.CTRL9",
+      "keys": "ctrl+9"
     },
     {
       "id": null,
       "keys": "ctrl+shift+period"
     },
     {
-      "id": "User.sendInput.CTRL0",
-      "keys": "ctrl+0"
+      "id": "User.prevTab.0",
+      "keys": "ctrl+shift+pgup"
+    },
+    {
+      "id": "User.nextTab.0",
+      "keys": "ctrl+shift+pgdn"
     },
     {
       "id": null,
       "keys": "ctrl+shift+comma"
+    },
+    {
+      "id": "User.sendInput.CTRL0",
+      "keys": "ctrl+0"
     },
     {
       "id": "Terminal.Suggestions",
@@ -360,12 +360,12 @@
       "keys": "ctrl+period"
     },
     {
-      "id": "User.sendInput.CTRL3",
-      "keys": "ctrl+3"
-    },
-    {
       "id": "User.sendInput.DAD07DD",
       "keys": "ctrl+shift+;"
+    },
+    {
+      "id": "User.sendInput.CTRL3",
+      "keys": "ctrl+3"
     },
     {
       "id": "User.sendInput.355D2F28",
@@ -533,18 +533,6 @@
         "name": "Windows Git-Bash (Admin)"
       },
       {
-        "guid": "{6e91d858-8cf2-570d-9259-f53a05319aff}",
-        "hidden": false,
-        "name": "Developer Command Prompt for VS 2022",
-        "source": "Windows.Terminal.VisualStudio"
-      },
-      {
-        "guid": "{6d6dccbe-1643-51d2-b84c-d8646e1d27dd}",
-        "hidden": false,
-        "name": "Developer PowerShell for VS 2022",
-        "source": "Windows.Terminal.VisualStudio"
-      },
-      {
         "guid": "{47302f9c-1ac4-566c-aa3e-8cf29889d6ab}",
         "hidden": false,
         "name": "Nushell",
@@ -567,18 +555,6 @@
         "icon": "ms-appx:///ProfileIcons/{0caa0dad-35be-5f56-a8ff-afceeeaa6101}.png",
         "name": "Command Prompt (Admin)",
         "snapOnInput": true
-      },
-      {
-        "guid": "{36407424-70c9-54f6-a2af-1c47977ced1a}",
-        "hidden": false,
-        "name": "Developer Command Prompt for VS 18",
-        "source": "Windows.Terminal.VisualStudio"
-      },
-      {
-        "guid": "{ed878ac4-7338-5846-aac1-564a5973f08f}",
-        "hidden": false,
-        "name": "Developer PowerShell for VS 18",
-        "source": "Windows.Terminal.VisualStudio"
       }
     ]
   },
