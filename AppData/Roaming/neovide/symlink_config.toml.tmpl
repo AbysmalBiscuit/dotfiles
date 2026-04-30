@@ -1,0 +1,3 @@
+{{- if index .tool "neovide" }}
+{{ joinPath .chezmoi.homeDir ".config" "neovide" "config.toml" }}
+{{- end }}

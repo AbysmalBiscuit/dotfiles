@@ -5,6 +5,11 @@ idle = true
 maximized = false
 mouse-cursor-icon = "arrow"
 # neovim-bin = "/usr/bin/nvim"                        # in reality found dynamically on $PATH if unset
+{{- if index .tool "neovim" }}
+{{- if and .is_windows (stat (joinPath .chezmoi.homeDir ".local" "bin" "nvim-win64" "bin" "nvim.exe")) }}
+neovim-bin = '{{ joinPath .chezmoi.homeDir ".local" "bin" "nvim-win64" "bin" "nvim.exe" | replace "\\" "/" }}'
+{{- end }}
+{{- end }}
 no-multigrid = false
 srgb = false
 tabs = true

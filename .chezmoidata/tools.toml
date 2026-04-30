@@ -1200,6 +1200,30 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "Neovide"
+cmds = [
+    "neovide"
+]
+desc = "No Nonsense Neovim Client in Rust"
+url = "https://neovide.dev/"
+git = "https://github.com/neovide/neovide"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "VTracer"
 cmds = [
     "vtracer"
