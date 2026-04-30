@@ -446,6 +446,7 @@
       "ctrl-w space": "editor::OpenExcerptsSplit",
       "ctrl-w g space": "editor::OpenExcerptsSplit",
       "ctrl-6": "pane::AlternateFile",
+      "space `": "pane::AlternateFile",
     },
   },
   {
