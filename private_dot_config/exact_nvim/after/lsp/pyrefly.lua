@@ -1,11 +1,19 @@
 local cmd
 if vim.g.is_windows then
-  cmd = {
-    "powershell",
-    "-NoProfile",
-    "-Command",
-    [[& pyrefly lsp 2>&1 | Where-Object { $_ -notmatch '^\s*INFO' } | ForEach-Object { if ($_ -is [System.Management.Automation.ErrorRecord]) { [Console]::Error.WriteLine($_) } else { [Console]::WriteLine($_) } }]],
-  }
+  local python_exe
+  if vim.fn.executable("python3") then
+    python_exe = "python3"
+  elseif vim.fn.executable("python") then
+    python_exe = "python"
+  end
+
+  if python_exe ~= "" then
+    cmd = { python_exe, vim.fn.stdpath("config") .. "/after/lsp/pyrefly_lsp_wrapper.py" }
+  elseif vim.fn.executable("uv") then
+    cmd = { "uv", "run", vim.fn.stdpath("config") .. "/after/lsp/pyrefly_lsp_wrapper.py" }
+  else
+    cmd = { "pyrefly", "lsp" }
+  end
 else
   cmd = {
     "bash",
