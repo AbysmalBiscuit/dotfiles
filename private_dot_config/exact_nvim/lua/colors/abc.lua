@@ -15,7 +15,7 @@ local U = require("colors.utils.colors")
 ---Color palette
 local C = {
   none = "NONE",
-
+  --
   beige = "#efdcbc",
   beige2 = "#bfb096",
   beige3 = "#b4aa99",
@@ -29,19 +29,20 @@ local C = {
   blue3 = "#7db8f5",
   blue4 = "#375780",
   blue5 = "#273E5C",
-  blue6 = "#1B2B40",
+  blue6 = "#131B26",
   blue7 = "#2a4363",
   blue8 = "#569CD6",
+  blue_search = "#2E4A8C",
   blue_background = "#141F2E",
-  blue_background2 = "#111422",
-  -- blue_background = "#0F1824",
-  -- alternate_background = "#0D141F",
   alternate_background = "#0D141F",
   alternate_background_alt = "#090F18",
-  alternate_background2 = "#0D0D17",
+  background = "#0B111a",
+  background_alt = "#04070b",
+  gutter_background = "#131b25",
+  gutter_background_cursor = "#1B2433",
   cyan = "#06989A",
   cyan2 = "#34E2E2",
-  gold = "#C8A828",
+  gold = "#FFD700",
   gray = "#333333",
   gray0 = "#6a6a6e",
   gray1 = "#99999d",
@@ -49,11 +50,11 @@ local C = {
   gray5 = "#7f7f7f",
   gray7 = "#cccccc",
   gray8 = "#282828",
-  gray9 = "#1C1C2A",
   green = "#11cf45",
   green2 = "#80FFBB",
   green3 = "#93b3a3",
   green4 = "#3DC870",
+  green5 = "#4AA532",
   green6 = "#2BE85F",
   green7 = "#6abf80",
   lavender2 = "#c48aff",
@@ -93,6 +94,12 @@ local C = {
   search_blue_dark = "#308CC6",
   search_brown = "#7e3100",
 
+  -- lsp ref
+  ref_bg = U.brighten("#0e161f", 0.2),
+  ref_text = "#505570", -- muted blue-violet, quiet neutral
+  ref_read = "#4B8DC8", -- clear blue, readable on the violet-dark bg
+  ref_write = "#C07830", -- warm orange, strong warm/cool contrast
+
   -- Rainbow Colors
   rainbow_red = "#D65A56",
   rainbow_yellow = "#ffe636",
@@ -130,6 +137,8 @@ local C = {
   mantle = "#181825",
   crust = "#11111b",
 }
+
+C.sky2 = U.darken(C.blue2, 0.8, C.background)
 
 ---@type ColorsTable
 ---taken from catppuccin for easier merging
@@ -170,13 +179,13 @@ M.editor = {
   -- Standard highlight groups
 
   ---Normal text in non-current windows.
-  NormalNC = { bg = C.alternate_background2 },
+  NormalNC = { bg = C.background_alt },
 
   -- CursorLine
   ---Screen-line at the cursor, when 'cursorline' is set. Low-priority if foreground (ctermfg OR guifg) is not set.
   CursorLine = { bg = C.blue6 },
   ---Like LineNr when 'cursorline' is set and 'cursorlineopt' contains "number" or is "both", for the cursor line.
-  CursorLineNr = { fg = C.gray7, bg = C.gray8, style = { "bold" } },
+  CursorLineNr = { fg = C.gray7, bg = C.gutter_background_cursor, style = { "bold" } },
 
   -- Diagnostic
   DiagnosticError = { fg = C.red2 },
@@ -189,10 +198,10 @@ M.editor = {
   DiagnosticFloatingInfo = { fg = C.blue },
   DiagnosticFloatingWarn = { fg = C.orange },
 
-  DiagnosticSignError = { fg = C.red2, bg = C.gray8 },
-  DiagnosticSignHint = { fg = C.green, bg = C.gray8 },
-  DiagnosticSignInfo = { fg = C.blue, bg = C.gray8 },
-  DiagnosticSignWarn = { fg = C.orange, bg = C.gray8 },
+  DiagnosticSignError = { fg = C.red2, bg = C.gutter_background },
+  DiagnosticSignHint = { fg = C.green, bg = C.gutter_background },
+  DiagnosticSignInfo = { fg = C.blue, bg = C.gutter_background },
+  DiagnosticSignWarn = { fg = C.orange, bg = C.gutter_background },
   -- DiagnosticUnderlineWarn = {},
 
   -- Diffs
@@ -207,10 +216,10 @@ M.editor = {
   -- diffLine = { fg = CP.overlay0 },
   -- diffIndexLine = { fg = CP.teal },
 
-  DiffAdd = { bg = U.darken(CP.green, 0.18, C.blue_background) }, -- diff mode: Added line |diff.txt|
-  DiffChange = { bg = U.darken(CP.blue, 0.07, C.blue_background) }, -- diff mode: Changed line |diff.txt|
-  DiffDelete = { bg = U.darken(CP.red, 0.18, C.blue_background) }, -- diff mode: Deleted line |diff.txt|
-  DiffText = { bg = U.darken(CP.blue, 0.30, C.blue_background) }, -- diff mode: Changed text within a changed line |diff.txt|
+  DiffAdd = { bg = U.darken(CP.green, 0.18, C.background) }, -- diff mode: Added line |diff.txt|
+  DiffChange = { bg = U.darken(CP.blue, 0.07, C.background) }, -- diff mode: Changed line |diff.txt|
+  DiffDelete = { bg = U.darken(CP.red, 0.18, C.background) }, -- diff mode: Deleted line |diff.txt|
+  DiffText = { bg = U.darken(CP.blue, 0.30, C.background) }, -- diff mode: Changed text within a changed line |diff.txt|
 
   -- DiffAdd = { fg = C.pureblack, bg = C.green },
   -- DiffChange = { fg = C.pureblack, bg = C.orange },
@@ -225,21 +234,24 @@ M.editor = {
 
   -- Search
   -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
-  Search = { bg = U.darken(C.blue4, 0.6, C.blue_background) },
+  Search = { bg = U.darken(C.blue_search, 0.6, C.background) },
   -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
-  IncSearch = { fg = C.white, bg = U.darken(C.blue4, 0.90, C.blue_background), style = { "bold", "underline" } },
+  IncSearch = { fg = C.white, bg = U.darken(C.blue_search, 0.90, C.background), style = { "bold", "underline" } },
   -- 'cursearch' highlighting: highlights the current search you're on differently
-  CurSearch = { fg = C.white, bg = U.brighten(C.blue4, 0.2), style = { "bold", "underline" } },
+  CurSearch = { fg = C.white, bg = U.brighten(C.blue_search, 0.1), style = { "bold", "underline" } },
 
   -- Search = { fg = C.text, bg = U.darken(C.sky, 0.30, C.base) },
   -- IncSearch = { fg = C.mantle, bg = U.darken(C.sky, 0.90, C.base) },
   -- CurSearch = { fg = C.mantle, bg = C.red },
 
   -- Gutter
-  ColorColumn = { bg = C.gray9 },
-  LineNr = { fg = C.gray5, bg = C.gray8 },
-  SignColumn = { bg = C.gray8 },
+  ColorColumn = { bg = C.gutter_background },
+  LineNr = { fg = C.gray5, bg = C.gutter_background },
+  SignColumn = { bg = C.gutter_background },
 
+  LspReferenceText = { bg = C.ref_bg, sp = C.ref_text, style = { "underline" } },
+  LspReferenceRead = { bg = C.ref_bg, sp = C.ref_read, style = { "underline" } },
+  LspReferenceWrite = { bg = C.ref_bg, sp = C.ref_write, style = { "underline" } },
   LspInlayHint = { fg = C.gray5 },
   EndOfBuffer = { fg = C.gray },
   ModeMsg = { fg = C.green, bg = C.gray8 },
@@ -264,7 +276,7 @@ M.editor = {
   -- Visual = { bg = C.blue4 },
 
   -- new visual catppuccin gray style
-  Visual = { bg = U.darken(C.overlay2, 0.3, C.blue_background), bold = true, style = { "bold" } },
+  Visual = { bg = U.darken(C.overlay2, 0.3, C.background), bold = true, style = { "bold" } },
 
   vimCommentTitle = { fg = C.white },
   vimOption = { fg = C.blue },
@@ -280,19 +292,19 @@ M.syntax = {
   Boolean = { fg = C.peach, style = { "bold" } },
   Comment = { fg = C.gray5 },
   Conditional = { fg = C.blue, style = { "bold" } },
-  Constant = { fg = C.yellow },
-  Define = { fg = C.amber, style = { "bold" } },
+  Constant = { fg = C.yellow, style = { "bold" } },
+  Define = { fg = C.green5, style = { "bold" } },
   Float = { fg = C.orange },
   Function = { fg = C.rosewater },
   Identifier = { fg = C.white },
   Keyword = { fg = C.blue, style = { "bold" } },
-  Macro = { fg = C.amber, style = { "bold" } },
+  Macro = { link = "Define" },
   MatchParen = { bg = C.surface2, style = { "bold" } },
-  Normal = { fg = C.white, bg = C.blue_background2 },
+  Normal = { fg = C.white, bg = C.background },
   Number = { fg = C.orange },
   -- Operator = { fg = C.white },
-  Operator = { fg = C.teal },
-  PreProc = { fg = C.amber, style = { "bold" } },
+  Operator = { fg = C.teal, style = { "bold" } },
+  PreProc = { link = "Define" },
   Include = { fg = C.magenta3 },
   Special = { fg = C.blue8, style = { "bold" } },
   Statement = { fg = C.blue },
@@ -310,6 +322,7 @@ M.integrations = {
   lsp = {
     -- ["@lsp"] = {},
     -- ["@lsp.type"] = {},
+    ["@lsp.type.enumMember"] = { link = "Constant" },
     -- ["@lsp.mod"] = {},
 
     -- ["@lsp.mod.builtin"] = { fg = C.magenta4 },
@@ -333,7 +346,7 @@ M.integrations = {
     -- ["@lsp.type.decorator.rust"] = { link = "Macro" },
     -- ["@lsp.type.enum"] = { style = { "underline" } },
     -- ["@lsp.type.enumMember.zig"] = { link = "@variable.member" },
-    -- ["@lsp.type.macro"] = { fg = C.amber, style = { "bold" } },
+    ["@lsp.type.macro"] = { link = "Macro" },
     -- ["@lsp.type.namespace.zig"] = { fg = C.white },
     -- ["@lsp.type.parameter"] = { link = "@variable.parameter.declaration" },
     -- ["@lsp.type.property"] = {},
@@ -341,8 +354,6 @@ M.integrations = {
     ["@lsp.type.function"] = {},
     ["@lsp.type.decorator"] = {},
     ["@lsp.type.enum"] = {},
-    ["@lsp.type.enumMember.zig"] = {},
-    ["@lsp.type.macro"] = {},
     ["@lsp.type.method"] = {},
     ["@lsp.type.namespace.zig"] = {},
     ["@lsp.type.parameter"] = {},
@@ -381,7 +392,7 @@ M.integrations = {
     },
 
     decorator = {
-      ["@decorator"] = { fg = C.amber, bold = true, nocombine = true },
+      ["@decorator"] = { fg = C.orange2, bold = true, nocombine = true },
       -- ["@decorator.identifier"] = { fg = C.orange2, bold = true, nocombine = true },
       -- ["@decorator.name"] = { fg = C.white, bold = false, nocombine = true },
       -- ["@decorator.operator"] = { link = "@decorator"},
@@ -392,7 +403,7 @@ M.integrations = {
       ["@function"] = { fg = C.rosewater, style = { "bold" } },
       ["@function.builtin"] = { fg = C.magenta4, style = { "bold" } },
       ["@function.call"] = { fg = C.white },
-      ["@function.macro"] = { fg = C.amber, style = { "bold" } },
+      ["@function.macro"] = { link = "Macro" },
     },
 
     -- keywords
@@ -414,12 +425,12 @@ M.integrations = {
     },
 
     module = {
-      ["@module"] = { fg = C.sky, style = { "bold" } },
-      ["@module.builtin"] = { fg = C.sky, sp = C.magenta4, style = { "bold" } },
+      ["@module"] = { fg = C.green2, style = { "bold" } },
+      ["@module.builtin"] = { fg = C.green2, sp = C.magenta4, style = { "bold" } },
     },
 
     namespace = {
-      ["@namespace"] = { fg = C.sky, style = { "italic" } },
+      ["@namespace"] = { fg = C.green2, style = { "italic" } },
     },
 
     operator = {
@@ -525,6 +536,10 @@ M.integrations = {
       ["@function.latex"] = { fg = C.blue },
     },
 
+    lua = {
+      ["@property.lua"] = { fg = C.white },
+    },
+
     markdown = {
       -- ["@default.markdown"] = { fg = C.white },
     },
@@ -616,8 +631,8 @@ M.integrations = {
   },
 
   noice = {
-    NoiceCmdlineIcon = { fg = CP.sky, bg = C.blue_background },
-    NoiceCmdlinePopupBorder = { fg = C.lavender2, bg = C.blue_background },
+    NoiceCmdlineIcon = { fg = C.white, bg = C.background },
+    NoiceCmdlinePopupBorder = { fg = C.white, bg = C.background },
   },
 
   ["virt-column"] = {
