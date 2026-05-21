@@ -33,28 +33,29 @@ local C = {
   blue7 = "#2a4363",
   blue8 = "#569CD6",
   blue_background = "#141F2E",
+  blue_background2 = "#111422",
   -- blue_background = "#0F1824",
   -- alternate_background = "#0D141F",
   alternate_background = "#0D141F",
+  alternate_background_alt = "#090F18",
+  alternate_background2 = "#0D0D17",
   cyan = "#06989A",
   cyan2 = "#34E2E2",
-  gold = "#FFD700",
+  gold = "#C8A828",
   gray = "#333333",
   gray0 = "#6a6a6e",
   gray1 = "#99999d",
   gray2 = "#cbcbcf",
-  gray3 = "#b4aa99",
-  gray4 = "#262628",
   gray5 = "#7f7f7f",
-  gray6 = "#808080",
   gray7 = "#cccccc",
   gray8 = "#282828",
+  gray9 = "#1C1C2A",
   green = "#11cf45",
   green2 = "#80FFBB",
   green3 = "#93b3a3",
-  green4 = "#b1c37c",
-  green5 = "#4AA532",
+  green4 = "#3DC870",
   green6 = "#2BE85F",
+  green7 = "#6abf80",
   lavender2 = "#c48aff",
   lavender3 = "#725ab9",
   orange = "#ff9d00",
@@ -75,14 +76,15 @@ local C = {
   magenta2 = "#f49ac2",
   magenta3 = "#ca80ca",
   magenta4 = "#dd70dd",
+  magenta5 = "#B06EC8",
   white = "#e5e5e5",
   white2 = "#dcdccc",
   white3 = "#D3D7CF",
   -- yellow = "#ffd787",
   yellow2 = "#ffe636",
-  yellow3 = "#C4A000",
   yellow4 = "#FCE94F",
   yellow5 = "#FFFAB1",
+  amber = "#C4A000",
 
   -- styles
   string_escape = "#83A6C1",
@@ -168,7 +170,7 @@ M.editor = {
   -- Standard highlight groups
 
   ---Normal text in non-current windows.
-  NormalNC = { bg = C.alternate_background },
+  NormalNC = { bg = C.alternate_background2 },
 
   -- CursorLine
   ---Screen-line at the cursor, when 'cursorline' is set. Low-priority if foreground (ctermfg OR guifg) is not set.
@@ -234,8 +236,8 @@ M.editor = {
   -- CurSearch = { fg = C.mantle, bg = C.red },
 
   -- Gutter
-  ColorColumn = { bg = C.blue5 },
-  LineNr = { fg = C.gray6, bg = C.gray8 },
+  ColorColumn = { bg = C.gray9 },
+  LineNr = { fg = C.gray5, bg = C.gray8 },
   SignColumn = { bg = C.gray8 },
 
   LspInlayHint = { fg = C.gray5 },
@@ -279,23 +281,23 @@ M.syntax = {
   Comment = { fg = C.gray5 },
   Conditional = { fg = C.blue, style = { "bold" } },
   Constant = { fg = C.yellow },
-  Define = { fg = C.green5, style = { "bold" } },
+  Define = { fg = C.amber, style = { "bold" } },
   Float = { fg = C.orange },
-  Function = { fg = C.white },
+  Function = { fg = C.rosewater },
   Identifier = { fg = C.white },
   Keyword = { fg = C.blue, style = { "bold" } },
-  Macro = { fg = C.green5, style = { "bold" } },
-  MatchParen = { bg = C.blue7, style = { "bold" } },
-  Normal = { fg = C.white, bg = C.blue_background },
+  Macro = { fg = C.amber, style = { "bold" } },
+  MatchParen = { bg = C.surface2, style = { "bold" } },
+  Normal = { fg = C.white, bg = C.blue_background2 },
   Number = { fg = C.orange },
   -- Operator = { fg = C.white },
   Operator = { fg = C.teal },
-  PreProc = { fg = C.orange2 },
+  PreProc = { fg = C.amber, style = { "bold" } },
   Include = { fg = C.magenta3 },
   Special = { fg = C.blue8, style = { "bold" } },
   Statement = { fg = C.blue },
-  String = { fg = C.green },
-  Structure = { fg = C.green2 },
+  String = { fg = C.green4 },
+  Structure = { fg = C.blue2 },
   Type = { fg = C.blue2, style = { "bold" } },
   Typedef = { fg = C.blue2, style = { "bold" } },
 }
@@ -321,7 +323,7 @@ M.integrations = {
     -- ["@lsp.typemod.function.declaration"] = { style = { "bold" } },
     -- ["@lsp.typemod.function.defaultLibrary"] = { link = "Builtin" },
     -- ["@lsp.typemod.function.definition"] = { fg = C.white, style = { "bold" } },
-    -- ["@lsp.typemod.method.definition"] = { fg = C.white, style = { "bold" } },
+    ["@lsp.typemod.method.definition"] = { fg = C.rosewater, style = { "bold" } },
     -- ["@lsp.typemod.parameter.definition.python"] = { link = "@parameter" },
     ["@lsp.typemod.class.builtin"] = {},
     ["@lsp.typemod.variable"] = {},
@@ -331,7 +333,7 @@ M.integrations = {
     -- ["@lsp.type.decorator.rust"] = { link = "Macro" },
     -- ["@lsp.type.enum"] = { style = { "underline" } },
     -- ["@lsp.type.enumMember.zig"] = { link = "@variable.member" },
-    -- ["@lsp.type.macro"] = { fg = C.green5, style = { "bold" } },
+    -- ["@lsp.type.macro"] = { fg = C.amber, style = { "bold" } },
     -- ["@lsp.type.namespace.zig"] = { fg = C.white },
     -- ["@lsp.type.parameter"] = { link = "@variable.parameter.declaration" },
     -- ["@lsp.type.property"] = {},
@@ -358,8 +360,6 @@ M.integrations = {
   lsp_rust = {
     ["@lsp.type.comment.rust"] = { link = "NONE" },
     ["@lsp.type.macro.rust"] = { link = "Macro" },
-    -- ["@lsp.mod.documentation.rust"] = {},
-    -- ["@lsp.typemod.comment.documentation.rust"] = {},
   },
 
   ---@type NestedHighlightGroupTable
@@ -367,13 +367,12 @@ M.integrations = {
     -- comments
     comment = {
       -- ["@comment.documentation"] = { link = "Comment" },
-      -- ["@comment.documentation"] = { fg = C.green },
-      ["@comment.documentation.prefix"] = { fg = C.green, bold = true },
+      ["@comment.documentation.prefix"] = { fg = C.green7, bold = true },
     },
 
     constructor = {
       -- ["@attribute.builtin"] = { fg = colors.orange2, style = { "bold" } },
-      ["@constructor"] = { fg = C.magenta4, style = { "bold" } },
+      ["@constructor"] = { link = "Type" },
     },
 
     -- constants
@@ -382,7 +381,7 @@ M.integrations = {
     },
 
     decorator = {
-      ["@decorator"] = { fg = C.orange2, bold = true, nocombine = true },
+      ["@decorator"] = { fg = C.amber, bold = true, nocombine = true },
       -- ["@decorator.identifier"] = { fg = C.orange2, bold = true, nocombine = true },
       -- ["@decorator.name"] = { fg = C.white, bold = false, nocombine = true },
       -- ["@decorator.operator"] = { link = "@decorator"},
@@ -390,10 +389,10 @@ M.integrations = {
 
     -- functions
     ["function"] = {
-      ["@function"] = { fg = C.white },
+      ["@function"] = { fg = C.rosewater, style = { "bold" } },
       ["@function.builtin"] = { fg = C.magenta4, style = { "bold" } },
       ["@function.call"] = { fg = C.white },
-      ["@function.macro"] = { fg = C.green5, style = { "bold" } },
+      ["@function.macro"] = { fg = C.amber, style = { "bold" } },
     },
 
     -- keywords
@@ -409,13 +408,18 @@ M.integrations = {
       ["@keyword.exception"] = { link = "@keyword" },
     },
 
+    method = {
+      ["@method"] = { fg = C.rosewater, style = { "bold" } },
+      ["@method.call"] = { fg = C.text },
+    },
+
     module = {
-      ["@module"] = { fg = C.green2, style = { "bold" } },
-      ["@module.builtin"] = { fg = C.green2, sp = C.magenta4, style = { "bold" } },
+      ["@module"] = { fg = C.sky, style = { "bold" } },
+      ["@module.builtin"] = { fg = C.sky, sp = C.magenta4, style = { "bold" } },
     },
 
     namespace = {
-      ["@namespace"] = { fg = C.green2, style = { "italic" } },
+      ["@namespace"] = { fg = C.sky, style = { "italic" } },
     },
 
     operator = {
@@ -427,7 +431,7 @@ M.integrations = {
     },
 
     property = {
-      ["@property"] = { fg = C.white }, -- Same as TSField.
+      ["@property"] = { fg = C.lavender }, -- Same as TSField.
     },
 
     punctuation = {
@@ -446,16 +450,16 @@ M.integrations = {
 
     ["string"] = {
       -- strings
-      ["@string"] = { fg = C.green },
+      ["@string"] = { fg = C.green4 },
       ["@string.escape"] = { fg = C.lavender2, style = { "bold" } },
-      ["@string.regexp"] = { fg = C.green },
-      ["@string.template"] = { fg = C.green },
-      ["@string.documentation"] = { fg = C.green },
+      ["@string.regexp"] = { fg = C.green2 },
+      ["@string.template"] = { fg = C.green2 },
+      ["@string.documentation"] = { fg = C.green7 },
     },
 
     ["type"] = {
       -- type
-      ["@type.builtin"] = { fg = C.blue2, style = { "bold" } },
+      ["@type.builtin"] = { fg = C.sapphire, style = { "bold" } },
     },
 
     variable = {
@@ -464,12 +468,12 @@ M.integrations = {
       --- Variable names that are defined by the languages.
       ["@variable.builtin"] = { fg = C.magenta4 },
       --- Special variables that refer to a class instance, like `this` in JavaScript or `self` in Python.
-      ["@variable.instance_reference"] = { fg = C.orange2, style = { "bold" } },
-      ["@variable.class_reference"] = { fg = C.orange2, style = { "bold" } },
+      ["@variable.instance_reference"] = { fg = C.magenta5, style = { "bold" } },
+      ["@variable.class_reference"] = { fg = C.magenta5, style = { "bold" } },
       ["@variable.parameter"] = { fg = C.text },
       -- ["@variable.parameter.argument"] = { fg = C.green_mocha },
       ["@variable.parameter.argument"] = {},
-      ["@variable.member"] = { fg = C.lavender },
+      ["@variable.member"] = { link = "@property" },
       ["@variable.parameter.declaration"] = { fg = C.text, style = { "bold" } },
     },
   },
@@ -513,8 +517,8 @@ M.integrations = {
 
     json = {
       -- JSON
-      ["@property.json"] = { fg = C.green },
-      ["@property.jsonc"] = { fg = C.green },
+      ["@property.json"] = { fg = C.green4 },
+      ["@property.jsonc"] = { fg = C.green4 },
     },
 
     latex = {
@@ -528,7 +532,7 @@ M.integrations = {
     rust = {
       -- rust
       ["@variable.parameter.declaration.rust"] = { link = "@variable.parameter.declaration" },
-      -- ["@comment.documentation.rust"] = { fg = C.green },
+      -- ["@comment.documentation.rust"] = { fg = C.green7 },
     },
 
     python = {
@@ -549,7 +553,7 @@ M.integrations = {
       ["@keyword.exception.zig"] = { fg = C.yellow, style = { "bold" } },
       ["@keyword.repeat.zig"] = { fg = C.blue },
       ["@number.float.zig"] = { fg = C.blue },
-      ["@type.builtin.zig"] = { fg = C.blue2, style = { "bold" } },
+      ["@type.builtin.zig"] = { link = "@type.builtin" },
       ["@variable.parameter.zig"] = { fg = C.white },
       ["@variable.zig"] = { fg = C.white },
       ["@zigBlock"] = { fg = C.yellow, style = { "bold" } },
@@ -590,8 +594,8 @@ M.integrations = {
 
   treesitter_context = {
     -- Treesitter Context
-    TreesitterContextBottom = { sp = C.gray6, style = { "underline" } },
-    -- TreesitterContextLineNumberBottom = { sp = colors.gray6, style = { "underline" } }, -- Uncomment if needed
+    TreesitterContextBottom = { sp = C.gray5, style = { "underline" } },
+    -- TreesitterContextLineNumberBottom = { sp = colors.gray5, style = { "underline" } }, -- Uncomment if needed
   },
 
   -- toggleterm = {
@@ -613,7 +617,7 @@ M.integrations = {
 
   noice = {
     NoiceCmdlineIcon = { fg = CP.sky, bg = C.blue_background },
-    NoiceCmdlinePopupBorder = { fg = CP.lavender2, bg = C.blue_background },
+    NoiceCmdlinePopupBorder = { fg = C.lavender2, bg = C.blue_background },
   },
 
   ["virt-column"] = {
@@ -657,7 +661,7 @@ M.terminal = {
   terminal_color_2 = C.green,
   terminal_color_10 = C.green6,
 
-  terminal_color_3 = C.yellow3,
+  terminal_color_3 = C.amber,
   terminal_color_11 = C.yellow4,
 
   terminal_color_4 = C.blue,
