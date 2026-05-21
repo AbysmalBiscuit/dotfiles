@@ -68,8 +68,8 @@
         "scrollbar.track.background": "#1e1e2e",
         "scrollbar.track.border": "#cdd6f412",
         "editor.foreground": "#e5e5e5",
-        "editor.background": "#111422",
-        "editor.gutter.background": "#1C1C2A",
+        "editor.background": "#0B111a",
+        "editor.gutter.background": "#131b25",
         "editor.subheader.background": "#181825",
         "editor.active_line.background": "#cdd6f40d",
         "editor.highlighted_line.background": null,
@@ -324,7 +324,7 @@
             "font_weight": 700
           },
           "type.builtin": {
-            "color": "#74c7ec",
+            "color": "#74C7EC",
             "font_style": null,
             "font_weight": 700
           },
@@ -391,7 +391,7 @@
           "operator": {
             "color": "#94e2d5",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword": {
             "color": "#558eff",
