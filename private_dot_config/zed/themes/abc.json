@@ -264,14 +264,14 @@
             "font_weight": null
           },
           "string.regexp": {
-            "color": "#fab387",
+            "color": "#3DC870",
             "font_style": null,
             "font_weight": null
           },
           "string.escape": {
-            "color": "#f5c2e7",
+            "color": "#c48aff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "string.special": {
             "color": "#f5c2e7",
@@ -414,44 +414,44 @@
             "font_weight": null
           },
           "keyword.function": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.operator": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.import": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.repeat": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.return": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.debug": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.exception": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.conditional": {
-            "color": "#cba6f7",
+            "color": "#558eff",
             "font_style": null,
-            "font_weight": null
+            "font_weight": 700
           },
           "keyword.conditional.ternary": {
             "color": "#cba6f7",
@@ -474,17 +474,17 @@
             "font_weight": null
           },
           "punctuation": {
-            "color": "#EAC933",
+            "color": "#FFD700",
             "font_style": null,
             "font_weight": null
           },
           "punctuation.delimiter": {
-            "color": "#EAC933",
+            "color": "#FFD700",
             "font_style": null,
             "font_weight": null
           },
           "punctuation.bracket": {
-            "color": "#EAC933",
+            "color": "#FFD700",
             "font_style": null,
             "font_weight": null
           },
