@@ -463,8 +463,8 @@ M.integrations = {
       -- strings
       ["@string"] = { fg = C.green4 },
       ["@string.escape"] = { fg = C.lavender2, style = { "bold" } },
-      ["@string.regexp"] = { fg = C.green2 },
-      ["@string.template"] = { fg = C.green2 },
+      ["@string.regexp"] = { fg = C.green4 },
+      ["@string.template"] = { fg = C.green4 },
       ["@string.documentation"] = { fg = C.green7 },
     },
 
@@ -520,6 +520,7 @@ M.integrations = {
 
     gdscript = {
       ["@attribute.gdscript"] = { link = "@decorator.name" },
+      ["@string.string_name"] = { fg = C.flamingo },
     },
 
     gotmpl = {

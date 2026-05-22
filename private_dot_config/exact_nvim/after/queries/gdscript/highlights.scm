@@ -8,9 +8,12 @@
 
 (comment) @comment @spell
 
-(string_name) @string
+(string_name) @string.string_name
 
 (string) @string
+
+(string
+  (escape_sequence) @string.escape)
 
 (float) @number.float
 
@@ -486,7 +489,7 @@
     "WorldEnvironment" "X509Certificate" "XMLParser" "XRAnchor3D" "XRBodyModifier3D" "XRBodyTracker"
     "XRCamera3D" "XRController3D" "XRControllerTracker" "XRFaceModifier3D" "XRFaceTracker"
     "XRHandModifier3D" "XRHandTracker" "XRInterface" "XRInterfaceExtension" "XRNode3D" "XROrigin3D"
-    "XRPose" "XRPositionalTracker" "XRServer" "XRTracker" "XRVRS" "bool" "float" "int"
+    "XRPose" "XRPositionalTracker" "XRServer" "XRTracker" "XRVRS" "bool" "float" "int" "void"
     ; from doc/classes/@GlobalScope.xml
     "AudioServer" "CameraServer" "ClassDB" "DisplayServer" "EditorInterface" "Engine"
     "EngineDebugger" "GDExtensionManager" "Geometry2D" "Geometry3D" "GodotSharp" "IP" "Input"
