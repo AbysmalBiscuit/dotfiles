@@ -152,7 +152,6 @@ init_command_only_if_no = []
 lang = "rust"
 name = "zed"
 cmds = [
-    "zed",
     "zed.exe"
 ]
 desc = "Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter."

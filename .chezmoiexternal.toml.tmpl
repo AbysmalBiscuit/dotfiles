@@ -125,6 +125,7 @@ url = {{ gitHubLatestReleaseAssetURL "jj-vcs/jj" (printf "jj-v*-%s%s" $jj_triple
 refreshPeriod = "168h"
 executable = true
 # path = {{ printf "jj-v*-%s/jj%s" $jj_triple .exe_ext | quote }}
+stripComponents = 1
 path = "jj{{ .exe_ext }}"
 {{- end }}
 

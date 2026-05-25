@@ -457,10 +457,10 @@ export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 # {{- $man_path = $filtered | uniq | join ":" }}
 
 # WSL Specific
-export WINHOME=# {{ (index .secrets.system .system.hostname).wsl_winhome | quote }}
+export WINHOME=# {{ (index (index .secrets.system .system.hostname | default dict) "wsl_winhome") | quote }}
 
 # Use Windows Browser
-export BROWSER=# {{ (index .secrets.system .system.hostname).browser | quote }}
+export BROWSER=# {{ (index (index .secrets.system .system.hostname | default dict) "browser") | quote }}
 
 # Split path into linux and windows parts
 # OLDIFS=$IFS
