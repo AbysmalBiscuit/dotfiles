@@ -1,4 +1,4 @@
-"$schema" = "https://yazi-rs.github.io/schemas/theme.json"
+# "$schema" = "https://yazi-rs.github.io/schemas/theme.json"
 
 [flavor]
 dark = "catppuccin-mocha"
@@ -64,7 +64,7 @@ unset_alt = { fg = "#f2cdcd", bg = "#313244" }
 
 progress_label = { fg = "#ffffff", bold = true }
 progress_normal = { fg = "#89b4fa", bg = "#45475a" }
-progress_error  = { fg = "#89b4fa", bg = "#f38ba8" }
+progress_error = { fg = "#89b4fa", bg = "#f38ba8" }
 
 # : }}}
 
@@ -143,9 +143,9 @@ desc = { fg = "#9399b2" }
 # : Spotter {{{
 
 [spot]
-border   = { fg = "#89b4fa" }
-title    = { fg = "#89b4fa" }
-tbl_col  = { fg = "#94e2d5" }
+border = { fg = "#89b4fa" }
+title = { fg = "#89b4fa" }
+tbl_col = { fg = "#94e2d5" }
 tbl_cell = { fg = "#f5c2e7", bg = "#45475a" }
 
 # : }}}
