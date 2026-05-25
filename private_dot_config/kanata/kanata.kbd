@@ -34,7 +34,7 @@ configuration entries.
   ;; Apply only to specific keyboards
   macos-dev-names-include ()
   linux-dev ()
-  windows-interception-keyboard-hwids ()
+  ;; windows-interception-keyboard-hwids ()
 
   ;; Other options
   tray-icon base.png
@@ -61,7 +61,7 @@ configuration entries.
 (deflayer (default 🖼 🏠)
   grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
-  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  @cap a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
   lctl lmet lalt           spc            ralt rmet rctl
 )
@@ -78,6 +78,10 @@ configuration entries.
 
 (defalias
   extend (layer-toggle extend)
+)
+
+(deflocalkeys-winiov2
+  caps 255
 )
 
 (defalias
@@ -135,4 +139,3 @@ configuration entries.
   (v b) BracketRight     50 all-released ()
   (f g) Minus            50 all-released ()
 )
-
