@@ -344,7 +344,7 @@ function has_command {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
-$completions_cache = "# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}"
+$completions_cache = '# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}'
 if (Test-Path "$completions_cache")  {
     foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1') {
         . $f.FullName
