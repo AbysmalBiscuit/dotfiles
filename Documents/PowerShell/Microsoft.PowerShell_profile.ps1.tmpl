@@ -359,6 +359,7 @@ function y {
         Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
     }
     Remove-Item -Path $tmp
+    Clear-Host
 }
 # {{- end }}
 # {{- if index .has "chezmoi" | default false }}
