@@ -1,0 +1,10 @@
+{{- $triforce_dir :=  joinPath "triforce" "triforce_stats.json" -}}
+{{- range $prefix := list
+    (joinPath "Nextcloud" "settings-files")
+    "settings"
+    -}}
+    {{- $path :=  joinPath $.chezmoi.homeDir $prefix $triforce_dir -}}
+    {{- if stat $path }}
+        {{- $path -}}
+    {{- end -}}
+{{- end -}}
