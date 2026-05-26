@@ -317,6 +317,7 @@ M.syntax = {
 M.integrations = {
   gotmpl = {
     goTmplFunctions = { link = "@function.builtin" },
+    goTmplAction = { link = "Macro" },
   },
 
   lsp = {
