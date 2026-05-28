@@ -1,0 +1,26 @@
+{
+  "caveman": {
+    "installLocation": "/home/lev/.claude/plugins/marketplaces/caveman",
+    "lastUpdated": "",
+    "source": {
+      "source": "github",
+      "repo": "JuliusBrussee/caveman"
+    }
+  },
+  "claude-plugins-official": {
+    "installLocation": "/home/lev/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "",
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    }
+  },
+  "superpowers-marketplace": {
+    "installLocation": "/home/lev/.claude/plugins/marketplaces/superpowers-marketplace",
+    "lastUpdated": "",
+    "source": {
+      "source": "github",
+      "repo": "obra/superpowers-marketplace"
+    }
+  }
+}
