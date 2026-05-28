@@ -288,6 +288,7 @@ Before the Write call, re-read the draft and confirm:
 - [ ] Footer names the branch and evidence source
 - [ ] No em-dashes in prose
 - [ ] Headings numbered with `·`
+- [ ] When relevant and possible, include links to code line on GitHub (in the PR)
 
 ## Notes for multi-issue reports
 
@@ -301,10 +302,3 @@ When summarising several findings (regression classes, audit sweeps):
 - Each finding gets its own H2 with the class tag in the heading.
 - Skip the per-finding fix-option pair; consolidate fixes in one closing section.
 
-## Example outputs
-
-The repo already has two reference reports — read them for tone and density:
-
-- `pr-reviews/issue-1-adminDb-rls-bypass.html` — single-issue deep dive
-- `pr-reviews/context-builder-migration-regressions.html` — multi-issue
-  regression class (light theme; new reports use the dark theme above)
