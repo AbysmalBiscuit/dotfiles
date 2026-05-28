@@ -288,7 +288,7 @@ Before the Write call, re-read the draft and confirm:
 - [ ] Footer names the branch and evidence source
 - [ ] No em-dashes in prose
 - [ ] Headings numbered with `·`
-- [ ] When relevant and possible, include links to code line on GitHub (in the PR)
+- [ ] When relevant and possible, include links to code line on GitHub (in the PR branch)
 
 ## Notes for multi-issue reports
 
