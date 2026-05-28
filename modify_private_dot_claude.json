@@ -1,0 +1,9 @@
+// chezmoi:modify-template
+{{- $current := .chezmoi.stdin | fromJson -}}
+{{- $baseline := include "ext_private_dot_claude.json" | fromJson -}}
+{{- $merged := merge $baseline $current -}}
+{{- if deepEqual $baseline $merged -}}
+{{-   .chezmoi.stdin }}
+{{- else -}}
+{{-   $merged | toPrettyJson }}
+{{- end -}}
