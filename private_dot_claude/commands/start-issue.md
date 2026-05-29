@@ -1,6 +1,6 @@
 ---
 description: Cold-start a session inside an issue worktree — load the ISSUE_SUMMARY handoff and orient
-allowed-tools: Bash, Read, Glob, Grep
+allowed-tools: Bash, Read, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
 ---
 
 # /start-issue
@@ -66,7 +66,20 @@ note it and offer to `bun install`.
 - If the issue needs deeper context (acceptance criteria, linked PRs), offer to
   re-fetch the Linear issue via MCP — don't auto-fetch.
 
-### 5. Hand control back
+### 5. Check Linear issue assignment
+
+Fetch the issue's current assignee (`mcp__linear__get_issue` for `ISSUE_ID`).
+
+- **No one assigned** → assign the user to the issue (`mcp__linear__save_issue`,
+  resolving the user via `mcp__linear__get_user` with `me`).
+- **Someone already assigned** →
+  - If `$ARGUMENTS` (or the conversation) included explicit permission to
+    double-assign or reassign → proceed with the assignment.
+  - Otherwise → **stop and ask the user** what to do (leave as-is, add self as a
+    second assignee, or reassign to self). Do not change the assignee until they
+    answer.
+
+### 6. Hand control back
 
 Ask the user how they want to proceed (e.g. start with first suggested step,
 explore a specific file, or brainstorm approach). Don't start editing code
