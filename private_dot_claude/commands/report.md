@@ -140,7 +140,23 @@ drop `<h2>` body sections to match the chosen kind.
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--fg);
     font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 96px}
+  .layout{display:grid;grid-template-columns:240px minmax(0,960px);gap:40px;
+    max-width:1240px;margin:0 auto;padding:40px 24px 96px;justify-content:center}
+  .content{min-width:0}
+  .toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);
+    overflow:auto;font-size:13px;border-right:1px solid var(--border);padding-right:8px}
+  .toc .t{color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+    font-size:11px;margin:0 0 10px}
+  .toc ol{list-style:none;margin:0;padding:0}
+  .toc li{margin:2px 0}
+  .toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 8px;
+    border-radius:6px;border-left:2px solid transparent;line-height:1.35}
+  .toc a:hover{color:var(--fg);background:var(--panel)}
+  .toc a.active{color:var(--accent);border-left-color:var(--accent);background:var(--panel)}
+  @media(max-width:860px){
+    .layout{grid-template-columns:minmax(0,1fr);max-width:960px}
+    .toc{display:none}
+  }
   h1{font-size:28px;line-height:1.25;margin:0 0 4px}
   h2{font-size:20px;margin:40px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
   h3{font-size:16px;margin:24px 0 8px;color:var(--accent)}
@@ -193,7 +209,19 @@ drop `<h2>` body sections to match the chosen kind.
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="layout">
+
+  <nav class="toc">
+    <p class="t">On this page</p>
+    <ol>
+      <li><a href="#tldr">TL;DR</a></li>
+      <li><a href="#s1">1 · {{First body section}}</a></li>
+      <li><a href="#s2">2 · {{Next section}}</a></li>
+      <li><a href="#s3">3 · {{Evidence / flow / options}}</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
 
   <p style="margin:0 0 6px">
     <span class="pill tag {{warn|bad|good|}}">{{TAG e.g. INFO | DRAFT | ACTION NEEDED}}</span>
@@ -210,7 +238,7 @@ drop `<h2>` body sections to match the chosen kind.
     <div><div class="k">Owner</div><div class="v">{{who / team, if relevant}}</div></div>
   </div>
 
-  <h2>TL;DR</h2>
+  <h2 id="tldr">TL;DR</h2>
   <div class="callout">
     <strong>Summary</strong>
     {{Two or three sentences. The whole report compressed. Concrete.}}
@@ -224,7 +252,7 @@ drop `<h2>` body sections to match the chosen kind.
     {{The caveat, risk, or open question.}}
   </div>
 
-  <h2>1 · {{First body section per the kind}}</h2>
+  <h2 id="s1">1 · {{First body section per the kind}}</h2>
   <p>{{Prose. Active voice, concrete.}}</p>
   <ul>
     <li><strong>{{Point}}.</strong> {{One sentence.}}</li>
@@ -241,7 +269,7 @@ flowchart LR
     <figcaption>{{What the diagram shows, one line.}}</figcaption>
   </figure>
 
-  <h2>2 · {{Next section — often a table}}</h2>
+  <h2 id="s2">2 · {{Next section — often a table}}</h2>
   <table>
     <thead><tr><th>{{Col}}</th><th>{{Col}}</th><th class="num">{{Num}}</th><th>{{Notes}}</th></tr></thead>
     <tbody>
@@ -249,7 +277,7 @@ flowchart LR
     </tbody>
   </table>
 
-  <h2>3 · {{Evidence / flow / options as the kind requires}}</h2>
+  <h2 id="s3">3 · {{Evidence / flow / options as the kind requires}}</h2>
   <p>{{Setup or framing in one short paragraph.}}</p>
 <pre>{{command output, code, or repro — verbatim}}</pre>
   <div class="callout good"><strong>Result</strong> {{One-sentence verdict.}}</div>
@@ -273,7 +301,29 @@ flowchart LR
     {{how verified, if applicable}}
   </footer>
 
+  </main>
 </div>
+
+<script>
+  // TOC scrollspy: highlight the section currently in view
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+    var map = {};
+    links.forEach(function(a){
+      var id = a.getAttribute("href").slice(1);
+      if(document.getElementById(id)) map[id] = a;
+    });
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){ a.classList.remove("active"); });
+          if(map[e.target.id]) map[e.target.id].classList.add("active");
+        }
+      });
+    }, {rootMargin:"0px 0px -70% 0px"});
+    Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
+  })();
+</script>
 
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -292,6 +342,21 @@ flowchart LR
 
 If the report has no diagram, drop the `<figure class="diagram">` block. Keep the
 Mermaid `<script>` only when at least one diagram is present.
+
+### Table of contents (left sidebar)
+
+The skeleton renders a sticky left-hand TOC (`<nav class="toc">`) beside the
+content. Keep it in sync with the body:
+
+- Add one `<li><a href="#id">…</a></li>` per `<h2>` you keep, in order.
+- Every `<h2>` needs a matching `id`. Use `tldr` for TL;DR and `s1`, `s2`, `s3`,
+  … for numbered body sections. The link text mirrors the heading (`1 · How it
+  works`).
+- Drop a TOC entry whenever you drop its section. Never link an `id` that has no
+  heading.
+- The scrollspy `<script>` highlights the active section as the reader scrolls —
+  keep it; it is plain inlined JS, no external asset.
+- The TOC hides below 860px (single-column). No action needed.
 
 ## Component cheatsheet
 
@@ -313,12 +378,15 @@ Mermaid `<script>` only when at least one diagram is present.
 | Mermaid diagram | `<figure class="diagram"><pre class="mermaid">flowchart LR …</pre><figcaption>…</figcaption></figure>` |
 | Collapsible detail dump | `<details class="code"><summary>…</summary><div class="body">…</div></details>` |
 | Keyboard hint | `<kbd>bun test</kbd>` |
+| TOC entry | `<li><a href="#s1">1 · How it works</a></li>` (heading needs matching `id`) |
 
 ## Quality gate before writing
 
 Before the Write call, re-read the draft and confirm:
 
 - [ ] Tag pill at top, H1 second, meta grid third, TL;DR fourth
+- [ ] Left TOC lists every kept `<h2>` in order; each links a real `id`; no
+      orphan links; scrollspy `<script>` kept
 - [ ] TL;DR summarizes the whole report in plain language
 - [ ] Body sections match the chosen kind; no empty placeholder headings
 - [ ] Every claim is concrete (path, number, date, quote) — no vague filler
