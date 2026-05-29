@@ -25,11 +25,14 @@ Run this from **inside the worktree dir** (e.g. `/home/lev/Git/adaptyv/eng-1234-
 git rev-parse --abbrev-ref HEAD
 ```
 
-  Branch looks like `AbysmalBiscuit-claude/eng-1234-...`. Extract the `ABC-123`
-  identifier (uppercased) from the slug → `ISSUE_ID`.
+  Branch looks like `<prefix>/eng-1234-...` (prefix may be `AbysmalBiscuit-claude/`,
+  `lev/`, or a Linear-generated prefix). Extract the `ABC-123` identifier (uppercased)
+  from the slug regardless of prefix → `ISSUE_ID`.
 - If neither works (detached HEAD, no match), ask the user for the issue ID.
 
 ### 2. Load the summary
+
+Read `/home/lev/Git/adaptyv/ISSUES_COMMON.md`.
 
 Read `/home/lev/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md`.
 
@@ -55,6 +58,10 @@ note it and offer to `bun install`.
 ### 4. Orient
 
 - Restate the task in 2-3 lines from the summary.
+- Surface the **Port slot** + resolved ports from the summary, with the exact launch
+  commands (e.g. `bun next dev -p 4101`, `PORT=9101 bun nitro dev`). The user runs
+  servers on these — not the defaults — so parallel worktrees don't collide. Repeat the
+  API-URL caveat if the API port is non-default.
 - Surface the **Suggested first steps** from the summary.
 - If the issue needs deeper context (acceptance criteria, linked PRs), offer to
   re-fetch the Linear issue via MCP — don't auto-fetch.

@@ -70,9 +70,40 @@ Run `bun install` in the relevant app dir(s) inside the worktree:
 cd "$WORKTREE/apps/<app>" && bun install
 ```
 
-Only the apps in scope — not the whole monorepo unless the issue is repo-wide.
+Only the apps in scope. Note: `bun install` in any workspace dir installs the **whole**
+monorepo workspace (root + every app) in one shot — so a single `bun install` covers all
+in-scope apps. Running it per-app is redundant but harmless.
 
-### 6. Write the session summary
+### 6. Allocate a port slot (parallel-work safe)
+
+Each worktree runs its dev servers on a distinct **port slot** so multiple worktrees can
+run side-by-side without bind collisions. Slot 0 = the monorepo's defaults. Each issue
+worktree gets the next free slot ≥ 1, and ports are `base + slot`.
+
+Default bases (from `monorepo/CLAUDE.md`): lab-os `4100`, foundry-portal `4200`,
+api `9100`, plate-api `8080`.
+
+Pick the next free slot by scanning existing summaries for the `Port slot:` marker:
+
+```bash
+# slot 0 reserved for the monorepo; find lowest free slot >= 1
+used=$(rg -oN 'Port slot:\*\* *([0-9]+)' -r '$1' /home/lev/Git/adaptyv/ISSUE_SUMMARY_*.md 2>/dev/null)
+SLOT=1
+while printf '%s\n' "$used" | grep -qx "$SLOT"; do SLOT=$((SLOT+1)); done
+echo "Assigned port slot: $SLOT"
+echo "  lab-os=$((4100+SLOT))  api=$((9100+SLOT))  plate-api=$((8080+SLOT))  foundry-portal=$((4200+SLOT))"
+```
+
+Record the chosen `SLOT` and resolved ports in the summary (step 7). The `Port slot:`
+marker line **must** stay machine-readable (`**Port slot:** N`) so the next run's scan
+finds it.
+
+> **Caveat to flag:** the shared `../.env.local` hard-codes the API URL (default port
+> 9100). If a worktree runs the API on a non-default port, lab-os won't reach it unless
+> the API-URL env is overridden locally too. Slot ports prevent *bind* collisions;
+> cross-app URL wiring is separate. Note this in the summary.
+
+### 7. Write the session summary
 
 Write to `/home/lev/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` (parent dir, **outside**
 both monorepo and worktree). This is the cold-start handoff for the next session.
@@ -88,6 +119,21 @@ Include:
 - **Branch:** {BRANCH}
 - **Apps in scope:** {list}
 - **State / assignee:** {state} / {assignee}
+- **Port slot:** {SLOT}
+
+## Ports (slot {SLOT})
+
+Launch dev servers on these ports to avoid collisions with other worktrees:
+
+| App | Port | Launch |
+|-----|------|--------|
+| lab-os | {4100+SLOT} | `cd apps/lab-os && bun next dev -p {4100+SLOT}` |
+| api | {9100+SLOT} | `cd apps/api && PORT={9100+SLOT} bun nitro dev` |
+| plate-api | {8080+SLOT} | `PORT={8080+SLOT}` if needed |
+| foundry-portal | {4200+SLOT} | `cd apps/foundry-portal && bun next dev -p {4200+SLOT}` if needed |
+
+> Only list rows for apps in scope; drop the rest. If the API runs on a non-default
+> port, override the API-URL env for lab-os too (see setup caveat).
 
 ## Summary
 
@@ -103,13 +149,14 @@ linked PRs, affected files/modules, gotchas. Bullet points.}
 {ordered list of concrete starting actions for the new session}
 ```
 
-### 7. Report back
+### 8. Report back
 
 Print, for the user to copy:
 
 - the `cd "$WORKTREE"` command
 - the summary file path
 - branch name
+- assigned port slot + resolved ports
 
 Do **not** cd or open an editor — the user starts the new session themselves.
 
