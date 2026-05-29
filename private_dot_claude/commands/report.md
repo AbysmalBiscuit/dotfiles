@@ -36,7 +36,8 @@ confirm rather than interrogating.
 - Path: `reports/<kebab-slug>.html`
 - Slug rules: lowercase, dashes, no dates, no numeric prefix. E.g.
   `auth-token-refresh-flow.html`, `ingestion-pipeline-status.html`.
-- One self-contained HTML file. CSS inlined. No external assets.
+- One self-contained HTML file. CSS inlined. Only allowed external asset: the
+  Mermaid script from CDN (for diagrams). Everything else inlined.
 
 ## Workflow
 
@@ -44,10 +45,14 @@ confirm rather than interrogating.
    links. Collect concrete facts — paths, numbers, dates, quotes.
 2. Verify when possible. If a claim can be checked (run a command, count rows,
    read the code), check it and cite the result verbatim.
-3. Pick the section set for the report kind (see below). Drop any section with
+3. Draw a diagram whenever it carries the idea better than prose: any flow,
+   architecture, sequence, state machine, hierarchy, timeline, or relationship.
+   Use Mermaid (see "Diagrams" below). A report with a system, process, or
+   multi-actor interaction should have at least one diagram.
+4. Pick the section set for the report kind (see below). Drop any section with
    no content — never leave a placeholder heading.
-4. Write to `reports/<slug>.html`.
-5. Print the path and a one-line summary to the user.
+5. Write to `reports/<slug>.html`.
+6. Print the path and a one-line summary to the user.
 
 ## Section sets by kind
 
@@ -63,6 +68,41 @@ Section 0 (pill + H1 + subtitle), 1 (meta grid), 2 (TL;DR), and the footer are
 | `status` | Current state · Progress (table) · Risks/blockers · Next steps |
 
 Number body sections with a middle dot: `## 1 · How it works`.
+
+## Diagrams
+
+Draw a diagram whenever it explains faster than prose. Use Mermaid — it renders
+client-side from a `<pre class="mermaid">` block plus one CDN script (already in
+the skeleton). The source stays human-readable, so if the script fails to load
+the reader still sees the diagram text.
+
+Pick the diagram type by what you're showing:
+
+| Showing | Mermaid type |
+|---------|--------------|
+| Steps / pipeline / decision branches | `flowchart LR` or `flowchart TD` |
+| Actors exchanging messages over time | `sequenceDiagram` |
+| States and transitions | `stateDiagram-v2` |
+| Tables / entities and relations | `erDiagram` |
+| Class / module structure | `classDiagram` |
+| Schedule / timeline / phases | `gantt` or `timeline` |
+| Proportions of a whole | `pie` |
+
+Per kind, the usual fit:
+
+- `overview` → flowchart or sequence of how it works; erDiagram for data model.
+- `investigation` → sequence of the failing interaction; flowchart of the trigger path.
+- `decision` → flowchart of the decision, or a small comparison still as a table.
+- `comparison` → keep the lead a table; add a diagram only if structure differs.
+- `status` → gantt/timeline for schedule; flowchart for the pipeline's current state.
+
+Rules:
+
+- Wrap every diagram in `<figure class="diagram">` with a `<figcaption>`.
+- Keep nodes labelled with real names (functions, services, tables), not generic
+  `A → B`.
+- One idea per diagram. Two small diagrams beat one tangled one.
+- Don't diagram what a one-line sentence already settles.
 
 ## Voice + prose rules
 
@@ -145,6 +185,11 @@ drop `<h2>` body sections to match the chosen kind.
   details.code[open]>summary::before{content:"▾  "}
   details.code .body{padding:4px 18px 14px}
   details.code .body h3:first-child{margin-top:14px}
+  figure.diagram{margin:18px 0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:18px}
+  figure.diagram pre.mermaid{background:transparent;border:0;padding:0;margin:0;
+    text-align:center;font-size:14px}
+  figure.diagram figcaption{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
 </style>
 </head>
 <body>
@@ -185,6 +230,17 @@ drop `<h2>` body sections to match the chosen kind.
     <li><strong>{{Point}}.</strong> {{One sentence.}}</li>
   </ul>
 
+  <figure class="diagram">
+<pre class="mermaid">
+flowchart LR
+  {{client}}["{{Client}}"] -->|{{GET /token}}| {{api}}["{{api/handler.ts}}"]
+  {{api}} -->|{{verify}}| {{store}}[("{{token_store}}")]
+  {{store}} -->|{{hit}}| {{api}}
+  {{api}} -->|{{refreshed JWT}}| {{client}}
+</pre>
+    <figcaption>{{What the diagram shows, one line.}}</figcaption>
+  </figure>
+
   <h2>2 · {{Next section — often a table}}</h2>
   <table>
     <thead><tr><th>{{Col}}</th><th>{{Col}}</th><th class="num">{{Num}}</th><th>{{Notes}}</th></tr></thead>
@@ -218,9 +274,24 @@ drop `<h2>` body sections to match the chosen kind.
   </footer>
 
 </div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "dark",
+    themeVariables: {
+      background: "#161b22", primaryColor: "#1c2230", primaryTextColor: "#e6edf3",
+      primaryBorderColor: "#30363d", lineColor: "#58a6ff", fontSize: "14px",
+    },
+  });
+</script>
 </body>
 </html>
 ```
+
+If the report has no diagram, drop the `<figure class="diagram">` block. Keep the
+Mermaid `<script>` only when at least one diagram is present.
 
 ## Component cheatsheet
 
@@ -239,6 +310,7 @@ drop `<h2>` body sections to match the chosen kind.
 | Inline muted note | `<span class="muted">// note</span>` |
 | Numeric table column | `<td class="num">42</td>` |
 | Stepped flow | `<div class="flow"><span class="n">1.</span> …</div>` |
+| Mermaid diagram | `<figure class="diagram"><pre class="mermaid">flowchart LR …</pre><figcaption>…</figcaption></figure>` |
 | Collapsible detail dump | `<details class="code"><summary>…</summary><div class="body">…</div></details>` |
 | Keyboard hint | `<kbd>bun test</kbd>` |
 
@@ -251,6 +323,9 @@ Before the Write call, re-read the draft and confirm:
 - [ ] Body sections match the chosen kind; no empty placeholder headings
 - [ ] Every claim is concrete (path, number, date, quote) — no vague filler
 - [ ] At least one table, flow, or code block where the topic supports it
+- [ ] A diagram present if the topic has a flow, structure, or interaction;
+      Mermaid `<script>` included iff a diagram is present
+- [ ] Diagram nodes use real names, each diagram shows one idea
 - [ ] Bottom-line callout states the conclusion / recommendation / next step
 - [ ] Footer names the sources
 - [ ] No em-dashes in prose
