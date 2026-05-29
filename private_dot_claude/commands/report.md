@@ -57,7 +57,9 @@ confirm rather than interrogating.
 ## Section sets by kind
 
 Section 0 (pill + H1 + subtitle), 1 (meta grid), 2 (TL;DR), and the footer are
-**always present**. The rest vary:
+**always present**. "How to use this report" and "Method & limitations" are
+present whenever the report is long enough to need a reading path, uses pills, or
+cites code (drop them only for a trivial one-screen status). The rest vary:
 
 | Kind | Body sections (in order) |
 |------|--------------------------|
@@ -153,9 +155,21 @@ drop `<h2>` body sections to match the chosen kind.
     border-radius:6px;border-left:2px solid transparent;line-height:1.35}
   .toc a:hover{color:var(--fg);background:var(--panel)}
   .toc a.active{color:var(--accent);border-left-color:var(--accent);background:var(--panel)}
+  a.src{font-family:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;font-size:.82em;
+    color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent);white-space:nowrap}
+  a.src::before{content:"⎘ ";opacity:.6}
+  a.src:hover{background:var(--panel2)}
+  #menu-btn{display:none;position:fixed;top:12px;left:12px;z-index:50;
+    background:var(--accent);color:var(--bg);border:0;border-radius:6px;
+    padding:8px 12px;font-size:14px;font-weight:600;cursor:pointer}
   @media(max-width:860px){
     .layout{grid-template-columns:minmax(0,1fr);max-width:960px}
-    .toc{display:none}
+    .toc{position:fixed;top:0;left:0;width:260px;height:100vh;z-index:40;max-height:none;
+      background:var(--panel);border-right:1px solid var(--border);
+      transform:translateX(-100%);transition:transform .2s;
+      box-shadow:2px 0 12px rgba(0,0,0,.4);padding:20px 16px}
+    .toc.open{transform:none}
+    #menu-btn{display:block}
   }
   h1{font-size:28px;line-height:1.25;margin:0 0 4px}
   h2{font-size:20px;margin:40px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -209,15 +223,18 @@ drop `<h2>` body sections to match the chosen kind.
 </style>
 </head>
 <body>
+<button id="menu-btn" aria-label="Toggle contents">☰ Contents</button>
 <div class="layout">
 
   <nav class="toc">
     <p class="t">On this page</p>
     <ol>
       <li><a href="#tldr">TL;DR</a></li>
+      <li><a href="#how">How to use this report</a></li>
       <li><a href="#s1">1 · {{First body section}}</a></li>
       <li><a href="#s2">2 · {{Next section}}</a></li>
       <li><a href="#s3">3 · {{Evidence / flow / options}}</a></li>
+      <li><a href="#method">Method &amp; limitations</a></li>
     </ol>
   </nav>
 
@@ -251,6 +268,18 @@ drop `<h2>` body sections to match the chosen kind.
     <strong>Watch out</strong> (drop if nothing to flag)
     {{The caveat, risk, or open question.}}
   </div>
+
+  <h2 id="how">How to use this report</h2>
+  <p>{{Reading path: which section to read first and why, then the order to walk
+  the rest. Name the one section that frames everything else.}}</p>
+  <ul>
+    <li><strong>Pills / callouts.</strong> {{What the status pills and coloured
+    callouts mean here, and which to read first. Drop if the report uses none.}}</li>
+    <li><strong>Source links.</strong> The <code>⎘ path:Lx-Ly</code> links open the
+    file at a pinned commit, anchored to the cited lines. {{Drop if no code is cited.}}</li>
+    <li><strong>Verified vs quoted.</strong> {{Say what was checked first-hand
+    versus taken from a description or third party. See Method &amp; limitations.}}</li>
+  </ul>
 
   <h2 id="s1">1 · {{First body section per the kind}}</h2>
   <p>{{Prose. Active voice, concrete.}}</p>
@@ -295,6 +324,14 @@ flowchart LR
     {{One paragraph. The conclusion, recommendation, or next step.}}
   </div>
 
+  <h2 id="method">Method &amp; limitations</h2>
+  <p>{{How this report was assembled: files read, commands run, links fetched.}}</p>
+  <div class="callout warn">
+    <strong>What this does not establish</strong> (drop if everything was verified)
+    {{Name what was quoted from a description or assumed rather than reproduced
+    first-hand. Line ranges are "look here", not byte-exact, unless checked.}}
+  </div>
+
   <footer>
     {{Report kind}} on {{topic}} ·
     sources: {{files / commands / links}} ·
@@ -305,24 +342,43 @@ flowchart LR
 </div>
 
 <script>
-  // TOC scrollspy: highlight the section currently in view
-  (function(){
-    var links = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
-    var map = {};
-    links.forEach(function(a){
-      var id = a.getAttribute("href").slice(1);
-      if(document.getElementById(id)) map[id] = a;
+(function(){
+  // Source permalinks: materialise ⎘ links from data-f / data-l, pinned to a commit.
+  // Fill REPO + SHA when the report cites code; delete this block if it cites none.
+  var REPO = "{{https://github.com/owner/repo}}", SHA = "{{commit-sha-or-branch}}";
+  document.querySelectorAll("a.src").forEach(function(a){
+    var f = a.getAttribute("data-f"); if(!f) return;
+    var l = a.getAttribute("data-l") || "", hash = "";
+    if(l){ var p = l.split("-"); hash = p.length>1 ? ("#L"+p[0]+"-L"+p[1]) : ("#L"+p[0]); }
+    var enc = f.split("/").map(encodeURIComponent).join("/");
+    var sha = a.getAttribute("data-sha") || SHA;          // data-sha overrides per-link
+    a.href = REPO + "/blob/" + sha + "/" + enc + hash;
+    a.target = "_blank"; a.rel = "noopener";
+    if(!a.textContent.trim()){ var n = f.split("/").pop(); a.textContent = n + (l ? (":"+l) : ""); }
+  });
+  // Mobile TOC toggle.
+  var toc = document.querySelector(".toc"), btn = document.getElementById("menu-btn");
+  if(btn && toc){
+    btn.addEventListener("click", function(){ toc.classList.toggle("open"); });
+    toc.addEventListener("click", function(e){
+      if(e.target.tagName==="A" && window.innerWidth<=860) toc.classList.remove("open");
     });
-    var obs = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if(e.isIntersecting){
-          links.forEach(function(a){ a.classList.remove("active"); });
-          if(map[e.target.id]) map[e.target.id].classList.add("active");
-        }
-      });
-    }, {rootMargin:"0px 0px -70% 0px"});
-    Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
-  })();
+  }
+  // Scrollspy: highlight the current section (supports multiple links per id).
+  if(toc){
+    var links = [].slice.call(toc.querySelectorAll('a[href^="#"]')), map = {};
+    links.forEach(function(a){ var id=a.getAttribute("href").slice(1); (map[id]=map[id]||[]).push(a); });
+    var targets = Object.keys(map).map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    function spy(){
+      var y = window.scrollY + 120, cur = null;
+      targets.forEach(function(t){ if(t.offsetTop <= y) cur = t.id; });
+      links.forEach(function(a){ a.classList.remove("active"); });
+      if(cur && map[cur]) map[cur].forEach(function(a){ a.classList.add("active"); });
+    }
+    window.addEventListener("scroll", spy, {passive:true});
+    window.addEventListener("resize", spy); spy();
+  }
+})();
 </script>
 
 <script type="module">
@@ -356,7 +412,47 @@ content. Keep it in sync with the body:
   heading.
 - The scrollspy `<script>` highlights the active section as the reader scrolls —
   keep it; it is plain inlined JS, no external asset.
-- The TOC hides below 860px (single-column). No action needed.
+- Below 860px the TOC becomes a slide-in drawer toggled by the `☰ Contents`
+  button (`#menu-btn`). Keep both; the script wires them up. No action needed.
+
+### How to use this report
+
+Include a short "How to use this report" section (id `how`, right after TL;DR)
+on any report longer than one screen. It tells the reader:
+
+- **Reading path** — which section frames the rest, then the order to walk them.
+- **Pill / callout legend** — what the colours mean and which to read first. If
+  the report leans on pills, make this a small table (`Pill | Meaning | Read
+  priority`). Drop the line if the report uses no pills.
+- **Source links** — that `⎘ path:Lx-Ly` links open code at a pinned commit. Drop
+  if no code is cited.
+- **Verified vs quoted** — point at Method & limitations.
+
+### Source permalinks (`⎘` links)
+
+When the report cites code, link to the exact lines instead of pasting paths as
+plain text. Write the anchor with data attributes and let the inlined script
+build the URL:
+
+```html
+<a class="src" data-f="apps/api/server/utils/db/admin.ts" data-l="1-45"></a>
+```
+
+- `data-f` — repo-relative path. `data-l` — line or `start-end` range (omit for a
+  whole-file link). Empty anchor text auto-fills to `filename:lines`.
+- Set `REPO` and `SHA` once in the script. Pin `SHA` to a commit (not a branch)
+  so links stay valid after the branch moves.
+- `data-sha` on an individual anchor overrides the default (e.g. to point at a
+  "before" commit for comparison).
+- If the report cites no code, delete the source-permalink block from the script.
+
+### Method & limitations
+
+Close longer reports with a "Method & limitations" section (id `method`): how the
+report was assembled (files read, commands run), then a `callout warn` naming
+what was **quoted or assumed** rather than reproduced first-hand. This keeps the
+report honest about its evidence and tells the reader what is still theirs to
+check. Drop the caveat callout only when every claim was verified.
 
 ## Component cheatsheet
 
@@ -379,6 +475,7 @@ content. Keep it in sync with the body:
 | Collapsible detail dump | `<details class="code"><summary>…</summary><div class="body">…</div></details>` |
 | Keyboard hint | `<kbd>bun test</kbd>` |
 | TOC entry | `<li><a href="#s1">1 · How it works</a></li>` (heading needs matching `id`) |
+| Source permalink | `<a class="src" data-f="path/to/file.ts" data-l="12-40"></a>` (set `REPO`/`SHA` in script) |
 
 ## Quality gate before writing
 
@@ -386,7 +483,13 @@ Before the Write call, re-read the draft and confirm:
 
 - [ ] Tag pill at top, H1 second, meta grid third, TL;DR fourth
 - [ ] Left TOC lists every kept `<h2>` in order; each links a real `id`; no
-      orphan links; scrollspy `<script>` kept
+      orphan links; scrollspy + mobile-toggle `<script>` kept
+- [ ] "How to use this report" present (unless trivial one-screen report);
+      explains reading path, pill legend, and verified-vs-quoted
+- [ ] Code cited via `⎘` source permalinks (not bare paths) with `REPO`/`SHA`
+      filled; permalink block deleted if no code cited
+- [ ] "Method & limitations" present on longer reports; caveat callout names what
+      was quoted/assumed vs reproduced
 - [ ] TL;DR summarizes the whole report in plain language
 - [ ] Body sections match the chosen kind; no empty placeholder headings
 - [ ] Every claim is concrete (path, number, date, quote) — no vague filler
