@@ -1,5 +1,4 @@
 [
-  (lambda)
   (function_definition)
   (constructor_definition)
   (for_statement)
@@ -14,6 +13,8 @@
   (get_body)
 ] @indent.begin
 
+(lambda ":" @indent.begin)
+
 [
   (elif_clause)
   (else_clause)
@@ -22,9 +23,9 @@
 [
   (string)
   (comment)
-  (array)
-  (dictionary)
-  (parenthesized_expression)
+  ; (array)
+  ; (dictionary)
+  ; (parenthesized_expression)
   (ERROR)
 ] @indent.auto
 
@@ -44,6 +45,10 @@
     "{")
 ] @indent.begin
 
+; (_ "[" "]" @end) @indent
+; (_ "{" "}" @end) @indent
+; (_ "(" ")" @end) @indent
+
 ; This only works with expanded tabs.
 ; ((parameters) @indent.align (#set! indent.open_delimiter "(") (#set! indent.close_delimiter ")"))
 ; ((arguments)  @indent.align (#set! indent.open_delimiter "(") (#set! indent.close_delimiter ")"))
@@ -57,15 +62,22 @@
 ; edits. As far as I can tell the parser greedily consumes whitespace
 ; as a zero-width token which causes trouble when inserting indents.
 ; This indents correctly with tabs.
-; (arguments) @indent.begin
-; (parameters) @indent.begin
-; (array) @indent.begin
-; (dictionary) @indent.begin
-; (parenthesized_expression) @indent.begin
+(arguments) @indent.begin
+(parameters) @indent.begin
+(array) @indent.begin
+(dictionary) @indent.begin
+(parenthesized_expression) @indent.begin
 ; Partial workaround for when the cursor is on the bracket character and a newline
 ; is created with <o>. Without this the newline is opened with extra
 ; indentation.
 ; (body (_ (array "]" @indent.end) ) _)
+; (body (_ (dictionary "}" @indent.end) ) _)
+; (body (_ (parenthesized_expression ")" @indent.end) ) _)
+(arguments ")" @indent.end)
+(parameters ")" @indent.end)
+(parenthesized_expression ")" @indent.end)
+(array "]" @indent.end)
+(dictionary "}" @indent.end)
 ; Problematic behaviors occur at the last statement of a body.
 ; with @dedent:
 ;   - [ | ] i<CR> will dedent ] to 0.
@@ -75,4 +87,4 @@
 ;   - [ | ] i<CR> same
 ;   - [
 ;   ]| o will open new line with extra indent.
-;(body (_ (array "]" @indent.auto) ) .)
+(body (_ (array "]" @indent.auto) ) .)
