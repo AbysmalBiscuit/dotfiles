@@ -28,7 +28,10 @@
     "elements-of-style@superpowers-marketplace": true,
     "double-shot-latte@superpowers-marketplace": false,
     "caveman@caveman": true,
-    "slack@claude-plugins-official": true
+    "slack@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
