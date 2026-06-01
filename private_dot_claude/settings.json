@@ -1,55 +1,57 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
-    "OTEL_METRICS_EXPORTER": "otlp"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(npm run lint)",
-      "Bash(npm run test:*)",
-      "Bash(cs test:*)",
-      "Bash(pytest:*)",
-      "Bash(cargo test:*)"
-    ],
-    "deny": [
-      "Bash(curl:*)"
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bunx -y ccstatusline@latest",
-    "padding": 0,
-    "refreshInterval": 10
-  },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true,
-    "elements-of-style@superpowers-marketplace": true,
-    "caveman@caveman": true,
-    "slack@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "plugin-dev@claude-plugins-official": true,
-    "pr-crucible@pr-crucible": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "env": {
+        "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+        "OTEL_METRICS_EXPORTER": "otlp"
     },
-    "pr-crucible": {
-      "source": {
-        "source": "github",
-        "repo": "AbysmalBiscuit/pr-crucible"
-      }
-    }
-  },
-  "effortLevel": "medium",
-  "companyAnnouncements": [],
-  "editorMode": "vim",
-  "autoCompactEnabled": true
+    "permissions": {
+        "allow": [
+            "Bash(curl * http://localhost:*)",
+            "Bash(curl * https://localhost:*)",
+            "Bash(npm run lint)",
+            "Bash(npm run test:*)",
+            "Bash(cs test:*)",
+            "Bash(pytest:*)",
+            "Bash(cargo test:*)"
+        ],
+        "deny": [
+            "Bash(curl:*)"
+        ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "bunx -y ccstatusline@latest",
+        "padding": 0,
+        "refreshInterval": 10
+    },
+    "enabledPlugins": {
+        "superpowers@superpowers-marketplace": true,
+        "elements-of-style@superpowers-marketplace": true,
+        "caveman@caveman": true,
+        "slack@claude-plugins-official": true,
+        "typescript-lsp@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true,
+        "rust-analyzer-lsp@claude-plugins-official": true,
+        "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+        "plugin-dev@claude-plugins-official": true,
+        "pr-crucible@pr-crucible": true
+    },
+    "extraKnownMarketplaces": {
+        "caveman": {
+            "source": {
+                "source": "github",
+                "repo": "JuliusBrussee/caveman"
+            }
+        },
+        "pr-crucible": {
+            "source": {
+                "source": "github",
+                "repo": "AbysmalBiscuit/pr-crucible"
+            }
+        }
+    },
+    "effortLevel": "medium",
+    "companyAnnouncements": [],
+    "editorMode": "vim",
+    "autoCompactEnabled": true
 }
