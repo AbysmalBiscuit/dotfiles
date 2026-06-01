@@ -42,7 +42,10 @@ confirm rather than interrogating.
 ## Workflow
 
 1. Gather context: read the named files, run the named commands, fetch the
-   links. Collect concrete facts — paths, numbers, dates, quotes.
+   links. Collect concrete facts — paths, numbers, dates, quotes. Read enough
+   surrounding code to explain it, not just the one line you cite — the function
+   it lives in, its callers, the types it touches. The reader has not seen the
+   code; assume zero prior knowledge of the file.
 2. Verify when possible. If a claim can be checked (run a command, count rows,
    read the code), check it and cite the result verbatim.
 3. Draw a diagram whenever it carries the idea better than prose: any flow,
@@ -120,6 +123,36 @@ Rules:
 - **Section headings use a middle dot for numbering.** `## 1 · How it works`.
 - **Heading nouns specific.** "Ingestion retries" beats "Details."
 - **One tense per section.** Past for what happened, present for current state.
+
+## Context — show enough
+
+The most common failure is assuming the reader already knows the code. They do
+not. A report that names a function without showing it, or cites a bug without
+the surrounding lines, forces the reader to go open the file — which defeats the
+report. Make every claim legible on its own.
+
+- **Show the code you talk about.** When a sentence turns on a specific function,
+  branch, or config value, paste the relevant lines in a `<pre>` (or a
+  `<details class="code">` for long dumps) right next to the prose. Quote the
+  exact lines, not a paraphrase. A `⎘` permalink is the *pointer*, not a
+  substitute for showing the snippet.
+- **Frame before you cite.** Before a snippet, say in one line what file it is
+  from, what it does, and why it matters here. Reader should never hit code cold.
+- **Define the unfamiliar.** Spell out the domain terms, acronyms, env vars,
+  table names, and function roles the first time they appear. One clause is
+  enough: "`reconcile()` (the nightly job that re-syncs balances)".
+- **Give the starting state.** What did the reader need to know going in — what
+  the system does, where the code lives, what the normal path looks like — before
+  the specific point lands. Orient, then dive.
+- **Trace the path, don't just name endpoints.** "Handler calls `verify()` which
+  reads `token_store`" beats "the token is verified." Name each hop with its real
+  symbol so the reader can follow without the source open.
+- **Prefer showing over asserting.** Instead of "the retry logic is wrong," show
+  the loop and point at the line. The evidence carries the claim.
+
+Self-test before writing: could a teammate who has never opened this repo follow
+the report end to end without leaving the page? If not, add the missing snippet,
+definition, or framing sentence.
 
 ## HTML skeleton
 
@@ -493,6 +526,14 @@ Before the Write call, re-read the draft and confirm:
 - [ ] TL;DR summarizes the whole report in plain language
 - [ ] Body sections match the chosen kind; no empty placeholder headings
 - [ ] Every claim is concrete (path, number, date, quote) — no vague filler
+- [ ] Every cited function/branch/value is **shown** (snippet near the prose),
+      not just named or permalinked
+- [ ] Each snippet is framed first (what file, what it does, why it matters);
+      no code hits the reader cold
+- [ ] Unfamiliar terms, acronyms, env vars, table/function names defined on first
+      use; starting state given before the specific point
+- [ ] Self-test passed: a teammate who never opened this repo could follow it
+      end to end without leaving the page
 - [ ] At least one table, flow, or code block where the topic supports it
 - [ ] A diagram present if the topic has a flow, structure, or interaction;
       Mermaid `<script>` included iff a diagram is present
