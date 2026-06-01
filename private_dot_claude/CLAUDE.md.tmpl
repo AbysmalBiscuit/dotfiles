@@ -42,6 +42,31 @@ Description of the change.
 
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
+
+## Code Comments
+
+**Comments must be timeless and standalone** — understandable by a reader who knows nothing about the PR, issue, or task that introduced them. A comment describes what the code does and why, in the present tense; it never narrates the change.
+
+- **No PR/review taxonomy**: drop labels like `Class A` / `Class B` branching — meaningless once review context is gone. Describe the actual behavior instead.
+- **No issue refs as explanation**: `// closes the cross-tenant leak (issue-1)`, `// core of the X fix` — the reader can't open `issue-1`. State the invariant the code enforces.
+- **No dangling task pointers**: `// see Task 6.x` rots the moment the plan is archived.
+- **No change-relative phrasing**: `this PR`, `now we`, `used to`, `previously` — the diff already records what changed; the comment shouldn't.
+- **No RED/GREEN test narration** in non-test code: `// make this assertion pass`, `// failing until X is implemented` describe the TDD cycle, not what the code does.
+
+**Exception**: a genuine technical mechanism that happens to use a flagged word is fine — `session-scoped GUCs leak across tenants` describes a real hazard, not PR meta.
+
+**Fix is usually just deleting the meta prefix:**
+
+```ts
+// Class A branching: anonymous callers get a public context
+const ctx = makeAnonContext(event);
+
+// →
+
+// Anonymous callers get a public context
+const ctx = makeAnonContext(event);
+```
+
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
 {{- if or (index .tool "fd") (index .tool "rg") }}
