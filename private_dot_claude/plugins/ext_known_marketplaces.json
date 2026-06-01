@@ -15,6 +15,14 @@
       "repo": "anthropics/claude-plugins-official"
     }
   },
+  "pr-crucible": {
+    "installLocation": "/home/lev/.claude/plugins/marketplaces/pr-crucible",
+    "lastUpdated": "",
+    "source": {
+      "source": "github",
+      "repo": "AbysmalBiscuit/pr-crucible"
+    }
+  },
   "superpowers-marketplace": {
     "installLocation": "/home/lev/.claude/plugins/marketplaces/superpowers-marketplace",
     "lastUpdated": "",
