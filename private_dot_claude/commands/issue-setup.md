@@ -1,6 +1,6 @@
 ---
 description: Set up an isolated worktree to work on a Linear issue (worktree + env + bun install + session summary)
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments
 ---
 
 # /setup-issue
