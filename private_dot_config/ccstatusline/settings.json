@@ -50,17 +50,6 @@
         "type": "separator"
       },
       {
-        "id": "8",
-        "type": "git-changes",
-        "color": "ansi256:69",
-        "bold": true,
-        "rawValue": false
-      },
-      {
-        "id": "71490fab-ee56-49ef-a89f-8a81904032b6",
-        "type": "separator"
-      },
-      {
         "id": "ca911a78-adb6-43fd-9da5-89a76c6099f7",
         "type": "session-cost",
         "color": "ansi256:220",
