@@ -578,9 +578,9 @@ M.integrations = {
   },
 
   blink_cmp = {
-    BlinkCmpMenuBorder = { fg = C.white },
-    BlinkCmpDocBorder = { fg = C.white },
-    BlinkCmpSignatureHelpBorder = { fg = C.white },
+    BlinkCmpMenuBorder = { fg = C.blue_mocha },
+    BlinkCmpDocBorder = { fg = C.blue_mocha },
+    BlinkCmpSignatureHelpBorder = { fg = C.blue_mocha },
   },
 
   blink_indent = {
@@ -633,8 +633,17 @@ M.integrations = {
   },
 
   noice = {
-    NoiceCmdlineIcon = { fg = C.white, bg = C.background },
-    NoiceCmdlinePopupBorder = { fg = C.white, bg = C.background },
+    NoiceCmdlineIcon = { fg = C.sky, italic = false },
+    -- NoiceCmdlineIcon = { fg = C.white, bg = C.background },
+    NoiceCmdlineIconLua = { fg = C.blue2 },
+
+    NoiceCmdlineIconHelp = { fg = C.orange },
+    -- NoiceCmdlineIconInput
+    NoiceCmdlineIconFilter = { fg = C.red, style = { "bold" } },
+    -- NoiceCmdlineIconCmdline
+    -- NoiceCmdlineIconIncRename = { fg = C.green },
+    -- NoiceCmdlineIconCalculator = { fg = C.blue2 },
+    NoiceCmdlinePopupBorder = { fg = C.blue_mocha, bg = C.background },
   },
 
   ["virt-column"] = {
