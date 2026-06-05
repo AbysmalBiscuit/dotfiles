@@ -693,6 +693,11 @@
             "font_style": null,
             "font_weight": 800
           },
+          "title.markup": {
+            "color": "#FAB387",
+            "font_style": null,
+            "font_weight": 800
+          },
           "variant": {
             "color": "#f38ba8",
             "font_style": null,
