@@ -107,7 +107,7 @@
   "wrap_guides": [80, 100, 120],
   "relative_line_numbers": "enabled",
   // ai
-  "disable_ai": true,
+  "disable_ai": false,
   "agent_buffer_font_size": 16.0,
   "agent": {
     "button": true,
@@ -224,6 +224,7 @@
     },
     {{- end }}
     "sequential-thinking": {
+      "enabled": false,
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
     }
