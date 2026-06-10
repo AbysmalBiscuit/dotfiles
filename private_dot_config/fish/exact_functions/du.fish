@@ -5,7 +5,8 @@ if type -q pdu
     end
 else
     echo "'pdu' is not installed on this system. Install it to replace 'du'."
+    set du_command (command -v du)
     function du --wraps='du' --description 'alias du=du -h'
-        du -h $argv
+        $du_command -h $argv
     end
 end
