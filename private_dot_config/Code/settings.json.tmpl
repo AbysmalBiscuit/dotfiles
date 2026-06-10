@@ -756,7 +756,7 @@
   "python.analysis.typeEvaluation.strictDictionaryInference": true,
   "python.analysis.typeEvaluation.strictListInference": true,
   "python.analysis.typeEvaluation.strictSetInference": true,
-  "python.defaultInterpreterPath": {{ lookPath "python3" }},
+  "python.defaultInterpreterPath": "{{ lookPath "python3" }}",
   "python.languageServer": "Default",
   "python.missingPackage.severity": "Warning",
   "python.pyrefly.disableLanguageServices": true,
@@ -771,7 +771,7 @@
   "python.testing.unittestEnabled": true,
   "redhat.telemetry.enabled": false,
   "remote.autoForwardPortsSource": "hybrid",
-  "ruff.configuration": {{ joinPath .chezmoi.homeDir ".config" "ruff" "ruff.toml" }},
+  "ruff.configuration": "{{ joinPath .chezmoi.homeDir ".config" "ruff" "ruff.toml" }}",
   "ruff.format.preview": true,
   "ruff.lint.preview": true,
   "ruff.nativeServer": true,
@@ -820,7 +820,7 @@
   },
   "vim.hlsearch": true,
   "vim.leader": "<Space>",
-  "vim.neovimPath": "/usr/local/bin/nvim",
+  "vim.neovimPath": "{{ .tool.neovim }}",
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "after": [
@@ -1029,8 +1029,8 @@
   "vim.sneak": true,
   "vim.useSystemClipboard": true,
   {{ if .tool.neovim -}}
-  "vscode-neovim.neovimExecutablePaths.darwin": {{ .system.editor }},
-  "vscode-neovim.neovimInitVimPaths.darwin": {{ joinPath .chezmoi.homeDir ".config" "nvim" "init.lua" }},
+  "vscode-neovim.neovimExecutablePaths.darwin": "{{ .system.editor }}",
+  "vscode-neovim.neovimInitVimPaths.darwin": "{{ joinPath .chezmoi.homeDir ".config" "nvim" "init.lua" }}",
   {{- end }}
   "workbench.colorCustomizations": {
     "editor.background": "#141F2E",
