@@ -485,15 +485,6 @@ config.keys = {
   -- CTRL-SHIFT-l activates the debug overlay
   { key = "L", mods = "CTRL", action = wezterm.action.ShowDebugOverlay },
 
-  -- open new tab with profile 2
-  {
-    key = "2",
-    mods = "CTRL|SHIFT",
-    action = wezterm.action.SpawnTab({
-      DomainName = "WSL:kali-linux",
-    }),
-  },
-
   -- for nvim navigation
   { key = "LeftArrow", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-left") },
   { key = "DownArrow", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-down") },
@@ -691,11 +682,37 @@ if os == "windows" then
       return cmd
     end)
   )
+
+  -- CTRL|SHIFT+1 and CTRL|SHIFT+2 open the two highest-priority shells
+  -- that exist on this machine. Priority: wsl > pwsh7 > powershell > cmd.
+  local profile_commands = {}
+  if #wsl_domains > 0 then
+    table.insert(profile_commands, { args = { "wsl.exe" } })
+  end
+  if executable_exists("C:\\Program Files\\PowerShell\\7\\pwsh.exe") then
+    table.insert(profile_commands, { args = { "C:\\Program Files\\PowerShell\\7\\pwsh.exe" } })
+  end
+  if executable_exists("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe") then
+    table.insert(profile_commands, { args = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" } })
+  end
+  table.insert(profile_commands, { args = cmd_args })
+
+  for i = 1, math.min(2, #profile_commands) do
+    table.insert(config.keys, {
+      key = tostring(i),
+      mods = "CTRL|SHIFT",
+      action = act.SpawnCommandInNewTab(profile_commands[i]),
+    })
+  end
 end
 
 config.window_close_confirmation = "NeverPrompt"
 -- config.clean_exit_codes = { 0 }
 -- config.exit_behavior = "Close"
+
+-- Kitty keyboard protocol: lets terminal apps distinguish modified keys
+-- (e.g. Shift+Enter vs Enter, needed for newline insertion in Claude Code)
+config.enable_kitty_keyboard = true
 
 config.automatically_reload_config = true
 
