@@ -1,0 +1,3 @@
+{{- if index .tool "code" }}
+{{ joinPath .chezmoi.homeDir ".config" "Code" "settings.json" }}
+{{- end }}
