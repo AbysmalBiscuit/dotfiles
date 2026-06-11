@@ -21,38 +21,7 @@
     ],
     "deny": []
   },
-  "statusLine": {
-    "type": "command",
-    "command": "ccstatusline",
-    "padding": 0,
-    "refreshInterval": 10
-  },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true,
-    "elements-of-style@superpowers-marketplace": true,
-    "caveman@caveman": true,
-    "slack@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "plugin-dev@claude-plugins-official": true,
-    "pr-crucible@pr-crucible": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    },
-    "pr-crucible": {
-      "source": {
-        "source": "github",
-        "repo": "AbysmalBiscuit/pr-crucible"
-      }
-    }
-  },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "WorktreeCreate": [
       {
@@ -75,6 +44,39 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "elements-of-style@superpowers-marketplace": true,
+    "caveman@caveman": true,
+    "slack@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "plugin-dev@claude-plugins-official": true,
+    "pr-crucible@pr-crucible": true,
+    "claude-md-management@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "pr-crucible": {
+      "source": {
+        "source": "github",
+        "repo": "AbysmalBiscuit/pr-crucible"
+      }
+    }
+  },
   {{- if eq .chezmoi.hostname "GLaDOS-3" }}
   "effortLevel": "high",
   {{- else }}
@@ -86,6 +88,5 @@
     "enabled": true,
     "mode": "hold"
   },
-  "editorMode": "vim",
-  "model": "claude-fable-5[1m]"
+  "editorMode": "vim"
 }
