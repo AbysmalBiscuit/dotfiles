@@ -151,6 +151,30 @@ completions_command_only_if_no = []
 init_command_only_if_no = []
 
 [[tools]]
+lang = "bun"
+name = "mermaid-cli"
+cmds = [
+    "mmdc"
+]
+desc = "This is a command-line interface (CLI) for mermaid. It takes a mermaid definition file as input and generates an SVG/PNG/PDF file as output."
+url = ""
+git = "https://github.com/mermaid-js/mermaid-cli"
+comment = ""
+install_command = "bun install -g @mermaid-js/mermaid-cli"
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
 lang = "c"
 name = "Devilspie2"
 cmds = [
