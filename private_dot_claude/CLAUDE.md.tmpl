@@ -46,6 +46,14 @@ const ctx = makeAnonContext(event);
 const ctx = makeAnonContext(event);
 ```
 
+{{- if index .has "mmdc" }}
+
+## mermaid-js diagrams
+
+When generating mermaid-js diagrams, use the `mmdc` cli tool to validate the syntax.
+
+{{- end }}
+
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
 {{- if or (index .tool "fd") (index .tool "rg") }}
