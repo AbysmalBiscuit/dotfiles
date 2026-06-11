@@ -102,11 +102,15 @@ config.font = wezterm.font_with_fallback({
   "Monaco",
   "Consolas",
   "Twemoji Mozilla",
+  "Noto Color Emoji",
   "Apple Color Emoji",
   "Segoe UI Emoji",
   "Segoe UI Symbol",
   "Symbols Nerd Font",
   "Font Awesome 6 Pro",
+  "Noto Emoji",
+  "Segoe UI Historic",
+  "Noto Sans Bamum",
 })
 
 config.color_scheme = "Catppuccin Mocha"
