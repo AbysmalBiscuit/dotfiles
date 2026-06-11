@@ -430,6 +430,38 @@ wezterm.on("update-right-status", function(window, pane)
 end)
 
 -- keybinding definitions
+
+-- ConPTY panes (all local Windows shells, including WSL) negotiate
+-- win32-input-mode, where keys arrive as explicit KEY_EVENT_RECORD escape
+-- sequences. SendKey writes plain VT bytes instead, which conhost's fallback
+-- input parser handles poorly: a lone ESC stalls sequence disambiguation and
+-- modified arrows get dropped. Encode a key-down + key-up record pair
+-- ourselves: CSI Vk;Sc;Uc;Kd;Cs;Rc _
+-- https://github.com/microsoft/terminal/blob/main/doc/specs/%234999%20-%20Improved%20keyboard%20handling%20in%20Conpty.md
+local function win32_key_seq(vk, scan, uni, ctrl_state)
+  return string.format(
+    "\x1b[%d;%d;%d;1;%d;1_\x1b[%d;%d;%d;0;%d;1_",
+    vk,
+    scan,
+    uni,
+    ctrl_state,
+    vk,
+    scan,
+    uni,
+    ctrl_state
+  )
+end
+
+-- control_key_state = LEFT_CTRL_PRESSED (0x08) | ENHANCED_KEY (0x100)
+local CTRL_ENHANCED = 0x108
+-- vk/scan codes for the cursor keys
+local win32_ctrl_arrow = {
+  LeftArrow = win32_key_seq(0x25, 0x4B, 0, CTRL_ENHANCED),
+  UpArrow = win32_key_seq(0x26, 0x48, 0, CTRL_ENHANCED),
+  RightArrow = win32_key_seq(0x27, 0x4D, 0, CTRL_ENHANCED),
+  DownArrow = win32_key_seq(0x28, 0x50, 0, CTRL_ENHANCED),
+}
+
 local function isViProcess(pane)
   -- get_foreground_process_name On Linux, macOS and Windows,
   -- the process can be queried to determine this path. Other operating systems
@@ -442,11 +474,15 @@ end
 local function conditionalActivatePane(window, pane, pane_direction, vim_direction)
   if isViProcess(pane) then
     -- print("in vim sending", pane_direction)
-    window:perform_action(
-      -- This should match the keybinds you set in Neovim.
-      act.SendKey({ key = vim_direction, mods = "CTRL" }),
-      pane
-    )
+    -- This should match the keybinds you set in Neovim.
+    local action
+    if os == "windows" then
+      -- win32-input-mode encoding; SendKey's plain VT bytes get lost in ConPTY
+      action = act.SendString(win32_ctrl_arrow[vim_direction])
+    else
+      action = act.SendKey({ key = vim_direction, mods = "CTRL" })
+    end
+    window:perform_action(action, pane)
   else
     -- print("not in vim sending", pane_direction)
     window:perform_action(act.ActivatePaneDirection(pane_direction), pane)
@@ -752,17 +788,20 @@ table.insert(config.keys, {
   action = act.SendString("\x1b\r"),
 })
 
--- Esc clears an active mouse selection (like :noh); with no selection it
--- passes through to the running app, so TUIs still receive Esc normally
+-- Esc clears any mouse selection (like :noh) AND always passes through to the
+-- running app. Multiple runs synchronously in the GUI thread — unlike an
+-- action_callback, which defers to Lua and can swallow or reorder Esc relative
+-- to following keys. On Windows the passthrough must be win32-input-mode
+-- encoded: a raw \x1b stalls conhost's escape-sequence disambiguation and Esc
+-- never reaches the app. VK_ESCAPE = 27, scan code 1.
+local esc_passthrough = os == "windows" and act.SendString(win32_key_seq(27, 1, 27, 0))
+  or act.SendKey({ key = "Escape" })
 table.insert(config.keys, {
   key = "Escape",
-  action = wezterm.action_callback(function(window, pane)
-    if window:get_selection_text_for_pane(pane) ~= "" then
-      window:perform_action(act.ClearSelection, pane)
-    else
-      window:perform_action(act.SendKey({ key = "Escape" }), pane)
-    end
-  end),
+  action = act.Multiple({
+    act.ClearSelection,
+    esc_passthrough,
+  }),
 })
 
 config.automatically_reload_config = true
