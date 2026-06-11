@@ -132,6 +132,11 @@ o.scrolloff = 8
 o.signcolumn = "yes"
 g.indent_char = "▎"
 o.winborder = "rounded"
+
+-- expose nvim in the terminal title so wezterm's isViProcess() can detect
+-- nvim inside WSL panes (the Windows-side process tree only shows wsl.exe)
+o.title = true
+o.titlestring = "nvim %t"
 -- o.winborder = "single"
 -- o.isfname = o.isfname .. ",@-@"
 vim.opt.isfname:append("@-@")
