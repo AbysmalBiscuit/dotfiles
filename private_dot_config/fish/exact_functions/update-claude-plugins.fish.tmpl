@@ -1,0 +1,7 @@
+# {{- if and (index .has "claude") (index .has "jq") }}
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+function update-claude-plugins --description 'Updates claude code plugins'
+    claude plugin marketplace update
+    claude plugin list --json | jq -r '.[].id' | xargs -rn1 claude plugin update
+end
+# {{- end }}
