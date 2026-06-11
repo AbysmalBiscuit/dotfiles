@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
-    "OTEL_METRICS_EXPORTER": "otlp"
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1"
   },
   "permissions": {
     "allow": [
@@ -12,6 +13,10 @@
       "Bash(npm run test:*)",
       "Bash(cs test:*)",
       "Bash(pytest:*)",
+      "Bash(bun test*)",
+      "Bash(bun nitro dev*)",
+      "Bash(bun next dev*)",
+      "Bash(bun run turbo dev*)",
       "Bash(cargo test:*)"
     ],
     "deny": []
@@ -76,11 +81,11 @@
   "effortLevel": "medium",
   {{- end }}
   "companyAnnouncements": [],
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "editorMode": "vim",
-  "autoCompactEnabled": true,
-  "voiceEnabled": true
+  "model": "claude-fable-5[1m]"
 }
