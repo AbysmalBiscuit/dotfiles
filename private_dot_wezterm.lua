@@ -6,6 +6,7 @@ local config = wezterm.config_builder()
 local gpus = wezterm.gui.enumerate_gpus()
 local act = wezterm.action
 
+-- config.debug_key_events = true
 config.launch_menu = {}
 -- if config.launch_menu == nil then
 -- end
@@ -305,6 +306,9 @@ config.window_frame = {
   button_bg = c.base,
 }
 
+-- no native close button on tab pills; close with middle-click or CTRL|SHIFT+w
+config.show_close_tab_button_in_tabs = false
+
 config.hide_tab_bar_if_only_one_tab = false
 config.tab_and_split_indices_are_zero_based = false
 
@@ -603,6 +607,11 @@ config.exec_domains = {}
 
 -- shell settings
 if os == "windows" then
+  -- WezTerm's built-in mux SSH agent overrides SSH_AUTH_SOCK in spawned shells
+  -- with its own socket, which Windows OpenSSH cannot connect to; disable it so
+  -- ssh.exe falls back to the \\.\pipe\openssh-ssh-agent named pipe
+  config.mux_enable_ssh_agent = false
+
   local cmd_args
   if executable_exists("c:/clink/clink_x64.exe") then
     -- And inject clink into the command prompt
@@ -612,14 +621,28 @@ if os == "windows" then
   end
   config.default_prog = cmd_args
 
+  -- pwsh 7 may live in Program Files (MSI install) or be a Microsoft Store
+  -- app-execution alias under WindowsApps; io.open can't read store aliases,
+  -- so probe with glob instead
+  local pwsh7_path
+  for _, p in ipairs({
+    "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+    wezterm.home_dir .. "\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.exe",
+  }) do
+    if #wezterm.glob(p) > 0 then
+      pwsh7_path = p
+      break
+    end
+  end
+
   local changed_default_prog = false
-  if executable_exists("C:\\Program Files\\PowerShell\\7\\pwsh.exe") then
+  if pwsh7_path then
     table.insert(config.launch_menu, {
       label = "PowerShell7",
-      args = { "C:\\Program Files\\PowerShell\\7\\pwsh.exe" },
+      args = { pwsh7_path },
     })
     config.default_domain = "local"
-    config.default_prog = { "C:\\Program Files\\PowerShell\\7\\pwsh.exe" }
+    config.default_prog = { pwsh7_path }
     changed_default_prog = true
   end
 
@@ -687,22 +710,27 @@ if os == "windows" then
   -- that exist on this machine. Priority: wsl > pwsh7 > powershell > cmd.
   local profile_commands = {}
   if #wsl_domains > 0 then
-    table.insert(profile_commands, { args = { "wsl.exe" } })
+    -- spawn via the WSL domain rather than exec'ing wsl.exe: wsl.exe emits
+    -- UTF-16LE output which renders as garbage codepoints when it errors
+    table.insert(profile_commands, { domain = { DomainName = wsl_domains[1].name } })
   end
-  if executable_exists("C:\\Program Files\\PowerShell\\7\\pwsh.exe") then
-    table.insert(profile_commands, { args = { "C:\\Program Files\\PowerShell\\7\\pwsh.exe" } })
+  if pwsh7_path then
+    table.insert(profile_commands, { args = { pwsh7_path } })
   end
   if executable_exists("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe") then
     table.insert(profile_commands, { args = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" } })
   end
   table.insert(profile_commands, { args = cmd_args })
 
+  -- phys: matches the physical key position; the mapped shifted character
+  -- ("!", "@" on US layout) is registered too since with SHIFT held the key
+  -- event can carry the shifted character instead of the digit
+  local shifted_digits = { "!", "@" }
   for i = 1, math.min(2, #profile_commands) do
-    table.insert(config.keys, {
-      key = tostring(i),
-      mods = "CTRL|SHIFT",
-      action = act.SpawnCommandInNewTab(profile_commands[i]),
-    })
+    local action = act.SpawnCommandInNewTab(profile_commands[i])
+    table.insert(config.keys, { key = "phys:" .. i, mods = "CTRL|SHIFT", action = action })
+    table.insert(config.keys, { key = shifted_digits[i], mods = "CTRL", action = action })
+    table.insert(config.keys, { key = shifted_digits[i], mods = "CTRL|SHIFT", action = action })
   end
 end
 
@@ -710,9 +738,28 @@ config.window_close_confirmation = "NeverPrompt"
 -- config.clean_exit_codes = { 0 }
 -- config.exit_behavior = "Close"
 
--- Kitty keyboard protocol: lets terminal apps distinguish modified keys
--- (e.g. Shift+Enter vs Enter, needed for newline insertion in Claude Code)
-config.enable_kitty_keyboard = true
+-- Shift+Enter sends the Alt+Enter encoding (ESC CR) so Claude Code can map it
+-- to newline insertion. Avoids enable_kitty_keyboard, whose wezterm
+-- implementation encodes Esc/Delete incorrectly and breaks Esc in many TUIs
+-- (wezterm issues #3621, #5147)
+table.insert(config.keys, {
+  key = "Enter",
+  mods = "SHIFT",
+  action = act.SendString("\x1b\r"),
+})
+
+-- Esc clears an active mouse selection (like :noh); with no selection it
+-- passes through to the running app, so TUIs still receive Esc normally
+table.insert(config.keys, {
+  key = "Escape",
+  action = wezterm.action_callback(function(window, pane)
+    if window:get_selection_text_for_pane(pane) ~= "" then
+      window:perform_action(act.ClearSelection, pane)
+    else
+      window:perform_action(act.SendKey({ key = "Escape" }), pane)
+    end
+  end),
+})
 
 config.automatically_reload_config = true
 
