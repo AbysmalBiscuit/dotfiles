@@ -35,7 +35,7 @@ Run these in order. Stop and ask the user if any step fails or is ambiguous.
 
 - `ISSUE_ID` = the canonical identifier, e.g. `ENG-1234`.
 - `SLUG` = `ISSUE_ID` lowercased + short kebab title, e.g. `eng-1234-fix-bli-export`.
-- `BRANCH` = `AbysmalBiscuit-claude/SLUG` (per global git convention).
+- `BRANCH` = `lev/SLUG` (per global git convention).
 - `WORKTREE` = `/home/lev/Git/adaptyv/SLUG` (sibling of the monorepo, **not** inside it).
 
 ### 3. Create the worktree
