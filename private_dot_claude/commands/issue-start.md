@@ -16,6 +16,11 @@ Run this from **inside the worktree dir** (e.g. `/home/lev/Git/adaptyv/eng-1234-
 
 ## Steps
 
+Before step 1, invoke the **`checklist` skill** and create one task per numbered
+step below (identify issue → load summary → verify workspace → orient → check Linear
+assignment → hand control back). Mark each `in_progress` before starting it and
+`completed` once done, so progress stays visible throughout.
+
 ### 1. Identify the issue
 
 - If `$ARGUMENTS` set → `ISSUE_ID = $ARGUMENTS`.

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "tmux",
+  "permissions": {
+    "allow": [
+      "Bash(curl * http://localhost:*)",
+      "Bash(curl * https://localhost:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:*)",
+      "Bash(cs test:*)",
+      "Bash(pytest:*)",
+      "Bash(bun test*)",
+      "Bash(bun nitro dev*)",
+      "Bash(bun next dev*)",
+      "Bash(bun run turbo dev*)",
+      "Bash(cargo test:*)"
+    ],
+    "deny": [
+      "Read(~/.local/share/chezmoi/**)",
+      "Read(~/.cache/**)",
+      "Read(~/.config/chezmoi/**)",
+      "Read(/etc/*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.azure/**)",
+      "Read(~/.kube/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.netrc)",
+      "Read(~/.npmrc)",
+      "Read(~/.pypirc)",
+      "Read(~/.git-credentials)",
+      "Read(~/.password-store/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.claude.json)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/secrets/**)",
+      "Edit(~/.local/share/chezmoi/**)",
+      "Edit(~/.config/chezmoi/**)",
+      "Edit(/etc/*)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.zshrc)",
+      "Edit(~/.profile)",
+      "Edit(~/.aws/**)",
+      "Edit(~/.config/gcloud/**)",
+      "Edit(~/.azure/**)",
+      "Edit(~/.kube/**)",
+      "Edit(~/.gnupg/**)",
+      "Edit(~/.docker/config.json)",
+      "Edit(~/.netrc)",
+      "Edit(~/.npmrc)",
+      "Edit(~/.pypirc)",
+      "Edit(~/.git-credentials)",
+      "Edit(~/.password-store/**)",
+      "Edit(~/.config/gh/**)",
+      "Edit(~/.claude.json)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(**/secrets/**)",
+      "Read(/mnt/c/Windows/**)",
+      "Edit(/mnt/c/Windows/**)",
+      "Read(/mnt/c/Program Files/**)",
+      "Edit(/mnt/c/Program Files/**)",
+      "Read(/mnt/c/Program Files (x86)/**)",
+      "Edit(/mnt/c/Program Files (x86)/**)",
+      "Read(/mnt/c/ProgramData/**)",
+      "Edit(/mnt/c/ProgramData/**)",
+      "Read(/mnt/c/Users/*/AppData/**)",
+      "Edit(/mnt/c/Users/*/AppData/**)",
+      "Read(/mnt/c/Users/*/.cache/**)",
+      "Read(/mnt/c/Users/*/.config/chezmoi/**)",
+      "Read(/mnt/c/Users/*/.ssh/**)",
+      "Edit(/mnt/c/Users/*/.ssh/**)",
+      "Read(/mnt/c/Users/*/.aws/**)",
+      "Read(/mnt/c/Users/*/.azure/**)",
+      "Read(/mnt/c/Users/*/.kube/**)",
+      "Read(/mnt/c/Users/*/.gnupg/**)",
+      "Read(/mnt/c/Users/*/.docker/config.json)",
+      "Read(/mnt/c/Users/*/.git-credentials)",
+      "Read(/mnt/c/Users/*/.config/gh/**)",
+      "Read(/mnt/c/Users/*/.claude.json)",
+      "Read(/mnt/c/Users/*/NTUSER.DAT*)",
+      "Read(/mnt/c/$Recycle.Bin/**)",
+      "Edit(/mnt/c/$Recycle.Bin/**)",
+      "Read(/mnt/c/System Volume Information/**)"
+    ]
+  },
+  "feedbackSurveyRate": 0,
+  "prefersReducedMotion": true,
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/lev/.claude/hooks/worktree-create.sh"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/lev/.claude/hooks/worktree-remove.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "elements-of-style@superpowers-marketplace": true,
+    "caveman@caveman": true,
+    "slack@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "plugin-dev@claude-plugins-official": true,
+    "pr-crucible@pr-crucible": true,
+    "claude-md-management@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "pr-crucible": {
+      "source": {
+        "source": "github",
+        "repo": "AbysmalBiscuit/pr-crucible"
+      }
+    }
+  },
+  "fileSuggestion": {
+    "type": "command",
+    "command": "~/.claude/file-suggestion.sh"
+  },
+  "effortLevel": "high",
+  "companyAnnouncements": [],
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "editorMode": "vim"
+}

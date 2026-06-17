@@ -22,6 +22,11 @@ If `$ARGUMENTS` is empty, ask the user for the issue ID/URL before doing anythin
 
 Run these in order. Stop and ask the user if any step fails or is ambiguous.
 
+Before step 1, invoke the **`checklist` skill** and create one task per numbered step
+below (fetch issue → derive names → create worktree → symlink env → install deps →
+allocate port slot → write summary → report back). Mark each `in_progress` before
+starting it and `completed` once done, so progress stays visible throughout.
+
 ### 1. Fetch the Linear issue
 
 - Parse the issue ID from `$ARGUMENTS` (strip a URL down to the `ABC-123` identifier).
@@ -61,6 +66,11 @@ ln -s /home/lev/Git/adaptyv/.env.local "$WORKTREE/apps/<app>/.env"
 ```
 
 Do this for each relevant app (e.g. `apps/api`, `apps/lab-os`).
+
+> Dev servers are normally launched through doppler (`dev_local`, see step 7); the
+> symlink mainly serves tools/scripts that read `apps/<app>/.env` directly. If the
+> issue touches **lab-os**, also add a dummy `WORKCELL_BLI_RUN_WORKFLOW_ID` to
+> `apps/lab-os/.env.local` or its SSR errors on boot.
 
 ### 5. Install deps
 
@@ -125,15 +135,25 @@ Include:
 
 Launch dev servers on these ports to avoid collisions with other worktrees:
 
-| App | Port | Launch |
+Launch through doppler (`dev_local`) so secrets are injected (app→project mapping
+is in `monorepo/doppler.yaml`):
+
+| App | Port | Launch (doppler `dev_local`) |
 |-----|------|--------|
-| lab-os | {4100+SLOT} | `cd apps/lab-os && bun next dev -p {4100+SLOT}` |
-| api | {9100+SLOT} | `cd apps/api && PORT={9100+SLOT} bun nitro dev` |
-| plate-api | {8080+SLOT} | `PORT={8080+SLOT}` if needed |
-| foundry-portal | {4200+SLOT} | `cd apps/foundry-portal && bun next dev -p {4200+SLOT}` if needed |
+| lab-os | {4100+SLOT} | `doppler run -p lab-os -c dev_local -- next dev -p {4100+SLOT}` |
+| api | {9100+SLOT} | `SUPABASE_JWT_SECRET='super-secret-jwt-token-with-at-least-32-characters-long' doppler run -p api-foundry -c dev_local --preserve-env=SUPABASE_JWT_SECRET -- nitro dev --port {9100+SLOT}` |
+| plate-api | {8080+SLOT} | see `monorepo/doppler.yaml` for the project; `PORT={8080+SLOT}` |
+| foundry-portal | {4200+SLOT} | see `monorepo/doppler.yaml` for the project; `-p {4200+SLOT}` |
 
 > Only list rows for apps in scope; drop the rest. If the API runs on a non-default
 > port, override the API-URL env for lab-os too (see setup caveat).
+>
+> The `--preserve-env=SUPABASE_JWT_SECRET` keeps the minted-JWT secret matching the
+> local Supabase container; `dev_local` already carries this value, so it's only
+> strictly needed when pinning a non-default secret. **Skip-doppler fallback:**
+> with the env symlinked, `cd apps/<app> && bun nitro dev` (or `bun next dev`) also
+> works — simpler, but drifts from `dev_local`. **lab-os** needs a dummy
+> `WORKCELL_BLI_RUN_WORKFLOW_ID` in `apps/lab-os/.env.local` or SSR errors.
 
 ## Summary
 
@@ -147,6 +167,14 @@ linked PRs, affected files/modules, gotchas. Bullet points.}
 ## Suggested first steps
 
 {ordered list of concrete starting actions for the new session}
+
+## Before committing (TS apps)
+
+CI runs `oxlint --deny-warnings && oxfmt --check`. Before committing TS changes,
+run oxfmt + oxlint on the modified files from the monorepo root:
+
+    oxfmt --write <changed files>
+    oxlint --fix <changed files>
 ```
 
 ### 8. Report back
@@ -162,5 +190,6 @@ Do **not** cd or open an editor — the user starts the new session themselves.
 
 ## Notes
 
-- Never run `doppler` unless the user asks explicitly.
+- Use `doppler` with the `dev_local` config to launch dev servers (see step 7).
+  Never use `doppler` with prod (`prd`) config.
 - If git, bun, or an MCP call fails, surface the exact error and ask — don't guess.
