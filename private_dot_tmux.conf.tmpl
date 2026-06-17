@@ -4,16 +4,22 @@
 # {{- else -}}
 # vim:filetype=tmux.chezmoitmpl
 # {{- end }}
-set LANG="en_US.UTF-8"
+set-environment -g LANG "en_US.UTF-8"
 
 set -g base-index 1
 # set -g renumber-windows
 setw -g pane-base-index 1
 
+# Keep manually-set window names (e.g. a script's `rename-window pr123[ENG-456]`).
+# Without these, Claude Code's terminal-title escapes (allow-rename) and
+# process tracking (automatic-rename) overwrite the name with the last command.
+setw -g automatic-rename off
+set -g allow-rename off
+
 # Make a better prefix binding
 unbind C-b
 unbind r
-bind r source-file ~/.tmux.conf
+bind r source-file ~/.tmux.conf \; display-message "tmux.conf reloaded"
 
 set -g default-terminal "tmux-256color"
 set -ag terminal-overrides ",xterm-256color:RGB"
@@ -24,6 +30,9 @@ set -ga update-environment TERM
 set -ga update-environment TERM_PROGRAM
 
 set -g prefix C-/
+# Many terminals (incl. WezTerm) send 0x1f for Ctrl+/, which tmux sees as C-_.
+# Register it as a secondary prefix so Ctrl+/ works regardless of what is sent.
+set -g prefix2 C-_
 # unbind-key C-/
 # bind-key C-/ send-prefix
 # set -g prefix C-s
@@ -47,21 +56,26 @@ bind-key l select-pane -R
 bind -n C-Pageup  previous-window
 bind -n C-Pagedown next-window
 
-bind -T root C-Left select-pane -L
-bind -T root C-Down select-pane -D
-bind -T root C-Up select-pane -U
-bind -T root C-Right select-pane -R
+# C-arrow pane navigation is defined below as is_vim-aware bindings
+# (send keys into nvim panes so Navigator.nvim can handle them, else
+# select-pane). Do not add plain `bind -T root C-Left select-pane` here:
+# it would override the is_vim version and break in-vim split navigation.
+
+# bind -T root C-Left select-pane -L
+# bind -T root C-Down select-pane -D
+# bind -T root C-Up select-pane -U
+# bind -T root C-Right select-pane -R
 
 set-option -g status-position top
 
 # Re-enable home and end keys
-# {{- if .is_wsl -}}
+# {{- if .is_wsl }}
   bind-key -n Home send-keys \033[H
   bind-key -n End send-keys \033[F
-# {{- else if .is_macos -}}
+# {{- else if .is_macos }}
 bind-key -n Home send Escape "OH"
 bind-key -n End send Escape "OF"
-# {{- end -}}
+# {{- end }}
 # Add default opening methods as fallback
 # bind c new-window -c "#{pane_current_path}"
 # bind '"' split-window -c "#{pane_current_path}"
@@ -129,6 +143,10 @@ bind-key -T copy-mode-vi C-Right select-pane -R
 ### Catppuccin theme configuration
 set -g @catppuccin_flavor 'mocha' # latte, frappe, macchiato or mocha
 set -g @catppuccin_window_status_style "rounded"
+# Show the window NAME (#W, e.g. pr3287[SWE-9915]) in the pills, not the pane
+# title (#T), which Claude Code overwrites with its current task.
+set -g @catppuccin_window_text " #W"
+set -g @catppuccin_window_current_text " #W"
 run '~/.tmux/plugins/tmux/catppuccin.tmux' # or where this file is located on your machine
 
 # Define RAM colors
@@ -181,23 +199,40 @@ run '~/.tmux/plugins/tmux/catppuccin.tmux' # or where this file is located on yo
 set -g status-right-length 100
 set -g status-left-length 100
 set -g status-left ""
-set -g status-right "#{E:@catppuccin_status_application}"
+# Two-row status bar:
+#   row 0 (top)    = catppuccin info modules (utils), right-aligned
+#   row 1 (bottom) = the window/session pills (full width, not squished)
+# Modules live in status-format[0]; the window list in status-format[1] (tmux's
+# default window-list rendering, copied verbatim so mouse selection and styling
+# keep working).
+set -g status 2
+set -g status-right ""
+set -g status-format[0] "#[align=right]#[push-default]"
+set -ga status-format[0] "#{E:@catppuccin_status_application}"
+# set -ag status-right "#[bg=#{@thm_green},fg=#{@thm_crust}]#[reverse]#[noreverse] "
+set -ga status-format[0] "#(tmux-spotify-info)"
+set -gaF status-format[0] "#{E:@catppuccin_status_cpu}"
+
 # set -ag status-right "#[bg=#{@thm_green},fg=#{@thm_crust}]#[reverse]#[noreverse] "
 set -ga status-right "#(tmux-spotify-info)"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 # 
-# {{- if .is_macos -}}
+# {{- if .is_macos }}
 set -ag status-right "#[bg=#{@thm_flamingo},fg=#{@thm_crust}]#[reverse]#[noreverse]󱀙  "
 set -ag status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(memory_pressure | awk '/percentage/{print $5}') "
-# {{- end -}}
+# {{- end }}
 # set -agF status-right "#{E:@catppuccin_status_ram}"
 # set -agF status-right "#{E:@catppuccin_status_load}"
 # set -ag status-right "#[bg=#{@thm_pink},fg=#{@thm_crust}]#[reverse]#[noreverse]  "
 # set -agF status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(free | awk '/Mem:/ {printf \"%3.1f%%\", $3/$2*100}') "
-set -agF status-right "#{E:@catppuccin_status_date_time}"
-set -agF status-right "#{E:@catppuccin_status_weather}"
+set -gaF status-format[0] "#{E:@catppuccin_status_date_time}"
+set -gaF status-format[0] "#{E:@catppuccin_status_weather}"
 # set -agF status-right "#{E:@catppuccin_status_clima}"
-set -ag status-right "#{E:@catppuccin_status_session}"
+set -ga status-format[0] "#{E:@catppuccin_status_session}"
+set -ga status-format[0] "#[pop-default]"
+
+# Row 1: window/session pills (tmux default window-list rendering)
+set -g status-format[1] "#[align=left range=left #{E:status-left-style}]#[push-default]#{T;=/#{status-left-length}:status-left}#[pop-default]#[norange default]#[list=on align=#{status-justify}]#[list=left-marker]<#[list=right-marker]>#[list=on]#{W:#[range=window|#{window_index} #{E:window-status-style}#{?#{&&:#{window_last_flag},#{!=:#{E:window-status-last-style},default}}, #{E:window-status-last-style},}#{?#{&&:#{window_bell_flag},#{!=:#{E:window-status-bell-style},default}}, #{E:window-status-bell-style},#{?#{&&:#{||:#{window_activity_flag},#{window_silence_flag}},#{!=:#{E:window-status-activity-style},default}}, #{E:window-status-activity-style},}}]#[push-default]#{T:window-status-format}#[pop-default]#[norange default]#{?loop_last_flag,,#{window-status-separator}},#[range=window|#{window_index} list=focus #{?#{!=:#{E:window-status-current-style},default},#{E:window-status-current-style},#{E:window-status-style}}#{?#{&&:#{window_last_flag},#{!=:#{E:window-status-last-style},default}}, #{E:window-status-last-style},}#{?#{&&:#{window_bell_flag},#{!=:#{E:window-status-bell-style},default}}, #{E:window-status-bell-style},#{?#{&&:#{||:#{window_activity_flag},#{window_silence_flag}},#{!=:#{E:window-status-activity-style},default}}, #{E:window-status-activity-style},}}]#[push-default]#{T:window-status-current-format}#[pop-default]#[norange list=on default]#{?loop_last_flag,,#{window-status-separator}}}#[nolist align=right range=right #{E:status-right-style}]#[push-default]#{T;=/#{status-right-length}:status-right}#[pop-default]#[norange default]"
 
 set -g @plugin 'tmux-plugins/tmux-cpu'
 set -g @plugin 'xamut/tmux-weather'
