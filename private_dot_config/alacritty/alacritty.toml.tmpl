@@ -54,3 +54,9 @@ bindings = [
     { mouse = "Forward", action = "ScrollLineUp" },
     { mouse = "Right", action = "Paste" },
 ]
+
+{{- if .is_windows }}
+[terminal.shell]
+program = "wsl.exe"
+args = ["~"]
+{{- end }}
