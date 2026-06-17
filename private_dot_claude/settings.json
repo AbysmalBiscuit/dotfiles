@@ -94,6 +94,7 @@
       "Read(/mnt/c/System Volume Information/**)"
     ]
   },
+  "defaultMode": "auto",
   "feedbackSurveyRate": 0,
   "prefersReducedMotion": true,
   "hooks": {
