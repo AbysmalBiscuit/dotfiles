@@ -1,0 +1,3 @@
+{{- if .tool.alacritty -}}
+{{ joinPath .chezmoi.homeDir ".config" "alacritty" "alacritty.toml" }}
+{{- end -}}

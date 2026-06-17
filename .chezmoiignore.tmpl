@@ -107,7 +107,6 @@ localSettings.yaml
 .chezmoiscripts/**.sh.tmpl
 .chezmoiscripts/linux/**
 .chezmoiscripts/macos/**
-.config/alacritty
 .config/fish
 .config/gedit/**
 .config/ghostty
@@ -200,6 +199,7 @@ Documents
 {{- end }}
 # config tools
 {{- range $tool := list
+    "alacritty"
     "bat"
     "bottom"
     "ccstatusline"
