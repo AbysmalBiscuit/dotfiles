@@ -552,9 +552,13 @@ VISUAL=""
 # {{- end }}
 export VISUAL
 
-# {{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
 # API keys
-export AVANTE_GEMINI_API_KEY=# {{ .secrets.api_keys.avante.personal.gemini | quote }}
+# {{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
+export AVANTE_GEMINI_API_KEY="# {{ .secrets.api_keys.avante.personal.gemini }}"
+# {{- end }}
+
+# {{ if .secrets.api_keys.linear.adaptyv_issue_end -}}
+export LINEAR_API_KEY="# {{ .secrets.api_keys.linear.adaptyv_issue_end }}"
 # {{- end }}
 
 # {{ template "sh/env_compiler.sh" . }}
