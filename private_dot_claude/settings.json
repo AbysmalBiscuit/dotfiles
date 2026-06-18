@@ -1,13 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "fileSuggestion": {
+    "type": "command",
+    "command": "~/.claude/file-suggestion.sh"
+  },
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
     "CLAUDE_CODE_NO_FLICKER": "1",
     "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
   },
-  "teammateMode": "tmux",
   "permissions": {
+    "defaultMode": "auto",
     "allow": [
       "Bash(curl * http://localhost:*)",
       "Bash(curl * https://localhost:*)",
@@ -94,9 +98,6 @@
       "Read(/mnt/c/System Volume Information/**)"
     ]
   },
-  "defaultMode": "auto",
-  "feedbackSurveyRate": 0,
-  "prefersReducedMotion": true,
   "hooks": {
     "WorktreeCreate": [
       {
@@ -136,7 +137,8 @@
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
     "plugin-dev@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
-    "claude-md-management@claude-plugins-official": true
+    "claude-md-management@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
@@ -152,10 +154,7 @@
       }
     }
   },
-  "fileSuggestion": {
-    "type": "command",
-    "command": "~/.claude/file-suggestion.sh"
-  },
+  "feedbackSurveyRate": 0,
   "effortLevel": "high",
   "companyAnnouncements": [],
   "tui": "fullscreen",
@@ -163,5 +162,7 @@
     "enabled": true,
     "mode": "hold"
   },
-  "editorMode": "vim"
+  "prefersReducedMotion": true,
+  "editorMode": "vim",
+  "teammateMode": "in-process"
 }
