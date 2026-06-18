@@ -215,7 +215,7 @@ set -gaF status-format[0] "#{E:@catppuccin_status_cpu}"
 
 # set -ag status-right "#[bg=#{@thm_green},fg=#{@thm_crust}]#[reverse]#[noreverse] "
 set -ga status-right "#(tmux-spotify-info)"
-set -agF status-right "#{E:@catppuccin_status_cpu}"
+# CPU lives on the top status row (status-format[0]); see cpu-interpolate-format.sh.
 # 
 # {{- if .is_macos }}
 set -ag status-right "#[bg=#{@thm_flamingo},fg=#{@thm_crust}]#[reverse]#[noreverse]󱀙  "
@@ -240,5 +240,9 @@ set -g @plugin 'xamut/tmux-weather'
 # Run plugin manager
 set -g @plugin 'tmux-plugins/tpm'
 run '~/.tmux/plugins/tpm/tpm'
+
+# tmux-cpu only interpolates status-left/status-right; apply the same CPU
+# placeholder substitution to the top status row so its CPU module renders.
+run-shell '~/.tmux/cpu-interpolate-format.sh'
 
 #
