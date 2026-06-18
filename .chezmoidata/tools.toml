@@ -1194,6 +1194,30 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "GlazeWM"
+cmds = [
+    "glazewm"
+]
+desc = "GlazeWM is a tiling window manager for macOS and Windows inspired by i3wm."
+url = ""
+git = "https://github.com/glzr-io/glazewm"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "Jujutsu"
 cmds = [
     "jj"

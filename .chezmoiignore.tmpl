@@ -50,6 +50,12 @@ localSettings.yaml
 # files that are edited externally and symlinked to chezmoi
 **/ext_*
 
+
+{{- if not (index .tool "glazewm") }}
+.glzr/
+{{- end }}
+
+
 # os specific exclusions
 
 {{ if .is_wsl -}}
