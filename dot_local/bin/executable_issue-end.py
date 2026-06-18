@@ -14,9 +14,13 @@ Two subcommands (default is `status`):
   issue-end.py                 status of every issue worktree of the current repo
   issue-end.py status [IDS..]  same, optionally limited to given issue IDs
   issue-end.py clean  [IDS..]  interactively remove FINISHED worktrees
+  issue-end.py clean --clean-worktree SEL..  remove the named worktrees, gate bypassed
 
 `status` is always read-only. `clean` lists each finished worktree's artifacts,
-asks y/n per worktree (unless -y), then calls issue-end-cleanup.sh.
+asks y/n per worktree (unless -y), then calls issue-end-cleanup.sh. With
+--clean-worktree the finished gate is skipped and the args name worktrees directly
+(by issue id, branch, or path) — the escape hatch for scratch trees with no PR or
+Linear issue.
 
 Worktrees are discovered with `git worktree list`, and every worktree's PR is
 resolved from a single bulk `gh pr list --state all` call matched by head branch
@@ -48,6 +52,14 @@ from typing import NamedTuple
 
 import click
 from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
 from rich.text import Text
 
@@ -139,10 +151,14 @@ def discover(start: str) -> tuple[str, list[tuple[str, str]]]:
     return blocks[0][0], blocks[1:]  # first block is the main repo; report the rest
 
 
-def build_rows(start: str) -> list[Row]:
+def build_rows(
+    start: str, progress: Progress | None = None, task: int | None = None
+) -> list[Row]:
     """Discover worktrees and resolve each one's PR via a single bulk gh call."""
     main, others = discover(start)
 
+    if progress is not None:
+        progress.update(task, description="Fetching pull requests from GitHub…", total=None)
     prs = gh(
         ["pr", "list", "--state", "all", "--limit", str(PR_FETCH_LIMIT),
          "--json", "number,state,url,headRefName"],
@@ -156,6 +172,10 @@ def build_rows(start: str) -> list[Row]:
         if chosen is None or key > (STATE_RANK.get(chosen["state"], 0), chosen["number"]):
             best[head] = pr
 
+    if progress is not None:
+        progress.update(
+            task, description="Scanning worktrees", total=len(others) or 1, completed=0
+        )
     rows: list[Row] = []
     for path, branch in others:
         iid = issue_id_of(branch, path)
@@ -167,22 +187,28 @@ def build_rows(start: str) -> list[Row]:
             )
         else:
             rows.append(Row(path, branch, iid, dirty, "none", "NO_PR", "-"))
+        if progress is not None:
+            progress.advance(task)
     return rows
 
 
 # --- Linear "Done" gate: one batched GraphQL request --------------------------
 
 
-def linear_states(ids: list[str], key: str | None) -> dict[str, LinearState]:
+def linear_states(
+    ids: list[str], key: str | None,
+    progress: Progress | None = None, task: int | None = None,
+) -> tuple[dict[str, LinearState], str | None]:
     """Map each ENG-1234-style id to its Linear workflow state, in one request.
 
-    Returns {} when no key or no resolvable ids. Ids that don't exist (or that
-    the key can't see) are simply absent from the result.
+    Also returns the workspace url slug (for building issue links), or None.
+    Returns ({}, None) when no key or no resolvable ids. Ids that don't exist
+    (or that the key can't see) are simply absent from the state map.
     """
     wanted = {i: ID_RE.match(i) for i in ids}
     resolvable = {i: m for i, m in wanted.items() if m}
     if not key or not resolvable:
-        return {}
+        return {}, None
 
     aliases: dict[str, str] = {}
     parts: list[str] = []
@@ -195,8 +221,10 @@ def linear_states(ids: list[str], key: str | None) -> dict[str, LinearState]:
             f"number: {{ eq: {num} }} }}) "
             f"{{ nodes {{ identifier state {{ type name }} }} }}"
         )
-    query = "query {" + " ".join(parts) + "}"
+    query = "query { org: organization { urlKey } " + " ".join(parts) + "}"
 
+    if progress is not None:
+        progress.update(task, description="Checking Linear issue status…", total=None)
     req = urllib.request.Request(
         LINEAR_URL,
         data=json.dumps({"query": query}).encode(),
@@ -207,36 +235,46 @@ def linear_states(ids: list[str], key: str | None) -> dict[str, LinearState]:
             payload = json.loads(resp.read())
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
         err.print(f"[yellow]Linear lookup failed:[/] {exc}")
-        return {}
+        return {}, None
 
     if payload.get("errors"):
         msg = "; ".join(e.get("message", "?") for e in payload["errors"])
         err.print(f"[yellow]Linear API error:[/] {msg}")
     data = payload.get("data") or {}
 
+    url_key = (data.get("org") or {}).get("urlKey")
     out: dict[str, LinearState] = {}
     for alias, block in data.items():
+        if alias == "org":
+            continue
         nodes = (block or {}).get("nodes") or []
         if nodes:
             st = nodes[0]["state"]
             out[aliases[alias]] = LinearState(st["type"], st["name"])
-    return out
+    return out, url_key
 
 
 # --- verdict ------------------------------------------------------------------
 
 
-def reason_not_finished(row: Row, linear: LinearState | None, has_key: bool) -> str | None:
-    """None when finished; otherwise a short reason it is not."""
+def reason_not_finished(
+    row: Row, linear: LinearState | None, has_key: bool, pr_only: bool = False
+) -> str | None:
+    """None when finished; otherwise a short reason it is not.
+
+    With pr_only, the Linear "Done" gate is dropped — a worktree is finished on
+    PR-merged + clean tree alone.
+    """
     bits: list[str] = []
     if row.issue_id == "UNKNOWN":
         return "not an issue worktree"
     if row.pr_state != "MERGED":
         bits.append("PR not merged" if row.pr_state != "NO_PR" else "no PR")
-    if linear is None:
-        bits.append("Linear ?" if has_key else "no Linear key")
-    elif linear.type != "completed":
-        bits.append(f"Linear {linear.name}")
+    if not pr_only:
+        if linear is None:
+            bits.append("Linear ?" if has_key else "no Linear key")
+        elif linear.type != "completed":
+            bits.append(f"Linear {linear.name}")
     if row.dirty == "dirty":
         bits.append("dirty")
     return ", ".join(bits) if bits else None
@@ -258,6 +296,15 @@ def pr_cell(row: Row) -> Text:
     return Text(label, style=style)
 
 
+def issue_cell(row: Row, states: dict[str, LinearState], url_key: str | None) -> Text:
+    """The issue id, linked to its Linear page when it resolves to a real issue."""
+    style = "cyan" if row.issue_id != "UNKNOWN" else "dim"
+    if url_key and row.issue_id in states:
+        url = f"https://linear.app/{url_key}/issue/{row.issue_id}"
+        return Text(row.issue_id, style=f"{style} link {url}")
+    return Text(row.issue_id, style=style)
+
+
 def linear_cell(linear: LinearState | None, has_key: bool) -> Text:
     if linear is None:
         return Text("?" if has_key else "no key", style="dim")
@@ -269,7 +316,9 @@ def linear_cell(linear: LinearState | None, has_key: bool) -> Text:
     return Text(linear.name, style=style)
 
 
-def render(rows: list[Row], states: dict[str, LinearState], has_key: bool) -> int:
+def render(
+    rows: list[Row], states: dict[str, LinearState], has_key: bool, url_key: str | None
+) -> int:
     """Print the status table. Returns the number of finished worktrees."""
     table = Table(box=None, pad_edge=False, header_style="dim", expand=False)
     table.add_column("ISSUE", no_wrap=True)
@@ -291,7 +340,7 @@ def render(rows: list[Row], states: dict[str, LinearState], has_key: bool) -> in
         else:
             verdict = Text(reason, style="yellow" if "dirty" in reason else "dim")
         table.add_row(
-            Text(row.issue_id, style="cyan" if row.issue_id != "UNKNOWN" else "dim"),
+            issue_cell(row, states, url_key),
             Text(row.branch, style="dim"),
             Text(row.dirty, style="red" if row.dirty == "dirty" else "dim"),
             pr_cell(row),
@@ -333,15 +382,60 @@ def show_artifacts(worktree: str) -> None:
 # --- CLI ----------------------------------------------------------------------
 
 
-def gather(start: str, ids: tuple[str, ...]) -> tuple[list[Row], dict[str, LinearState], bool]:
-    rows = build_rows(start)
-    if ids:
-        wanted = {i.upper() for i in ids}
-        rows = [r for r in rows if r.issue_id in wanted]
+def select_explicit(rows: list[Row], selectors: tuple[str, ...]) -> list[Row]:
+    """Pick the exact worktrees named by selectors, ignoring any finished gate.
+
+    Each selector is matched case-insensitively against a row's issue id, branch,
+    worktree basename, or full worktree path — so a non-issue scratch worktree can
+    be named by its branch or directory. Selectors matching nothing warn; the
+    result preserves selector order and de-duplicates by worktree.
+    """
+    chosen: list[Row] = []
+    seen: set[str] = set()
+    for sel in selectors:
+        s = sel.lower()
+        hits = [
+            r for r in rows
+            if s in {
+                r.issue_id.lower(), r.branch.lower(),
+                os.path.basename(r.worktree).lower(), r.worktree.lower(),
+            }
+        ]
+        if not hits:
+            err.print(f"[yellow]no worktree matches '{sel}'[/]")
+        for r in hits:
+            if r.worktree not in seen:
+                seen.add(r.worktree)
+                chosen.append(r)
+    return chosen
+
+
+def scan_progress() -> Progress:
+    """A transient spinner+bar live display on stderr, so piped stdout stays clean."""
+    return Progress(
+        SpinnerColumn(spinner_name="dots", style="cyan"),
+        TextColumn("[cyan]{task.description}"),
+        BarColumn(bar_width=24, complete_style="cyan", finished_style="green"),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        console=err,
+        transient=True,
+    )
+
+
+def gather(
+    start: str, ids: tuple[str, ...]
+) -> tuple[list[Row], dict[str, LinearState], bool, str | None]:
     key = os.environ.get("LINEAR_API_KEY")
-    issue_ids = [r.issue_id for r in rows if r.issue_id != "UNKNOWN"]
-    states = linear_states(issue_ids, key)
-    return rows, states, bool(key)
+    with scan_progress() as progress:
+        task = progress.add_task("Discovering worktrees…", total=None)
+        rows = build_rows(start, progress, task)
+        if ids:
+            wanted = {i.upper() for i in ids}
+            rows = [r for r in rows if r.issue_id in wanted]
+        issue_ids = [r.issue_id for r in rows if r.issue_id != "UNKNOWN"]
+        states, url_key = linear_states(issue_ids, key, progress, task)
+    return rows, states, bool(key), url_key
 
 
 @click.group(invoke_without_command=True)
@@ -363,8 +457,8 @@ def cli(ctx: click.Context, start: str | None) -> None:
 @click.pass_context
 def status(ctx: click.Context, issue_ids: tuple[str, ...]) -> None:
     """Read-only report of every issue worktree (optionally filtered by ID)."""
-    rows, states, has_key = gather(ctx.obj["start"], issue_ids)
-    finished = render(rows, states, has_key)
+    rows, states, has_key, url_key = gather(ctx.obj["start"], issue_ids)
+    finished = render(rows, states, has_key, url_key)
     if finished:
         console.print(
             f"\n[green]{finished} finished.[/] Run "
@@ -381,27 +475,66 @@ def status(ctx: click.Context, issue_ids: tuple[str, ...]) -> None:
 @click.argument("issue_ids", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Don't prompt per worktree; remove all finished.")
 @click.option("--force", is_flag=True, help="Pass --force to the cleanup script (discards dirty trees).")
+@click.option("--pr-only", is_flag=True, help="Ignore the Linear gate; finished = PR merged + clean tree.")
+@click.option(
+    "--clean-worktree", is_flag=True,
+    help="Remove the exact worktrees named as args, bypassing the finished gate "
+         "(PR/Linear ignored). Requires explicit selectors; for scratch worktrees.",
+)
 @click.pass_context
-def clean(ctx: click.Context, issue_ids: tuple[str, ...], yes: bool, force: bool) -> None:
-    """Interactively remove FINISHED worktrees (PR merged + Linear done + clean)."""
+def clean(
+    ctx: click.Context, issue_ids: tuple[str, ...], yes: bool, force: bool,
+    pr_only: bool, clean_worktree: bool,
+) -> None:
+    """Interactively remove FINISHED worktrees (PR merged + Linear done + clean).
+
+    With --pr-only the Linear gate is dropped: any merged, clean worktree is
+    eligible. Useful when LINEAR_API_KEY is unset.
+
+    With --clean-worktree the finished gate is dropped entirely and the positional
+    args become explicit worktree selectors (matched against issue id, branch, or
+    worktree path). This removes arbitrary worktrees — including scratch trees with
+    no PR or Linear issue — so it never operates on every worktree at once.
+    """
     start = ctx.obj["start"]
-    rows, states, has_key = gather(start, issue_ids)
-    render(rows, states, has_key)
 
-    finished = [
-        r for r in rows
-        if reason_not_finished(r, states.get(r.issue_id), has_key) is None
-    ]
-    if not finished:
-        console.print("\n[dim]Nothing finished to clean up.[/]")
-        return
+    if clean_worktree:
+        if not issue_ids:
+            err.print(
+                "[red]--clean-worktree needs one or more selectors "
+                "(issue id, branch, or worktree path).[/]"
+            )
+            ctx.exit(1)
+        rows, states, has_key, url_key = gather(start, ())
+        render(rows, states, has_key, url_key)
+        targets = select_explicit(rows, issue_ids)
+        if not targets:
+            console.print("\n[dim]No matching worktrees.[/]")
+            return
+        console.print(
+            f"\n[bold yellow]--clean-worktree: removing {len(targets)} selected "
+            f"worktree(s), ignoring the PR/Linear/finished gate.[/]"
+        )
+    else:
+        rows, states, has_key, url_key = gather(start, issue_ids)
+        render(rows, states, has_key, url_key)
+        if pr_only:
+            console.print("[yellow]--pr-only: Linear 'Done' gate skipped.[/]")
+        targets = [
+            r for r in rows
+            if reason_not_finished(r, states.get(r.issue_id), has_key, pr_only) is None
+        ]
+        if not targets:
+            console.print("\n[dim]Nothing finished to clean up.[/]")
+            return
+        console.print(f"\n[bold green]{len(targets)} worktree(s) ready to remove:[/]")
 
-    console.print(f"\n[bold green]{len(finished)} worktree(s) ready to remove:[/]")
     removed = 0
-    for row in finished:
-        console.print(f"\n[cyan]{row.issue_id}[/]  {row.worktree}")
+    for row in targets:
+        label = row.issue_id if row.issue_id != "UNKNOWN" else row.branch
+        console.print(f"\n[cyan]{label}[/]  {row.worktree}")
         show_artifacts(row.worktree)
-        if not yes and not click.confirm(f"  Remove {row.issue_id}?", default=False):
+        if not yes and not click.confirm(f"  Remove {label}?", default=False):
             console.print("    [dim]skipped[/]")
             continue
         cmd = ["bash", str(CLEANUP), row.worktree, row.issue_id]
@@ -412,13 +545,16 @@ def clean(ctx: click.Context, issue_ids: tuple[str, ...], yes: bool, force: bool
             removed += 1
         elif result.returncode == 2:
             err.print(
-                f"    [yellow]{row.issue_id} is dirty — rerun with --force to discard.[/]"
+                f"    [yellow]{label} is dirty — rerun with --force to discard.[/]"
             )
         else:
-            err.print(f"    [red]cleanup failed for {row.issue_id} (exit {result.returncode}).[/]")
+            err.print(f"    [red]cleanup failed for {label} (exit {result.returncode}).[/]")
 
-    console.print(f"\n[green]Removed {removed} of {len(finished)}.[/]")
+    console.print(f"\n[green]Removed {removed} of {len(targets)}.[/]")
 
 
 if __name__ == "__main__":
-    cli()
+    # Pin the completion env var; the default derived from the "issue-end.py" prog
+    # name contains a dot (_ISSUE_END.PY_COMPLETE), which is not a valid shell
+    # identifier. See the shell-completion setup note in the module docstring.
+    cli(complete_var="_ISSUE_END_COMPLETE")

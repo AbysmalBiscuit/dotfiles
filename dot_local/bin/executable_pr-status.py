@@ -43,8 +43,18 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
 from rich.text import Text
+
+# A transient spinner on stderr so a piped/redirected stdout stays free of it.
+err = Console(stderr=True)
 
 
 class Author(TypedDict):
@@ -274,10 +284,8 @@ def repo_args(repo: str | None) -> list[str]:
     return ["--repo", repo] if repo else []
 
 
-def mine_table(
-    console: Console, me: str, repo: str | None, prev: dict[str, dict[str, str]]
-) -> dict[str, dict[str, str]]:
-    prs = cast(
+def fetch_mine(repo: str | None) -> list[MinePR]:
+    return cast(
         "list[MinePR]",
         gh(
             [
@@ -288,6 +296,11 @@ def mine_table(
         )
         or [],
     )
+
+
+def mine_table(
+    console: Console, me: str, prs: list[MinePR], prev: dict[str, dict[str, str]]
+) -> dict[str, dict[str, str]]:
     console.print("[bold cyan]MY OPEN PRs[/]")
     if not prs:
         console.print("  [dim](none)[/]")
@@ -309,9 +322,7 @@ def mine_table(
     return cur
 
 
-def reviews_table(
-    console: Console, me: str, repo: str | None, prev: dict[str, dict[str, str]]
-) -> dict[str, dict[str, str]]:
+def fetch_reviews(repo: str | None, me: str) -> list[ReviewPR]:
     fields = "number,url,title,headRefName,author,reviewDecision,latestReviews,reviewRequests"
     seen: dict[int, ReviewPR] = {}
     for search in ("review-requested:@me", "reviewed-by:@me"):
@@ -327,9 +338,13 @@ def reviews_table(
         )
         for pr in batch:
             seen.setdefault(pr["number"], pr)
+    return [pr for pr in seen.values() if pr["author"]["login"] != me]
 
+
+def reviews_table(
+    console: Console, me: str, rows: list[ReviewPR], prev: dict[str, dict[str, str]]
+) -> dict[str, dict[str, str]]:
     console.print("\n[bold cyan]PRs AWAITING MY REVIEW[/]")
-    rows = [pr for pr in seen.values() if pr["author"]["login"] != me]
     if not rows:
         console.print("  [dim](none)[/]")
         return {}
@@ -366,16 +381,40 @@ def main() -> None:
     want_mine = args.mine or not args.reviews
     want_reviews = args.reviews or not args.mine
 
-    me = cast("dict[str, str]", gh(["api", "user"]))["login"]
     console = Console()
 
-    path = None if args.no_cache else cache_path(resolve_repo(args.repo))
+    # Fetch everything under a transient spinner, then render once it clears —
+    # so the live display never interleaves with the printed tables.
+    mine_prs: list[MinePR] = []
+    review_rows: list[ReviewPR] = []
+    repo_key: str | None = None
+    with Progress(
+        SpinnerColumn(spinner_name="dots", style="cyan"),
+        TextColumn("[cyan]{task.description}"),
+        BarColumn(bar_width=20, complete_style="cyan", finished_style="green"),
+        TimeElapsedColumn(),
+        console=err,
+        transient=True,
+    ) as progress:
+        task = progress.add_task("Connecting to GitHub…", total=None)
+        me = cast("dict[str, str]", gh(["api", "user"]))["login"]
+        if not args.no_cache:
+            progress.update(task, description="Resolving repository…")
+            repo_key = resolve_repo(args.repo)
+        if want_mine:
+            progress.update(task, description="Fetching your open PRs…")
+            mine_prs = fetch_mine(args.repo)
+        if want_reviews:
+            progress.update(task, description="Fetching PRs awaiting your review…")
+            review_rows = fetch_reviews(args.repo, me)
+
+    path = cache_path(repo_key) if repo_key else None
     cache = load_cache(path) if path else {}
 
     if want_mine:
-        cache["mine"] = mine_table(console, me, args.repo, cache.get("mine", {}))
+        cache["mine"] = mine_table(console, me, mine_prs, cache.get("mine", {}))
     if want_reviews:
-        cache["reviews"] = reviews_table(console, me, args.repo, cache.get("reviews", {}))
+        cache["reviews"] = reviews_table(console, me, review_rows, cache.get("reviews", {}))
 
     if path:
         save_cache(path, cache)

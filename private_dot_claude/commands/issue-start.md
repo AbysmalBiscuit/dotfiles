@@ -1,6 +1,6 @@
 ---
 description: Cold-start a session inside an issue worktree — load the ISSUE_SUMMARY handoff and orient
-allowed-tools: Bash, Read, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
+allowed-tools: Bash, Read, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
 ---
 
 # /start-issue
@@ -18,8 +18,8 @@ Run this from **inside the worktree dir** (e.g. `/home/lev/Git/adaptyv/eng-1234-
 
 Before step 1, invoke the **`checklist` skill** and create one task per numbered
 step below (identify issue → load summary → verify workspace → orient → check Linear
-assignment → hand control back). Mark each `in_progress` before starting it and
-`completed` once done, so progress stays visible throughout.
++ Sentry assignment → hand control back). Mark each `in_progress` before starting it
+and `completed` once done, so progress stays visible throughout.
 
 ### 1. Identify the issue
 
@@ -68,12 +68,18 @@ note it and offer to `bun install`.
   servers on these — not the defaults — so parallel worktrees don't collide. Repeat the
   API-URL caveat if the API port is non-default.
 - Surface the **Suggested first steps** from the summary.
+- If the summary lists a **Sentry** issue, surface its URL + short ID, and remind that
+  the GitHub PR for this work must reference it in its description (see step 5).
+- Surface the **Definition of done**: the fix must ship with unit and/or
+  integration tests that reproduce the bug and fail without the fix, so this
+  regression can't recur. Flag it now so test-writing is planned into the approach,
+  not bolted on at the end.
 - If the issue needs deeper context (acceptance criteria, linked PRs), offer to
   re-fetch the Linear issue via MCP — don't auto-fetch.
 
-### 5. Check Linear issue assignment
+### 5. Check Linear + Sentry assignment
 
-Fetch the issue's current assignee (`mcp__linear__get_issue` for `ISSUE_ID`).
+**Linear** — fetch the issue's current assignee (`mcp__linear__get_issue` for `ISSUE_ID`).
 
 - **No one assigned** → assign the user to the issue (`mcp__linear__save_issue`,
   resolving the user via `mcp__linear__get_user` with `me`).
@@ -83,6 +89,22 @@ Fetch the issue's current assignee (`mcp__linear__get_issue` for `ISSUE_ID`).
   - Otherwise → **stop and ask the user** what to do (leave as-is, add self as a
     second assignee, or reassign to self). Do not change the assignee until they
     answer.
+
+**Sentry** — make sure the related Sentry issue (if any) is owned and linked.
+
+- If the summary already lists a **Sentry** issue → confirm it's assigned to the user
+  in Sentry; assign it (`mcp__plugin_sentry_sentry__execute_sentry_tool`) if not.
+- If the summary lists **no Sentry** issue → do one fresh search
+  (`mcp__plugin_sentry_sentry__search_issues`) using the error text / affected module /
+  in-scope app from the summary. Judge relevance strictly (same error, stack frame, or
+  component). If a single clearly-relevant issue turns up:
+  - assign it to the user in Sentry,
+  - add a Linear comment (`mcp__linear__save_comment`) with the Sentry URL + short ID,
+  - and note it back in the summary so the PR can reference it.
+  Multiple candidates → list them and ask before claiming any. No clear match → skip.
+- Either way, when a Sentry issue is in play, **remind the user**: the GitHub PR for
+  this work must reference the Sentry issue in its description (e.g. a `Fixes: {URL}`
+  line) so the error, Linear issue, and PR are cross-linked.
 
 ### 6. Hand control back
 
