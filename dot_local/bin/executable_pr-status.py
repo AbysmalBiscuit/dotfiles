@@ -39,6 +39,8 @@ import os
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import TypedDict, cast
 
@@ -208,7 +210,7 @@ def reviewer_state(pr: ReviewPR, me: str) -> tuple[str, str]:
     elif vote == "APPROVED":
         action = "done (approved)"
     elif vote == "CHANGES_REQUESTED":
-        action = "await fixes / re-review"
+        action = "awaiting author fixes"
     elif vote == "COMMENTED":
         action = "commented; decide"
     else:
@@ -221,7 +223,7 @@ def action_style(action: str) -> str:
         return "green"
     if action.startswith(("address", "fix", "REVIEW NEEDED")):
         return "red"
-    if action.startswith("await fixes"):
+    if action.startswith("awaiting author"):
         return "yellow"
     if action.startswith(("awaiting", "replied", "commented", "draft")):
         return "dim"
@@ -230,6 +232,41 @@ def action_style(action: str) -> str:
 
 def pr_link(pr: BasePR) -> Text:
     return Text(f"#{pr['number']}", style=f"link {pr['url']}")
+
+
+def linear_url_key() -> str | None:
+    """The Linear workspace slug used to build clickable issue links.
+
+    Prefers $LINEAR_WORKSPACE (no network); otherwise asks the Linear API with
+    $LINEAR_API_KEY. Returns None when neither is available or the lookup fails —
+    issue ids then render as plain (unlinked) text.
+    """
+    slug = os.environ.get("LINEAR_WORKSPACE")
+    if slug:
+        return slug
+    key = os.environ.get("LINEAR_API_KEY")
+    if not key:
+        return None
+    req = urllib.request.Request(
+        "https://api.linear.app/graphql",
+        data=json.dumps({"query": "query { organization { urlKey } }"}).encode(),
+        headers={"Content-Type": "application/json", "Authorization": key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            payload = json.loads(resp.read())
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        return None
+    return ((payload.get("data") or {}).get("organization") or {}).get("urlKey")
+
+
+def issue_cell(issue_id: str, url_key: str | None) -> Text:
+    """The issue id, linked to its Linear page when a workspace slug is known."""
+    if issue_id == "-":
+        return Text("-", style="dim")
+    if url_key:
+        return Text(issue_id, style=f"link https://linear.app/{url_key}/issue/{issue_id}")
+    return Text(issue_id)
 
 
 def diff_cell(prev: str | None, cur: str, style: str = "") -> Text:
@@ -299,7 +336,8 @@ def fetch_mine(repo: str | None) -> list[MinePR]:
 
 
 def mine_table(
-    console: Console, me: str, prs: list[MinePR], prev: dict[str, dict[str, str]]
+    console: Console, me: str, prs: list[MinePR], url_key: str | None,
+    prev: dict[str, dict[str, str]],
 ) -> dict[str, dict[str, str]]:
     console.print("[bold cyan]MY OPEN PRs[/]")
     if not prs:
@@ -312,7 +350,7 @@ def mine_table(
         was = prev.get(str(pr["number"]), {})
         table.add_row(
             pr_link(pr),
-            issue_of(pr),
+            issue_cell(issue_of(pr), url_key),
             diff_cell(was.get("review"), review),
             diff_cell(was.get("check"), check),
             diff_cell(was.get("action"), action, action_style(action)),
@@ -364,6 +402,17 @@ def reviews_table(
     return cur
 
 
+def print_legend(console: Console) -> None:
+    """A compact key: ACTION colour tells you whose turn it is, at a glance."""
+    console.print(
+        "\n[dim]ACTION colour:[/] [red]needs you[/] (REVIEW NEEDED · address changes · fix CI) · "
+        "[green]ready to land[/] (MERGE · done) · "
+        "[yellow]waiting on author[/] (awaiting author fixes) · "
+        "[dim]passive (awaiting review · draft)[/]"
+    )
+    console.print("[dim]old → new in a cell = value changed since the last run.[/]")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="At-a-glance triage of your GitHub PRs via gh.",
@@ -388,6 +437,7 @@ def main() -> None:
     mine_prs: list[MinePR] = []
     review_rows: list[ReviewPR] = []
     repo_key: str | None = None
+    url_key: str | None = None
     with Progress(
         SpinnerColumn(spinner_name="dots", style="cyan"),
         TextColumn("[cyan]{task.description}"),
@@ -402,6 +452,8 @@ def main() -> None:
             progress.update(task, description="Resolving repository…")
             repo_key = resolve_repo(args.repo)
         if want_mine:
+            progress.update(task, description="Resolving Linear workspace…")
+            url_key = linear_url_key()
             progress.update(task, description="Fetching your open PRs…")
             mine_prs = fetch_mine(args.repo)
         if want_reviews:
@@ -412,9 +464,12 @@ def main() -> None:
     cache = load_cache(path) if path else {}
 
     if want_mine:
-        cache["mine"] = mine_table(console, me, mine_prs, cache.get("mine", {}))
+        cache["mine"] = mine_table(console, me, mine_prs, url_key, cache.get("mine", {}))
     if want_reviews:
         cache["reviews"] = reviews_table(console, me, review_rows, cache.get("reviews", {}))
+
+    if (want_mine and mine_prs) or (want_reviews and review_rows):
+        print_legend(console)
 
     if path:
         save_cache(path, cache)

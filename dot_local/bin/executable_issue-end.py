@@ -272,7 +272,7 @@ def reason_not_finished(
         bits.append("PR not merged" if row.pr_state != "NO_PR" else "no PR")
     if not pr_only:
         if linear is None:
-            bits.append("Linear ?" if has_key else "no Linear key")
+            bits.append("Linear unknown" if has_key else "no Linear key")
         elif linear.type != "completed":
             bits.append(f"Linear {linear.name}")
     if row.dirty == "dirty":
@@ -290,7 +290,7 @@ def pr_cell(row: Row) -> Text:
         "CLOSED": "red",
         "NO_PR": "dim",
     }.get(row.pr_state, "")
-    label = row.pr_state if row.pr_state == "NO_PR" else f"{row.pr_state} #{row.pr_number}"
+    label = "no PR" if row.pr_state == "NO_PR" else f"{row.pr_state} #{row.pr_number}"
     if row.pr_url and row.pr_url != "-":
         return Text(label, style=f"{style} link {row.pr_url}")
     return Text(label, style=style)
@@ -307,7 +307,7 @@ def issue_cell(row: Row, states: dict[str, LinearState], url_key: str | None) ->
 
 def linear_cell(linear: LinearState | None, has_key: bool) -> Text:
     if linear is None:
-        return Text("?" if has_key else "no key", style="dim")
+        return Text("unknown" if has_key else "no key", style="dim")
     style = {
         "completed": "green",
         "started": "yellow",
@@ -325,7 +325,7 @@ def render(
     # Branch is secondary (the issue ID identifies the worktree); cap it so the
     # PR/LINEAR/VERDICT columns always survive a narrow terminal.
     table.add_column("BRANCH", no_wrap=True, overflow="ellipsis", max_width=46)
-    table.add_column("DIRTY", no_wrap=True)
+    table.add_column("TREE", no_wrap=True)
     table.add_column("PR", no_wrap=True)
     table.add_column("LINEAR", no_wrap=True)
     table.add_column("VERDICT")
