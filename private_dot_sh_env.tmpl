@@ -553,11 +553,11 @@ VISUAL=""
 export VISUAL
 
 # API keys
-# {{ if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) -}}
+# {{- if (and (.is_personal) (.secrets.api_keys.avante.personal.gemini)) }}
 export AVANTE_GEMINI_API_KEY="# {{ .secrets.api_keys.avante.personal.gemini }}"
 # {{- end }}
 
-# {{ if .secrets.api_keys.linear.adaptyv_issue_end -}}
+# {{- if index .secrets.api_keys.linear "adaptyv_issue_end" }}
 export LINEAR_API_KEY="# {{ .secrets.api_keys.linear.adaptyv_issue_end }}"
 # {{- end }}
 
