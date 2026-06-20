@@ -35,6 +35,15 @@ autocmd({ "FileType" }, {
   end,
 })
 
+if vim.g.is_windows then
+  autocmd("User", {
+    pattern = "VeryLazy",
+    callback = function()
+      require("exe_cache").scan()
+    end,
+  })
+end
+
 --------------------------------------------------------------------------------
 -- Treesitter
 --------------------------------------------------------------------------------

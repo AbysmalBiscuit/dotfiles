@@ -289,6 +289,10 @@ return {
               show_documentation_window = true,
             },
           },
+          exe = {
+            name = "exe",
+            module = "blink_exe_source",
+          },
           -- avante = {
           --   module = "blink-cmp-avante",
           --   name = "Avante",
@@ -392,45 +396,60 @@ return {
         }
       end
 
-      opts = vim.tbl_deep_extend("force", opts, {
-        cmdline = {
-          enabled = true,
-          keymap = {
-            preset = "none",
-            ["<C-f>"] = { "select_and_accept", "fallback" },
-            ["<Up>"] = { "select_prev", "fallback" },
-            ["<Down>"] = { "select_next", "fallback" },
-            ["<Left>"] = { get_hide_cmp_menu_and_do_next(), "fallback" },
-            ["<Right>"] = { get_hide_cmp_menu_and_do_next(), "fallback" },
-            ["<PageDown>"] = {
-              get_scroll_function("down", {
-                count = 5,
-                auto_insert = opts.completion.list.selection.auto_insert or false,
-                on_ghost_text = opts.completion.ghost_text.enabled or false,
-              }),
-              "fallback",
-            },
-            ["<PageUp>"] = {
-              get_scroll_function("up", {
-                count = 5,
-                auto_insert = opts.completion.list.selection.auto_insert or false,
-                on_ghost_text = opts.completion.ghost_text.enabled or false,
-              }),
-              "fallback",
-            },
+      local cmdline_opts = {
+        enabled = true,
+        keymap = {
+          preset = "none",
+          ["<C-f>"] = { "select_and_accept", "fallback" },
+          ["<Up>"] = { "select_prev", "fallback" },
+          ["<Down>"] = { "select_next", "fallback" },
+          ["<Left>"] = { get_hide_cmp_menu_and_do_next(), "fallback" },
+          ["<Right>"] = { get_hide_cmp_menu_and_do_next(), "fallback" },
+          ["<PageDown>"] = {
+            get_scroll_function("down", {
+              count = 5,
+              auto_insert = opts.completion.list.selection.auto_insert or false,
+              on_ghost_text = opts.completion.ghost_text.enabled or false,
+            }),
+            "fallback",
           },
-          completion = {
-            list = { selection = { preselect = false } },
-            menu = {
-              auto_show = function(ctx)
-                return vim.fn.getcmdtype() == ":"
-              end,
-            },
-            ghost_text = {
-              enabled = true,
-            },
+          ["<PageUp>"] = {
+            get_scroll_function("up", {
+              count = 5,
+              auto_insert = opts.completion.list.selection.auto_insert or false,
+              on_ghost_text = opts.completion.ghost_text.enabled or false,
+            }),
+            "fallback",
           },
         },
+        completion = {
+          list = { selection = { preselect = false } },
+          menu = {
+            auto_show = function(ctx)
+              return vim.fn.getcmdtype() == ":"
+            end,
+          },
+          ghost_text = {
+            enabled = true,
+          },
+        },
+      }
+
+      if vim.g.is_windows then
+        cmdline_opts.sources = function()
+          local line = vim.fn.getcmdline()
+          if vim.fn.getcmdtype() == ":" and line:match("^%s*[%%%d,%.%$'<>]*!") then
+            return { "exe" }
+          end
+          if vim.fn.getcmdtype() == ":" then
+            return { "cmdline" }
+          end
+          return {}
+        end
+      end
+
+      opts = vim.tbl_deep_extend("force", opts, {
+        cmdline = cmdline_opts,
       })
 
       -- create user commands to toggle blink ripgrep
