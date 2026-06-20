@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "fileSuggestion": {
     "type": "command",
-    "command": "~/.claude/file-suggestion.sh"
+    "command": "bash ~/.claude/file-suggestion.sh"
   },
   "env": {
     "CLAUDE_CODE_ENABLE_tarstTELEMETRY": "0",
@@ -102,7 +102,33 @@
       "Read(/mnt/c/Users/*/NTUSER.DAT*)",
       "Read(/mnt/c/$Recycle.Bin/**)",
       "Edit(/mnt/c/$Recycle.Bin/**)",
-      "Read(/mnt/c/System Volume Information/**)"
+      "Read(/mnt/c/System Volume Information/**)",
+      "Read(C:/Windows/**)",
+      "Edit(C:/Windows/**)",
+      "Read(C:/Program Files/**)",
+      "Edit(C:/Program Files/**)",
+      "Read(C:/Program Files (x86)/**)",
+      "Edit(C:/Program Files (x86)/**)",
+      "Read(C:/ProgramData/**)",
+      "Edit(C:/ProgramData/**)",
+      "Read(C:/Users/*/AppData/**)",
+      "Edit(C:/Users/*/AppData/**)",
+      "Read(C:/Users/*/.cache/**)",
+      "Read(C:/Users/*/.config/chezmoi/**)",
+      "Read(C:/Users/*/.ssh/**)",
+      "Edit(C:/Users/*/.ssh/**)",
+      "Read(C:/Users/*/.aws/**)",
+      "Read(C:/Users/*/.azure/**)",
+      "Read(C:/Users/*/.kube/**)",
+      "Read(C:/Users/*/.gnupg/**)",
+      "Read(C:/Users/*/.docker/config.json)",
+      "Read(C:/Users/*/.git-credentials)",
+      "Read(C:/Users/*/.config/gh/**)",
+      "Read(C:/Users/*/.claude.json)",
+      "Read(C:/Users/*/NTUSER.DAT*)",
+      "Read(C:/$Recycle.Bin/**)",
+      "Edit(C:/$Recycle.Bin/**)",
+      "Read(C:/System Volume Information/**)"
     ],
     "defaultMode": "auto"
   },
@@ -112,7 +138,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/lev/.claude/hooks/worktree-create.sh"
+            "command": "bash ~/.claude/hooks/worktree-create.sh"
           }
         ]
       }
@@ -122,7 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/lev/.claude/hooks/worktree-remove.sh"
+            "command": "bash ~/.claude/hooks/worktree-remove.sh"
           }
         ]
       }
@@ -148,16 +174,16 @@
     "sentry@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    },
     "pr-crucible": {
       "source": {
         "source": "github",
         "repo": "AbysmalBiscuit/pr-crucible"
+      }
+    },
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
       }
     }
   },

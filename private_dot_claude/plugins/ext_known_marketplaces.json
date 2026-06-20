@@ -1,14 +1,6 @@
 {
-  "caveman": {
-    "installLocation": "/home/lev/.claude/plugins/marketplaces/caveman",
-    "lastUpdated": "",
-    "source": {
-      "source": "github",
-      "repo": "JuliusBrussee/caveman"
-    }
-  },
   "claude-plugins-official": {
-    "installLocation": "/home/lev/.claude/plugins/marketplaces/claude-plugins-official",
+    "installLocation": "",
     "lastUpdated": "",
     "source": {
       "source": "github",
@@ -16,7 +8,7 @@
     }
   },
   "pr-crucible": {
-    "installLocation": "/home/lev/.claude/plugins/marketplaces/pr-crucible",
+    "installLocation": "",
     "lastUpdated": "",
     "source": {
       "source": "github",
@@ -24,7 +16,7 @@
     }
   },
   "superpowers-marketplace": {
-    "installLocation": "/home/lev/.claude/plugins/marketplaces/superpowers-marketplace",
+    "installLocation": "",
     "lastUpdated": "",
     "source": {
       "source": "github",
