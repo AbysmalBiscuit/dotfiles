@@ -1,16 +1,31 @@
 ## Git Commits
 
-Follow conventional commits when writing git commits.
+Format: [Conventional Commits](https://www.conventionalcommits.org) — `type(scope): description`.
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+Breaking change: `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer.
 
-## PR Comments
+**Subject line** (the seven rules — cbea.ms/git-commit):
+- Imperative mood: `add`, not `added`/`adds`/`adding`. Test: "If applied, this commit will _<subject>_".
+- ≤50 chars including the `type:` prefix; 72 is the hard limit.
+- No trailing period.
+- Lowercase the description after the colon: `fix: handle null user`, not `fix: Handle null user`.
 
-<pr-comment-rule>
-When I say to add a comment to a PR with a TODO on it, use 'checkbox' markdown format to add the TODO. For instance:
+**Body** — only when the change needs context; skip it for obvious one-liners:
+- Blank line after the subject; wrap at 72 chars.
+- Explain *what* and *why*, not *how* — the diff shows how. Cover what was wrong, what changes, why this approach.
+- No narration ("This commit…", "This PR…", "now we…") and no emoji. State the change directly — same instinct as the **Code Comments** rule, except a commit *should* describe the change and its motivation.
 
-<example>
-- [ ] A description of the TODO goes here
-</example>
-</pr-comment-rule>
+One logical change per commit. If the subject needs "and", consider splitting.
+
+Before committing:
+- Stage selectively — don't sweep unrelated edits, generated files, or secrets into the commit.
+- Review `git diff --staged` and describe what the diff *actually* does, not what you intended.
+
+## Pull Requests
+
+- PR title follows the commit convention above (it becomes the squash-merge commit).
+- Description is BLUF: lead with what changed and why; link the issue; keep it tight, no filler.
+- Don't open or push a PR unless I ask.
 - When tagging Claude in GitHub issues, use '@claude'
 
 ## GitHub
