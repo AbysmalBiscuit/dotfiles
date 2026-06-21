@@ -146,6 +146,28 @@ fd "pattern" src/               # Limit scope to directory
 ```
 {{- end }}
 
+{{- if index .tool "ast_grep" }}
+### ast-grep — structural code search (NOT a replacement for rg)
+
+Use `rg` for text/identifiers/TODOs. Reach for `ast-grep` ONLY when the match
+depends on **code structure** — args, nesting, or AST shape that regex can't express.
+
+```bash
+ast-grep -p 'foo($$$)'                 # call to foo() with any args, any formatting
+ast-grep -p 'foo($$$)' -l ts           # restrict to a language
+ast-grep -p 'await $X' -r 'await wrap($X)'   # structural rewrite (codemod), not sed
+ast-grep scan                          # run rule files (sgconfig.yml)
+```
+
+| Use case | Tool |
+|----------|------|
+| Find a string, identifier, or TODO | `rg` |
+| Match a code pattern across formatting/lines | `ast-grep -p` |
+| Rename/rewrite by syntax (codemod) | `ast-grep -p ... -r ...` |
+
+`$X` = single node, `$$$` = zero-or-more nodes. Always invoke `ast-grep` (never the `sg` alias — `sg` collides with the Unix setgid command and reads as ambiguous).
+{{- end }}
+
 ### Other Tools
 
 ```bash
