@@ -21,6 +21,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -45,6 +46,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -69,6 +71,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -93,6 +96,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -122,6 +126,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -148,6 +153,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -172,6 +178,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -196,6 +203,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -220,6 +228,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -244,6 +253,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -268,6 +278,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -292,6 +303,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -316,6 +328,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -340,6 +353,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -364,6 +378,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -388,6 +403,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -412,6 +428,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -436,6 +453,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -460,6 +478,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -484,6 +503,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -509,6 +529,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -533,6 +554,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -558,6 +580,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -582,6 +605,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -606,6 +630,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -631,6 +656,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -655,6 +681,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -684,6 +711,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -708,6 +736,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -736,6 +765,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -764,6 +794,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = [
     "sk"
 ]
@@ -790,6 +821,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -814,6 +846,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -838,6 +871,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -862,6 +896,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -886,6 +921,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -910,6 +946,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -938,6 +975,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -962,6 +1000,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -986,6 +1025,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1014,6 +1054,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1038,6 +1079,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1062,6 +1104,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1086,6 +1129,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1110,6 +1154,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1142,6 +1187,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1166,6 +1212,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1190,6 +1237,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1214,6 +1262,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1244,6 +1293,7 @@ command_nu_name = "nushell"
 command_powershell_name = "power-shell"
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1268,6 +1318,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1292,6 +1343,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1320,6 +1372,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1344,6 +1397,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1368,6 +1422,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1399,6 +1454,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1423,6 +1479,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1447,6 +1504,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1479,6 +1537,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1505,6 +1564,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1531,6 +1591,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1555,6 +1616,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1579,6 +1641,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1609,6 +1672,49 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
+name = "devkit"
+cmds = [
+    "devkit-mcp",
+    "devkitd",
+    "devrun",
+    "issue",
+    "lockm",
+    "portm"
+]
+desc = "A rust devkit for running multiple parallel agents"
+url = ""
+git = "https://github.com/AbysmalBiscuit/devkit.git"
+comment = ""
+install_command = ""
+completions_command = "CMD completions SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "powershell",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = [
+    "devkit-mcp",
+    "devrun",
+    "issue",
+    "lockm",
+    "portm"
+]
 init_command_only_if_no = []
 
 [[tools]]
@@ -1633,6 +1739,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1661,6 +1768,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1691,6 +1799,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1715,6 +1824,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1739,6 +1849,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1769,6 +1880,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1799,6 +1911,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1823,6 +1936,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1847,6 +1961,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1871,6 +1986,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1895,6 +2011,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1919,6 +2036,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1943,6 +2061,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1967,6 +2086,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -1995,6 +2115,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2019,6 +2140,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2043,6 +2165,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2067,6 +2190,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2091,6 +2215,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2115,6 +2240,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2139,6 +2265,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2163,6 +2290,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2191,6 +2319,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2223,6 +2352,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2247,6 +2377,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2271,6 +2402,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2295,6 +2427,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2324,6 +2457,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2348,6 +2482,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2372,6 +2507,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2396,6 +2532,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2424,6 +2561,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2448,6 +2586,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2472,6 +2611,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2496,6 +2636,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2520,6 +2661,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2548,6 +2690,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2576,6 +2719,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2611,6 +2755,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2635,6 +2780,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2659,6 +2805,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2683,6 +2830,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2707,6 +2855,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2731,6 +2880,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2762,6 +2912,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2793,6 +2944,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2817,6 +2969,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2848,6 +3001,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2872,6 +3026,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2896,6 +3051,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2920,6 +3076,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2944,6 +3101,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2968,6 +3126,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -2996,6 +3155,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -3030,6 +3190,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -3054,6 +3215,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -3078,6 +3240,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
@@ -3102,4 +3265,5 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []

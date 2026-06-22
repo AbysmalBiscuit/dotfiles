@@ -43,11 +43,18 @@
 # {{-   $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
 # {{-   if $cmd_str -}}
 # {{-     $exe := $cmd_str | splitList " " | first -}}
-# {{-     $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
-# {{-     if index $.has $has_key | default false -}}
-# {{-       $path := lookPath $exe -}}
-# {{-       if $path }}
-# # {{ $exe }}:# {{ (stat $path).modTime }}
+# {{- /* ---- CMD placeholder fans out to $tool.cmds ---- */ -}}
+# {{-     $exes := list $exe -}}
+# {{-     if eq $exe "CMD" -}}
+# {{-       $exes = $tool.cmds | default (list) -}}
+# {{-     end -}}
+# {{-     range $e := $exes -}}
+# {{-       $has_key := $e | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-       if index $.has $has_key | default false -}}
+# {{-         $path := lookPath $e -}}
+# {{-         if $path }}
+# # {{ $e }}:# {{ (stat $path).modTime }}
+# {{-         end -}}
 # {{-       end -}}
 # {{-     end -}}
 # {{-   end -}}
@@ -73,8 +80,21 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-     if or $has_comp $has_init -}}
     # {{-       $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
     # {{-       $exe := $cmd_str | splitList " " | first -}}
-    # {{-       $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
-    # {{-       if index $.has $has_key | default false -}}
+    # {{- /* ---- CMD fans out to completions_cmds when set, else all cmds; keep installed only ---- */ -}}
+    # {{-       $exes := list $exe -}}
+    # {{-       if eq $exe "CMD" -}}
+    # {{-         $exes = (index $tool "completions_cmds") | default (list) -}}
+    # {{-         if not $exes -}}
+    # {{-           $exes = $tool.cmds | default (list) -}}
+    # {{-         end -}}
+    # {{-       end -}}
+    # {{-       $live := list -}}
+    # {{-       range $e := $exes -}}
+    # {{-         if index $.has ($e | replaceAllRegex "[^a-zA-Z0-9_]" "_") | default false -}}
+    # {{-           $live = append $live $e -}}
+    # {{-         end -}}
+    # {{-       end -}}
+    # {{-       if $live -}}
     # {{-         if has $shell $tool.supported_shells -}}
     # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
     # {{-           $use_cmd := "" -}}
@@ -114,12 +134,16 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-             if $custom -}}
     # {{-               $shell_arg = $custom -}}
     # {{-             end -}}
-    # {{-             $gen_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
+    # {{-             $base_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
     # {{- /* ---- Append pipe ---- */ -}}
     # {{-             $append := index $tool $append_key | default "" -}}
-    # {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }}
+    # {{- /* ---- One line per installed cmd; CMD is a no-op for single-exe tools ---- */ -}}
+    # {{-             range $e := $live -}}
+    # {{-               $gen_cmd := $base_cmd | replace "CMD" $e -}}
+    # {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" }} || true
     echo
     # {{ "" }}
+    # {{-             end -}}
     # {{-           end -}}
     # {{-         end -}}
     # {{-       end -}}

@@ -21,6 +21,7 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -46,6 +47,7 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -70,6 +72,7 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -94,6 +97,7 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -118,6 +122,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -146,6 +151,7 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
 
 [[wsl_tools]]
@@ -170,4 +176,5 @@ command_nu_name = "nushell"
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
+completions_cmds = []
 init_command_only_if_no = []
