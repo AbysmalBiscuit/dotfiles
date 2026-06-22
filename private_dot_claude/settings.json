@@ -169,7 +169,8 @@
     "pr-crucible@pr-crucible": true,
     "claude-md-management@claude-plugins-official": true,
     "sentry@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true
+    "skill-creator@claude-plugins-official": true,
+    "ast-grep@ast-grep-marketplace": true
   },
   "extraKnownMarketplaces": {
     "pr-crucible": {
@@ -182,6 +183,12 @@
       "source": {
         "source": "github",
         "repo": "anthropics/claude-code"
+      }
+    },
+    "ast-grep-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "ast-grep/agent-skill"
       }
     }
   },
