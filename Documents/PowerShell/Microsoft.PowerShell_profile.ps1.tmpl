@@ -335,6 +335,39 @@ function unlockgpg {
     echo "test" | gpg --clearsign
 }
 
+function get-window-name {
+  param([int]$Delay = 3)
+  if (-not ([System.Management.Automation.PSTypeName]'Win').Type) {
+    Add-Type @"
+using System;using System.Text;using System.Runtime.InteropServices;
+public class Win {
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern int GetClassName(IntPtr h, StringBuilder s, int m);
+  [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr h, StringBuilder s, int m);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+}
+"@
+  }
+  for ($i = $Delay; $i -gt 0; $i--) {
+    Write-Host ("`rFocus the target window... capturing in {0}s " -f $i) -NoNewline -ForegroundColor Yellow
+    Start-Sleep -Seconds 1
+  }
+  Write-Host "`rCapturing now...                          " -ForegroundColor Green
+  $h = [Win]::GetForegroundWindow()
+  $cls = New-Object Text.StringBuilder 256; [void][Win]::GetClassName($h, $cls, 256)
+  $ttl = New-Object Text.StringBuilder 512; [void][Win]::GetWindowText($h, $ttl, 512)
+  $procId = 0; [void][Win]::GetWindowThreadProcessId($h, [ref]$procId)
+  $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
+  [pscustomobject]@{
+    Title       = $ttl.ToString()
+    Class       = $cls.ToString()      # -> window_class
+    ProcessName = $p.ProcessName       # -> window_process
+    Pid         = $procId
+    ExePath     = $p.Path
+    Handle      = $h
+  } | Format-List
+}
+
 # Aliases
 New-Alias which get-command
 
