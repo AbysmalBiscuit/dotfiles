@@ -116,6 +116,8 @@ window_rules:
       - window_class: { equals: "#32770" }
       - window_process: { equals: "firefox" }
         window_class: { equals: "MozillaDialogClass" }
+      # GnuPG passphrase / PIN prompt (Qt class is version-stamped, match process)
+      - window_process: { equals: "pinentry" }
 
   # Godot draws its dialogs as custom windows that share the main editor's
   # class ('Engine') and process, so only the title distinguishes them: the
