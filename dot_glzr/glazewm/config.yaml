@@ -1,7 +1,7 @@
 general:
   # Launch Zebar on startup (kept from default).
-  startup_commands: ['shell-exec zebar']
-  shutdown_commands: ['shell-exec taskkill /IM zebar.exe /F']
+  startup_commands: ["shell-exec zebar"]
+  shutdown_commands: ["shell-exec taskkill /IM zebar.exe /F"]
   config_reload_commands: []
 
   focus_follows_cursor: false
@@ -12,50 +12,50 @@ general:
   # to jump on every window focus change instead.
   cursor_jump:
     enabled: true
-    trigger: 'monitor_focus'
+    trigger: "monitor_focus"
 
-  hide_method: 'cloak'
+  hide_method: "cloak"
   show_all_in_taskbar: false
 
 gaps:
   scale_with_dpi: true
   # AeroSpace ran with zero gaps. Top is kept non-zero to leave room for the
   # Zebar bar; bump it if windows render under the bar.
-  inner_gap: '0px'
+  inner_gap: "0px"
   outer_gap:
-    top: '40px'
-    right: '0px'
-    bottom: '0px'
-    left: '0px'
+    top: "40px"
+    right: "0px"
+    bottom: "0px"
+    left: "0px"
 
 window_effects:
   focused_window:
     border:
       enabled: true
-      color: '#8dbcff'
+      color: "#8dbcff"
     hide_title_bar:
       enabled: false
     corner_style:
       enabled: false
-      style: 'square'
+      style: "square"
     transparency:
       enabled: false
-      opacity: '95%'
+      opacity: "95%"
   other_windows:
     border:
       enabled: true
-      color: '#a1a1a1'
+      color: "#a1a1a1"
     hide_title_bar:
       enabled: false
     corner_style:
       enabled: false
-      style: 'square'
+      style: "square"
     transparency:
       enabled: false
-      opacity: '0%'
+      opacity: "0%"
 
 window_behavior:
-  initial_state: 'tiling'
+  initial_state: "tiling"
   state_defaults:
     floating:
       centered: true
@@ -66,16 +66,16 @@ window_behavior:
 
 # AeroSpace workspaces: 1-5 plus named letter workspaces.
 workspaces:
-  - name: '1'
-  - name: '2'
-  - name: '3'
-  - name: '4'
-  - name: '5'
-  - name: 'A'
-  - name: 'B'
-  - name: 'C'
-  - name: 'E'
-  - name: 'O'
+  - name: "1"
+  - name: "2"
+  - name: "3"
+  - name: "4"
+  - name: "5"
+  - name: "A"
+  - name: "B"
+  - name: "C"
+  - name: "E"
+  - name: "O"
   # To reproduce your workspace-to-monitor-force-assignment, add
   # `bind_to_monitor: 0` (primary) or `1` (secondary) under a workspace,
   # e.g. on '2', '3', '5'. Indices are 0-based; swap if they land wrong.
@@ -83,224 +83,250 @@ workspaces:
 
 window_rules:
   # --- ignore rules (kept from default) ---
-  - commands: ['ignore']
+  - commands: ["ignore"]
     match:
-      - window_process: { equals: 'zebar' }
-      - window_title: { regex: '[Pp]icture.in.[Pp]icture' }
-        window_class: { regex: 'Chrome_WidgetWin_1|MozillaDialogClass' }
-      - window_process: { equals: 'PowerToys' }
+      - window_process: { equals: "zebar" }
+      # WSLg: Linux GUI apps are hosted by the Remote Desktop client
+      # (msrdc.exe). Leave them completely unmanaged by the WM.
+      - window_process: { equals: "msrdc" }
+      - window_title: { regex: "[Pp]icture.in.[Pp]icture" }
+        window_class: { regex: "Chrome_WidgetWin_1|MozillaDialogClass" }
+      - window_process: { equals: "PowerToys" }
         window_class: { regex: 'HwndWrapper\[PowerToys\.PowerAccent.*?\]' }
-      - window_title: { equals: 'Command Palette' }
-        window_class: { equals: 'WinUIDesktopWin32WindowClass' }
-      - window_process: { equals: 'PowerToys' }
-        window_title: { regex: '.*? - Peek' }
-      - window_process: { equals: 'Lively' }
-        window_class: { regex: 'HwndWrapper' }
-      - window_process: { equals: 'EXCEL' }
-        window_class: { not_regex: 'XLMAIN' }
-      - window_process: { equals: 'WINWORD' }
-        window_class: { not_regex: 'OpusApp' }
-      - window_process: { equals: 'POWERPNT' }
-        window_class: { not_regex: 'PPTFrameClass' }
+      - window_title: { equals: "Command Palette" }
+        window_class: { equals: "WinUIDesktopWin32WindowClass" }
+      - window_process: { equals: "PowerToys" }
+        window_title: { regex: ".*? - Peek" }
+      - window_process: { equals: "Lively" }
+        window_class: { regex: "HwndWrapper" }
+      - window_process: { equals: "EXCEL" }
+        window_class: { not_regex: "XLMAIN" }
+      - window_process: { equals: "WINWORD" }
+        window_class: { not_regex: "OpusApp" }
+      - window_process: { equals: "POWERPNT" }
+        window_class: { not_regex: "PPTFrameClass" }
+
+  # --- float transient dialogs/popups for all apps (save / open / download /
+  #     print / loading, etc.). Keeps them out of the tiling grid while the WM
+  #     still manages them (move, close, fullscreen via keybindings still work).
+  #     '#32770' is the native Win32 common-dialog class used by Chrome,
+  #     Explorer, Godot, installers, etc.; Firefox uses its own dialog class. ---
+  - commands: ["set-floating --centered --shown-on-top"]
+    match:
+      - window_class: { equals: "#32770" }
+      - window_process: { equals: "firefox" }
+        window_class: { equals: "MozillaDialogClass" }
+
+  # Godot draws its dialogs as custom windows that share the main editor's
+  # class ('Engine') and process, so only the title distinguishes them: the
+  # main editor and project manager always contain 'Godot Engine'; dialogs
+  # (e.g. 'Files have been modified outside Godot') do not. Evaluate only at
+  # window-managed time — Godot rewrites the main window's title constantly,
+  # and a title_change re-trigger would float the editor on a transient title.
+  - commands: ["set-floating --centered --shown-on-top"]
+    on: ["manage"]
+    match:
+      - window_process: { regex: "^Godot" }
+        window_title: { not_regex: "Godot Engine" }
 
   # --- app -> workspace assignments (your on-window-detected rules) ---
 
   # spotify + keepassxc + file explorer + foobar2000 -> 3
-  - commands: ['move --workspace 3']
+  - commands: ["move --workspace 3"]
     match:
-      - window_process: { equals: 'Spotify' }
-      - window_process: { equals: 'KeePassXC' }
-      - window_process: { equals: 'explorer' }
-      - window_process: { equals: 'foobar2000' }
+      # - window_process: { equals: "Spotify" }
+      - window_process: { equals: "KeePassXC" }
+      # - window_process: { equals: "explorer" }
+      # - window_process: { equals: "foobar2000" }
 
   # KeePassXC browser-access / unlock popups -> B (runs after the rule above,
   # so these specific windows end up on B; normal KeePassXC stays on 3)
-  - commands: ['move --workspace B']
+  - commands: ["move --workspace B"]
     match:
-      - window_process: { equals: 'KeePassXC' }
-        window_title: { regex: '[Bb]rowser [Aa]ccess|Unlock' }
+      - window_process: { equals: "KeePassXC" }
+        window_title: { regex: "[Bb]rowser [Aa]ccess|Unlock" }
 
   # comms: outlook + slack + teams -> 2
-  - commands: ['move --workspace 2']
+  - commands: ["move --workspace 2"]
     match:
-      - window_process: { equals: 'OUTLOOK' }   # new Outlook is 'olk'
-      - window_process: { equals: 'olk' }
-      - window_process: { equals: 'Slack' }
-      - window_process: { equals: 'ms-teams' }  # classic Teams is 'Teams'
-      - window_process: { equals: 'Teams' }
+      - window_process: { equals: "OUTLOOK" } # new Outlook is 'olk'
+      - window_process: { equals: "olk" }
+      - window_process: { equals: "Slack" }
+      - window_process: { equals: "ms-teams" } # classic Teams is 'Teams'
+      - window_process: { equals: "Teams" }
 
   # browsers -> B
-  - commands: ['move --workspace B']
+  - commands: ["move --workspace B"]
     match:
-      - window_process: { equals: 'firefox' }
-      - window_process: { equals: 'chrome' }
+      # - window_process: { equals: 'firefox' }
+      - window_process: { equals: "chrome" }
 
   # terminal (WezTerm) -> C
-  - commands: ['move --workspace C']
-    match:
-      - window_process: { equals: 'wezterm-gui' }
+  # - commands: ['move --workspace C']
+  #   match:
+  #     - window_process: { equals: 'wezterm-gui' }
 
   # MS Office -> O
-  - commands: ['move --workspace O']
+  - commands: ["move --workspace O"]
     match:
-      - window_process: { equals: 'POWERPNT' }
-      - window_process: { equals: 'WINWORD' }
-      - window_process: { equals: 'EXCEL' }
+      - window_process: { equals: "POWERPNT" }
+      - window_process: { equals: "WINWORD" }
+      - window_process: { equals: "EXCEL" }
 
   # editors -> E
-  - commands: ['move --workspace E']
+  - commands: ["move --workspace E"]
     match:
-      - window_process: { equals: 'Code' }      # VS Code
-      - window_process: { equals: 'neovide' }
-      - window_process: { equals: 'zed' }
+      - window_process: { equals: "Code" } # VS Code
+      - window_process: { equals: "neovide" }
+      # - window_process: { equals: "zed" }
 
 binding_modes:
   # Arrow/HJKL resize mode (bonus; enter with alt+r).
-  - name: 'resize'
+  - name: "resize"
     keybindings:
-      - commands: ['resize --width -2%']
-        bindings: ['h', 'left']
-      - commands: ['resize --width +2%']
-        bindings: ['l', 'right']
-      - commands: ['resize --height +2%']
-        bindings: ['k', 'up']
-      - commands: ['resize --height -2%']
-        bindings: ['j', 'down']
-      - commands: ['wm-disable-binding-mode --name resize']
-        bindings: ['escape', 'enter']
+      - commands: ["resize --width -2%"]
+        bindings: ["h", "left"]
+      - commands: ["resize --width +2%"]
+        bindings: ["l", "right"]
+      - commands: ["resize --height +2%"]
+        bindings: ["k", "up"]
+      - commands: ["resize --height -2%"]
+        bindings: ["j", "down"]
+      - commands: ["wm-disable-binding-mode --name resize"]
+        bindings: ["escape", "enter"]
 
   # Your AeroSpace 'service' mode (enter with alt+period).
-  - name: 'service'
+  - name: "service"
     keybindings:
-      - commands: ['wm-reload-config', 'wm-disable-binding-mode --name service']
-        bindings: ['escape']
-      - commands: ['toggle-floating', 'wm-disable-binding-mode --name service']
-        bindings: ['f', 'e']
+      - commands: ["wm-reload-config", "wm-disable-binding-mode --name service"]
+        bindings: ["escape"]
+      - commands: ["toggle-floating", "wm-disable-binding-mode --name service"]
+        bindings: ["f", "e"]
 
 keybindings:
   # --- focus (alt + arrows) ---
-  - commands: ['focus --direction left']
-    bindings: ['alt+left']
-  - commands: ['focus --direction down']
-    bindings: ['alt+down']
-  - commands: ['focus --direction up']
-    bindings: ['alt+up']
-  - commands: ['focus --direction right']
-    bindings: ['alt+right']
+  - commands: ["focus --direction left"]
+    bindings: ["alt+left"]
+  - commands: ["focus --direction down"]
+    bindings: ["alt+down"]
+  - commands: ["focus --direction up"]
+    bindings: ["alt+up"]
+  - commands: ["focus --direction right"]
+    bindings: ["alt+right"]
 
   # --- move window (alt + shift + arrows) ---
-  - commands: ['move --direction left']
-    bindings: ['alt+shift+left']
-  - commands: ['move --direction down']
-    bindings: ['alt+shift+down']
-  - commands: ['move --direction up']
-    bindings: ['alt+shift+up']
-  - commands: ['move --direction right']
-    bindings: ['alt+shift+right']
+  - commands: ["move --direction left"]
+    bindings: ["alt+shift+left"]
+  - commands: ["move --direction down"]
+    bindings: ["alt+shift+down"]
+  - commands: ["move --direction up"]
+    bindings: ["alt+shift+up"]
+  - commands: ["move --direction right"]
+    bindings: ["alt+shift+right"]
 
   # --- resize (minus/equal = width, backtick/backslash = height) ---
-  - commands: ['resize --width -2%']
-    bindings: ['alt+shift+oem_minus']
-  - commands: ['resize --width +2%']
-    bindings: ['alt+shift+oem_plus']
-  - commands: ['resize --height -2%']
-    bindings: ['alt+shift+oem_3']      # backtick `
-  - commands: ['resize --height +2%']
-    bindings: ['alt+shift+oem_5']      # backslash \
-  - commands: ['wm-enable-binding-mode --name resize']
-    bindings: ['alt+r']
+  - commands: ["resize --width -2%"]
+    bindings: ["alt+shift+oem_minus"]
+  - commands: ["resize --width +2%"]
+    bindings: ["alt+shift+oem_plus"]
+  - commands: ["resize --height -2%"]
+    bindings: ["alt+shift+oem_3"] # backtick `
+  - commands: ["resize --height +2%"]
+    bindings: ["alt+shift+oem_5"] # backslash \
+  - commands: ["wm-enable-binding-mode --name resize"]
+    bindings: ["alt+r"]
 
   # --- layout: toggle split direction (your alt-slash) ---
   # Note: AeroSpace's accordion layout (alt-comma) has no GlazeWM equivalent.
-  - commands: ['toggle-tiling-direction']
-    bindings: ['alt+oem_2']            # slash /
+  - commands: ["toggle-tiling-direction"]
+    bindings: ["alt+oem_2"] # slash /
 
   # --- workspace switching ---
-  - commands: ['focus --workspace 1']
-    bindings: ['alt+1']
-  - commands: ['focus --workspace 2']
-    bindings: ['alt+2']
-  - commands: ['focus --workspace 3']
-    bindings: ['alt+3']
-  - commands: ['focus --workspace 4']
-    bindings: ['alt+4']
-  - commands: ['focus --workspace 5']
-    bindings: ['alt+5']
-  - commands: ['focus --workspace A']
-    bindings: ['alt+a']
-  - commands: ['focus --workspace B']
-    bindings: ['alt+b']
-  - commands: ['focus --workspace C']
-    bindings: ['alt+c']
-  - commands: ['focus --workspace E']
-    bindings: ['alt+e', 'alt+k']       # you mapped both e and k to E
-  - commands: ['focus --workspace O']
-    bindings: ['alt+o']
+  - commands: ["focus --workspace 1"]
+    bindings: ["alt+1"]
+  - commands: ["focus --workspace 2"]
+    bindings: ["alt+2"]
+  - commands: ["focus --workspace 3"]
+    bindings: ["alt+3"]
+  - commands: ["focus --workspace 4"]
+    bindings: ["alt+4"]
+  - commands: ["focus --workspace 5"]
+    bindings: ["alt+5"]
+  - commands: ["focus --workspace A"]
+    bindings: ["alt+a"]
+  - commands: ["focus --workspace B"]
+    bindings: ["alt+b"]
+  - commands: ["focus --workspace C"]
+    bindings: ["alt+c"]
+  - commands: ["focus --workspace E"]
+    bindings: ["alt+e", "alt+k"] # you mapped both e and k to E
+  - commands: ["focus --workspace O"]
+    bindings: ["alt+o"]
 
   # --- move focused window to workspace (focus stays, like AeroSpace) ---
-  - commands: ['move --workspace 1']
-    bindings: ['alt+shift+1']
-  - commands: ['move --workspace 2']
-    bindings: ['alt+shift+2']
-  - commands: ['move --workspace 3']
-    bindings: ['alt+shift+3']
-  - commands: ['move --workspace 4']
-    bindings: ['alt+shift+4']
-  - commands: ['move --workspace 5']
-    bindings: ['alt+shift+5']
-  - commands: ['move --workspace A']
-    bindings: ['alt+shift+a']
-  - commands: ['move --workspace B']
-    bindings: ['alt+shift+b']
-  - commands: ['move --workspace C']
-    bindings: ['alt+shift+c']
-  - commands: ['move --workspace E']
-    bindings: ['alt+shift+e', 'alt+shift+k']
-  - commands: ['move --workspace O']
-    bindings: ['alt+shift+o']
+  - commands: ["move --workspace 1"]
+    bindings: ["alt+shift+1"]
+  - commands: ["move --workspace 2"]
+    bindings: ["alt+shift+2"]
+  - commands: ["move --workspace 3"]
+    bindings: ["alt+shift+3"]
+  - commands: ["move --workspace 4"]
+    bindings: ["alt+shift+4"]
+  - commands: ["move --workspace 5"]
+    bindings: ["alt+shift+5"]
+  - commands: ["move --workspace A"]
+    bindings: ["alt+shift+a"]
+  - commands: ["move --workspace B"]
+    bindings: ["alt+shift+b"]
+  - commands: ["move --workspace C"]
+    bindings: ["alt+shift+c"]
+  - commands: ["move --workspace E"]
+    bindings: ["alt+shift+e", "alt+shift+k"]
+  - commands: ["move --workspace O"]
+    bindings: ["alt+shift+o"]
 
   # --- workspace navigation ---
-  - commands: ['focus --recent-workspace']
-    bindings: ['alt+tab']              # overrides Windows alt-tab; see notes
-  - commands: ['focus --next-active-workspace']
-    bindings: ['alt+s']
-  - commands: ['focus --prev-active-workspace']
-    bindings: ['alt+d']
+  - commands: ["focus --recent-workspace"]
+    bindings: ["alt+tab"] # overrides Windows alt-tab; see notes
+  - commands: ["focus --next-active-workspace"]
+    bindings: ["alt+s"]
+  - commands: ["focus --prev-active-workspace"]
+    bindings: ["alt+d"]
 
   # --- move current workspace to the other monitor ---
-  - commands: ['move-workspace --direction right']
-    bindings: ['alt+shift+tab']
+  - commands: ["move-workspace --direction right"]
+    bindings: ["alt+shift+tab"]
 
   # --- service mode (your alt-period) ---
-  - commands: ['wm-enable-binding-mode --name service']
-    bindings: ['alt+oem_period']
+  - commands: ["wm-enable-binding-mode --name service"]
+    bindings: ["alt+oem_period"]
 
   # --- window state ---
-  - commands: ['toggle-floating --centered']
-    bindings: ['alt+shift+space']
-  - commands: ['toggle-tiling']
-    bindings: ['alt+t']
-  - commands: ['toggle-fullscreen']
-    bindings: ['alt+f']
-  - commands: ['toggle-minimized']
-    bindings: ['alt+m']
-  - commands: ['wm-cycle-focus']
-    bindings: ['alt+space']
-  - commands: ['close']
-    bindings: ['alt+shift+q']
+  - commands: ["toggle-floating --centered"]
+    bindings: ["alt+shift+space"]
+  - commands: ["toggle-tiling"]
+    bindings: ["alt+t"]
+  - commands: ["toggle-fullscreen"]
+    bindings: ["alt+f"]
+  - commands: ["toggle-minimized"]
+    bindings: ["alt+m"]
+  - commands: ["wm-cycle-focus"]
+    bindings: ["alt+space"]
+  - commands: ["close"]
+    bindings: ["alt+shift+q"]
 
   # --- pause WM (~ AeroSpace text-editing mode) ---
-  - commands: ['wm-toggle-pause']
-    bindings: ['alt+escape', 'alt+shift+p']
+  - commands: ["wm-toggle-pause"]
+    bindings: ["alt+escape", "alt+shift+p"]
 
   # --- WM control ---
-  - commands: ['wm-reload-config']
-    bindings: ['alt+shift+r']
-  - commands: ['wm-redraw']
-    bindings: ['alt+shift+w']
-  - commands: ['wm-exit']
-    bindings: ['alt+shift+x']
+  - commands: ["wm-reload-config"]
+    bindings: ["alt+shift+r"]
+  - commands: ["wm-redraw"]
+    bindings: ["alt+shift+w"]
+  - commands: ["wm-exit"]
+    bindings: ["alt+shift+x"]
 
   # --- launch terminal (WezTerm) ---
-  - commands: ['shell-exec wezterm-gui']
-    bindings: ['alt+enter']
+  - commands: ["shell-exec wezterm-gui"]
+    bindings: ["alt+enter"]
