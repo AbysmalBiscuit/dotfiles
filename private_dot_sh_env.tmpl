@@ -87,6 +87,10 @@ export OS=# {{ .chezmoi.os | quote }}
 # colored GCC warnings and errors
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
+# {{- if index .has "claude" }}
+export CLAUDE_CODE_TMUX_TRUECOLOR=1
+# {{- end }}
+
 # colored less
 # {{ if stat (joinPath .chezmoi.homeDir "bin" "source-highlight-esc.sh") -}}
 #if [[ -x "$HOME/bin/source-highlight-esc.sh" ]]; then
