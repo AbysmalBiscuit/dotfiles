@@ -326,9 +326,9 @@ function tab_title(tab_info)
   if title and #title > 0 then
     return title
   end
-  -- Otherwise, use the title from the active pane
-  -- in that tab
-  return tab_info.active_pane.title
+  -- Otherwise, use the title from the active pane in that tab. Strip the
+  -- "tmux:<edges>" navigation suffix so the tab just reads "tmux".
+  return (tab_info.active_pane.title:gsub("^tmux:%u*", "tmux"))
 end
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
@@ -462,6 +462,20 @@ local win32_ctrl_arrow = {
   DownArrow = win32_key_seq(0x28, 0x50, 0, CTRL_ENHANCED),
 }
 
+-- Pass Ctrl+Arrow straight through to the running app instead of letting
+-- WezTerm act on it. tmux (via its is_vim check) and Navigator.nvim handle all
+-- pane/split routing; WezTerm can't see through WSL+tmux to detect nvim, so any
+-- decision it makes here is wrong. On Windows the keystroke must be
+-- win32-input-mode encoded so ConPTY translates it into a VT Ctrl+Arrow that
+-- tmux reads; elsewhere a plain SendKey suffices.
+local function ctrlArrowPassthrough(direction)
+  if os == "windows" then
+    return act.SendString(win32_ctrl_arrow[direction])
+  else
+    return act.SendKey({ key = direction, mods = "CTRL" })
+  end
+end
+
 local function isViProcess(pane)
   -- get_foreground_process_name On Linux, macOS and Windows,
   -- the process can be queried to determine this path. Other operating systems
@@ -471,20 +485,26 @@ local function isViProcess(pane)
     or (pane:get_title():find("n?vim") ~= nil and not pane:get_current_working_dir())
 end
 
+local DIR_LETTER = { Left = "L", Right = "R", Up = "U", Down = "D" }
+
+-- Decide whether the inner stack (tmux/nvim) should handle Ctrl+Arrow, or
+-- whether WezTerm should move its own pane. tmux publishes its active pane's
+-- edge state into the title as "tmux:<edges>" (see set-titles-string in
+-- ~/.tmux.conf); a letter means tmux is against that wall and cannot move
+-- further, so WezTerm takes over. Off the tmux edge, pass the key through and
+-- let tmux/nvim navigate. Non-tmux panes fall back to the direct-nvim heuristic.
+local function innerHandles(pane, pane_direction)
+  local edges = pane:get_title():match("^tmux:(%u*)")
+  if edges then
+    return not edges:find(DIR_LETTER[pane_direction])
+  end
+  return isViProcess(pane)
+end
+
 local function conditionalActivatePane(window, pane, pane_direction, vim_direction)
-  if isViProcess(pane) then
-    -- print("in vim sending", pane_direction)
-    -- This should match the keybinds you set in Neovim.
-    local action
-    if os == "windows" then
-      -- win32-input-mode encoding; SendKey's plain VT bytes get lost in ConPTY
-      action = act.SendString(win32_ctrl_arrow[vim_direction])
-    else
-      action = act.SendKey({ key = vim_direction, mods = "CTRL" })
-    end
-    window:perform_action(action, pane)
+  if innerHandles(pane, pane_direction) then
+    window:perform_action(ctrlArrowPassthrough(vim_direction), pane)
   else
-    -- print("not in vim sending", pane_direction)
     window:perform_action(act.ActivatePaneDirection(pane_direction), pane)
   end
 end
@@ -529,7 +549,8 @@ config.keys = {
   -- CTRL-SHIFT-l activates the debug overlay
   { key = "L", mods = "CTRL", action = wezterm.action.ShowDebugOverlay },
 
-  -- for nvim navigation
+  -- Ctrl+Arrow: tmux/nvim navigate until tmux hits its window edge (encoded in
+  -- the "tmux:<edges>" title), then WezTerm moves its own pane.
   { key = "LeftArrow", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-left") },
   { key = "DownArrow", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-down") },
   { key = "UpArrow", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-up") },
