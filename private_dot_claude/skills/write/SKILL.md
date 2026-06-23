@@ -39,6 +39,8 @@ Cut these before sending:
 
 Test: read it aloud. If a sentence sounds like a corporate auto-reply, rewrite or delete it.
 
+For longer LLM-drafted prose (docs, articles, reports) — not just short messages — use `removing-ai-slop` for the full set of tells and the restore-or-cut method.
+
 ## 4. Polish
 
 After structure and slop-cut, invoke `elements-of-style:writing-clearly-and-concisely` for line-level tightening (omit needless words, active voice, definite/concrete language).
