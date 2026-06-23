@@ -1,206 +1,214 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "fileSuggestion": {
-    "type": "command",
-    "command": "\"C:/Program Files/Git/usr/bin/bash.exe\" \"C:/Users/Lev/.claude/file-suggestion.sh\""
-  },
-  "env": {
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
-    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
-    "CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL": "0",
-    "DISABLE_ERROR_REPORTING": "1",
-    "DISABLE_FEEDBACK_COMMAND": "1",
-    "CLAUDE_CODE_NO_FLICKER": "1",
-    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(curl * http://localhost:*)",
-      "Bash(curl * https://localhost:*)",
-      "Bash(npm run lint)",
-      "Bash(npm run test:*)",
-      "Bash(cs test:*)",
-      "Bash(pytest:*)",
-      "Bash(bun test*)",
-      "Bash(bun nitro dev*)",
-      "Bash(bun next dev*)",
-      "Bash(bun run turbo dev*)",
-      "Bash(cargo test:*)"
-    ],
-    "deny": [
-      "Read(~/.sh_env)",
-      "Read(~/.local/share/chezmoi/**)",
-      "Read(~/.cache/**)",
-      "Read(~/.config/chezmoi/**)",
-      "Read(/etc/*)",
-      "Read(~/.ssh/**)",
-      "Read(~/.aws/**)",
-      "Read(~/.config/gcloud/**)",
-      "Read(~/.azure/**)",
-      "Read(~/.kube/**)",
-      "Read(~/.gnupg/**)",
-      "Read(~/.docker/config.json)",
-      "Read(~/.netrc)",
-      "Read(~/.npmrc)",
-      "Read(~/.pypirc)",
-      "Read(~/.git-credentials)",
-      "Read(~/.password-store/**)",
-      "Read(~/.config/gh/**)",
-      "Read(~/.claude.json)",
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(**/secrets/**)",
-      "Edit(~/.local/share/chezmoi/**)",
-      "Edit(~/.config/chezmoi/**)",
-      "Edit(/etc/*)",
-      "Edit(~/.ssh/**)",
-      "Edit(~/.bashrc)",
-      "Edit(~/.zshrc)",
-      "Edit(~/.profile)",
-      "Edit(~/.aws/**)",
-      "Edit(~/.config/gcloud/**)",
-      "Edit(~/.azure/**)",
-      "Edit(~/.kube/**)",
-      "Edit(~/.gnupg/**)",
-      "Edit(~/.docker/config.json)",
-      "Edit(~/.netrc)",
-      "Edit(~/.npmrc)",
-      "Edit(~/.pypirc)",
-      "Edit(~/.git-credentials)",
-      "Edit(~/.password-store/**)",
-      "Edit(~/.config/gh/**)",
-      "Edit(~/.claude.json)",
-      "Edit(./.env)",
-      "Edit(./.env.*)",
-      "Edit(**/secrets/**)",
-      "Read(/mnt/c/Windows/**)",
-      "Edit(/mnt/c/Windows/**)",
-      "Read(/mnt/c/Program Files/**)",
-      "Edit(/mnt/c/Program Files/**)",
-      "Read(/mnt/c/Program Files (x86)/**)",
-      "Edit(/mnt/c/Program Files (x86)/**)",
-      "Read(/mnt/c/ProgramData/**)",
-      "Edit(/mnt/c/ProgramData/**)",
-      "Read(/mnt/c/Users/*/AppData/**)",
-      "Edit(/mnt/c/Users/*/AppData/**)",
-      "Read(/mnt/c/Users/*/.cache/**)",
-      "Read(/mnt/c/Users/*/.config/chezmoi/**)",
-      "Read(/mnt/c/Users/*/.ssh/**)",
-      "Edit(/mnt/c/Users/*/.ssh/**)",
-      "Read(/mnt/c/Users/*/.aws/**)",
-      "Read(/mnt/c/Users/*/.azure/**)",
-      "Read(/mnt/c/Users/*/.kube/**)",
-      "Read(/mnt/c/Users/*/.gnupg/**)",
-      "Read(/mnt/c/Users/*/.docker/config.json)",
-      "Read(/mnt/c/Users/*/.git-credentials)",
-      "Read(/mnt/c/Users/*/.config/gh/**)",
-      "Read(/mnt/c/Users/*/.claude.json)",
-      "Read(/mnt/c/Users/*/NTUSER.DAT*)",
-      "Read(/mnt/c/$Recycle.Bin/**)",
-      "Edit(/mnt/c/$Recycle.Bin/**)",
-      "Read(/mnt/c/System Volume Information/**)",
-      "Read(C:/Windows/**)",
-      "Edit(C:/Windows/**)",
-      "Read(C:/Program Files/**)",
-      "Edit(C:/Program Files/**)",
-      "Read(C:/Program Files (x86)/**)",
-      "Edit(C:/Program Files (x86)/**)",
-      "Read(C:/ProgramData/**)",
-      "Edit(C:/ProgramData/**)",
-      "Read(C:/Users/*/AppData/**)",
-      "Edit(C:/Users/*/AppData/**)",
-      "Read(C:/Users/*/.cache/**)",
-      "Read(C:/Users/*/.config/chezmoi/**)",
-      "Read(C:/Users/*/.ssh/**)",
-      "Edit(C:/Users/*/.ssh/**)",
-      "Read(C:/Users/*/.aws/**)",
-      "Read(C:/Users/*/.azure/**)",
-      "Read(C:/Users/*/.kube/**)",
-      "Read(C:/Users/*/.gnupg/**)",
-      "Read(C:/Users/*/.docker/config.json)",
-      "Read(C:/Users/*/.git-credentials)",
-      "Read(C:/Users/*/.config/gh/**)",
-      "Read(C:/Users/*/.claude.json)",
-      "Read(C:/Users/*/NTUSER.DAT*)",
-      "Read(C:/$Recycle.Bin/**)",
-      "Edit(C:/$Recycle.Bin/**)",
-      "Read(C:/System Volume Information/**)"
-    ],
-    "defaultMode": "auto"
-  },
-  "hooks": {
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/worktree-create.sh"
-          }
-        ]
-      }
-    ],
-    "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/worktree-remove.sh"
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "ccstatusline",
-    "padding": 0,
-    "refreshInterval": 10
-  },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true,
-    "elements-of-style@superpowers-marketplace": true,
-    "slack@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "plugin-dev@claude-plugins-official": true,
-    "pr-crucible@pr-crucible": true,
-    "claude-md-management@claude-plugins-official": true,
-    "sentry@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "ast-grep@ast-grep-marketplace": true
-  },
-  "extraKnownMarketplaces": {
-    "pr-crucible": {
-      "source": {
-        "source": "github",
-        "repo": "AbysmalBiscuit/pr-crucible"
-      }
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "fileSuggestion": {
+        "type": "command",
+        "command": "~/.claude/file-suggestion.sh"
     },
-    "claude-code-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-code"
-      }
+    "env": {
+        "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+        "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+        "CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL": "0",
+        "DISABLE_ERROR_REPORTING": "1",
+        "DISABLE_FEEDBACK_COMMAND": "1",
+        "CLAUDE_CODE_NO_FLICKER": "1",
+        "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1",
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
     },
-    "ast-grep-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "ast-grep/agent-skill"
-      }
-    }
-  },
-  "feedbackSurveyRate": 0,
-  "effortLevel": "high",
-  "companyAnnouncements": [],
-  "tui": "fullscreen",
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  },
-  "prefersReducedMotion": true,
-  "editorMode": "vim",
-  "teammateMode": "in-process"
+    "permissions": {
+        "allow": [
+            "Bash(curl * http://localhost:*)",
+            "Bash(curl * https://localhost:*)",
+            "Bash(npm run lint)",
+            "Bash(npm run test:*)",
+            "Bash(cs test:*)",
+            "Bash(pytest:*)",
+            "Bash(bun test*)",
+            "Bash(bun nitro dev*)",
+            "Bash(bun next dev*)",
+            "Bash(bun run turbo dev*)",
+            "Bash(cargo test:*)"
+        ],
+        "deny": [
+            "Read(~/.sh_env)",
+            "Read(~/.local/share/chezmoi/**)",
+            "Read(~/.cache/**)",
+            "Read(~/.config/chezmoi/**)",
+            "Read(/etc/*)",
+            "Read(~/.ssh/**)",
+            "Read(~/.aws/**)",
+            "Read(~/.config/gcloud/**)",
+            "Read(~/.azure/**)",
+            "Read(~/.kube/**)",
+            "Read(~/.gnupg/**)",
+            "Read(~/.docker/config.json)",
+            "Read(~/.netrc)",
+            "Read(~/.npmrc)",
+            "Read(~/.pypirc)",
+            "Read(~/.git-credentials)",
+            "Read(~/.password-store/**)",
+            "Read(~/.config/gh/**)",
+            "Read(~/.claude.json)",
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(**/secrets/**)",
+            "Edit(~/.local/share/chezmoi/**)",
+            "Edit(~/.config/chezmoi/**)",
+            "Edit(/etc/*)",
+            "Edit(~/.ssh/**)",
+            "Edit(~/.bashrc)",
+            "Edit(~/.zshrc)",
+            "Edit(~/.profile)",
+            "Edit(~/.aws/**)",
+            "Edit(~/.config/gcloud/**)",
+            "Edit(~/.azure/**)",
+            "Edit(~/.kube/**)",
+            "Edit(~/.gnupg/**)",
+            "Edit(~/.docker/config.json)",
+            "Edit(~/.netrc)",
+            "Edit(~/.npmrc)",
+            "Edit(~/.pypirc)",
+            "Edit(~/.git-credentials)",
+            "Edit(~/.password-store/**)",
+            "Edit(~/.config/gh/**)",
+            "Edit(~/.claude.json)",
+            "Edit(./.env)",
+            "Edit(./.env.*)",
+            "Edit(**/secrets/**)",
+            "Read(/mnt/c/Windows/**)",
+            "Edit(/mnt/c/Windows/**)",
+            "Read(/mnt/c/Program Files/**)",
+            "Edit(/mnt/c/Program Files/**)",
+            "Read(/mnt/c/Program Files (x86)/**)",
+            "Edit(/mnt/c/Program Files (x86)/**)",
+            "Read(/mnt/c/ProgramData/**)",
+            "Edit(/mnt/c/ProgramData/**)",
+            "Read(/mnt/c/Users/*/AppData/**)",
+            "Edit(/mnt/c/Users/*/AppData/**)",
+            "Read(/mnt/c/Users/*/.cache/**)",
+            "Read(/mnt/c/Users/*/.config/chezmoi/**)",
+            "Read(/mnt/c/Users/*/.ssh/**)",
+            "Edit(/mnt/c/Users/*/.ssh/**)",
+            "Read(/mnt/c/Users/*/.aws/**)",
+            "Read(/mnt/c/Users/*/.azure/**)",
+            "Read(/mnt/c/Users/*/.kube/**)",
+            "Read(/mnt/c/Users/*/.gnupg/**)",
+            "Read(/mnt/c/Users/*/.docker/config.json)",
+            "Read(/mnt/c/Users/*/.git-credentials)",
+            "Read(/mnt/c/Users/*/.config/gh/**)",
+            "Read(/mnt/c/Users/*/.claude.json)",
+            "Read(/mnt/c/Users/*/NTUSER.DAT*)",
+            "Read(/mnt/c/$Recycle.Bin/**)",
+            "Edit(/mnt/c/$Recycle.Bin/**)",
+            "Read(/mnt/c/System Volume Information/**)",
+            "Read(C:/Windows/**)",
+            "Edit(C:/Windows/**)",
+            "Read(C:/Program Files/**)",
+            "Edit(C:/Program Files/**)",
+            "Read(C:/Program Files (x86)/**)",
+            "Edit(C:/Program Files (x86)/**)",
+            "Read(C:/ProgramData/**)",
+            "Edit(C:/ProgramData/**)",
+            "Read(C:/Users/*/AppData/**)",
+            "Edit(C:/Users/*/AppData/**)",
+            "Read(C:/Users/*/.cache/**)",
+            "Read(C:/Users/*/.config/chezmoi/**)",
+            "Read(C:/Users/*/.ssh/**)",
+            "Edit(C:/Users/*/.ssh/**)",
+            "Read(C:/Users/*/.aws/**)",
+            "Read(C:/Users/*/.azure/**)",
+            "Read(C:/Users/*/.kube/**)",
+            "Read(C:/Users/*/.gnupg/**)",
+            "Read(C:/Users/*/.docker/config.json)",
+            "Read(C:/Users/*/.git-credentials)",
+            "Read(C:/Users/*/.config/gh/**)",
+            "Read(C:/Users/*/.claude.json)",
+            "Read(C:/Users/*/NTUSER.DAT*)",
+            "Read(C:/$Recycle.Bin/**)",
+            "Edit(C:/$Recycle.Bin/**)",
+            "Read(C:/System Volume Information/**)"
+        ],
+        "defaultMode": "auto"
+    },
+    "hooks": {
+        "WorktreeCreate": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash ~/.claude/hooks/worktree-create.sh"
+                    }
+                ]
+            }
+        ],
+        "WorktreeRemove": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash ~/.claude/hooks/worktree-remove.sh"
+                    }
+                ]
+            }
+        ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "ccstatusline",
+        "padding": 0,
+        "refreshInterval": 10
+    },
+    "enabledPlugins": {
+        "superpowers@superpowers-marketplace": true,
+        "elements-of-style@superpowers-marketplace": true,
+        "slack@claude-plugins-official": true,
+        "typescript-lsp@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true,
+        "rust-analyzer-lsp@claude-plugins-official": true,
+        "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+        "plugin-dev@claude-plugins-official": true,
+        "pr-crucible@pr-crucible": true,
+        "claude-md-management@claude-plugins-official": true,
+        "sentry@claude-plugins-official": true,
+        "skill-creator@claude-plugins-official": true,
+        "ast-grep@ast-grep-marketplace": true,
+        "devkit@devkit": true
+    },
+    "extraKnownMarketplaces": {
+        "pr-crucible": {
+            "source": {
+                "source": "github",
+                "repo": "AbysmalBiscuit/pr-crucible"
+            }
+        },
+        "claude-code-plugins": {
+            "source": {
+                "source": "github",
+                "repo": "anthropics/claude-code"
+            }
+        },
+        "ast-grep-marketplace": {
+            "source": {
+                "source": "github",
+                "repo": "ast-grep/agent-skill"
+            }
+        },
+        "devkit": {
+            "source": {
+                "source": "directory",
+                "path": "AbysmalBiscuit/devkit"
+            }
+        }
+    },
+    "feedbackSurveyRate": 0,
+    "effortLevel": "high",
+    "companyAnnouncements": [],
+    "tui": "fullscreen",
+    "voice": {
+        "enabled": true,
+        "mode": "hold"
+    },
+    "prefersReducedMotion": true,
+    "theme": "dark",
+    "editorMode": "vim",
+    "teammateMode": "in-process"
 }

@@ -26,7 +26,7 @@ if any step fails or is ambiguous.
 
 Before step 1, invoke the **`checklist` skill** and create one task per numbered step
 below (fetch issue → find/assign Sentry issue → derive names → create worktree →
-symlink env → install deps → allocate port slot → write summary → report back). Mark
+symlink env → install deps → write summary → report back). Mark
 each `in_progress` before starting it and `completed` once done, so progress stays
 visible throughout.
 
@@ -40,15 +40,14 @@ batch the tool calls in a single message wherever a wave allows.
   content, so do this first.
 - **Wave B** (after step 1, all concurrent) —
   - step 2: find/assign the Sentry issue (search → assign → Linear comment),
-  - step 3: derive names (pure computation),
-  - step 7: allocate the port slot (only scans existing summaries — no dependency on
-    the worktree).
+  - step 3: derive names (pure computation).
 - **Wave C** (after step 3 produces `BRANCH`/`WORKTREE`) — step 4: create the
   worktree. This can run while the Sentry work from Wave B is still in flight.
 - **Wave D** (after the worktree exists, concurrent) — step 5 (symlink env) and
   step 6 (`bun install`).
-- **Wave E** — step 8 (write the summary) once Sentry result, names, and port slot are
-  all known; then step 9 (report back).
+- **Wave E** — step 8 (write the summary) once the Sentry result and names are
+  known; then step 9 (report back). Ports are not allocated at setup — devkit
+  assigns them when the next session runs `devrun up` (step 7).
 
 Long-running or independent calls (the Sentry search/assign, `bun install`, the Linear
 comment) need not block each other — kick them off and collect results as they land.
@@ -103,6 +102,10 @@ git -C /home/lev/Git/adaptyv/monorepo worktree add -b "$BRANCH" "$WORKTREE" orig
 Branch off `origin/staging` (the default branch). If `$BRANCH` already exists, ask
 the user whether to reuse it or pick a new name.
 
+No per-worktree devkit config is needed: write-lock enforcement is on globally via
+`[harness] enforce_writes = true` in `~/.config/devkit/config.toml`, so concurrent
+agents and parallel subagents in this worktree are coordinated automatically.
+
 ### 5. Symlink env vars
 
 The shared env file lives at `/home/lev/Git/adaptyv/.env.local`. Symlink it into the
@@ -115,10 +118,12 @@ ln -s /home/lev/Git/adaptyv/.env.local "$WORKTREE/apps/<app>/.env"
 
 Do this for each relevant app (e.g. `apps/api`, `apps/lab-os`).
 
-> Dev servers are normally launched through doppler (`dev_local`, see step 8); the
-> symlink mainly serves tools/scripts that read `apps/<app>/.env` directly. If the
-> issue touches **lab-os**, also add a dummy `WORKCELL_BLI_RUN_WORKFLOW_ID` to
-> `apps/lab-os/.env.local` or its SSR errors on boot.
+> Dev servers run through `devrun` (step 7), which injects doppler `dev_local`
+> secrets, the pinned JWT secret, and lab-os's dummy `WORKCELL_BLI_RUN_WORKFLOW_ID`
+> from `~/.config/devkit/config.toml`. The symlink mainly serves tools/scripts that
+> read `apps/<app>/.env` directly. Only when running a server *directly* (skip-doppler
+> fallback) does lab-os need the dummy `WORKCELL_BLI_RUN_WORKFLOW_ID` in
+> `apps/lab-os/.env.local` to avoid SSR errors on boot.
 
 ### 6. Install deps
 
@@ -132,34 +137,18 @@ Only the apps in scope. Note: `bun install` in any workspace dir installs the **
 monorepo workspace (root + every app) in one shot — so a single `bun install` covers all
 in-scope apps. Running it per-app is redundant but harmless.
 
-### 7. Allocate a port slot (parallel-work safe)
+### 7. Ports — handled by devkit (no allocation at setup)
 
-Each worktree runs its dev servers on a distinct **port slot** so multiple worktrees can
-run side-by-side without bind collisions. Slot 0 = the monorepo's defaults. Each issue
-worktree gets the next free slot ≥ 1, and ports are `base + slot`.
+**Do not assign ports here.** devkit owns port allocation: when the next session
+runs `devrun up` in the worktree, it reserves a collision-free port per app from
+the registry (bases and the app catalog live in `~/.config/devkit/config.toml`),
+wraps each launch in doppler `dev_local`, and wires the API's URL into consumer
+apps (lab-os, foundry-portal) via the config's `url_env` — so the old slot math
+and the cross-app API-URL caveat are both obsolete.
 
-Default bases (from `monorepo/CLAUDE.md`): lab-os `4100`, foundry-portal `4200`,
-api `9100`, plate-api `8080`.
-
-Pick the next free slot by scanning existing summaries for the `Port slot:` marker:
-
-```bash
-# slot 0 reserved for the monorepo; find lowest free slot >= 1
-used=$(rg -oN 'Port slot:\*\* *([0-9]+)' -r '$1' /home/lev/Git/adaptyv/ISSUE_SUMMARY_*.md 2>/dev/null)
-SLOT=1
-while printf '%s\n' "$used" | grep -qx "$SLOT"; do SLOT=$((SLOT+1)); done
-echo "Assigned port slot: $SLOT"
-echo "  lab-os=$((4100+SLOT))  api=$((9100+SLOT))  plate-api=$((8080+SLOT))  foundry-portal=$((4200+SLOT))"
-```
-
-Record the chosen `SLOT` and resolved ports in the summary (step 8). The `Port slot:`
-marker line **must** stay machine-readable (`**Port slot:** N`) so the next run's scan
-finds it.
-
-> **Caveat to flag:** the shared `../.env.local` hard-codes the API URL (default port
-> 9100). If a worktree runs the API on a non-default port, lab-os won't reach it unless
-> the API-URL env is overridden locally too. Slot ports prevent *bind* collisions;
-> cross-app URL wiring is separate. Note this in the summary.
+Nothing runs at setup time. The summary (step 8) just tells the next session how to
+start servers and read back the assigned ports. To inspect what's already in use
+across worktrees at any point: `portm status`.
 
 ### 8. Write the session summary
 
@@ -178,35 +167,33 @@ Include:
 - **Branch:** {BRANCH}
 - **Apps in scope:** {list}
 - **State / assignee:** {state} / {assignee}
-- **Port slot:** {SLOT}
 
 > If a Sentry issue is linked above, the GitHub PR for this work **must** reference it
 > — put the Sentry issue URL in the PR description (e.g. a `Fixes: {sentry URL}` line)
 > so the error, the Linear issue, and the PR are all cross-linked.
 
-## Ports (slot {SLOT})
+## Running servers
 
-Launch dev servers on these ports to avoid collisions with other worktrees:
+Start dev servers with **devrun** — it allocates a collision-free port per app
+from the registry, wraps each launch in doppler `dev_local`, pins the JWT secret,
+and wires the API URL into lab-os/foundry-portal automatically. Pass no ports and
+no doppler flags by hand:
 
-Launch through doppler (`dev_local`) so secrets are injected (app→project mapping
-is in `monorepo/doppler.yaml`):
+```bash
+devrun up                 # start every in-scope app for this worktree
+devrun up api             # one app   (apps in scope: {list})
+devrun status             # the ports devrun assigned + pids
+devrun logs api           # tail output
+devrun down               # stop this worktree's servers
+```
 
-| App | Port | Launch (doppler `dev_local`) |
-|-----|------|--------|
-| lab-os | {4100+SLOT} | `doppler run -p lab-os -c dev_local -- next dev -p {4100+SLOT}` |
-| api | {9100+SLOT} | `SUPABASE_JWT_SECRET='super-secret-jwt-token-with-at-least-32-characters-long' doppler run -p api-foundry -c dev_local --preserve-env=SUPABASE_JWT_SECRET -- nitro dev --port {9100+SLOT}` |
-| plate-api | {8080+SLOT} | see `monorepo/doppler.yaml` for the project; `PORT={8080+SLOT}` |
-| foundry-portal | {4200+SLOT} | see `monorepo/doppler.yaml` for the project; `-p {4200+SLOT}` |
+Read the assigned ports/URLs back from `devrun status` after `up` — they are not
+fixed numbers. `portm status` shows allocations across all worktrees.
 
-> Only list rows for apps in scope; drop the rest. If the API runs on a non-default
-> port, override the API-URL env for lab-os too (see setup caveat).
->
-> The `--preserve-env=SUPABASE_JWT_SECRET` keeps the minted-JWT secret matching the
-> local Supabase container; `dev_local` already carries this value, so it's only
-> strictly needed when pinning a non-default secret. **Skip-doppler fallback:**
-> with the env symlinked, `cd apps/<app> && bun nitro dev` (or `bun next dev`) also
-> works — simpler, but drifts from `dev_local`. **lab-os** needs a dummy
-> `WORKCELL_BLI_RUN_WORKFLOW_ID` in `apps/lab-os/.env.local` or SSR errors.
+> **Skip-doppler fallback** (no devrun, drop doppler from the loop): with the env
+> symlinked, run the framework server directly, e.g.
+> `cd apps/api && bun nitro dev` or `cd apps/lab-os && bun next dev`. In that mode
+> lab-os needs a dummy `WORKCELL_BLI_RUN_WORKFLOW_ID` in `apps/lab-os/.env.local`.
 
 ## Summary
 
@@ -246,12 +233,16 @@ Print, for the user to copy:
 - the `cd "$WORKTREE"` command
 - the summary file path
 - branch name
-- assigned port slot + resolved ports
+- how to start servers: `devrun up`, then `devrun status` for the assigned ports
 
 Do **not** cd or open an editor — the user starts the new session themselves.
 
 ## Notes
 
-- Use `doppler` with the `dev_local` config to launch dev servers (see step 8).
-  Never use `doppler` with prod (`prd`) config.
+- Dev servers run through `devrun` (step 7), which uses doppler `dev_local` from
+  the devkit config. Never run against the prod (`prd`) doppler config.
+- Write-lock enforcement is on globally (`[harness] enforce_writes = true` in
+  `~/.config/devkit/config.toml`) — concurrent agents and parallel subagents in the
+  same worktree are blocked from clobbering each other's structured edits. This
+  relies on the `devkit` plugin being enabled and `lockm` on `PATH`.
 - If git, bun, or an MCP call fails, surface the exact error and ask — don't guess.
