@@ -63,10 +63,11 @@ note it and offer to `bun install`.
 ### 4. Orient
 
 - Restate the task in 2-3 lines from the summary.
-- Surface the **Port slot** + resolved ports from the summary, with the exact launch
-  commands (e.g. `bun next dev -p 4101`, `PORT=9101 bun nitro dev`). The user runs
-  servers on these — not the defaults — so parallel worktrees don't collide. Repeat the
-  API-URL caveat if the API port is non-default.
+- Surface how to start servers: `devrun up` (every in-scope app) or `devrun up <app>`,
+  then `devrun status` for the ports devrun assigned. devrun reserves a collision-free
+  port per app for the worktree, wraps each launch in doppler `dev_local`, and wires the
+  API URL into consumer apps — so there's no port slot, literal launch command, or
+  API-URL caveat to surface.
 - Surface the **Suggested first steps** from the summary.
 - If the summary lists a **Sentry** issue, surface its URL + short ID, and remind that
   the GitHub PR for this work must reference it in its description (see step 5).
@@ -114,5 +115,6 @@ unsolicited.
 
 ## Notes
 
-- Never run `doppler` unless asked explicitly.
+- Dev servers run through `devrun`, which wraps launches in doppler `dev_local`
+  automatically — never run `doppler` by hand or against prod (`prd`).
 - This command orients only — it does not write code or commit.

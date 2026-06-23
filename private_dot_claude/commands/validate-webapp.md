@@ -5,16 +5,18 @@ allowed-tools: Bash, Read, Glob, Grep, mcp__chrome-devtools__new_page, mcp__chro
 
 # /validate-webapp
 
-Start the dev services this issue/worktree needs, then drive the running app with
-chrome-devtools to confirm the bug is fixed / the feature works.
+Start the dev services this issue/worktree needs via **devrun**, then drive the
+running app with chrome-devtools to confirm the bug is fixed / the feature works.
 
 Run from **inside the issue worktree** (e.g. `/home/lev/Git/adaptyv/eng-1234-...`).
+devrun keys everything off the current worktree, so `cd` into it first (or pass
+`-C <worktree>` to every devrun call).
 
 ## Input
 
 `$ARGUMENTS` = optional: what to validate (e.g. "the BLI export button no longer 500s")
 and/or which apps to start (e.g. `api lab-os`). If empty, derive both from the
-issue context (step 1).
+issue context (step 1) and let devrun auto-detect the apps from the diff (step 2).
 
 ## Steps
 
@@ -28,68 +30,67 @@ pwd && git rev-parse --abbrev-ref HEAD && git rev-parse --show-toplevel
 
 - Extract `ISSUE_ID` from the branch name (`abc-123` pattern, uppercase it).
 - Read `/home/lev/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` if it exists — it has the
-  apps in scope, the port slot, and the issue summary.
+  apps in scope and the issue summary.
 - Determine **what behavior to validate**: from `$ARGUMENTS` if given, else from the
   summary file + `git log`/`git diff origin/staging...HEAD --stat` (what did this
   branch change?). If still unclear, ask the user before starting anything.
 
 ### 2. Resolve apps in scope
 
-From `$ARGUMENTS`, the summary's "Apps in scope", or the diff paths (`apps/<app>/...`).
-Known apps and default base ports (slot 0):
+Decide which app names to hand to devrun:
 
-| App | Base port | Launch (from app dir) |
-|-----|-----------|-----------------------|
-| api | 9100 | `bun nitro dev --port <PORT>` |
-| lab-os | 4100 | `bun next dev --port <PORT>` |
-| foundry-portal | 4200 | `bun next dev --port <PORT>` |
-| website | 4300 | `bun next dev --port <PORT>` |
-| plate-api | 8080 | `PORT=<PORT> bun dev` |
+- From `$ARGUMENTS` (e.g. `api lab-os`), or the summary's "Apps in scope".
+- Otherwise, **let devrun auto-detect** — `devrun up` with no app args infers the
+  apps from the diff vs `origin/staging`.
 
-Always start the api if any webapp in scope talks to it.
-
-### 3. Resolve ports
-
-Priority order:
-
-1. **Assigned slot**: `**Port slot:** N` line in the issue's `ISSUE_SUMMARY` file →
-   port = base + N. Use the resolved ports from its "Ports" table when present.
-2. **No slot assigned**: find the first free port per app by incrementing from the
-   base, +1 at a time:
+You don't need to know ports, launch commands, or the API-URL wiring — devrun reads
+all of that from the devkit config. To preview what it will run without starting
+anything:
 
 ```bash
-# first free port >= base
-port=<BASE>; while ss -ltn "sport = :$port" | grep -q LISTEN; do port=$((port+1)); done; echo "$port"
+devrun up --dry-run [apps...]   # prints resolved [role] app :port, cwd, argv, env, log
 ```
 
-3. Check nothing is **already listening** on the chosen ports — if a dev server for
-   this same worktree is already up (verify via `ss -ltnp` / the process's cwd),
-   reuse it instead of starting a second one.
+`devrun up --help` lists the flags; an `unknown app` error means the name isn't in
+the devkit catalog (check the dry-run output for valid names).
 
-> If the API ends up on a non-default port, the webapp must be pointed at it — the
-> shared `../.env.local` hard-codes the API URL at port 9100. Override the API-URL
-> env var when launching the webapp (check the app's env usage, e.g.
-> `NEXT_PUBLIC_API_URL=http://localhost:<API_PORT>`). Skipping this gives
-> false-negative validation results.
+### 3. Start the services
 
-### 4. Start the services
-
-Start each in-scope app as a **background** Bash task from its app dir inside the
-worktree, e.g.:
+First check whether servers for this worktree are already up — devrun tracks them,
+and re-running `up` reuses the ports already reserved for the worktree:
 
 ```bash
-cd <WORKTREE>/apps/api && bun nitro dev --port <API_PORT>
-cd <WORKTREE>/apps/lab-os && bun next dev --port <LABOS_PORT>
+devrun status            # tracked servers for THIS worktree (PORT/APP/ROLE/PID/LISTENING)
 ```
 
-Then wait for readiness — poll each port until it accepts connections (timeout ~120s):
+If nothing relevant is running, bring the apps up:
 
 ```bash
-for i in $(seq 1 60); do curl -sf -o /dev/null "http://localhost:<PORT>" && break; sleep 2; done
+devrun up [apps...]      # omit apps to auto-detect from the diff
 ```
 
-If a service fails to start, surface the exact error from its output and stop —
-don't validate against a half-up stack.
+devrun handles what the steps used to do by hand:
+
+- allocates a collision-free port per app (slot-based per worktree),
+- wraps each launch in `doppler run -c dev_local` (local Supabase stack — never prd),
+- wires the API base URL into every consumer app (so a non-default API port is no
+  longer a false-negative trap),
+- pulls in the dependent provider (e.g. `api`) automatically when a webapp needs it,
+- **blocks until each app is ready** (~120s), printing a `[role] app :port` line with
+  the readiness verdict.
+
+If an app fails to become ready, devrun prints the tail of its log. Inspect it and
+**stop** — don't validate against a half-up stack:
+
+```bash
+devrun logs <app>        # add -f to follow
+```
+
+### 4. Resolve the URLs to validate
+
+Read the resolved ports from the `up` output or `devrun status` — the webapp URL is
+`http://localhost:<PORT>` for the app's row. Navigate directly to the route the
+issue concerns when known.
 
 ### 5. Validate with chrome-devtools
 
@@ -111,7 +112,7 @@ Print a verdict the user can act on:
 
 - **PASS / FAIL** per validated behavior, with evidence (screenshot, console output,
   network status codes — not just "it works")
-- Services started + their ports (so the user can poke at them — leave them running)
+- Services started + their ports (from `devrun status`), so the user can poke at them
 - Any regressions or suspicious console/network noise spotted along the way
 
 If validation FAILS, do **not** attempt a fix — report exactly what was observed vs
@@ -119,8 +120,9 @@ expected and stop.
 
 ## Notes
 
-- Leave dev servers running after validation; tell the user which background tasks
-  hold them.
-- Never run `doppler` unless the user asks explicitly.
+- Leave dev servers running after validation — devrun tracks them per worktree. Stop
+  them with `devrun down` (releases the ports) when the user is done.
+- devrun wraps every launch in `doppler run -c dev_local` automatically (local stack,
+  never prd) — don't invoke `doppler` yourself.
 - If chrome-devtools MCP is unavailable, say so and stop — don't fake validation
   with curl alone.
