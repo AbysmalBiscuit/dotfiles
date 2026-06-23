@@ -21,8 +21,22 @@ unbind C-b
 unbind r
 bind r source-file ~/.tmux.conf \; display-message "tmux.conf reloaded"
 
-set -g default-terminal "tmux-direct"
+# tmux-256color (not *-direct): tcell-based TUIs (lazygit) mis-parse direct-color
+# terminfo and render hex colors as garbage. Truecolor still works — the RGB
+# override below forwards 24-bit color to the outer terminal, and COLORTERM lets
+# inner apps detect it.
+set -g default-terminal "tmux-256color"
 set -ag terminal-overrides ",xterm-256color:RGB"
+
+# Forward OSC 8 hyperlinks (e.g. `issue status`/`issue prs` clickable URLs) out
+# to the outer terminal. tmux only passes them through when the outer term is
+# known to support them, which tmux-256color terminfo doesn't advertise.
+set -as terminal-features '*:hyperlinks'
+
+# Inside tmux, TERM_PROGRAM is forced to "tmux", so Rust's supports-hyperlinks
+# crate (used by devkit's `issue` CLI) stops emitting OSC 8 at all. Force it on
+# so the escape is produced; the feature line above lets tmux relay it.
+set-environment -g FORCE_HYPERLINK 1
 
 
 set -g allow-passthrough all

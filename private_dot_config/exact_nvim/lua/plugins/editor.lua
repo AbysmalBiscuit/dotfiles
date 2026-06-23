@@ -225,6 +225,40 @@ return {
     -- },
     config = function()
       require("Navigator").setup({})
+
+      -- Publish nvim's per-direction split edges to tmux's @nvim_edges so the
+      -- "tmux:<edges>" terminal title (see ~/.tmux.conf) reflects nvim's layout,
+      -- not just tmux's. A letter marks a direction with no nvim window that way;
+      -- WezTerm only takes over Ctrl+Arrow once both nvim and tmux are blocked.
+      if vim.env.TMUX then
+        local function blocked(dir)
+          return vim.fn.winnr(dir) == vim.fn.winnr()
+        end
+        local function publish()
+          local edges = (blocked("h") and "L" or "")
+            .. (blocked("l") and "R" or "")
+            .. (blocked("k") and "U" or "")
+            .. (blocked("j") and "D" or "")
+          -- Moving between nvim splits doesn't change tmux's active pane, so
+          -- tmux won't re-emit the title on its own; refresh-client forces it.
+          vim.fn.jobstart({ "tmux", "set-option", "-p", "@nvim_edges", edges, ";", "refresh-client", "-S" })
+        end
+
+        local group = vim.api.nvim_create_augroup("NvimTmuxEdges", { clear = true })
+        vim.api.nvim_create_autocmd(
+          { "VimEnter", "WinEnter", "WinClosed", "WinResized", "TabEnter" },
+          { group = group, callback = publish }
+        )
+        -- Reset to the "fully blocked" default on exit so the shell left behind
+        -- in this pane reports only tmux's edges. system() blocks so it lands
+        -- before the process goes away.
+        vim.api.nvim_create_autocmd("VimLeavePre", {
+          group = group,
+          callback = function()
+            vim.fn.system({ "tmux", "set-option", "-p", "@nvim_edges", "LRUD" })
+          end,
+        })
+      end
     end,
   },
   {
