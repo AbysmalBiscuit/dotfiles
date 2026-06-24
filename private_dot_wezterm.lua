@@ -630,17 +630,35 @@ config.mouse_bindings = {
     mods = "NONE",
     action = wezterm.action.DisableDefaultAssignment,
   },
-  -- Ctrl-click will open the link under the mouse cursor
+  -- Ctrl-click opens the link under the mouse cursor. A mouse binding is gated
+  -- by its mouse_reporting field: the default (false) matches only when the
+  -- foreground app has NOT enabled mouse reporting; mouse_reporting = true
+  -- matches only when it HAS (tmux with `mouse on`, vim, lazygit). Define both
+  -- so Ctrl-click opens links in either mode — otherwise the click is forwarded
+  -- to the app and WezTerm never runs OpenLinkAtMouseCursor.
   {
     event = { Up = { streak = 1, button = "Left" } },
     mods = "CTRL",
     action = wezterm.action.OpenLinkAtMouseCursor,
   },
-  -- Disable the Ctrl-click down event to stop programs from seeing it when a URL is clicked
+  {
+    event = { Up = { streak = 1, button = "Left" } },
+    mods = "CTRL",
+    action = wezterm.action.OpenLinkAtMouseCursor,
+    mouse_reporting = true,
+  },
+  -- Swallow the Ctrl-click press so the app underneath never sees it as a mouse
+  -- event, in both reporting modes.
   {
     event = { Down = { streak = 1, button = "Left" } },
     mods = "CTRL",
     action = wezterm.action.Nop,
+  },
+  {
+    event = { Down = { streak = 1, button = "Left" } },
+    mods = "CTRL",
+    action = wezterm.action.Nop,
+    mouse_reporting = true,
   },
 }
 
