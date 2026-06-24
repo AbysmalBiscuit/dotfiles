@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Rename the current tmux window to #<pr>[<LINEAR-ID>] for the worktree in $dir.
+#
+# Prefers devkit's `issue info` when available: it owns the id-from-branch rule,
+# the PR lookup, and a per-worktree PR cache. Falls back to local git/gh parsing
+# when the `issue` binary (or jq) is absent.
+#
+#   id derives from the branch; no id (e.g. `main`) -> leave the window name
+#     untouched, preserving a manually-set name.
+#   PR known -> #<pr>[<id>]; otherwise just [<id>].
+#   Outside any git work tree -> the cwd's basename ($HOME shown as ~).
+set -euo pipefail
+
+dir="${1:-$PWD}"
+[ -n "${TMUX:-}" ] || exit 0
+
+# Outside a git work tree there is no issue to name the window after; track cwd.
+if ! git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if [ "$dir" = "$HOME" ]; then
+    tmux rename-window '~'
+  else
+    tmux rename-window "$(basename "$dir")"
+  fi
+  exit 0
+fi
+
+# Build "#<pr>[<id>]" / "[<id>]" from an id and an optional pr. An empty/unknown
+# id is the "no issue" signal: return non-zero so the caller leaves the name be.
+window_name() {  # $1=id  $2=pr
+  case "${1:-}" in
+    "" | UNKNOWN | null) return 1 ;;
+  esac
+  if [ -n "${2:-}" ] && [ "$2" != "null" ]; then
+    printf '#%s[%s]' "$2" "$1"
+  else
+    printf '[%s]' "$1"
+  fi
+}
+
+# Pull `issue_id` and `pr_number` out of `issue info --json`. cache-only ($2=1)
+# never touches the network; the full form does and warms the per-worktree cache.
+issue_info_fields() {  # $1=dir  $2=cache_only(0|1)
+  local extra=()
+  [ "$2" = 1 ] && extra=(--cache-only)
+  issue info --json "${extra[@]}" -C "$1" 2>/dev/null \
+    | jq -r '[.issue_id // "", (.pr_number // "" | tostring)] | @tsv' 2>/dev/null
+}
+
+if command -v issue >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  # Fast render from the cache (no network): id always resolves, PR shows if
+  # already cached.
+  IFS=$'\t' read -r id pr < <(issue_info_fields "$dir" 1) || true
+  if name=$(window_name "${id:-}" "${pr:-}"); then
+    tmux rename-window "$name"
+  fi
+  # id known but PR not yet cached: one full lookup warms the cache and re-renders
+  # with the PR. This is the only path that hits the network, and only until the
+  # PR is cached — after that the cache-only read above already has it.
+  if [ -n "${id:-}" ] && [ "${id}" != "UNKNOWN" ] && { [ -z "${pr:-}" ] || [ "${pr}" = "null" ]; }; then
+    IFS=$'\t' read -r id pr < <(issue_info_fields "$dir" 0) || true
+    if name=$(window_name "${id:-}" "${pr:-}"); then
+      tmux rename-window "$name"
+    fi
+  fi
+  exit 0
+fi
+
+# Fallback (no `issue` binary): derive the id from the branch and look up the PR
+# via gh, caching positive results forever (keyed by branch).
+branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0
+
+# First letters-dash-digits run, uppercased (same rule as devkit's find_id).
+id=$(printf '%s' "$branch" | grep -oiE '[a-z]+-[0-9]+' | head -n1 | tr '[:lower:]' '[:upper:]' || true)
+[ -n "$id" ] || exit 0
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-issue-name"
+cache_file="$cache_dir/$(printf '%s' "$branch" | tr '/' '_')"
+
+if [ -s "$cache_file" ]; then
+  pr=$(cat "$cache_file")
+else
+  pr=$(cd "$dir" && gh pr view --json number --jq .number 2>/dev/null || true)
+  if [ -n "$pr" ]; then
+    mkdir -p "$cache_dir"
+    printf '%s' "$pr" >"$cache_file"
+  fi
+fi
+
+if [ -n "$pr" ]; then
+  name="#${pr}[${id}]"
+else
+  name="[${id}]"
+fi
+
+tmux rename-window "$name"

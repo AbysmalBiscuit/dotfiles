@@ -16,6 +16,18 @@ setw -g pane-base-index 1
 setw -g automatic-rename off
 set -g allow-rename off
 
+# Publish the active pane's edge position to the outer terminal title so
+# WezTerm can tell when the inner stack is against a wall and should hand
+# Ctrl+Arrow off to its own pane navigation (see innerHandles in ~/.wezterm.lua).
+# A letter (L/R/U/D) marks a direction the inner stack CAN'T move: the tmux pane
+# touches that window edge AND nvim has no split that way. nvim publishes its own
+# edges into @nvim_edges (see the Navigator config in lua/plugins/editor.lua);
+# the default "LRUD" means a non-nvim pane is blocked at the nvim level, so only
+# tmux's own edges matter there.
+set -g @nvim_edges "LRUD"
+set -g set-titles on
+set -g set-titles-string "tmux:#{?#{&&:#{pane_at_left},#{m:*L*,#{@nvim_edges}}},L,}#{?#{&&:#{pane_at_right},#{m:*R*,#{@nvim_edges}}},R,}#{?#{&&:#{pane_at_top},#{m:*U*,#{@nvim_edges}}},U,}#{?#{&&:#{pane_at_bottom},#{m:*D*,#{@nvim_edges}}},D,}"
+
 # Make a better prefix binding
 unbind C-b
 unbind r
