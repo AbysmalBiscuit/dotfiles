@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Set the title of the focused WezTerm tab, for grouping tmux windows into named
+# "projects". WezTerm's tab_title() (see ~/.wezterm.lua) shows an explicitly-set
+# tab title verbatim and otherwise falls back to the tmux window's cwd; this
+# script drives that override.
+#
+#   custom   -> a name you type; the tab keeps it until changed.
+#   static   -> freeze the current cwd basename ($HOME as ~) as the name.
+#   dynamic  -> clear the override; the tab follows the active tmux pane's cwd
+#               again (the default).
+#
+# Runs from inside WSL+tmux, where WEZTERM_PANE is not propagated. The target is
+# therefore the GUI-focused tab (list-clients -> focused_pane_id -> its tab),
+# i.e. whichever tab you are looking at when you run this.
+#
+# Usage:
+#   wezterm-tab-name                 # interactive menu
+#   wezterm-tab-name <name>          # set a custom name
+#   wezterm-tab-name -c | --cwd      # freeze the current cwd basename
+#   wezterm-tab-name -d | --dynamic  # clear; follow cwd again
+set -euo pipefail
+
+# Resolve wezterm.exe: PATH first, then the default Windows install location.
+wezterm_bin() {
+  if command -v wezterm.exe >/dev/null 2>&1; then
+    printf 'wezterm.exe'
+  elif [ -x "/mnt/c/Program Files/WezTerm/wezterm.exe" ]; then
+    printf '/mnt/c/Program Files/WezTerm/wezterm.exe'
+  else
+    echo "wezterm-tab-name: wezterm.exe not found" >&2
+    return 1
+  fi
+}
+
+cwd_name() {  # basename of $PWD, or ~ for $HOME
+  if [ "$PWD" = "$HOME" ]; then printf '~'; else basename "$PWD"; fi
+}
+
+WT=$(wezterm_bin) || exit 1
+
+# The tab the user is looking at: the focused pane's tab. jq is required (same
+# dependency as tmux-issue-name).
+focused_pane=$("$WT" cli list-clients --format json 2>/dev/null \
+  | jq -r 'map(select(.focused_pane_id != null)) | .[0].focused_pane_id // empty')
+if [ -z "${focused_pane:-}" ]; then
+  echo "wezterm-tab-name: could not find the focused WezTerm pane" >&2
+  exit 1
+fi
+tab_id=$("$WT" cli list --format json 2>/dev/null \
+  | jq -r --argjson p "$focused_pane" 'map(select(.pane_id == $p)) | .[0].tab_id // empty')
+if [ -z "${tab_id:-}" ]; then
+  echo "wezterm-tab-name: could not resolve the tab for pane $focused_pane" >&2
+  exit 1
+fi
+
+set_title() {  # $1=title ("" clears the override)
+  "$WT" cli set-tab-title --tab-id "$tab_id" "$1"
+}
+
+# Non-interactive forms.
+case "${1:-}" in
+  -d | --dynamic) set_title ""; echo "tab $tab_id -> dynamic (follows cwd)"; exit 0 ;;
+  -c | --cwd)     name=$(cwd_name); set_title "$name"; echo "tab $tab_id -> $name"; exit 0 ;;
+  -h | --help)    sed -n '2,20p' "$0"; exit 0 ;;
+  "") : ;;        # fall through to the interactive menu
+  *)              set_title "$1"; echo "tab $tab_id -> $1"; exit 0 ;;
+esac
+
+# Interactive menu.
+cwd=$(cwd_name)
+printf 'Name WezTerm tab %s:\n' "$tab_id"
+printf '  1) custom name\n'
+printf '  2) static cwd (%s)\n' "$cwd"
+printf '  3) dynamic (follow cwd)\n'
+printf 'choice [1]: '
+read -r choice
+case "${choice:-1}" in
+  2) set_title "$cwd"; echo "tab $tab_id -> $cwd" ;;
+  3) set_title ""; echo "tab $tab_id -> dynamic (follows cwd)" ;;
+  *)
+    printf 'name: '
+    read -r name
+    [ -n "$name" ] || { echo "wezterm-tab-name: empty name, nothing changed" >&2; exit 1; }
+    set_title "$name"
+    echo "tab $tab_id -> $name"
+    ;;
+esac

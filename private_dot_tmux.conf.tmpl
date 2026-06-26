@@ -24,9 +24,14 @@ set -g allow-rename off
 # edges into @nvim_edges (see the Navigator config in lua/plugins/editor.lua);
 # the default "LRUD" means a non-nvim pane is blocked at the nvim level, so only
 # tmux's own edges matter there.
+#
+# The cwd basename is appended after the edges as "tmux:<edges> <cwd>". WezTerm
+# strips the "tmux:<edges>" prefix and shows the cwd as the tab title (see
+# tab_title in ~/.wezterm.lua); the edges still parse because they are uppercase
+# letters terminated by the space before the path.
 set -g @nvim_edges "LRUD"
 set -g set-titles on
-set -g set-titles-string "tmux:#{?#{&&:#{pane_at_left},#{m:*L*,#{@nvim_edges}}},L,}#{?#{&&:#{pane_at_right},#{m:*R*,#{@nvim_edges}}},R,}#{?#{&&:#{pane_at_top},#{m:*U*,#{@nvim_edges}}},U,}#{?#{&&:#{pane_at_bottom},#{m:*D*,#{@nvim_edges}}},D,}"
+set -g set-titles-string "tmux:#{?#{&&:#{pane_at_left},#{m:*L*,#{@nvim_edges}}},L,}#{?#{&&:#{pane_at_right},#{m:*R*,#{@nvim_edges}}},R,}#{?#{&&:#{pane_at_top},#{m:*U*,#{@nvim_edges}}},U,}#{?#{&&:#{pane_at_bottom},#{m:*D*,#{@nvim_edges}}},D,} #{b:pane_current_path}"
 
 # Make a better prefix binding
 unbind C-b
@@ -81,6 +86,12 @@ bind-key l select-pane -R
 
 bind -n C-Pageup  previous-window
 bind -n C-Pagedown next-window
+
+# Move the current window to a typed index, displacing the occupant and every
+# window to its right one index up to make room (move-window -b "inserts before,
+# moving windows up if necessary"). The default `.` binding uses bare
+# `move-window -t`, which instead errors when the target index is taken.
+bind . command-prompt -T target -p "move window to index:" { move-window -b -t "%%" }
 
 # C-arrow pane navigation is defined below as is_vim-aware bindings
 # (send keys into nvim panes so Navigator.nvim can handle them, else

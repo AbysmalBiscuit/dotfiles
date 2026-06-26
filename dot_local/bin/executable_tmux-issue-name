@@ -5,27 +5,34 @@
 # the PR lookup, and a per-worktree PR cache. Falls back to local git/gh parsing
 # when the `issue` binary (or jq) is absent.
 #
-#   id derives from the branch; no id (e.g. `main`) -> leave the window name
-#     untouched, preserving a manually-set name.
+#   id derives from the branch; no id (e.g. `main`, or any repo that isn't an
+#     issue worktree) -> name the window after the cwd's basename, the same as
+#     outside a git work tree.
 #   PR known -> #<pr>[<id>]; otherwise just [<id>].
-#   Outside any git work tree -> the cwd's basename ($HOME shown as ~).
+#   cwd basename is shown with $HOME as ~.
 set -euo pipefail
 
 dir="${1:-$PWD}"
 [ -n "${TMUX:-}" ] || exit 0
 
-# Outside a git work tree there is no issue to name the window after; track cwd.
-if ! git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  if [ "$dir" = "$HOME" ]; then
+# Name the window after the cwd: its basename, or ~ for $HOME. This is the
+# fallback whenever there is no issue id to name the window after.
+rename_to_cwd() {  # $1=dir
+  if [ "$1" = "$HOME" ]; then
     tmux rename-window '~'
   else
-    tmux rename-window "$(basename "$dir")"
+    tmux rename-window "$(basename "$1")"
   fi
+}
+
+# Outside a git work tree there is no issue to name the window after; track cwd.
+if ! git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  rename_to_cwd "$dir"
   exit 0
 fi
 
 # Build "#<pr>[<id>]" / "[<id>]" from an id and an optional pr. An empty/unknown
-# id is the "no issue" signal: return non-zero so the caller leaves the name be.
+# id is the "no issue" signal: return non-zero so the caller falls back to cwd.
 window_name() {  # $1=id  $2=pr
   case "${1:-}" in
     "" | UNKNOWN | null) return 1 ;;
@@ -52,6 +59,9 @@ if command -v issue >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   IFS=$'\t' read -r id pr < <(issue_info_fields "$dir" 1) || true
   if name=$(window_name "${id:-}" "${pr:-}"); then
     tmux rename-window "$name"
+  else
+    # In a git work tree but no issue id (e.g. on `main`): track cwd.
+    rename_to_cwd "$dir"
   fi
   # id known but PR not yet cached: one full lookup warms the cache and re-renders
   # with the PR. This is the only path that hits the network, and only until the
@@ -67,11 +77,15 @@ fi
 
 # Fallback (no `issue` binary): derive the id from the branch and look up the PR
 # via gh, caching positive results forever (keyed by branch).
-branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0
+branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD 2>/dev/null) || branch=""
 
 # First letters-dash-digits run, uppercased (same rule as devkit's find_id).
 id=$(printf '%s' "$branch" | grep -oiE '[a-z]+-[0-9]+' | head -n1 | tr '[:lower:]' '[:upper:]' || true)
-[ -n "$id" ] || exit 0
+# No branch (detached HEAD) or no id in it (e.g. `main`): track cwd.
+if [ -z "$id" ]; then
+  rename_to_cwd "$dir"
+  exit 0
+fi
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-issue-name"
 cache_file="$cache_dir/$(printf '%s' "$branch" | tr '/' '_')"
