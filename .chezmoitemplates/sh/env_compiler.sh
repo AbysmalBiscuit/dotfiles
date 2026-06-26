@@ -69,6 +69,9 @@ export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/llvm/include"
 # {{- end }}
 
 # go
+# {{- if stat (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") }}
+export GOAMD64="{{ include (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") }}"
+# {{- end }}
 # {{- /* if .tool.go */}}
 # GOAMD64="v1"
 # temp_file=$(mktemp 'XXXXX.go')
