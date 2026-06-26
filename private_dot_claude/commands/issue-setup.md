@@ -1,13 +1,16 @@
 ---
-description: Set up an isolated worktree to work on a Linear issue (worktree + bun install + session summary)
+description: Set up an isolated worktree to work on a Linear issue (worktree + install + session summary)
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
 ---
 
-# /setup-issue
+# /issue-setup
 
-Bootstrap a fresh, isolated workspace for a Linear issue: create a git worktree,
-install deps, and write a session-summary file that a *new*
-Claude session can pick up cold.
+Bootstrap a fresh, isolated workspace for a Linear issue. The mechanical work —
+creating the worktree off the baseline, writing per-app prep files, running each
+app's install/setup, and reserving ports — is done by **`issue setup`** (the devkit
+binary), driven entirely by `~/.config/devkit/config.toml`. Your job is the parts the
+binary can't: enriching from Linear/Notion/Sentry and writing a self-sufficient
+cold-start handoff.
 
 The user will **cd into the worktree and start a new session themselves** — so the
 summary file is the handoff. Make it self-sufficient.
@@ -25,31 +28,24 @@ independent work concurrently (see "Parallel execution" below). Stop and ask the
 if any step fails or is ambiguous.
 
 Before step 1, invoke the **`checklist` skill** and create one task per numbered step
-below (fetch issue → find/assign Sentry issue → derive names → create worktree →
-install deps → write summary → report back). Mark
-each `in_progress` before starting it and `completed` once done, so progress stays
-visible throughout.
+below (fetch issue → find/assign Sentry issue → derive slug + apps → `issue setup` →
+write summary → report back). Mark each `in_progress` before starting it and `completed`
+once done, so progress stays visible throughout.
 
 ### Parallel execution
 
-Only step 1 is a hard prerequisite for the rest; almost everything downstream is
-independent. Run independent work concurrently rather than one step at a time —
-batch the tool calls in a single message wherever a wave allows.
+Only step 1 is a hard prerequisite for the rest. Run independent work concurrently
+rather than one step at a time — batch the tool calls in a single message wherever a
+wave allows.
 
-- **Wave A** — step 1 (fetch the Linear issue) alone. Everything else needs its
-  content, so do this first.
-- **Wave B** (after step 1, all concurrent) —
+- **Wave A** — step 1 (fetch the Linear issue) alone. Everything else needs its content.
+- **Wave B** (after step 1, concurrent) —
   - step 2: find/assign the Sentry issue (search → assign → Linear comment),
-  - step 3: derive names (pure computation).
-- **Wave C** (after step 3 produces `BRANCH`/`WORKTREE`) — step 4: create the
-  worktree. This can run while the Sentry work from Wave B is still in flight.
-- **Wave D** (after the worktree exists, concurrent) — step 5 (`bun install`).
-- **Wave E** — step 7 (write the summary) once the Sentry result and names are
-  known; then step 8 (report back). Ports are not allocated at setup — devkit
-  assigns them when the next session runs `devrun up`.
-
-Long-running or independent calls (the Sentry search/assign, `bun install`, the Linear
-comment) need not block each other — kick them off and collect results as they land.
+  - step 3: derive the slug + in-scope apps (pure computation).
+- **Wave C** (after step 3) — step 4: `issue setup`. This can run while the Sentry work
+  from Wave B is still in flight.
+- **Wave D** (after the worktree exists and the Sentry result + names are known) —
+  step 5 (write the summary), then step 6 (report back).
 
 ### 1. Fetch the Linear issue
 
@@ -77,68 +73,50 @@ take ownership of it and wire it into the paper trail.
     `mcp__plugin_sentry_sentry__execute_sentry_tool`, updating the issue's assignee).
   - Link it back to Linear: add a comment on the Linear issue
     (`mcp__linear__save_comment`) containing the Sentry issue URL and short ID.
-  - Record the Sentry issue URL + short ID for the summary (step 7) so the eventual
+  - Record the Sentry issue URL + short ID for the summary (step 5) so the eventual
     GitHub PR can reference it.
 - If **multiple** plausible candidates exist, list them with their URLs and ask the
   user which (if any) to claim before assigning anything.
 
-### 3. Derive names
+### 3. Derive the slug and in-scope apps
 
-- `ISSUE_ID` = the canonical identifier, e.g. `ENG-1234`.
-- `SLUG` = `ISSUE_ID` lowercased + short kebab title, e.g. `eng-1234-fix-bli-export`.
-- `BRANCH` = `lev/SLUG` (per global git convention).
-- `WORKTREE` = `/home/lev/Git/adaptyv/SLUG` (sibling of the monorepo, **not** inside it).
+`issue setup` composes the branch and worktree names from the config templates
+(`branch = {{ prefix }}{{ issue | lower }}-{{ slug }}`,
+`worktree_dir = {{ issue | lower }}-{{ slug }}`), so you supply only the raw parts:
 
-### 4. Create the worktree
+- `ISSUE` = the canonical identifier, e.g. `ENG-1234`. Pass it verbatim — the template
+  lowercases it.
+- `SLUG` = a short kebab title **only**, e.g. `fix-bli-export`. Do **not** prepend the
+  issue id; the templates already compose `<issue>-<slug>`.
+- `APPS` = the comma-separated devkit app ids in scope for this issue. These are the apps
+  that get prep files, `setup`/installs, and reserved ports. Inspect the catalog with
+  `devrun config apps` if you're unsure which ids exist.
 
-From `/home/lev/Git/adaptyv/monorepo`:
-
-```bash
-git -C /home/lev/Git/adaptyv/monorepo fetch origin
-git -C /home/lev/Git/adaptyv/monorepo worktree add -b "$BRANCH" "$WORKTREE" origin/staging
-```
-
-Branch off `origin/staging` (the default branch). If `$BRANCH` already exists, ask
-the user whether to reuse it or pick a new name.
-
-No per-worktree devkit config is needed: write-lock enforcement is on globally via
-`[harness] enforce_writes = true` in `~/.config/devkit/config.toml`, so concurrent
-agents and parallel subagents in this worktree are coordinated automatically.
-
-### 5. Install deps
-
-Run `bun install` in the relevant app dir(s) inside the worktree:
+### 4. Create the worktree with `issue setup`
 
 ```bash
-cd "$WORKTREE/apps/<app>" && bun install
+issue setup --issue "ENG-1234" --slug "fix-bli-export" --apps api,lab-os
 ```
 
-Only the apps in scope. Note: `bun install` in any workspace dir installs the **whole**
-monorepo workspace (root + every app) in one shot — so a single `bun install` covers all
-in-scope apps. Running it per-app is redundant but harmless.
+This single command: fetches `origin`, creates the worktree at
+`<worktree_root>/<issue>-<slug>` on a new `lev/<issue>-<slug>` branch off the configured
+baseline (`origin/staging`), writes each app's `prep_files`, runs each app's `setup`
+commands (e.g. `bun install` / `uv sync`), reserves a collision-free port per app, and
+prints JSON `{issue, worktree, branch, ports}`. Read the worktree path, branch, and ports
+out of that JSON for the summary — don't hardcode them.
 
-For python apps use `uv`:
-```bash
-cd "$WORKTREE/apps/<python_app>" && uv sync
-```
+- Preview first with `--dry-run`: it prints the would-be branch/worktree/ports without
+  creating anything or reserving ports.
+- If it bails with **"branch already exists"**, ask the user whether to reuse it or pick a
+  new slug, then re-run. Never force.
+- Nothing project-specific is hardcoded here — worktree root, baseline ref, installs, prep
+  files, and port bases all come from `~/.config/devkit/config.toml`.
 
-### 6. Ports — handled by devkit (no allocation at setup)
+### 5. Write the session summary
 
-**Do not assign ports here.** devkit owns port allocation: when the next session
-runs `devrun up` in the worktree, it reserves a collision-free port per app from
-the registry (bases and the app catalog live in `~/.config/devkit/config.toml`),
-wraps each launch in doppler `dev_local`, and wires the API's URL into consumer
-apps (lab-os, foundry-portal) via the config's `url_env` — so the old slot math
-and the cross-app API-URL caveat are both obsolete.
-
-Nothing runs at setup time. The summary (step 7) just tells the next session how to
-start servers and read back the assigned ports. To inspect what's already in use
-across worktrees at any point: `portm status`.
-
-### 7. Write the session summary
-
-Write to `/home/lev/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` (parent dir, **outside**
-both monorepo and worktree). This is the cold-start handoff for the next session.
+Write to `~/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` (the worktree's parent dir,
+**outside** both monorepo and worktree — the same dir `issue end` later cleans). This is
+the cold-start handoff for the next session.
 
 Include:
 
@@ -148,9 +126,9 @@ Include:
 - **Linear:** {issue URL}
 - **Notion:** {notion URL, or "none"}
 - **Sentry:** {sentry issue URL + short ID, or "none"}
-- **Worktree:** {WORKTREE}
-- **Branch:** {BRANCH}
-- **Apps in scope:** {list}
+- **Worktree:** {worktree from `issue setup` JSON}
+- **Branch:** {branch from `issue setup` JSON}
+- **Apps in scope:** {APPS}
 - **State / assignee:** {state} / {assignee}
 
 > If a Sentry issue is linked above, the GitHub PR for this work **must** reference it
@@ -159,21 +137,21 @@ Include:
 
 ## Running servers
 
-Start dev servers with **devrun** — it allocates a collision-free port per app
-from the registry, wraps each launch in doppler `dev_local`, pins the JWT secret,
-and wires the API URL into lab-os/foundry-portal automatically. Pass no ports and
-no doppler flags by hand:
+`issue setup` already reserved a port per in-scope app (listed above). Start the
+servers with **devrun** — it launches each app on its reserved port, wraps each launch
+in doppler `dev_local`, pins the JWT secret, and wires the API URL into
+lab-os/foundry-portal automatically. Pass no ports and no doppler flags by hand:
 
 ```bash
 devrun up                 # start every in-scope app for this worktree
-devrun up api             # one app   (apps in scope: {list})
-devrun status             # the ports devrun assigned + pids
+devrun up api             # one app   (apps in scope: {APPS})
+devrun status             # the assigned ports + pids
 devrun logs api           # tail output
 devrun down               # stop this worktree's servers
 ```
 
-Read the assigned ports/URLs back from `devrun status` after `up` — they are not
-fixed numbers. `portm status` shows allocations across all worktrees.
+Read live ports/URLs back from `devrun status`. `portm status` shows allocations across
+all worktrees.
 
 ## Summary
 
@@ -205,24 +183,26 @@ run oxfmt + oxlint on the modified files from the monorepo root:
 oxfmt --write <changed_files>
 oxlint --fix <changed_files>
 ```
+```
 
-### 8. Report back
+### 6. Report back
 
 Print, for the user to copy:
 
-- the `cd "$WORKTREE"` command
+- the `cd "<worktree>"` command (worktree from the `issue setup` JSON)
 - the summary file path
-- branch name
+- the branch name
 - how to start servers: `devrun up`, then `devrun status` for the assigned ports
 
 Do **not** cd or open an editor — the user starts the new session themselves.
 
 ## Notes
 
-- Dev servers run through `devrun` (step 6), which uses doppler `dev_local` from
-  the devkit config. Never run against the prod (`prd`) doppler config.
+- Dev servers run through `devrun`, which uses doppler `dev_local` from the devkit
+  config. Never run against the prod (`prd`) doppler config — devkit rejects it.
 - Write-lock enforcement is on globally (`[harness] enforce_writes = true` in
   `~/.config/devkit/config.toml`) — concurrent agents and parallel subagents in the
   same worktree are blocked from clobbering each other's structured edits. This
   relies on the `devkit` plugin being enabled and `lockm` on `PATH`.
-- If git, bun, or an MCP call fails, surface the exact error and ask — don't guess.
+- If `issue setup`, git, or an MCP call fails, surface the exact error and ask — don't
+  guess.

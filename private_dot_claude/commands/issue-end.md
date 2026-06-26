@@ -5,90 +5,83 @@ allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, mcp__linear__get_issue
 
 # /issue-end
 
-Clean up issue worktrees whose work is finished. A worktree is **finished** only when
-**both**: its GitHub PR is merged **and** its Linear issue is marked Done.
+Clean up issue worktrees whose work is finished, using **`issue end`** (the devkit
+binary) for the scan, the finished-gate, and the removal. A worktree is **finished**
+only when its GitHub PR is merged **and** its Linear issue is Done **and** the tree is
+clean — `issue` computes that verdict for you, so there's no separate scan script or
+manual Linear check. Your one added job is rescuing each finished worktree's artifacts
+**before** removal, since `issue end` deletes the worktree wholesale.
 
-Worktrees live as siblings of the main repo (`../WORKTREE_NAME`, e.g.
-`/home/lev/Git/adaptyv/eng-1234-...` next to `.../monorepo`), with handoff files
-`ISSUE_SUMMARY_<ID>.md` in the shared parent dir. Created by `/issue-setup`.
+Worktrees live under the configured `worktree_root` (`~/Git/adaptyv`), siblings of the
+`monorepo` clone, with handoff files `ISSUE_SUMMARY_<ID>.md` in that parent dir. Created
+by `/issue-setup`.
 
 ## Input
 
 `$ARGUMENTS` = optional issue ID(s) to limit the cleanup to (e.g. `ENG-1234 DBI-986`).
 Empty = consider all worktrees of the repo containing the current dir.
 
-## Helper scripts
-
-- `~/.claude/scripts/issue-end-scan.sh [dir]` — lists every worktree as TSV:
-  `worktree, branch, issue_id, dirty, pr_number, pr_state, pr_url, summary_file`.
-  `pr_state` ∈ MERGED | OPEN | CLOSED | NO_PR.
-- `~/.claude/scripts/issue-end-cleanup.sh <worktree> <issue_id> [--force]` — removes
-  the worktree, deletes its local branch, prunes, and deletes `ISSUE_*<ID>*.md` from
-  the parent dir. Refuses dirty worktrees without `--force`; refuses to run from
-  inside the worktree being removed.
-
 ## Steps
 
-### 1. Scan
+### 1. Scan + verdict (read-only)
 
 ```bash
-~/.claude/scripts/issue-end-scan.sh "$PWD"
+issue status $ARGUMENTS
 ```
 
-Filter to candidate rows:
+This prints every worktree with its PR state, Linear state, tree cleanliness, and a
+**VERDICT** column (`FINISHED` in green). It performs the PR-merged and Linear-Done
+checks itself, so there's no separate scan or manual Linear confirmation step. Run it
+from inside the repo, or pass `-C <dir>`.
 
-- `pr_state == MERGED`
-- `issue_id != UNKNOWN` (skip non-issue worktrees — recovery branches, PR-review
-  checkouts, experiments — and never touch them)
-- if `$ARGUMENTS` given, only those issue IDs
+Note the `FINISHED` rows. Worktrees showing `not an issue worktree` (recovery branches,
+PR-review checkouts, experiments) are out of scope — never pass their branches on. If
+nothing is `FINISHED`, report "nothing finished" with the table and stop.
 
-If zero candidates: report "nothing finished" with the scan table and stop.
+### 2. Triage artifacts (per FINISHED worktree, BEFORE removal)
 
-### 2. Confirm Linear state
-
-For each candidate, fetch the Linear issue (`mcp__linear__get_issue` with the
-`issue_id`). Finished only when the issue's state **type** is `completed` (e.g.
-"Done"). Not done → skip the worktree and note "PR merged but Linear not done" in
-the final report. Linear lookup fails (bad ID, no access) → skip and report; never
-clean up on uncertainty.
-
-### 3. Triage artifacts (per finished worktree, BEFORE removal)
-
-Check for artifacts:
+`issue end` removes the whole worktree, so rescue any artifacts first.
 
 ```bash
 ls <WORKTREE>/pr-reviews/ <WORKTREE>/reports/ 2>/dev/null
 ```
 
-If none → proceed to step 4.
+If none → step 3. If present:
 
-If present:
+1. Quick triage — list files with size/date, peek at heads (HTML title / first heading)
+   to identify each. Classify likely-relevant (final PR-review report, findings ledger,
+   decision docs) vs likely-disposable (intermediate runs, superseded drafts, scratch
+   output).
+2. Interview the user with AskUserQuestion, one question per worktree: options like
+   "Keep recommended set", "Keep all", "Discard all" — list the concrete filenames and
+   the recommendation in the descriptions.
+3. Keepers → copy to `~/Git/adaptyv/issue-archive/<ISSUE_ID>/` (create the dir),
+   preserving filenames. Confirm the copy succeeded before removal.
 
-1. Quick triage — list files with size/date, peek at heads (HTML title /
-   first heading) to identify each. Classify: likely-relevant (final PR-review
-   report, findings ledger, decision docs) vs likely-disposable (intermediate runs,
-   superseded drafts, scratch output).
-2. Interview the user with AskUserQuestion, one question per worktree:
-   options like "Keep recommended set", "Keep all", "Discard all" — list the
-   concrete filenames and the recommendation in the descriptions.
-3. Keepers → copy to `/home/lev/Git/adaptyv/issue-archive/<ISSUE_ID>/` (create dir),
-   preserving filenames. Confirm copy succeeded before removal.
+### 3. Remove
 
-### 4. Remove
-
-If the current dir is inside a worktree about to be removed, tell the user to cd out
-(or run the rest from the parent dir via `git -C`) — the cleanup script refuses
-otherwise.
+Confirm the removal set with the user, then remove the finished worktrees
+non-interactively:
 
 ```bash
-~/.claude/scripts/issue-end-cleanup.sh <WORKTREE> <ISSUE_ID>
+issue end -y $ARGUMENTS
 ```
 
-If the script exits 2 (dirty worktree): show `git -C <WORKTREE> status --short` and
-the diff to the user, and ask explicitly before re-running with `--force`. Never
-`--force` without showing what gets discarded.
+`issue end` re-checks the finished gate (so it only removes still-finished trees),
+removes the worktree, deletes the local branch, prunes, and deletes `ISSUE_*<ID>*.md`
+from the parent dir. It refuses to run if the cwd is inside a target worktree (cd out
+first, or drive it from the parent with `-C <dir>`) and refuses a dirty tree without
+`--force`.
 
-### 5. Report
+- **Dirty tree:** show `git -C <WORKTREE> status --short` and the diff to the user, ask
+  explicitly, then re-run with `--force`. Never `--force` without showing what gets
+  discarded.
+- **Merged but Linear not Done, and you want it gone anyway:** `issue end --pr-only`
+  skips the Linear-Done gate.
+- **Remove a specific non-finished worktree on purpose:** `issue end --clean-worktree
+  <selector>` (issue id, branch, or path) bypasses the finished gate for that selection.
+
+### 4. Report
 
 One table:
 
@@ -98,11 +91,13 @@ One table:
 | DBI-986 | OPEN #3065 | In Progress | kept |
 | ... | MERGED | In Review | kept — Linear not done |
 
-Plus: archive locations for kept artifacts, and any worktrees skipped due to errors.
+Plus: archive locations for kept artifacts, and any worktrees skipped due to errors or a
+dirty tree.
 
 ## Notes
 
-- Both gates required — merged PR alone is not finished. When in doubt, keep.
-- Only ever remove worktrees whose branch matches an issue pattern (`abc-123`);
-  detached/unknown worktrees are out of scope even with `--force` available.
+- Both gates required — a merged PR alone is not finished — unless you pass `--pr-only`.
+  When in doubt, keep.
+- `issue end` only ever removes worktrees its own finished gate (or `--clean-worktree`)
+  selects; detached/unknown worktrees are out of scope.
 - Remote branches: leave them alone — GitHub deletes merged heads per repo settings.
