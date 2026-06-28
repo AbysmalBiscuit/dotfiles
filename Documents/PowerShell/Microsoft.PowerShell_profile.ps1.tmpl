@@ -332,7 +332,15 @@ Set-PSReadLineKeyHandler -Chord Ctrl+d -ScriptBlock {
 
 # Functions
 function unlockgpg {
-    echo "test" | gpg --clearsign
+    $gpg = git config --get gpg.program
+    if (-not $gpg) { $gpg = 'gpg' }
+    $key = git config --get user.signingkey
+    'warm' | & $gpg --local-user $key --clearsign 1>$null 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "GPG passphrase cached (ttl 24h)."
+    } else {
+        Write-Host "gpg sign test failed (exit $LASTEXITCODE)" -ForegroundColor Red
+    }
 }
 
 function get-window-name {
