@@ -116,20 +116,30 @@ window_rules:
       - window_class: { equals: "#32770" }
       - window_process: { equals: "firefox" }
         window_class: { equals: "MozillaDialogClass" }
-      # GnuPG passphrase / PIN prompt (Qt class is version-stamped, match process)
-      - window_process: { equals: "pinentry" }
 
-  # Godot draws its dialogs as custom windows that share the main editor's
-  # class ('Engine') and process, so only the title distinguishes them: the
-  # main editor and project manager always contain 'Godot Engine'; dialogs
-  # (e.g. 'Files have been modified outside Godot') do not. Evaluate only at
-  # window-managed time — Godot rewrites the main window's title constantly,
-  # and a title_change re-trigger would float the editor on a transient title.
+  # Godot's editor, dialogs, and running-game windows all share one class
+  # ('Engine') and process ('godot'); only the title separates them. The main
+  # editor and project manager always carry 'Godot Engine' in the title;
+  # popups (e.g. 'Connect a Signal to a Method') and the running game (e.g.
+  # '[server] peer=1 ... (DEBUG)') never do. The two rules below are exact
+  # complements, so every Godot window resolves to exactly one of float/tile.
+  #
+  # Godot sets the editor's full title a beat after the window is managed, so
+  # at manage time it briefly lacks the marker and is floated here too. The
+  # tile rule below corrects that on the next title_change; both rules must
+  # watch title_change for the hand-off to work. set-tiling is idempotent, so
+  # Godot's constant title rewrites are a no-op once the editor is tiled.
   - commands: ["set-floating --centered --shown-on-top"]
-    on: ["manage"]
+    on: ["manage", "title_change"]
     match:
-      - window_process: { regex: "^Godot" }
+      - window_process: { regex: "(?i)^godot" }
         window_title: { not_regex: "Godot Engine" }
+
+  - commands: ["set-tiling"]
+    on: ["manage", "title_change"]
+    match:
+      - window_process: { regex: "(?i)^godot" }
+        window_title: { regex: "Godot Engine" }
 
   # --- app -> workspace assignments (your on-window-detected rules) ---
 
