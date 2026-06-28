@@ -86,6 +86,11 @@ window_rules:
   - commands: ["ignore"]
     match:
       - window_process: { equals: "zebar" }
+      # GnuPG passphrase / PIN prompt (pinentry-qt/-basic/-w32). Leave it
+      # fully unmanaged: when floated, GlazeWM snapshots the dialog's initial
+      # pre-layout size and clamps it down to just the title bar. As an
+      # ignored window it opens at its natural size and centers itself.
+      - window_process: { regex: "(?i)^pinentry" }
       # WSLg: Linux GUI apps are hosted by the Remote Desktop client
       # (msrdc.exe). Leave them completely unmanaged by the WM.
       - window_process: { equals: "msrdc" }
