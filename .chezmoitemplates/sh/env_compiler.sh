@@ -70,26 +70,8 @@ export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/llvm/include"
 
 # go
 # {{- if stat (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") }}
-export GOAMD64="{{ include (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") }}"
+# export GOAMD64="# {{ include (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") | replaceAllRegex "\n" "" }}"
 # {{- end }}
-# {{- /* if .tool.go */}}
-# GOAMD64="v1"
-# temp_file=$(mktemp 'XXXXX.go')
-# printf 'package main\nfunc main() { println("testing go level") }\n' >"$temp_file"
-
-# for level in 4 3 2 1; do
-# if GO111MODULE=off GOAMD64="v$level" go run "$temp_file" &>/dev/null; then
-# GOAMD64="v$level"
-# break
-# fi
-# done
-
-# Final cleanup if the loop finishes without success
-# if [[ -f "$temp_file" ]]; then
-# rm "$temp_file"
-# fi
-# export GOAMD64
-# {{- /* end */}}
 
 # if [[ -f "$HOME/.cargo/bin/sccache" ]]; then
 # export RUSTC_WRAPPER="$HOME/.cargo/bin/sccache"

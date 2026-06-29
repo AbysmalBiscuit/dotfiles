@@ -1,0 +1,25 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=sh.chezmoitmpl
+# {{- end }}
+# # {{ (stat (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt")).modTime }}
+# {{- $is_wsl := false -}}
+# {{- if env "WSL_DISTRO_NAME" -}}
+# {{- $is_wsl = true -}}
+# {{- end -}}
+# {{- if .tool.go }}
+
+# Apply the GOAMD64 level detected by the go-level script.
+set -eu
+
+command -v go >/dev/null 2>&1 || exit 0
+[ "$(go env GOARCH)" = amd64 ] || exit 0 # GOAMD64 only matters for amd64
+
+level=$(tr -d '[:space:]' <"$HOME/.config/chezmoi/go_level.txt" 2>/dev/null || true)
+
+case "$level" in
+v1 | v2 | v3 | v4) go env -w "GOAMD64=$level" ;;
+*) go env -u GOAMD64 2>/dev/null || true ;; # missing/unknown -> default
+esac
+# {{- end }}
