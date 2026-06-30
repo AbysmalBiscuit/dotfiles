@@ -32,12 +32,15 @@ include = ["age/age{{ .exe_ext }}", "age/age-keygen{{ .exe_ext }}"]
   {{-   $croc_os = dict "amd64" "Windows-64bit" "arm64" "Windows-ARM64" | dig .chezmoi.arch "Windows-64bit" -}}
   {{- end }}
 
+{{- $croc_url := gitHubLatestReleaseAssetURL "schollz/croc" (printf "croc_v*_%s%s" $croc_os .archive) }}
+{{- if and $croc_os $croc_url }}
 [".local/bin/croc{{ .exe_ext }}"]
 type = "archive-file"
 url = {{ gitHubLatestReleaseAssetURL "schollz/croc" (printf "croc_v*_%s%s" $croc_os .archive) | quote }}
 refreshPeriod = "168h"
 executable = true
 path = {{ printf "croc%s" .exe_ext | quote }}
+{{- end }}
 {{- end }}
 
 
