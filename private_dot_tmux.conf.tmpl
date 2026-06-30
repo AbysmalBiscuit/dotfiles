@@ -33,6 +33,9 @@ set -g @nvim_edges "LRUD"
 set -g set-titles on
 set -g set-titles-string "tmux:#{?#{&&:#{pane_at_left},#{m:*L*,#{@nvim_edges}}},L,}#{?#{&&:#{pane_at_right},#{m:*R*,#{@nvim_edges}}},R,}#{?#{&&:#{pane_at_top},#{m:*U*,#{@nvim_edges}}},U,}#{?#{&&:#{pane_at_bottom},#{m:*D*,#{@nvim_edges}}},D,} #{b:pane_current_path}"
 
+# Auto renumebr the indices when some windows/tabs close
+set -g renumber-windows on
+
 # Make a better prefix binding
 unbind C-b
 unbind r
