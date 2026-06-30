@@ -250,14 +250,16 @@ set -g status-right ""
 set -g status-format[0] "#[align=right]#[push-default]"
 set -ga status-format[0] "#{E:@catppuccin_status_application}"
 # set -ag status-right "#[bg=#{@thm_green},fg=#{@thm_crust}]#[reverse]#[noreverse] "
+# {{- if not .is_wsl }}
 set -ga status-format[0] "#(tmux-spotify-info)"
 set -gaF status-format[0] "#{E:@catppuccin_status_cpu}"
+# {{- end }}
 
+# {{- if .is_macos }}
 # set -ag status-right "#[bg=#{@thm_green},fg=#{@thm_crust}]#[reverse]#[noreverse] "
 set -ga status-right "#(tmux-spotify-info)"
 # CPU lives on the top status row (status-format[0]); see cpu-interpolate-format.sh.
 # 
-# {{- if .is_macos }}
 set -ag status-right "#[bg=#{@thm_flamingo},fg=#{@thm_crust}]#[reverse]#[noreverse]󱀙  "
 set -ag status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(memory_pressure | awk '/percentage/{print $5}') "
 # {{- end }}
@@ -266,7 +268,9 @@ set -ag status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(memory_pressure | awk
 # set -ag status-right "#[bg=#{@thm_pink},fg=#{@thm_crust}]#[reverse]#[noreverse]  "
 # set -agF status-right "#[fg=#{@thm_fg},bg=#{@thm_mantle}] #(free | awk '/Mem:/ {printf \"%3.1f%%\", $3/$2*100}') "
 set -gaF status-format[0] "#{E:@catppuccin_status_date_time}"
+# {{- if not .is_wsl }}
 set -gaF status-format[0] "#{E:@catppuccin_status_weather}"
+# {{- end }}
 # set -agF status-right "#{E:@catppuccin_status_clima}"
 set -ga status-format[0] "#{E:@catppuccin_status_session}"
 set -ga status-format[0] "#[pop-default]"
