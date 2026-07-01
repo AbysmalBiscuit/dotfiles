@@ -107,7 +107,9 @@ body,
 .network,
 .memory,
 .cpu,
-.battery {
+.battery,
+.battery-time,
+.battery-time-full {
   margin-right: 20px;
 }
 
@@ -157,6 +159,41 @@ body,
 
 .battery {
   position: relative;
+}
+
+/* Color the battery by charge level; green while charging. */
+.battery.low {
+  color: #d11d4a;
+}
+
+.battery.medium {
+  color: #e0a100;
+}
+
+.battery.charging {
+  color: #3fb950;
+}
+
+/* Time estimates — emphasized so a stealth discharge stands out. */
+.battery-time,
+.battery-time-full {
+  font-weight: 700;
+  font-size: 1.15em;
+}
+
+.battery-time {
+  color: #ffb454;
+}
+
+.battery-time-full {
+  color: #3fb950;
+}
+
+/* Trailing battery icon takes the slot's color and hugs the number. */
+.battery-time i,
+.battery-time-full i {
+  color: inherit;
+  margin: 0 0 0 4px;
 }
 
 .battery .charging-icon {

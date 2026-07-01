@@ -30,7 +30,7 @@
         glazewm: { type: 'glazewm' },
         cpu: { type: 'cpu' },
         date: { type: 'date', formatting: 'EEE d MMM HH:mm' },
-        battery: { type: 'battery' },
+        battery: { type: 'battery', refreshInterval: 5000 },
         memory: { type: 'memory' },
         weather: { type: 'weather' },
       });
@@ -87,6 +87,26 @@
           if (batteryOutput.chargePercent > 20)
             return <i className="nf nf-fa-battery_1"></i>;
           return <i className="nf nf-fa-battery_0"></i>;
+        }
+
+        // Get class to color the battery by state and charge level.
+        // Full and unknown stay neutral; only discharging tints by level.
+        function getBatteryClass(batteryOutput) {
+          if (batteryOutput.state === 'charging') return 'charging';
+          if (batteryOutput.state === 'empty') return 'low';
+          if (batteryOutput.state === 'discharging') {
+            if (batteryOutput.chargePercent <= 20) return 'low';
+            if (batteryOutput.chargePercent <= 40) return 'medium';
+          }
+          return '';
+        }
+
+        // Format milliseconds of runtime left as e.g. "1h 20m" or "45m".
+        function formatTimeRemaining(ms) {
+          const totalMinutes = Math.round(ms / 60000);
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
         }
 
         // Get icon to show for current weather status.
@@ -212,13 +232,32 @@
               )}
 
               {output.battery && (
-                <div className="battery">
-                  {/* Show icon for whether battery is charging. */}
-                  {output.battery.isCharging && (
+                <div
+                  className={`battery ${getBatteryClass(output.battery)}`}
+                >
+                  {/* Show a plug when on power: charging or topped off. */}
+                  {(output.battery.state === 'charging' ||
+                    output.battery.state === 'full') && (
                     <i className="nf nf-md-power_plug charging-icon"></i>
                   )}
                   {getBatteryIcon(output.battery)}
                   {Math.round(output.battery.chargePercent)}%
+                </div>
+              )}
+
+              {/* Time estimate in its own slot, labeled by a battery
+                  icon (empty = time left, full = time to full) so it
+                  stays short on narrow/vertical screens. */}
+              {output.battery?.timeTillEmpty != null && (
+                <div className="battery-time">
+                  {formatTimeRemaining(output.battery.timeTillEmpty)}
+                  <i className="nf nf-md-battery_outline"></i>
+                </div>
+              )}
+              {output.battery?.timeTillFull != null && (
+                <div className="battery-time-full">
+                  {formatTimeRemaining(output.battery.timeTillFull)}
+                  <i className="nf nf-md-battery"></i>
                 </div>
               )}
 
