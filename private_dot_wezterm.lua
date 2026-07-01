@@ -326,9 +326,19 @@ function tab_title(tab_info)
   if title and #title > 0 then
     return title
   end
-  -- Otherwise, use the title from the active pane in that tab. Strip the
-  -- "tmux:<edges>" navigation suffix so the tab just reads "tmux".
-  return (tab_info.active_pane.title:gsub("^tmux:%u*", "tmux"))
+  -- Otherwise, derive from the active pane title. tmux publishes
+  -- "tmux:<edges> <cwd>" (see set-titles-string in ~/.tmux.conf); show the cwd.
+  -- A bare "tmux:<edges>" with no cwd yet renders as "tmux". Non-tmux panes
+  -- (e.g. a Windows shell) keep their own title.
+  local pane_title = tab_info.active_pane.title
+  local cwd = pane_title:match("^tmux:%u* (.+)$")
+  if cwd then
+    return cwd
+  end
+  if pane_title:match("^tmux:%u*$") then
+    return "tmux"
+  end
+  return pane_title
 end
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
