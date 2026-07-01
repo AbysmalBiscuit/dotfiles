@@ -30,5 +30,21 @@
       "source": "github",
       "repo": "ast-grep/agent-skill"
     }
+  },
+  "devkit": {
+    "source": {
+      "source": "github",
+      "path": "AbysmalBiscuit/devkit"
+    },
+    "installLocation": "",
+    "lastUpdated": ""
+  },
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "",
+    "lastUpdated": ""
   }
 }
