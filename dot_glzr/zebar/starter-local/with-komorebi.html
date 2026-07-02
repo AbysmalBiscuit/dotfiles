@@ -30,7 +30,7 @@
         komorebi: { type: 'komorebi' },
         cpu: { type: 'cpu' },
         date: { type: 'date', formatting: 'EEE d MMM t' },
-        battery: { type: 'battery', refreshInterval: 5000 },
+        battery: { type: 'battery', refreshInterval: 10000 },
         memory: { type: 'memory' },
         weather: { type: 'weather' },
       });
@@ -40,8 +40,21 @@
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
 
+        // Keep the last good battery reading. On a failed poll the
+        // battery provider sets its output-map entry to null; any other
+        // provider's tick then pushes that null into state and unmounts
+        // the indicator. Caching the last non-null reading keeps it
+        // visible until a battery poll succeeds again.
+        const [battery, setBattery] = useState(
+          providers.outputMap.battery ?? null,
+        );
+
         useEffect(() => {
-          providers.onOutput(() => setOutput(providers.outputMap));
+          providers.onOutput(() => {
+            const map = providers.outputMap;
+            setOutput(map);
+            if (map.battery) setBattery(map.battery);
+          });
         }, []);
 
         // Get icon to show for current network status.
@@ -188,32 +201,30 @@
                 </div>
               )}
 
-              {output.battery && (
-                <div
-                  className={`battery ${getBatteryClass(output.battery)}`}
-                >
+              {battery && (
+                <div className={`battery ${getBatteryClass(battery)}`}>
                   {/* Show a plug when on power: charging or topped off. */}
-                  {(output.battery.state === 'charging' ||
-                    output.battery.state === 'full') && (
+                  {(battery.state === 'charging' ||
+                    battery.state === 'full') && (
                     <i className="nf nf-md-power_plug charging-icon"></i>
                   )}
-                  {getBatteryIcon(output.battery)}
-                  {Math.round(output.battery.chargePercent)}%
+                  {getBatteryIcon(battery)}
+                  {Math.round(battery.chargePercent)}%
                 </div>
               )}
 
               {/* Time estimate in its own slot, labeled by a battery
                   icon (empty = time left, full = time to full) so it
                   stays short on narrow/vertical screens. */}
-              {output.battery?.timeTillEmpty != null && (
+              {battery?.timeTillEmpty != null && (
                 <div className="battery-time">
-                  {formatTimeRemaining(output.battery.timeTillEmpty)}
+                  {formatTimeRemaining(battery.timeTillEmpty)}
                   <i className="nf nf-md-battery_outline"></i>
                 </div>
               )}
-              {output.battery?.timeTillFull != null && (
+              {battery?.timeTillFull != null && (
                 <div className="battery-time-full">
-                  {formatTimeRemaining(output.battery.timeTillFull)}
+                  {formatTimeRemaining(battery.timeTillFull)}
                   <i className="nf nf-md-battery"></i>
                 </div>
               )}
