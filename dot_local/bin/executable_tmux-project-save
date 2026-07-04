@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Freeze a live tmux session into ~/.config/tmuxp/<name>.yaml so tmux-sessionizer
+# can rebuild it later (windows, panes, layout, cwd). Defaults to the current
+# session. Called on the `prefix + S` binding and by tmux-project-autosave.
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+
+dir="$HOME/.config/tmuxp"
+sess="${1:-$(tmux display-message -p '#S' 2>/dev/null || true)}"
+[[ -z "${sess:-}" ]] && exit 0
+
+mkdir -p "$dir"
+tmuxp freeze "$sess" -o "$dir/$sess.yaml" -f yaml --yes --quiet --force >/dev/null 2>&1 || true

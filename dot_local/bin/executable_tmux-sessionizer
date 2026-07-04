@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Fuzzy-pick a project directory and open (or switch to) a tmux session named
+# after it. One session per project folder, created on demand and reused on
+# return. If a saved tmuxp workspace exists for the project, the session is
+# rebuilt from it (windows/panes/cwd); otherwise a fresh single-window session
+# is created. Bound to `prefix + f` in ~/.tmux.conf.
+#
+# Usage:
+#   tmux-sessionizer            # fuzzy-pick a project
+#   tmux-sessionizer <dir>      # jump straight to a specific directory
+
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"   # tmuxp lives here
+
+TMUXP_DIR="$HOME/.config/tmuxp"
+
+# Restore captured commands too, or just panes + directories? Dirs-only is the
+# default. Enable command restore with `touch ~/.config/tmuxp/.restore-commands`
+# (prefix+C toggles it) or by exporting TMUX_PROJECT_RESTORE_COMMANDS=1.
+restore_commands() {
+    [[ "${TMUX_PROJECT_RESTORE_COMMANDS:-0}" == 1 || -f "$TMUXP_DIR/.restore-commands" ]]
+}
+
+# yq passes that reduce a frozen workspace to layout + directories only:
+#  A) move each pane's captured `cd <dir>` into a real start_directory
+#  B) drop all shell_command, so panes open a plain shell in that dir
+YQ_A='(.windows[].panes[] | select(.shell_command | tag == "!!seq")) |= (.start_directory = (.shell_command | map(select(test("^cd "))) | .[0] // "" | sub("^cd "; "")))'
+YQ_B='del(.windows[].panes[].shell_command)'
+
+# Load $config (detached). Strips captured commands to panes+dirs unless command
+# restore is enabled or yq is unavailable.
+load_workspace() {
+    if restore_commands || ! command -v yq >/dev/null 2>&1; then
+        tmuxp load -d -y "$config" >/dev/null 2>&1
+        return
+    fi
+    local tmp; tmp="$(mktemp --suffix=.yaml)"
+    if yq "$YQ_A" "$config" 2>/dev/null | yq "$YQ_B" >"$tmp" 2>/dev/null; then
+        tmuxp load -d -y "$tmp" >/dev/null 2>&1
+    else
+        tmuxp load -d -y "$config" >/dev/null 2>&1
+    fi
+    local rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
+list_candidates() {
+    # A "project" is a git repo root. ~/Git mixes <category>/<project> and
+    # direct <project> repos, so find .git dirs (any nesting) and strip to the
+    # repo root instead of listing every subdirectory.
+    fd -H -t d -d 3 '^\.git$' "$HOME/Git" 2>/dev/null | sed 's#/\.git/\?$##'
+    # Standalone project roots that don't live under ~/Git.
+    printf '%s\n' \
+        "$HOME/.config/nvim" \
+        "$HOME/.dotfiles" \
+        "$HOME/.local/share/chezmoi" \
+        "$HOME/bin"
+}
+
+# Stable, collision-free session name from a path: strip $HOME and a leading
+# Git/ segment for brevity, then map path/./:/space to underscores. Basenames
+# alone collide (algovos_website, chezmoi, grader exist under several roots),
+# which would make projects share one saved workspace.
+session_name_for() {
+    local rel="${1#"$HOME"/}"
+    rel="${rel#Git/}"
+    printf '%s' "$rel" | tr '/.: ' '____'
+}
+
+if [[ $# -eq 1 ]]; then
+    selected="$1"
+else
+    selected="$(list_candidates | sort -u | fzf --prompt='project> ' --height=100% --reverse)"
+fi
+
+[[ -z "${selected:-}" ]] && exit 0
+selected="${selected%/}"
+name="$(session_name_for "$selected")"
+config="$TMUXP_DIR/$name.yaml"
+
+# Create the session (detached) if missing: from its saved tmuxp workspace when
+# present, else a fresh single-window session rooted at the project. A freshly
+# created project is seeded with a workspace so the autosaver starts tracking it.
+create_session() {
+    if [[ -f "$config" ]] && command -v tmuxp >/dev/null 2>&1; then
+        load_workspace && return 0
+    fi
+    tmux new-session -ds "$name" -c "$selected"
+    tmux-project-save "$name" >/dev/null 2>&1 || true
+}
+
+tmux has-session -t="$name" 2>/dev/null || create_session
+
+# Attach when outside tmux (server may have just been created above), else switch.
+if [[ -z "${TMUX:-}" ]]; then
+    exec tmux attach-session -t "$name"
+else
+    tmux switch-client -t "$name"
+fi

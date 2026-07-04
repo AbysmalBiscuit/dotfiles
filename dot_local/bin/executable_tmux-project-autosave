@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Singleton background loop: every INTERVAL seconds, freeze every live tmux
+# session to ~/.config/tmuxp/<name>.yaml, so returning to a project restores it
+# roughly as you left it (the tmux analog of Zellij's session serialization).
+# Launched detached from ~/.tmux.conf; the flock keeps a single instance across
+# config reloads. Exits once no tmux server is running.
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+
+interval="${1:-300}"
+dir="$HOME/.config/tmuxp"
+lock="/tmp/tmux-project-autosave.$(id -u).lock"
+
+exec 9>"$lock"
+flock -n 9 || exit 0     # another instance already owns the loop
+
+mkdir -p "$dir"
+while tmux has-session 2>/dev/null; do
+    while IFS= read -r sess; do
+        [[ -z "$sess" ]] && continue
+        # Only refresh projects already tracked (opened via sessionizer or saved
+        # with prefix+S); ignore ad-hoc scratch sessions.
+        [[ -f "$dir/$sess.yaml" ]] || continue
+        tmuxp freeze "$sess" -o "$dir/$sess.yaml" -f yaml --yes --quiet --force >/dev/null 2>&1 || true
+    done < <(tmux list-sessions -F '#S' 2>/dev/null)
+    sleep "$interval"
+done

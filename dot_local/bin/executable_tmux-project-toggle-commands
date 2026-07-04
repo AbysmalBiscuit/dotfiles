@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Toggle whether tmux-sessionizer restores captured commands, or just panes and
+# directories (the default). Bound to `prefix + C` in ~/.tmux.conf.
+set -euo pipefail
+
+flag="$HOME/.config/tmuxp/.restore-commands"
+mkdir -p "$(dirname "$flag")"
+
+if [[ -f "$flag" ]]; then
+    rm -f "$flag"
+    msg="project restore: panes + dirs only"
+else
+    : >"$flag"
+    msg="project restore: panes + dirs + commands"
+fi
+
+tmux display-message "$msg" 2>/dev/null || true

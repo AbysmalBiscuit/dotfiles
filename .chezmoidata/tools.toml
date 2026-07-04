@@ -901,6 +901,36 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "go"
+name = "sesh"
+cmds = [
+    "sesh"
+]
+desc = "Sesh is a CLI that helps you create and manage tmux sessions quickly and easily using zoxide."
+url = ""
+git = "https://github.com/joshmedeski/sesh#how-to-install"
+comment = ""
+install_command = "go install github.com/joshmedeski/sesh/v2@latest"
+completions_command = "sesh completion SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "powershell",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "go"
 name = "sqlc"
 cmds = [
     "sqlc"
