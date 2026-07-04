@@ -128,6 +128,10 @@ bind M-% split-window -h -c "#{pane_current_path}"
 
 # Plugins
 set -g @plugin 'catppuccin/tmux'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
 # set -g @plugin 'christoomey/vim-tmux-navigator'
 #
 # set -g @vim_navigator_mapping_left "M-Left"  # use C-h and C-Left
@@ -135,6 +139,16 @@ set -g @plugin 'catppuccin/tmux'
 # set -g @vim_navigator_mapping_up "M-Up"
 # set -g @vim_navigator_mapping_down "M-Down"
 # set -g @vim_navigator_mapping_prev ""  # removes the C-\ binding
+
+# tmux sessions/projects
+# Auto-restore the last saved environment when the tmux server starts
+set -g @continuum-restore 'on'
+
+# Save automatically every 15 minutes (default; adjust if you want)
+set -g @continuum-save-interval '15'
+
+# Restore the actual programs running in panes, not just the shells
+set -g @resurrect-capture-pane-contents 'on'
 
 version_pat='s/^tmux[^0-9]*([.0-9]+).*/\1/p'
 
