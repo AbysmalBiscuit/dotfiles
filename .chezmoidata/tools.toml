@@ -3061,6 +3061,38 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "wezterm"
+cmds = [
+    "wezterm"
+]
+desc = ""
+url = ""
+git = ""
+comment = ""
+install_command = ""
+completions_command = "wezterm shell-completion --shell SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "elvish",
+    "fig",
+    "fish",
+    "powershell",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = "power-shell"
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "wr"
 cmds = [
     "wr"
