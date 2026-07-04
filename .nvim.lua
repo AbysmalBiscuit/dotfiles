@@ -326,6 +326,19 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if not client or client.name ~= "gopls" then
+      return
+    end
+    local root = client.root_dir or (client.config and client.config.root_dir)
+    if root == chezmoi_source then
+      client.server_capabilities.documentHighlightProvider = false
+    end
+  end,
+})
+
 --------------------------------------------------------------------------------
 -- LSP
 --------------------------------------------------------------------------------
