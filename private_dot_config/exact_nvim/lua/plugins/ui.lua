@@ -420,15 +420,10 @@ return {
     -- version = "*", -- (recommended) only required with prebuilt binaries
     version = false,
     enabled = true,
-    -- download prebuilt binaries from github releases
-    dependencies = not vim.g.has_nightly_rust and "saghen/blink.download",
-    -- OR build from source, requires nightly:
-    -- https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    build = vim.g.has_ocargo and "fish --command 'ocargo --nightly build --release'"
-      or (vim.g.has_nightly_rust and "cargo +nightly build --release"),
-    -- If you use nix, you can build from source using latest nightly rust with:
-    -- build = 'nix run .#build-plugin',
-
+    dependencies = "saghen/blink.lib",
+    build = function()
+      require("blink.pairs").build():pwait(60000)
+    end,
     --- @module 'blink.pairs'
     --- @type blink.pairs.Config
     opts = {
