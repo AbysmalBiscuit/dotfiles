@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# czdiff — sanity-check chezmoi's pending changes for one or more files (read-only).
+#
+# Compares each file on disk against the content chezmoi would write
+# (`chezmoi cat`). JSON files are diffed semantically with jd, so key order
+# and whitespace are ignored (add -set below to also ignore array order);
+# everything else is rendered with delta.
+#
+# No output for a file == it is already in sync.
+#
+# usage: czdiff <file> [more files...]
+set -uo pipefail
+
+[ $# -ge 1 ] || { echo "usage: czdiff <file> [more files...]" >&2; exit 2; }
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+
+status=0
+for arg in "$@"; do
+  if ! file=$(realpath -- "$arg" 2>/dev/null); then
+    echo "czdiff: cannot resolve '$arg' — skipping" >&2
+    status=1
+    continue
+  fi
+  if ! chezmoi cat "$file" >"$tmp" 2>/dev/null; then
+    echo "czdiff: '$arg' is not managed by chezmoi — skipping" >&2
+    status=1
+    continue
+  fi
+
+  case $file in
+    *.json)
+      if jq -e . "$file" >/dev/null 2>&1 && jq -e . "$tmp" >/dev/null 2>&1; then
+        jd "$file" "$tmp"        # semantic JSON diff; add -set to ignore array order
+      else
+        delta "$file" "$tmp"     # fall back if either side isn't valid JSON
+      fi
+      ;;
+    *)
+      delta "$file" "$tmp"
+      ;;
+  esac
+done
+
+exit $status
