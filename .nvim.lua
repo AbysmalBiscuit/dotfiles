@@ -188,6 +188,7 @@ local chezmoi_filetypes = {
   "python",
   "sh",
   "toml",
+  "tmux",
   "yaml",
   "zsh",
 }
@@ -314,6 +315,9 @@ vim.api.nvim_create_autocmd("FileType", {
     local base = ft:match("^([^%.]+)%.chezmoitmpl$")
     if base then
       local ts_lang = "gotmpl_" .. base
+      if not vim.tbl_contains(ts_lang_names, ts_lang) then
+        ts_lang = "gotmpl"
+      end
       vim.b[ev.buf].chezmoi_ts_lang = ts_lang
       vim.b[ev.buf].chezmoi_ts_pending = nil
       -- Single clean start — no stop/start race
