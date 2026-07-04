@@ -118,9 +118,24 @@ window_rules:
   #     Explorer, Godot, installers, etc.; Firefox uses its own dialog class. ---
   - commands: ["set-floating --centered --shown-on-top"]
     match:
+      # Explorer's #32770 dialogs are handled by the rule below (kept next to
+      # their parent window instead of centered), so exclude them here.
       - window_class: { equals: "#32770" }
+        window_process: { not_regex: "(?i)^explorer$" }
       - window_process: { equals: "firefox" }
         window_class: { equals: "MozillaDialogClass" }
+
+  # Explorer's own transient windows: copy/move/delete progress
+  # (OperationStatusWindow) and confirm/replace/in-use prompts (#32770).
+  # Float them WITHOUT --centered so they keep the spot Windows gives them
+  # (over the Explorer window that spawned them) and raise them above the
+  # tiling grid. The main Explorer window is CabinetWClass and is untouched.
+  - commands: ["set-floating --shown-on-top"]
+    match:
+      - window_process: { equals: "explorer" }
+        window_class: { equals: "#32770" }
+      - window_process: { equals: "explorer" }
+        window_class: { equals: "OperationStatusWindow" }
 
   # Godot's editor, dialogs, and running-game windows all share one class
   # ('Engine') and process ('godot'); only the title separates them. The main
