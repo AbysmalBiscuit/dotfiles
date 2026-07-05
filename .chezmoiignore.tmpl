@@ -33,7 +33,6 @@ fix_persmissions.sh
 # general exclusions
 **/__pychache__/**
 
-
 # always exclude
 bootstrap.ps1
 bootstrap.sh
@@ -59,6 +58,7 @@ localSettings.yaml
 # os specific exclusions
 
 {{ if .is_wsl -}}
+# is wsl
 .config/alacritty
 .config/ghostty
 .config/kanata
@@ -70,6 +70,7 @@ localSettings.yaml
 {{- end }}
 
 {{ if not .is_macos }}
+# is not  macos
 .chezmoiscripts/darwin/**
 .config/aerospace
 .config/homebrew
@@ -80,6 +81,7 @@ localSettings.yaml
 {{ end }}
 
 {{ if not .is_linux }}
+# is not linux
 .chezmoiscripts/linux/**
 .hushlogin
 .local/bin/nvim
@@ -87,6 +89,7 @@ localSettings.yaml
 .config/gnome-terminal
 .config/devilspie2
 {{- else -}}
+# is linux
 {{ if not (index .tool "devilspie2") -}}
 .config/devilspie2
 {{- end }}
@@ -101,6 +104,7 @@ localSettings.yaml
 {{ end }}
 
 {{ if .is_windows }}
+# is windows
 **.sh
 **.sh.tmpl
 **\.sh*
@@ -125,6 +129,12 @@ localSettings.yaml
 .local/share/nvim
 .fimrc
 .inputrc
+.local/bin/tmux-*
+.tmux.conf
+.tmux/**
+{{- if index $.tool "psmux" }}
+!.local/bin/tmux-*.ps1
+{{- end }}
 .local/share/gedit/**
 .local/share/gtksourceview-5/**
 .oh-my-zsh
@@ -144,16 +154,26 @@ localSettings.yaml
 AppData/Roaming/ConEmu.xml
 {{- end }}
 {{- else -}}
+# is not windows
+{{- if not (index $.tool "tmux") }}
+.tmux/*
+.tmux.conf
+.local/bin/tmux-*
+.local/bin/*-tmux-*
+{{- end }}
 .local/bin/lazygit-edit-nvim.cmd
 .local/bin/python3.bat.tmpl
 .local/share/nvim-data
 .chezmoiscripts/windows/**
+.psmux.conf
+.local/bin/tmux-*.ps1
 AppData/**
 Documents
 **\.ps1
-{{ end }}
+{{- end }}
 
-{{ if not .personal }}
+{{- if not .personal }}
+# not personal
 .aider.*
 .claude/**
 .config/ghostty
@@ -166,13 +186,6 @@ Documents
 .pypirc
 .ssh
 .ssh/**
-{{ end }}
-
-{{ if not (index $.tool "tmux") }}
-.tmux/*
-.tmux.conf
-.local/bin/tmux-*
-.local/bin/*-tmux-*
 {{ end }}
 
 {{ if not (eq .shell "zsh") -}}
