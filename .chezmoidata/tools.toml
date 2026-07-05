@@ -534,6 +534,31 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "c"
+name = "tmux"
+cmds = [
+    "tmux"
+]
+desc = "tmux is a terminal multiplexer: it enables a number of terminals to be created, accessed, and controlled from a single screen. tmux may be detached from a screen and continue running in the background, then later reattached."
+url = ""
+git = "https://github.com/tmux/tmux"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "c"
 name = "vim"
 cmds = [
     "vim"
@@ -2366,6 +2391,33 @@ supported_shells = [
     "fish",
     "zsh"
 ]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
+name = "psmux"
+cmds = [
+    "pmux",
+    "psmux",
+    "tmux.exe"
+]
+desc = "Tmux on Windows Powershell - tmux for PowerShell, Windows Terminal, cmd.exe. Includes psmux, pmux, and tmux commands. This is native Powershell Tmux designed for Windows in Rust 🦀"
+url = "https://psmux.pages.dev/"
+git = "https://github.com/psmux/psmux"
+comment = ""
+install_command = "cargo install psmux"
+completions_command = ""
+init_command = ""
+supported_shells = []
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
