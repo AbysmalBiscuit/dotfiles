@@ -79,6 +79,15 @@ When generating mermaid-js diagrams, use the `mmdc` cli tool to validate the syn
 
 {{- end }}
 
+{{- if stat (joinPath .chezmoi.homeDir ".claude" "skills" "graphify" "SKILL.md") }}
+
+## graphify
+
+- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+{{- end }}
+
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
 {{- if or (index .tool "fd") (index .tool "rg") }}
