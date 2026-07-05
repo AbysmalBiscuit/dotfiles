@@ -122,7 +122,6 @@ localSettings.yaml
 .config/mpv
 .config/psql
 .config/readline
-.config/tmux
 .local/share/nvim
 .fimrc
 .inputrc
@@ -135,7 +134,6 @@ localSettings.yaml
 .sh_*
 .ssh/id_rsa
 .ssh/id_rsa.pub
-.tmux.conf
 .xinitrc
 .zprofile
 .zsh*
@@ -168,6 +166,13 @@ Documents
 .pypirc
 .ssh
 .ssh/**
+{{ end }}
+
+{{ if not (index $.tool "tmux") }}
+.tmux/*
+.tmux.conf
+.local/bin/tmux-*
+.local/bin/*-tmux-*
 {{ end }}
 
 {{ if not (eq .shell "zsh") -}}
