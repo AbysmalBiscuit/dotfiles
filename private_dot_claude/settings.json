@@ -126,7 +126,8 @@
       "Read(C:/Users/*/NTUSER.DAT*)",
       "Read(C:/$Recycle.Bin/**)",
       "Edit(C:/$Recycle.Bin/**)",
-      "Read(C:/System Volume Information/**)"
+      "Read(C:/System Volume Information/**)",
+      "Bash(google-chrome *)"
     ],
     "defaultMode": "auto"
   },
