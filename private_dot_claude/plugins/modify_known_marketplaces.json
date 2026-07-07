@@ -1,9 +1,0 @@
-// chezmoi:modify-template
-{{- $current := dict -}}
-{{- if .chezmoi.stdin -}}
-{{-   $current = .chezmoi.stdin | fromJson -}}
-{{- end -}}
-{{- $baseline := include "private_dot_claude/plugins/ext_known_marketplaces.json" | fromJson -}}
-{{- /* baseline wins so updates propagate; current fills gaps */ -}}
-{{- $merged := merge $baseline $current -}}
-{{- $merged | toPrettyJson }}

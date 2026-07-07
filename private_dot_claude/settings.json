@@ -163,7 +163,9 @@
     "claude-md-management@claude-plugins-official": true,
     "devkit@devkit": true,
     "elements-of-style@superpowers-marketplace": true,
+    "elements-of-style@superpowers-marketplace": true,
     "plugin-dev@claude-plugins-official": true,
+    "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
     "pyright-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
@@ -171,20 +173,16 @@
     "skill-creator@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "superpowers@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true,
     "typescript-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "pr-crucible": {
+    "claude-plugins-official": {
       "source": {
         "source": "github",
-        "repo": "AbysmalBiscuit/pr-crucible"
-      }
-    },
-    "claude-code-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-code"
+        "repo": "anthropics/claude-plugins-official"
       }
     },
     "ast-grep-marketplace": {
@@ -193,10 +191,22 @@
         "repo": "ast-grep/agent-skill"
       }
     },
+    "pr-crucible": {
+      "source": {
+        "source": "github",
+        "repo": "AbysmalBiscuit/pr-crucible"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
     "devkit": {
       "source": {
-        "source": "directory",
-        "path": "AbysmalBiscuit/devkit"
+        "source": "github",
+        "repo": "AbysmalBiscuit/devkit"
       }
     }
   },
