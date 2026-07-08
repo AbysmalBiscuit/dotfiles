@@ -160,3 +160,19 @@ keybinding:
     copyFileInfoToClipboard: y
     collapseAll: "-"
     expandAll: =
+
+# {{ if index .has "graph_bridge" }}
+# Override the default pull (p) to also rebuild the graph-bridge knowledge graph.
+# A fast-forward pull fires no git hook, so the graph would otherwise go stale on
+# the main checkout. The rebuild runs ONLY when this repo has the graph-bridge
+# hook helper installed (the `if [ -x "$h" ]` guard) — in every other project it
+# just pulls. Defers to the helper, which runs the rebuild detached and
+# flock-serialized. Bound only where p means "pull" — not the commits panel,
+# where p is pickCommit. Trim context to just "files" if you only pull there.
+customCommands:
+  - key: "p"
+    context: "status, files, localBranches"
+    description: "pull, then rebuild the graph-bridge graph (background)"
+    command: 'git pull && { h="$(git rev-parse --git-path hooks 2>/dev/null)/graph-rebuild"; if [ -x "$h" ]; then "$h"; fi; }'
+    stream: true
+# {{ end }}
