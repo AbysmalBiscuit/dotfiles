@@ -68,7 +68,50 @@ Dispatch these concurrently. Each returns: verdict, evidence (`file:line`), and 
 
 - **Audit F — constraint sweep.** Run the entire test suite for the entire monorepo.
 
-- **Audit G — migration-specific tests** Run the entire migration-specific tests (integration/unit).
+- **Audit G — migration-specific tests + CI-safety.** Two parts, both required:
+  - **G1 — run them.** Run the entire migration-specific test set (integration/unit)
+    against a local DB with writes enabled (`ALLOW_DB_WRITES=true doppler run -p api-foundry
+    -c dev_local -- bun test <files>`). All must pass. A fresh worktree needs `bun install`
+    then `nitro prepare` first, or the `~/…` alias fails to resolve and every test errors at
+    import.
+  - **G2 — prove they don't trip CI.** A migration suite that passes locally (with a DB) can
+    still **fail the whole `@adaptyv/api` test job in CI**, which runs with **no DB** and sets
+    `TEMPORARY_CI_DB_SKIP=1`. The trap: DB-gated suites must **skip**, not throw, in that
+    environment. Verify the new/changed test files follow the established gating in
+    `tests/integration/_setup.ts` + `tests/integration/README.md`:
+    - The suite is wrapped in `describe.skipIf(CI_DB_SKIP)(…)` (import `CI_DB_SKIP` from
+      `../_setup`) and carries the correct `[supabase:readonly|write]` tag.
+    - **No `throw`, no `await isDbAvailable()`, and no seeding at module scope** that runs
+      before `describe.skipIf` can skip it. Any fail-loud "requires a local DB" guard must be
+      gated behind `if (!CI_DB_SKIP)` (prod-safety checks may stay unconditional). A top-level
+      `throw` surfaces in CI as an **"Unhandled error between tests"** and reds the job.
+    - **`describe.skipIf` skips test/hook *execution*, NOT body *evaluation*.** bun evaluates a
+      skipped describe callback to register its tests, so any DB-touching call placed **at
+      describe scope** still runs — and throws — under `CI_DB_SKIP`, even though it looks
+      guarded by the `skipIf`. The classic offender is a Kysely handle built eagerly:
+
+      ```ts
+      // ❌ throws at collection time on the DB-less runner — createTestKysely() runs
+      //    when the describe body is evaluated, before skipIf skips the tests
+      describe.skipIf(CI_DB_SKIP)("[supabase:write] …", () => {
+          const ky = createTestKysely();
+          beforeAll(async () => { await seed(ky); });
+      });
+
+      // ✅ defer into beforeAll — skipped suites never touch the DB factory
+      describe.skipIf(CI_DB_SKIP)("[supabase:write] …", () => {
+          let ky: Kysely<ExtendedDB>;
+          beforeAll(async () => { ky = createTestKysely(); await seed(ky); });
+      });
+      ```
+
+      A DB handle must be created inside `beforeAll` (assign to a `let`) — or, if it must be
+      module/describe scope, behind the ternary the codebase uses:
+      `const ky = CI_DB_SKIP ? null : createTestKysely()`. Never call `createTestKysely()`
+      bare at module or describe scope.
+    - Confirm empirically: `TEMPORARY_CI_DB_SKIP=1 bun test <files>` (no doppler, no DB) must
+      exit **0** with the suite **skipped** and **zero** unhandled errors. Report a `FAIL` with
+      `file:line` for any suite that throws or runs at module scope under this flag.
 
 ### Sequencing notes
 
@@ -81,4 +124,6 @@ Dispatch these concurrently. Each returns: verdict, evidence (`file:line`), and 
 ## Done criteria
 
 All audits report `PASS` (after fixes + re-validation), every endpoint — GET and non-GET —
-matches before/after on payload, and every global constraint holds.
+matches before/after on payload, every global constraint holds, and the migration test
+files are **CI-safe** (Audit G2): they skip cleanly under `TEMPORARY_CI_DB_SKIP=1` with no
+module-scope throw, so they don't red the `@adaptyv/api` test job on the DB-less CI runner.
