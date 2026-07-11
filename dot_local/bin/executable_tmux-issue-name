@@ -79,8 +79,10 @@ fi
 # via gh, caching positive results forever (keyed by branch).
 branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD 2>/dev/null) || branch=""
 
-# First letters-dash-digits run, uppercased (same rule as devkit's find_id).
-id=$(printf '%s' "$branch" | grep -oiE '[a-z]+-[0-9]+' | head -n1 | tr '[:lower:]' '[:upper:]' || true)
+# First letters-dash-digits run, uppercased (same rule as devkit's find_id):
+# a leading `pr-<number>` PR-checkout marker is the PR number, not an issue id,
+# so skip it in favour of a real id later (e.g. `pr-3255-…-swe-8603` -> SWE-8603).
+id=$(printf '%s' "$branch" | grep -oiE '[a-z]+-[0-9]+' | grep -viE '^pr-[0-9]+$' | head -n1 | tr '[:lower:]' '[:upper:]' || true)
 # No branch (detached HEAD) or no id in it (e.g. `main`): track cwd.
 if [ -z "$id" ]; then
   rename_to_cwd "$dir"
