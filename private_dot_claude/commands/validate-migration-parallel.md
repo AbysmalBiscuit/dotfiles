@@ -1,6 +1,6 @@
 ---
 description: Run kysely-migration validation, fanning the independent checks out to parallel subagents.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
 ---
 
 # /validate-migration-parallel

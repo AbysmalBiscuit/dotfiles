@@ -1,6 +1,6 @@
 ---
 description: Find finished issue worktrees (PR merged + Linear done), triage their artifacts, then remove worktree + ISSUE_*.md files
-allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, mcp__linear__get_issue
+allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue
 ---
 
 # /issue-end

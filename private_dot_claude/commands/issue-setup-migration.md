@@ -1,6 +1,6 @@
 ---
 description: Set up an issue worktree via /issue-setup for a kysely-migration sweep issue
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments
 ---
 
 # /issue-setup-migration

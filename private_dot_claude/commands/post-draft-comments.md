@@ -1,7 +1,7 @@
 ---
 description: Post the draft PR-review comments identified this session as a pending GitHub review, each rewritten in my voice via /write
 argument-hint: "[PR number or URL] (optional — inferred from branch if omitted)"
-allowed-tools: Bash, Read, Grep, Glob, Skill, AskUserQuestion
+allowed-tools: Bash, Read, Grep, Glob, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 
 # /post-draft-comments

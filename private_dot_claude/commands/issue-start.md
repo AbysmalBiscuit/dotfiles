@@ -1,6 +1,6 @@
 ---
 description: Cold-start a session inside an issue worktree — load the ISSUE_SUMMARY handoff and orient
-allowed-tools: Bash, Read, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
+allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
 ---
 
 # /start-issue
@@ -77,6 +77,7 @@ note it and offer to `bun install`.
   not bolted on at the end.
 - If the issue needs deeper context (acceptance criteria, linked PRs), offer to
   re-fetch the Linear issue via MCP — don't auto-fetch.
+- Use the `/graphify` skill to trace the issue more quickly than just grepping.
 
 ### 5. Check Linear + Sentry assignment
 

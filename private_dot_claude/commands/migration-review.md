@@ -1,6 +1,6 @@
 ---
 description: Ship a kysely-sweep migration for review — open the PR or ping Igor to re-review after addressing comments
-allowed-tools: Bash, Read, Glob, Grep, mcp__plugin_slack_slack__slack_send_message, mcp__plugin_slack_slack__slack_create_conversation
+allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__plugin_slack_slack__slack_send_message, mcp__plugin_slack_slack__slack_create_conversation
 ---
 
 # /migration-review

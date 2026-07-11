@@ -1,6 +1,6 @@
 ---
 description: Set up an isolated worktree to work on a Linear issue (worktree + install + session summary)
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
 ---
 
 # /issue-setup
@@ -189,7 +189,7 @@ oxlint --fix <changed_files>
 
 Print, for the user to copy:
 
-- the `cd "<worktree>"` command (worktree from the `issue setup` JSON)
+- the `cd <worktree>` command (worktree from the `issue setup` JSON. If the path doesn't need to be quoted, remove the quotes.)
 - the summary file path
 - the branch name
 - how to start servers: `devrun up`, then `devrun status` for the assigned ports

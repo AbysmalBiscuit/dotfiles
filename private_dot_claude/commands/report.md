@@ -1,6 +1,6 @@
 ---
 description: Generate a standardized self-contained HTML report under reports/ for summarizing and giving context about anything
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 
 # /report
