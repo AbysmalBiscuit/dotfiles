@@ -174,5 +174,5 @@ customCommands:
     context: "status, files, localBranches"
     description: "pull, then rebuild the graph-bridge graph (background)"
     command: 'git pull && { h="$(git rev-parse --git-path hooks 2>/dev/null)/graph-rebuild"; if [ -x "$h" ]; then "$h"; fi; }'
-    stream: true
+    output: log
 # {{ end }}
