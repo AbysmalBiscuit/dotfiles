@@ -145,7 +145,14 @@ Each task needs **ONE** tool, not a pipeline. If you're piping `fd` into `rg` or
 ❌ cat file | grep "x"               →  ✅ rg "x" file
 ❌ cat file | rg "x"                 →  ✅ rg "x" file
 {{- end }}
-❌ ls -R                             →  ✅ {{ if index .tool "fd" | default false }}fd -t f{{ else }}rg --files{{ end }}
+❌ ls -R                              →  ✅ {{ if index .tool "fd" | default false }}fd -t f{{ else }}rg --files{{ end }}
+{{- if index .tool "rg" }}
+
+# rg has NO recursive flag — it recurses by default. -r means --replace!
+❌ rg -rn "pattern"                  →  ✅ rg -n "pattern"   (line numbers)
+❌ rg -rl "pattern"                  →  ✅ rg -l "pattern"   (files with matches)
+❌ rg -rc "pattern"                  →  ✅ rg -c "pattern"   (count per file)
+{{- end }}
 ```
 {{- end }}
 
@@ -166,6 +173,14 @@ rg "(TODO|FIXME|HACK)"         # Multiple patterns
 rg "pattern" src/               # Limit scope to directory
 rg --files                      # List all files (like fd -t f)
 ```
+
+**No `-r` for recursion — rg recurses by default.** Coming from `grep`, do NOT
+prepend `-r`. In rg, `-r`/`--replace` takes the *next characters as replacement
+text* and only rewrites the printed output (rg never edits files). So `rg -rn` is
+parsed as `--replace=n` and silently prints matches with `n` substituted instead
+of line numbers — no error, plausible-looking wrong output. Pass each flag on its
+own: `-n` (line numbers), `-l` (files with matches), `-c` (count), `-i`
+(case-insensitive). Never glue them onto a leading `-r`.
 
 ### Search Strategy
 
