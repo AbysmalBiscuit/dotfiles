@@ -46,6 +46,15 @@ Before committing:
 
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 
+## Testing
+
+When doing TDD, write the test first and watch it fail before writing the fix (RED → GREEN):
+
+- Confirm RED for the right reason — the bug, not a typo or setup error — then make it GREEN.
+- Reproduce the actual broken behavior end-to-end: the real payload through the real entry point (HTTP endpoint, CLI, UI action), through validation/auth/serialization the way the bug did. A user's 400 on a PATCH → the test sends that PATCH and asserts it no longer 400s.
+- Don't ship a narrow unit test that only covers the one line changed. Testing the leaf function you touched in isolation, while skipping the layer the bug surfaced at, catches nothing.
+- If the code is already fixed, prove RED anyway: revert/hotpatch the source to broken, confirm the test fails, restore, confirm it passes. Report both.
+
 
 ## Code Comments
 
