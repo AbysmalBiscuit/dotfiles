@@ -391,6 +391,25 @@ if (Test-Path "$completions_cache")  {
         . $f.FullName
     }
 }
+
+# {{- if index .has "psmux" }}
+# Idempotent: sourcing twice must not wrap the wrapper.
+# Outside psmux there is no window to rename; leave the prompt untouched.
+if (-not $global:__tmuxIssueNamePrevPrompt -and $env:TMUX) {
+    $global:__tmuxIssueNamePrevPrompt = $function:prompt
+    $global:__tmuxIssueNameLastDir = $null
+
+    function global:prompt {
+        if ($PWD.Path -ne $global:__tmuxIssueNameLastDir) {
+            $global:__tmuxIssueNameLastDir = $PWD.Path
+            try { & "$HOME\.local\bin\tmux-issue-name.ps1" $PWD.Path } catch {}
+        }
+        & $global:__tmuxIssueNamePrevPrompt
+    }
+}
+# {{- end }}
+
+
 # {{- if index .has "yazi" | default false }}
 function y {
     $tmp = (New-TemporaryFile).FullName
