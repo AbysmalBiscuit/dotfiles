@@ -58,6 +58,39 @@ When doing TDD, write the test first and watch it fail before writing the fix (R
 
 ## Code Comments
 
+**Default to no comment.** Write code that explains itself — clear names and obvious structure —
+so it needs no narration. A comment earns its place only when the code cannot be made clear on
+its own: a non-obvious *why* (a platform quirk, an ordering constraint, a workaround, a subtle
+invariant), never a restatement of the *what* the line already says. If a comment only
+re-describes the code next to it, delete it. In *new* code, prefer a clearer name over a comment
+that explains a confusing one; in *existing* code, just delete the redundant comment — do not
+rename variables or extract expressions to avoid a comment. Working code isn't restructured for
+cosmetics. This governs inline narration — structured API/doc comments (JSDoc/TSDoc, docstrings)
+on public members are still encouraged.
+
+Bad — every line narrated, nothing added:
+
+```ts
+// set the status to active
+user.status = "active";
+// save the user
+repo.save(user);
+```
+
+Bad — a caption restating the assignment:
+
+```ts
+const isCrit = shot.y > 0.5; // true when this shot crit
+```
+
+Good — keep a comment only when it captures what the code cannot:
+
+```ts
+// Area overlaps register a frame after the collision event, so query the
+// target directly here instead of waiting for the overlap callback.
+for (const target of hitbox.overlaps()) { ... }
+```
+
 **Comments must be timeless and standalone** — understandable by a reader who knows nothing about the PR, issue, or task that introduced them. A comment describes what the code does and why, in the present tense; it never narrates the change.
 
 - **No PR/review taxonomy**: drop labels like `Class A` / `Class B` branching — meaningless once review context is gone. Describe the actual behavior instead.
