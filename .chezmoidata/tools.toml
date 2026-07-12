@@ -1214,6 +1214,56 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "python"
+name = "graphify"
+cmds = [
+    "graphify"
+]
+desc = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, and more). Turn any folder of code, SQL schemas, R scripts, shell scripts, docs, papers, images, or videos into a queryable knowledge graph. App code + database schema + infrastructure in one graph."
+url = "https://graphifylabs.ai/"
+git = "https://github.com/Graphify-Labs/graphify"
+comment = ""
+install_command = "uv tool install -U --force \"graphify[all]\""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "python"
+name = "graphify-godot-fork"
+cmds = [
+    "graphify"
+]
+desc = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, and more). Turn any folder of code, SQL schemas, R scripts, shell scripts, docs, papers, images, or videos into a queryable knowledge graph. App code + database schema + infrastructure in one graph."
+url = ""
+git = "https://github.com/AbysmalBiscuit/graphify"
+comment = ""
+install_command = "uv tool install -U --force \"graphifyy[anthropic,godot,leiden,mcp,office,ollama,pdf,sql,svg,video,watch] @ git+https://github.com/AbysmalBiscuit/graphify.git@v8\""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "python"
 name = "ranger"
 cmds = [
     "ranger"
