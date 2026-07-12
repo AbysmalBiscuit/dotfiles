@@ -204,6 +204,13 @@ Documents
 {{- end }}
 
 
+{{- if not (or (index .has "alacritty") (index .has "alacritree")) -}}
+.config/alacritty/alacritty.toml
+{{- end }}
+{{- if not (index .has "alacritree") -}}
+.config/alacritty/alacritree.toml
+{{- end }}
+
 # cli tools
 {{ if not (index .has "aider") -}}
 .aider*
@@ -223,7 +230,6 @@ Documents
 {{- end }}
 # config tools
 {{- range $tool := list
-    "alacritty"
     "bat"
     "bottom"
     "ccstatusline"

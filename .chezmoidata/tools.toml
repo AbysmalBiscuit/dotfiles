@@ -1503,6 +1503,31 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "alacritree"
+cmds = [
+    "alacritree"
+]
+desc = "git worktrees + git diffs + LLM notifications and indicatiors built on top of Alacritty for zero-friction parallel dev"
+url = ""
+git = "https://github.com/mathix420/alacritree"
+comment = ""
+install_command = "cargo install --git https://github.com/mathix420/alacritree"
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "alacritty"
 cmds = [
     "alacritty"
