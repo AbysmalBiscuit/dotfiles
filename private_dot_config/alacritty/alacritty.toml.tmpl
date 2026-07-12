@@ -4,7 +4,7 @@ padding = { x = 5, y = 1 }
 decorations_theme_variant = "Dark"
 
 [font]
-normal = { family = "MesloLGM Nerd Font Propo", style = "Regular" }
+normal = { family = "Sarasa Fixed K", style = "Regular" }
 size = 12
 
 [colors]
@@ -54,9 +54,3 @@ bindings = [
     { mouse = "Forward", action = "ScrollLineUp" },
     { mouse = "Right", action = "Paste" },
 ]
-
-{{- if .is_windows }}
-[terminal.shell]
-program = "wsl.exe"
-args = ["~"]
-{{- end }}

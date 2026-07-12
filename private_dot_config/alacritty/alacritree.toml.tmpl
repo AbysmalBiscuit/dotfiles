@@ -1,0 +1,37 @@
+[font]
+fallback = [
+  "MesloLGM Nerd Font Propo",
+  "Atkinson Hyperlegible Mono",
+  "Noto Sans Mono CJK KR",
+  "Noto Sans Mono CJK SC",
+  "Noto Sans Mono CJK HK",
+  "Noto Sans Mono CJK JP",
+  "Noto Sans Mono CJK TC",
+  "Menlo",
+  "Monaco",
+  "Consolas",
+  "Twemoji Mozilla",
+  "Noto Color Emoji",
+  "Apple Color Emoji",
+  "Segoe UI Emoji",
+  "Segoe UI Symbol",
+  "Symbols Nerd Font",
+  "Font Awesome 6 Pro",
+  "Noto Emoji",
+  "Segoe UI Historic",
+  "Noto Sans Bamum",
+]
+
+{{- if .is_windows }}
+[terminal.shell]
+program = "pwsh"
+args = ["-NoLogo"]
+
+[[ui.profiles]]
+name = "WSL"
+program = "wsl.exe"
+
+[[ui.profiles]]
+name = "cmd"
+program = "cmd.exe"
+{{- end }}
