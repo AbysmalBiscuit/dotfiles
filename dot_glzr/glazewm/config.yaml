@@ -91,6 +91,14 @@ window_rules:
       # pre-layout size and clamps it down to just the title bar. As an
       # ignored window it opens at its natural size and centers itself.
       - window_process: { regex: "(?i)^pinentry" }
+      # System Properties (SystemPropertiesAdvanced.exe) and its Environment
+      # Variables child dialog. Same clamping problem as pinentry above: as a
+      # floating #32770 the dialog is sized before its layout runs and ends up
+      # too short to show its bottom row of buttons. rundll32 hosts the same
+      # dialog when it's opened via `sysdm.cpl,EditEnvironmentVariables`.
+      - window_process: { regex: "(?i)^SystemProperties" }
+      - window_process: { equals: "rundll32" }
+        window_class: { equals: "#32770" }
       # WSLg: Linux GUI apps are hosted by the Remote Desktop client
       # (msrdc.exe). Leave them completely unmanaged by the WM.
       - window_process: { equals: "msrdc" }
