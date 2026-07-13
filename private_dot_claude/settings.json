@@ -138,7 +138,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/block-rg-replace-footgun.sh",
+            "command": "python3 ~/.claude/hooks/block-rg-replace-footgun.py",
             "statusMessage": "Checking rg flags"
           }
         ]
@@ -176,7 +176,6 @@
     "claude-md-management@claude-plugins-official": true,
     "devkit@devkit": true,
     "elements-of-style@superpowers-marketplace": true,
-    "elements-of-style@superpowers-marketplace": true,
     "plugin-dev@claude-plugins-official": true,
     "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
@@ -186,8 +185,6 @@
     "skill-creator@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "superpowers@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true,
     "typescript-lsp@claude-plugins-official": true
   },
