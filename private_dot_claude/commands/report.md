@@ -109,6 +109,45 @@ Rules:
 - One idea per diagram. Two small diagrams beat one tangled one.
 - Don't diagram what a one-line sentence already settles.
 
+### Make every diagram readable — expand button + orientation
+
+The content column is ~960px. A diagram with more than about four nodes, or with
+any real label text on them, gets scaled down to fit and becomes unreadable at
+rest. Two things fix that, and both are cheap, so do both every time:
+
+- **Give every diagram the expand button.** Put `<button class="zoom" type="button">⤢ Expand</button>`
+  as the first child of the `<figure class="diagram">`. The inlined script clones
+  the rendered SVG into a fullscreen overlay (Esc, ✕, or backdrop-click to close),
+  so the reader can always blow it up regardless of how small it renders inline.
+  This costs one line per figure and removes the whole class of "I can't read the
+  diagram" complaints. Keep the `#lightbox` div and its script block whenever any
+  diagram is present.
+- **Prefer `flowchart TD` over `LR` for chains.** A left-to-right chain of 5+ nodes
+  gets squeezed hard in a 960px column, while top-down uses the page's infinite
+  vertical space and stays legible. Reach for `LR` only for genuinely short
+  or wide-by-nature diagrams. `sequenceDiagram` and `erDiagram` set their own
+  orientation, so this applies mainly to flowcharts.
+
+Put load-bearing numbers **on the diagram** (`dna_sequence<br/><small>71,273 rows ·
+159 MB</small>`), and style the edge that carries the point so it reads at a
+glance (`linkStyle 5 stroke:#d29922,stroke-width:2px`). A diagram that restates
+the prose adds nothing; one that carries the argument earns its space.
+
+### Validate the Mermaid before writing
+
+Mermaid fails silently in the browser: a syntax error renders as a blank box or
+raw source, and you will not notice from the file alone. Check it with `mmdc`
+before you ship the report. Write the diagram source to a scratch `.mmd` and run:
+
+```bash
+mmdc -i diagram.mmd -o diagram.png -b '#161b22' -w 900
+```
+
+A non-zero exit means it will not render. Render to PNG and **look at it** rather
+than trusting the exit code, since a diagram can parse fine and still be an
+unreadable tangle. That is also the cheapest way to catch nodes that overlap or
+labels that overflow.
+
 ## Voice + prose rules
 
 - **Active voice.** "The worker retries failed jobs." Not "Failed jobs are
@@ -249,10 +288,26 @@ drop `<h2>` body sections to match the chosen kind.
   details.code .body{padding:4px 18px 14px}
   details.code .body h3:first-child{margin-top:14px}
   figure.diagram{margin:18px 0;background:var(--panel);border:1px solid var(--border);
-    border-radius:10px;padding:18px}
+    border-radius:10px;padding:18px;position:relative}
   figure.diagram pre.mermaid{background:transparent;border:0;padding:0;margin:0;
     text-align:center;font-size:14px}
+  figure.diagram pre.mermaid svg{max-width:100%;height:auto}
   figure.diagram figcaption{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
+  button.zoom{position:absolute;top:10px;right:10px;z-index:2;display:flex;align-items:center;
+    gap:6px;background:var(--panel2);color:var(--muted);border:1px solid var(--border);
+    border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:color .15s,border-color .15s}
+  button.zoom:hover{color:var(--accent);border-color:var(--accent)}
+  #lightbox{display:none;position:fixed;inset:0;z-index:100;background:rgba(6,9,13,.94);
+    padding:32px 24px 24px;overflow:auto}
+  #lightbox.open{display:flex;flex-direction:column}
+  #lightbox .lb-bar{display:flex;justify-content:space-between;align-items:center;
+    color:var(--muted);font-size:13px;margin-bottom:12px;flex:0 0 auto}
+  #lightbox .lb-close{background:var(--panel2);color:var(--fg);border:1px solid var(--border);
+    border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  #lightbox .lb-close:hover{border-color:var(--accent);color:var(--accent)}
+  #lightbox .lb-stage{flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0}
+  #lightbox .lb-stage svg{max-width:100%!important;max-height:100%;width:auto;height:auto}
 </style>
 </head>
 <body>
@@ -321,14 +376,15 @@ drop `<h2>` body sections to match the chosen kind.
   </ul>
 
   <figure class="diagram">
+    <button class="zoom" type="button">⤢ Expand</button>
 <pre class="mermaid">
-flowchart LR
+flowchart TD
   {{client}}["{{Client}}"] -->|{{GET /token}}| {{api}}["{{api/handler.ts}}"]
   {{api}} -->|{{verify}}| {{store}}[("{{token_store}}")]
   {{store}} -->|{{hit}}| {{api}}
   {{api}} -->|{{refreshed JWT}}| {{client}}
 </pre>
-    <figcaption>{{What the diagram shows, one line.}}</figcaption>
+    <figcaption>{{What the diagram shows, one line.}} Click <strong>Expand</strong> to enlarge.</figcaption>
   </figure>
 
   <h2 id="s2">2 · {{Next section — often a table}}</h2>
@@ -374,6 +430,15 @@ flowchart LR
   </main>
 </div>
 
+<!-- Diagram lightbox. Keep iff the report has at least one diagram; drop with them. -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged diagram">
+  <div class="lb-bar">
+    <span id="lb-caption"></span>
+    <button class="lb-close" type="button">✕ Close <span class="muted">(Esc)</span></button>
+  </div>
+  <div class="lb-stage"></div>
+</div>
+
 <script>
 (function(){
   // Source permalinks: materialise ⎘ links from data-f / data-l, pinned to a commit.
@@ -411,6 +476,31 @@ flowchart LR
     window.addEventListener("scroll", spy, {passive:true});
     window.addEventListener("resize", spy); spy();
   }
+  // Diagram lightbox: clone the rendered Mermaid SVG into a fullscreen overlay.
+  // Mermaid renders async, so read the SVG at click time rather than on load.
+  // Drop this block (and #lightbox) if the report has no diagrams.
+  var lb = document.getElementById("lightbox");
+  if(lb){
+    var stage = lb.querySelector(".lb-stage"), cap = lb.querySelector("#lb-caption");
+    function close(){ lb.classList.remove("open"); stage.innerHTML = ""; }
+    document.querySelectorAll("figure.diagram button.zoom").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var fig = btn.closest("figure.diagram");
+        var svg = fig.querySelector("pre.mermaid svg");
+        if(!svg) return;                                   // not rendered yet
+        var clone = svg.cloneNode(true);
+        clone.removeAttribute("width"); clone.removeAttribute("height");
+        stage.innerHTML = "";
+        stage.appendChild(clone);
+        var fc = fig.querySelector("figcaption");
+        cap.textContent = fc ? fc.textContent.replace(/\s*Click Expand to enlarge\.?\s*$/, "") : "";
+        lb.classList.add("open");
+      });
+    });
+    lb.querySelector(".lb-close").addEventListener("click", close);
+    lb.addEventListener("click", function(e){ if(e.target === lb) close(); });
+    document.addEventListener("keydown", function(e){ if(e.key === "Escape") close(); });
+  }
 })();
 </script>
 
@@ -429,8 +519,10 @@ flowchart LR
 </html>
 ```
 
-If the report has no diagram, drop the `<figure class="diagram">` block. Keep the
-Mermaid `<script>` only when at least one diagram is present.
+If the report has no diagram, drop the `<figure class="diagram">` block, the
+`#lightbox` div, and the lightbox block inside the main `<script>`. Keep the
+Mermaid `<script>` only when at least one diagram is present. When any diagram is
+present, all three stay, and every figure gets its `⤢ Expand` button.
 
 ### Table of contents (left sidebar)
 
@@ -504,7 +596,7 @@ check. Drop the caveat callout only when every claim was verified.
 | Inline muted note | `<span class="muted">// note</span>` |
 | Numeric table column | `<td class="num">42</td>` |
 | Stepped flow | `<div class="flow"><span class="n">1.</span> …</div>` |
-| Mermaid diagram | `<figure class="diagram"><pre class="mermaid">flowchart LR …</pre><figcaption>…</figcaption></figure>` |
+| Mermaid diagram | `<figure class="diagram"><button class="zoom" type="button">⤢ Expand</button><pre class="mermaid">flowchart TD …</pre><figcaption>…</figcaption></figure>` (needs `#lightbox` + its script) |
 | Collapsible detail dump | `<details class="code"><summary>…</summary><div class="body">…</div></details>` |
 | Keyboard hint | `<kbd>bun test</kbd>` |
 | TOC entry | `<li><a href="#s1">1 · How it works</a></li>` (heading needs matching `id`) |
@@ -538,6 +630,12 @@ Before the Write call, re-read the draft and confirm:
 - [ ] A diagram present if the topic has a flow, structure, or interaction;
       Mermaid `<script>` included iff a diagram is present
 - [ ] Diagram nodes use real names, each diagram shows one idea
+- [ ] **Every diagram has its `⤢ Expand` button**, and the `#lightbox` div +
+      lightbox script are present (all three kept together, or all three dropped)
+- [ ] Chains use `flowchart TD` rather than `LR` unless the diagram is genuinely
+      short or wide by nature
+- [ ] Mermaid validated with `mmdc` (exit 0) **and the rendered PNG eyeballed** —
+      it can parse clean and still be an unreadable tangle
 - [ ] Bottom-line callout states the conclusion / recommendation / next step
 - [ ] Footer names the sources
 - [ ] No em-dashes in prose
