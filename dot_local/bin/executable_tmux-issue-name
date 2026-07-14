@@ -17,12 +17,19 @@ dir="${1:-$PWD}"
 
 # Name the window after the cwd: its basename, or ~ for $HOME. This is the
 # fallback whenever there is no issue id to name the window after.
+# tmux rejects window names containing `.` or `:` (they collide with its
+# session:window.pane target syntax), so swap them for the lookalikes
+# `․` (U+2024) and `∶` (U+2236).
 rename_to_cwd() {  # $1=dir
+  local name
   if [ "$1" = "$HOME" ]; then
-    tmux rename-window '~'
+    name='~'
   else
-    tmux rename-window "$(basename "$1")"
+    name=$(basename "$1")
+    name=${name//./․}
+    name=${name//:/∶}
   fi
+  tmux rename-window -- "$name"
 }
 
 # Outside a git work tree there is no issue to name the window after; track cwd.
