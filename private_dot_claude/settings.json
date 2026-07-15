@@ -27,7 +27,11 @@
       "Bash(bun nitro dev*)",
       "Bash(bun next dev*)",
       "Bash(bun run turbo dev*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(docm list)",
+      "Bash(docm info:*)",
+      "Bash(docm path:*)",
+      "Read(~/.local/share/devkit/docs/**)"
     ],
     "deny": [
       "Read(~/.sh_env)",
@@ -186,7 +190,8 @@
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true,
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "linear@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
