@@ -44,17 +44,6 @@
         "type": "git-worktree",
         "color": "brightBlue",
         "bold": true
-      },
-      {
-        "id": "7",
-        "type": "separator"
-      },
-      {
-        "id": "ca911a78-adb6-43fd-9da5-89a76c6099f7",
-        "type": "session-cost",
-        "color": "ansi256:220",
-        "bold": true,
-        "rawValue": true
       }
     ],
     [
@@ -104,26 +93,9 @@
     ],
     [
       {
-        "id": "5bb4361d-d3a9-409e-a061-34c1893ae74d",
-        "type": "input-speed"
-      },
-      {
-        "id": "0939ad4b-263f-4290-9965-0c99ea480297",
-        "type": "separator",
-        "character": "|"
-      },
-      {
-        "id": "fdf626a5-3e90-4c84-9c34-dfdbaabea55b",
-        "type": "output-speed"
-      },
-      {
-        "id": "eeb3c3e6-8f71-4543-83bd-79bd94f153ff",
-        "type": "separator",
-        "character": "|"
-      },
-      {
-        "id": "dda71383-e2dc-4d06-b1dc-ca5ad3a359a2",
-        "type": "total-speed"
+        "id": "6f7e6cd8-6045-40ac-b9ab-68828c0d4b7a",
+        "type": "custom-command",
+        "commandPath": "~/.claude/statusline-cost.sh"
       }
     ]
   ],
