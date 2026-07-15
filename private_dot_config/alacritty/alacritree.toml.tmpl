@@ -22,6 +22,34 @@ fallback = [
   "Noto Sans Bamum",
 ]
 
+# session management
+[[keyboard.bindings]]
+key = "T"
+mods = "Control|Shift"
+action = "SpawnNewInstance"
+
+[[keyboard.bindings]]
+key = "PageUp"
+mods = "Control|Shift"
+action = "SelectPreviousTab"
+
+[[keyboard.bindings]]
+key = "PageDown"
+mods = "Control|Shift"
+action = "SelectNextTab"
+
+# directional panel focus (TUI-aware; tmux/nvim keep the key till their edge)
+[[keyboard.bindings]]
+key = "Left"
+mods = "Control"
+action = "FocusLeft"
+
+[[keyboard.bindings]]
+key = "Right"
+mods = "Control"
+action = "FocusRight"
+
+
 {{- if .is_windows }}
 [terminal.shell]
 program = "pwsh"
