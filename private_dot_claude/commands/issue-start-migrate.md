@@ -20,11 +20,13 @@ current branch (same as `/issue-start`).
 
 ## Steps
 
-Before step 1, invoke the **`checklist` skill** to track this command's two phases
-(run the issue-start flow → do the migration). As the migration takes shape in step 2,
-add one task per concrete migration action (smoketest, remove `@deprecated` context,
-migrate queries, validate every endpoint, etc.) so each is checked off as it lands.
-Mark exactly one task `in_progress` at a time and `completed` once verified.
+Before step 1, invoke the **`checklist` skill** to track this command's phases
+(run the issue-start flow → do the migration → gate it behind a feature flag → add
+the test battery). As the migration takes shape in step 2, add one task per concrete
+migration action (smoketest, move the new path off the `@deprecated` context, migrate
+queries, create + wire the feature flag, validate every endpoint, etc.) so each is
+checked off as it lands. Mark exactly one task `in_progress` at a time and `completed`
+once verified.
 
 ### 1. Run the issue-start flow
 
@@ -39,14 +41,20 @@ Once oriented, begin the migration. Follow these directives exactly:
 Goal: do the migration. Validate that everything works correctly **before and after**.
 
 - Run the api smoketest.
-- Remove the `@deprecated` ServiceContext from this endpoint/handler **and the
-  services it owns**, replacing it with a kysely one. Use the TypeScript LSP to
-  confirm no `@deprecated` context usage was missed anywhere here.
+- Build the new kysely path off the `@deprecated` ServiceContext entirely — the
+  endpoint/handler **and the services it owns** move to a kysely context. Use the
+  TypeScript LSP to confirm the **new** path carries no `@deprecated` context usage.
+  Do **not** delete the old `@deprecated` path in this PR: it is retained as the
+  feature-flag fallback (step 3) and removed only when the flag is retired.
 - Validate **all** endpoints. The smoketest harness only covers GET routes, so for
   every non-GET route use `curl` to capture before/after responses yourself. Keep
   the request payload body identical across before/after; metadata that legitimately
   changes (e.g. response timestamps) is fine.
 - Migrate queries to kysely.
+- The migrated view/RPC will be **dropped** post-migration, so define the builder's
+  row type from the base-table builder (`InferResult`) or a hand-written schema —
+  never infer it from the view's/RPC's generated `Selectable` type (duplicating the
+  shape is expected and correct).
 - Do **not** change the `withAdminDB` helper. You may add new reasons for bypassing
   via `withAdminDB`, but you may not modify the helper and you may not add any new
   helpers.
@@ -58,9 +66,52 @@ Goal: do the migration. Validate that everything works correctly **before and af
 - No type smuggling via `unknown`.
 - Do not create constants for grouping column names — inline them so the queries
   stay readable.
-- Add the migration test battery — see step 3.
+- Ship the new path behind a feature flag — see step 3.
+- Add the migration test battery — see step 4.
 
-### 3. Add the migration test battery
+### 3. Ship the migrated path behind a feature flag (safety switch)
+
+The kysely path goes to prod **behind a boolean flag that defaults to the old path**.
+The point is an instant, no-deploy rollback: if the new path misbehaves in prod — a
+divergence the local battery didn't surface, an RLS or scale regression, a
+serialization edge — you flip the flag **off**, the endpoint falls straight back to
+the proven old path, and you patch the new version and re-enable at your own pace.
+That safety switch only exists if the old path is still there to fall back to, which
+is why step 2 keeps it rather than deleting it.
+
+`apps/api/docs/07.feature-flags.md` is the source of truth — **read it** before wiring
+anything. The shape:
+
+- **Create the flag** in PostHog (project `apps-api`, EU) via the PostHog MCP,
+  **disabled by default**, named `<slug>-dbi-<NNNN>-<YYYY-MM-DD>` (descriptive slug +
+  driving issue id + creation date, e.g. `results-create-dbi-10450-2026-07-15`).
+- **Register it** in the `FLAGS` map in `server/utils/flags/index.ts`, pairing the
+  PostHog `key` with its `envOverride` (uppercased slug + issue) so CI and local dev —
+  where PostHog is usually absent — can pin the value deterministically.
+- **Gate the route** on `getFlag(event, FLAGS.x, false)`. The default is **`false` =
+  the old path**, so the endpoint serves the proven behaviour until the flag is
+  deliberately turned on. The default value must always be the safe, old-path
+  behaviour; `getFlag` never throws, so a flag can't itself break a request.
+- **Keep both paths side by side.** Follow the doc's split pattern: put the new
+  kyselyfied service/handler in a `_migration2026`-suffixed sibling, branch on the flag
+  in the route, and right before merge rename the old file with an `_old` suffix. For a
+  small swap an inline `if (await getFlag(...)) return newFn(...); return oldFn(...);`
+  between two service functions is enough — the mechanic scales to the size of the
+  change. Either way the old `@deprecated`-context path stays as the off-branch and is
+  deleted later, in the flag-retirement cleanup (`docs/llm-guides/principles.md`: a
+  retired flag is removed from code, not left toggled off).
+- **Prove the switch works**, don't assume it. The HTTP E2E suite (step 4) asserts the
+  resolved value in the wide event under `featureFlag.<key>` and exercises **both** the
+  flag-on (new) and flag-off (old) branch — pin each with the `envOverride` — so the
+  fallback is tested end to end.
+
+Carve-out: if there is genuinely no distinct old path to fall back to — a pure
+type-safety or relocation refactor whose SQL is parity-proven identical and whose
+"old" path was already kysely (e.g. SWE-10450) — there are not two behaviours to gate,
+so skip the flag. The flag is for a migration that introduces a **new, potentially
+divergent** path, which is the common case.
+
+### 4. Add the migration test battery
 
 Tests are part of the migration, not an afterthought. **Which battery is mandatory
 depends on the migration class** — match the tests to what you actually changed, and
@@ -98,6 +149,11 @@ First classify the change:
   loud, not silently 200 — SWE-9967) and **A/B parity** — the endpoint response equals
   an *independent* post-write direct-SQL read of the row.
 - Keep **one un-canonicalized timestamp assertion** to prove the wire format.
+- When the migration ships behind a feature flag (step 3): run the auth + behaviour
+  contract with the flag **on** (new path) and assert the fallback with the flag
+  **off** (old path), pinning each via the `envOverride`, and assert the resolved
+  value surfaces in the wide event under `featureFlag.<key>`. This proves the safety
+  switch actually toggles paths.
 
 **View/RPC ports additionally ship** the other two mandatory layers (a plain swap does
 NOT — there is no reimplemented SQL to diff, so these are noise there):
