@@ -1006,6 +1006,31 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "go"
+name = "uni"
+cmds = [
+    "uni"
+]
+desc = "Query the Unicode database from the commandline, with good support for emojis"
+url = ""
+git = "https://github.com/arp242/uni"
+comment = ""
+install_command = "go install zgo.at/uni/v2@latest"
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "go"
 name = "wsl2-ssh-agent"
 cmds = [
     "wsl2-ssh-agent"
