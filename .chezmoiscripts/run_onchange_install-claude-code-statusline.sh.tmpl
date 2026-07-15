@@ -1,0 +1,22 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{ if false -}}
+# vim:filetype=sh.chezmoitmpl
+# {{- end }}
+# Ensure Claude Code cost-statusline tooling (ccusage + ccstatusline) is present.
+# Templated on .has, so chezmoi re-runs it whenever either binary's detected
+# install state changes (missing -> found, or found -> missing).
+
+if ! command -v bun >/dev/null 2>&1; then
+    echo "bun not found — install bun first, then re-run 'chezmoi apply'." >&2
+    exit 1
+fi
+
+# {{ if not (index .has "ccusage") | default false -}}
+echo "==> installing ccusage (global, via bun)"
+bun add -g ccusage
+# {{ end -}}
+# {{ if not (index .has "ccstatusline") | default false -}}
+echo "==> installing ccstatusline (global, via bun)"
+bun add -g ccstatusline
+# {{ end -}}
