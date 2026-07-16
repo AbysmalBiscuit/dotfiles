@@ -224,7 +224,19 @@ return {
     --   },
     -- },
     config = function()
-      require("Navigator").setup({})
+      -- Directly inside alacritree (tmux publishes edge state through the
+      -- terminal title instead, see below), edge navigation asks alacritree
+      -- over its IPC socket to move panel focus.
+      local mux = "auto"
+      if vim.env.ALACRITREE_SOCKET and not vim.env.TMUX then
+        local ok, alacritree = pcall(function()
+          return require("alacritree_nav"):new()
+        end)
+        if ok then
+          mux = alacritree
+        end
+      end
+      require("Navigator").setup({ mux = mux })
 
       -- Publish nvim's per-direction split edges to tmux's @nvim_edges so the
       -- "tmux:<edges>" terminal title (see ~/.tmux.conf) reflects nvim's layout,
