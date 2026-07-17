@@ -95,7 +95,9 @@
       {
         "id": "6f7e6cd8-6045-40ac-b9ab-68828c0d4b7a",
         "type": "custom-command",
-        "commandPath": "~/.claude/statusline-cost.sh"
+        "commandPath": "bash -c ~/.claude/statusline-cost.py",
+        "timeout": 5000,
+        "preserveColors": false
       }
     ]
   ],
