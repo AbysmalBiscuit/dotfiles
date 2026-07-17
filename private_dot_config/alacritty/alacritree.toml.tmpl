@@ -1,3 +1,4 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 [font]
 fallback = [
   "MesloLGM Nerd Font Propo",
@@ -22,9 +23,26 @@ fallback = [
   "Noto Sans Bamum",
 ]
 
+# confirm close only while a process is running; closing the last session
+# navigates to the project main / home instead of respawning in place
+[ui]
+confirm_session_close = "busy"
+last_session_close = "navigate"
+# PR status badges on worktree rows (polls gh)
+pr_status = true
+
 # list session rows even for single-session workspaces
 [ui.session_display]
 sidebar_always = true
+
+# sidebar/chrome text: the unset default is 80% of the 12pt terminal font
+# (9.6pt); this key sets the size directly, so +1pt = 10.6
+[ui.font]
+size = 10.6
+
+# outline the focused side panel
+[ui.focus_outline]
+sidebar = true
 
 # session management
 [[keyboard.bindings]]
@@ -53,8 +71,7 @@ key = "Right"
 mods = "Control"
 action = "FocusRight"
 
-
-{{- if .is_windows }}
+# {{- if .is_windows }}
 [terminal.shell]
 program = "pwsh"
 args = ["-NoLogo"]
@@ -66,4 +83,4 @@ program = "wsl.exe"
 [[ui.profiles]]
 name = "cmd"
 program = "cmd.exe"
-{{- end }}
+# {{- end }}
