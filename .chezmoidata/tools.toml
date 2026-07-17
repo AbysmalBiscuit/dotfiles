@@ -2246,6 +2246,31 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "rust"
+name = "glyf"
+cmds = [
+    "glyf"
+]
+desc = "fast glyph finder"
+url = ""
+git = "https://github.com/youssefadly237/glyf"
+comment = ""
+install_command = "cargo install --features mlua --git https://github.com/youssefadly237/glyf"
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
 name = "grex"
 cmds = [
     "grex"
