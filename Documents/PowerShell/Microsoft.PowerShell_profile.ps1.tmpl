@@ -392,6 +392,27 @@ if (Test-Path "$completions_cache")  {
     }
 }
 
+# Fish-style abbreviated cwd (~/G/g/alacritree) as the terminal title.
+# ConPTY forwards WindowTitle as an OSC 0 sequence, which alacritree's
+# sidebar displays.  Starship calls this hook before rendering each prompt;
+# defining `prompt` directly would fight starship for ownership.
+function Invoke-Starship-PreCommand {
+    $p = $PWD.ProviderPath
+    if ($p -like "$HOME*") { $p = '~' + $p.Substring($HOME.Length) }
+    $parts = @($p -split '[\\/]' | Where-Object { $_ })
+    if ($parts.Count -gt 1) {
+        $head = $parts[0..($parts.Count - 2)] | ForEach-Object {
+            if ($_ -eq '~' -or $_ -match '^[A-Za-z]:$') { $_ }
+            elseif ($_ -like '.*') { $_.Substring(0, [Math]::Min(2, $_.Length)) }
+            else { $_.Substring(0, 1) }
+        }
+        $p = (@($head) + $parts[-1]) -join '/'
+    } else {
+        $p = $parts -join '/'
+    }
+    $Host.UI.RawUI.WindowTitle = $p
+}
+
 # {{- if index .has "psmux" }}
 # Idempotent: sourcing twice must not wrap the wrapper.
 # Outside psmux there is no window to rename; leave the prompt untouched.
