@@ -180,6 +180,7 @@
     "claude-md-management@claude-plugins-official": true,
     "devkit@devkit": true,
     "elements-of-style@superpowers-marketplace": true,
+    "linear@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
     "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
@@ -190,8 +191,7 @@
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "linear@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
