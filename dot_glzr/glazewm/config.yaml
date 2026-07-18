@@ -195,11 +195,14 @@ window_rules:
       - window_process: { equals: "ms-teams" } # classic Teams is 'Teams'
       - window_process: { equals: "Teams" }
 
-  # browsers -> B
+  # browsers -> B. Exclude Chrome's native common dialogs (#32770, e.g. the
+  # Save As / Open File picker) so they stay on the workspace that spawned
+  # them instead of being yanked to B when Chrome lives elsewhere.
   - commands: ["move --workspace B"]
     match:
       # - window_process: { equals: 'firefox' }
       - window_process: { equals: "chrome" }
+        window_class: { not_regex: "^#32770$" }
 
   # terminal (WezTerm) -> C
   # - commands: ['move --workspace C']
