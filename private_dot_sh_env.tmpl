@@ -189,8 +189,8 @@ export MOLD='# {{ lookPath .tool.mold }}'
 # Store original system path
 # {{ if .is_macos -}}
 # {{- if stat "/usr/libexec/path_helper" }}
-# PATH_SYS='# {{ output "/usr/libexec/path_helper" | trim }}'
-# {{- $path_sys = output "/usr/libexec/path_helper" | trim | splitList ":" }}
+# {{- $ph := output "/usr/bin/env" "-i" "PATH=/usr/bin:/bin" "/usr/libexec/path_helper" "-s" }}
+# {{- $path_sys = regexReplaceAll `(?s).*?\bPATH="([^"]*)".*` $ph "${1}" | splitList ":" }}
 # {{- else -}}
 # PATH_SYS="$PATH"
 # {{- end }}
@@ -315,7 +315,7 @@ fi
 # {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".luarocks/bin") -}}
 # {{- end }}
 
-# {{- if .tool.luarocks -}}
+# {{- if .tool.luarocks }}
 # Setting up lua path for neovim
 # eval "$(luarocks path --no-bin --lua-version 5.1)"
 # {{ output "luarocks" "path" "--no-bin" "--lua-version" "5.1" }}
@@ -419,20 +419,8 @@ EOF
 # PATH_SYS='# {{/* $path_sys | join ":" */}}'
 # PATH='# {{/* $path | join ":" */}}'
 
-# echo $PATH
-# PATH
-# PATH_WINDOWS
-# PATH_FULL
-# PATH_CLEAN=""
-# PATH_WINDOWS=""
-# PATH_FULL=""
-# export PATH_SAVE="$PATH"
-
-# if [[ -z "${MANPATH}" ]]; then
-    # MANPATH=$(man --path)
-# fi
 # MANPATH='# {{/* output "man" "--path" | trim */}}'
-# {{ $man_path := output "man" "--path" | trim }}
+# {{ $man_path := output "manpath" | trim }}
 
 # Configure python paths
 # {{- if .tool.python }}

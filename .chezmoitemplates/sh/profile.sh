@@ -14,10 +14,15 @@ done
 
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
-export LC_CTYPE=C.UTF-8
 export LC_NUMERIC=fr_CH.UTF-8
 export LC_TIME=en_DK.UTF-8
+# {{- if .is_macos }}
+export LC_CTYPE=en_US.UTF-8
+export LC_COLLATE=en_US.UTF-8
+# {{- else }}
+export LC_CTYPE=C.UTF-8
 export LC_COLLATE=C.UTF-8
+# {{- end }}
 export LC_MONETARY=fr_CH.UTF-8
 export LC_MESSAGES=en_US.UTF-8
 export LC_PAPER=fr_CH.UTF-8

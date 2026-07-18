@@ -27,7 +27,7 @@
 {{- $is_wsl := not (eq (env "WSL_DISTRO_NAME") "") -}}{{/* true if this machine is a WSL instance */}}
 {{- $is_linux := eq .chezmoi.os "linux" -}}{{/* true if this machine is a Linux machine */}}
 {{- $is_windows := eq .chezmoi.os "windows" -}}{{/* true if this machine is a Windows machine */}}
-{{- $is_macos := false -}}{{/* true if this machine is a macOS machine */}}
+{{- $is_macos := eq .chezmoi.os "darwin" -}}{{/* true if this machine is a macOS machine */}}
 {{- /* Default values/placeholders for variables */ -}}
 {{- $fullname := "Lev Velykoivanenko" -}}
 {{- $firstname := "Lev" -}}

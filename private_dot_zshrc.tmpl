@@ -8,6 +8,10 @@
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
+# {{ template "sh/debug_startup_start.sh" }}
+
+# {{ template "sh/rc.sh" }}
+
 # Sourcing external packages
 # {{ if .cache.build.shell }}
 [[ -s "$HOME/.sh_cache" ]] && source "$HOME/.sh_cache"
@@ -15,14 +19,20 @@
 # {{ template "zsh/rc.zsh" . }}
 # {{- end }}
 
+# enable gpg integration
+export GPG_TTY=$(tty)
+
 # Starting fish shell
 if [[
     -x $(command -v fish 2>/dev/null) &&
-    -z "$BASH_EXECUTION_STRING" &&
     x"$FORCESH" != x"1" &&
     (! -v ZED_TERM || "$ZED_TERM" != "true") ]] \
     ; then
-    source "# {{ .chezmoi.homeDir }}/.cache/# {{ $shell }}/env.# {{ $shell }}"
+    env_cache="# {{ .chezmoi.homeDir }}/.cache/# {{ $shell }}/env.# {{ $shell }}"
+    [[ -s "$env_cache" ]] && source "$env_cache"
+
+    # {{ template "sh/debug_startup_end.sh" }}
+
     exec fish
 fi
 
