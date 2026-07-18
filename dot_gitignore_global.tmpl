@@ -89,8 +89,15 @@ Session.vim
 # auto-generated tag files
 tags
 
-**/.claude/settings.local.json
+**.local.*
+**.local
 
 # Linked git worktrees created for isolated feature work
 .worktrees/
 .devkit/
+
+{{- if index .has "graphify" }}
+# graphify
+graphify-out/
+**/graphify-out/
+{{- end }}
