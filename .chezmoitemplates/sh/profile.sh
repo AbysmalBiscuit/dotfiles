@@ -15,7 +15,7 @@ done
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 export LC_NUMERIC=fr_CH.UTF-8
-export LC_TIME=en_DK.UTF-8
+export LC_TIME=# {{ if .is_macos }}en_GB.UTF-8# {{ else }}en_DK.UTF-8# {{ end }}
 # {{- if .is_macos }}
 export LC_CTYPE=en_US.UTF-8
 export LC_COLLATE=en_US.UTF-8
