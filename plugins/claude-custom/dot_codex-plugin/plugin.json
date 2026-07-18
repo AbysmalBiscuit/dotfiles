@@ -1,0 +1,18 @@
+{
+  "name": "claude-custom",
+  "version": "0.1.0",
+  "description": "Personal workflows ported from Claude commands and skills for issue worktrees, migrations, reviews, reports, writing, and codebase analysis",
+  "author": {
+    "name": "Lev"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Claude Custom",
+    "shortDescription": "Personal issue, review, reporting, writing, and code-analysis workflows",
+    "longDescription": "Ports Lev's custom Claude skills and commands to Codex, including devkit issue workflows, Kysely migration validation, Graphify, report generation, writing guidance, and stacked-git operations.",
+    "developerName": "Lev",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": "Show me the custom workflows available in this plugin."
+  }
+}

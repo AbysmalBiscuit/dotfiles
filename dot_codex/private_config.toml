@@ -1,0 +1,32 @@
+approvals_reviewer = "auto_review"
+
+[marketplaces.devkit]
+source_type = "git"
+source = "https://github.com/AbysmalBiscuit/devkit.git"
+
+[plugins."devkit@devkit"]
+enabled = true
+
+[plugins."superpowers@openai-curated"]
+enabled = true
+
+[plugins."sentry@openai-curated"]
+enabled = true
+
+[plugins."slack@openai-curated"]
+enabled = true
+
+[plugins."linear@openai-curated"]
+enabled = true
+
+[plugins."posthog@openai-curated"]
+enabled = true
+
+[plugins."superpowers@personal"]
+enabled = true
+
+[plugins."claude-custom@personal"]
+enabled = true
+
+[mcp_servers.adaptyv_bio_mcp]
+url = "https://mcp.adaptyv.bio/mcp"
