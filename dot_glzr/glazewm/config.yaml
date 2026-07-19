@@ -59,7 +59,10 @@ window_behavior:
   state_defaults:
     floating:
       centered: true
-      shown_on_top: false
+      # The per-command '--shown-on-top' flag is ignored by the running WM
+      # (set-floating always lands with the state_defaults value), so
+      # on-top behavior for floated dialogs has to come from this default.
+      shown_on_top: true
     fullscreen:
       maximized: false
       shown_on_top: false
@@ -172,16 +175,18 @@ window_rules:
   # --- app -> workspace assignments (your on-window-detected rules) ---
 
   # spotify + keepassxc + file explorer + foobar2000 -> 3
+  # (KeePassXC popups are excluded — they float in place via the rule below)
   - commands: ["move --workspace 3"]
     match:
       # - window_process: { equals: "Spotify" }
       - window_process: { equals: "KeePassXC" }
+        window_title: { not_regex: "[Bb]rowser [Aa]ccess|Unlock" }
       # - window_process: { equals: "explorer" }
       # - window_process: { equals: "foobar2000" }
 
-  # KeePassXC browser-access / unlock popups -> B (runs after the rule above,
-  # so these specific windows end up on B; normal KeePassXC stays on 3)
-  - commands: ["move --workspace B"]
+  # KeePassXC browser-access / unlock popups: keep them on whatever workspace
+  # they appear on, floated at their natural size/position and always on top.
+  - commands: ["set-floating --centered=false --shown-on-top=true"]
     match:
       - window_process: { equals: "KeePassXC" }
         window_title: { regex: "[Bb]rowser [Aa]ccess|Unlock" }
@@ -198,11 +203,11 @@ window_rules:
   # browsers -> B. Exclude Chrome's native common dialogs (#32770, e.g. the
   # Save As / Open File picker) so they stay on the workspace that spawned
   # them instead of being yanked to B when Chrome lives elsewhere.
-  - commands: ["move --workspace B"]
-    match:
-      # - window_process: { equals: 'firefox' }
-      - window_process: { equals: "chrome" }
-        window_class: { not_regex: "^#32770$" }
+  # - commands: ["move --workspace B"]
+  #   match:
+  #     # - window_process: { equals: 'firefox' }
+  #     - window_process: { equals: "chrome" }
+  #       window_class: { not_regex: "^#32770$" }
 
   # terminal (WezTerm) -> C
   # - commands: ['move --workspace C']
