@@ -397,6 +397,12 @@ if (Test-Path "$completions_cache")  {
 # sidebar displays.  Starship calls this hook before rendering each prompt;
 # defining `prompt` directly would fight starship for ownership.
 function Invoke-Starship-PreCommand {
+    # Sidebar follows the shell: re-home this alacritree session when the cwd
+    # crosses into another worktree (paths outside any worktree are rejected
+    # app-side, so ordinary cds are a cheap no-op).
+    if ($env:ALACRITREE_SESSION_ID) {
+        alacritree session move $env:ALACRITREE_SESSION_ID $PWD.ProviderPath *> $null
+    }
     $p = $PWD.ProviderPath
     if ($p -like "$HOME*") { $p = '~' + $p.Substring($HOME.Length) }
     $parts = @($p -split '[\\/]' | Where-Object { $_ })
