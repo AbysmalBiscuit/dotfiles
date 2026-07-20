@@ -167,6 +167,18 @@
           }
         ]
       }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
