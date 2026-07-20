@@ -67,22 +67,39 @@ window_behavior:
       maximized: false
       shown_on_top: false
 
+# Pin monitors to fixed indices by machine ID so `bind_to_monitor` indices
+# below stay stable across reconnects/reboots. Entry order = index (first
+# entry is 0). Unlisted monitors are ordered after listed ones, by position.
+# Run `glazewm query monitors` and take the middle segment of `devicePath`.
+# Entries only take `machine_id` — there is no by-name binding; workspaces
+# bind via `bind_to_monitor: <index>`.
+# NOTE: absent monitors don't reserve an index — indices compact to the
+# monitors currently present. The laptop panel is listed last because it's
+# off when docked; undocked it's the only monitor and becomes 0 anyway.
+monitors:
+  - machine_id: "DELA196#4&806d26&0&UID8257" # 0: Dell portrait (work, left)
+  - machine_id: "SAM711A#4&806d26&0&UID24645" # 1: Samsung ultrawide (work)
+  - machine_id: "LEN414F#4&806d26&0&UID8388688" # 2: laptop panel
+
 # AeroSpace workspaces: 1-5 plus named letter workspaces.
 workspaces:
   - name: "1"
+    bind_to_monitor: 0 # Dell portrait
   - name: "2"
+    bind_to_monitor: 0 # Dell portrait
   - name: "3"
+    bind_to_monitor: 1 # Samsung ultrawide
   - name: "4"
+    bind_to_monitor: 1 # Samsung ultrawide
   - name: "5"
+    bind_to_monitor: 1 # Samsung ultrawide
   - name: "A"
   - name: "B"
   - name: "C"
   - name: "E"
   - name: "O"
-  # To reproduce your workspace-to-monitor-force-assignment, add
-  # `bind_to_monitor: 0` (primary) or `1` (secondary) under a workspace,
-  # e.g. on '2', '3', '5'. Indices are 0-based; swap if they land wrong.
-  # Left out by default so nothing hides on a single-monitor setup.
+  # When a bound monitor is disconnected, the binding is ignored and the
+  # workspace opens on the focused monitor instead.
 
 window_rules:
   # --- ignore rules (kept from default) ---
@@ -174,15 +191,19 @@ window_rules:
 
   # --- app -> workspace assignments (your on-window-detected rules) ---
 
-  # spotify + keepassxc + file explorer + foobar2000 -> 3
+  # keepassxc -> 2
   # (KeePassXC popups are excluded — they float in place via the rule below)
-  - commands: ["move --workspace 3"]
+  - commands: ["move --workspace 2"]
     match:
-      # - window_process: { equals: "Spotify" }
       - window_process: { equals: "KeePassXC" }
         window_title: { not_regex: "[Bb]rowser [Aa]ccess|Unlock" }
-      # - window_process: { equals: "explorer" }
-      # - window_process: { equals: "foobar2000" }
+
+  # spotify + file explorer + foobar2000 -> 3
+  # - commands: ["move --workspace 3"]
+  #   match:
+  #     - window_process: { equals: "Spotify" }
+  #     - window_process: { equals: "explorer" }
+  #     - window_process: { equals: "foobar2000" }
 
   # KeePassXC browser-access / unlock popups: keep them on whatever workspace
   # they appear on, floated at their natural size/position and always on top.
