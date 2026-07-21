@@ -30,6 +30,8 @@ confirm_session_close = "busy"
 last_session_close = "navigate"
 # PR status badges on worktree rows (polls gh)
 pr_status = true
+# clicking a sidebar moves keyboard focus to it
+sidebar_click_focus = true
 # hold attention pings and drop them if the agent resumes within the window
 attention_grace_ms = 2000
 
@@ -55,12 +57,12 @@ action = "SpawnNewInstance"
 [[keyboard.bindings]]
 key = "PageUp"
 mods = "Control|Shift"
-action = "SelectPreviousTab"
+action = "SelectPreviousSession"
 
 [[keyboard.bindings]]
 key = "PageDown"
 mods = "Control|Shift"
-action = "SelectNextTab"
+action = "SelectNextSession"
 
 # directional panel focus (TUI-aware; tmux/nvim keep the key till their edge)
 [[keyboard.bindings]]
@@ -72,6 +74,12 @@ action = "FocusLeft"
 key = "Right"
 mods = "Control"
 action = "FocusRight"
+
+# close/delete/remove the sidebar-cursored row (sidebar-scoped, like the
+# default Delete)
+[[keyboard.bindings]]
+key = "D"
+action = "DeleteSelected"
 
 # {{- if .is_windows }}
 [terminal.shell]
