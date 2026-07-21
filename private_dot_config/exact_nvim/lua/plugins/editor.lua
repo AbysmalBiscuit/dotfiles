@@ -229,12 +229,15 @@ return {
       -- over its IPC socket to move panel focus.
       local mux = "auto"
       if vim.env.ALACRITREE_SOCKET and not vim.env.TMUX then
-        local ok, alacritree = pcall(function()
-          return require("alacritree_nav"):new()
-        end)
-        if ok then
-          mux = alacritree
-        end
+        mux = {
+          zoomed = function() return false end,
+          navigate = function(_, direction)
+            local action = ({ h = "FocusLeft", l = "FocusRight" })[direction]
+            if action then
+              vim.fn.jobstart({ "alacritree.exe", "action", action })
+            end
+          end,
+        }
       end
       require("Navigator").setup({ mux = mux })
 
