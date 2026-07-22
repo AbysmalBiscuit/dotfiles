@@ -91,6 +91,9 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 export CLAUDE_CODE_TMUX_TRUECOLOR=1
 # {{- end }}
 
+# Force devkit OSC 8 hyperlinks; supports-hyperlinks misses this terminal.
+export DEVKIT_HYPERLINKS="always"
+
 # colored less
 # {{ if stat (joinPath .chezmoi.homeDir "bin" "source-highlight-esc.sh") -}}
 #if [[ -x "$HOME/bin/source-highlight-esc.sh" ]]; then
