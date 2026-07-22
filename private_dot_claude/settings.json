@@ -31,6 +31,12 @@
       "Bash(docm list)",
       "Bash(docm info:*)",
       "Bash(docm path:*)",
+      "Bash(devrun task:*)",
+      "Bash(devrun up:*)",
+      "Bash(devrun down:*)",
+      "Bash(devrun config:*)",
+      "Bash(devrun status:*)",
+      "Bash(devrun logs:*)",
       "Read(~/.local/share/devkit/docs/**)"
     ],
     "deny": [
