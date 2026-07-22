@@ -227,14 +227,34 @@ return {
       -- Directly inside alacritree (tmux publishes edge state through the
       -- terminal title instead, see below), edge navigation asks alacritree
       -- over its IPC socket to move panel focus.
+
+      -- Inside WSL we strip Windows dirs from PATH (they slow every exec
+      -- lookup), so a bare "alacritree.exe" is unresolvable; recover its full
+      -- path from PATH_WINDOWS. On Windows it's on PATH, so the bare name stands.
+      local function alacritree_bin()
+        local win = vim.env.PATH_WINDOWS
+        if win then
+          for dir in vim.gsplit(win, ":", { plain = true }) do
+            local exe = dir .. "/alacritree.exe"
+            if vim.fn.executable(exe) == 1 then
+              return exe
+            end
+          end
+        end
+        return "alacritree.exe"
+      end
+      local alacritree = alacritree_bin()
+
       local mux = "auto"
       if vim.env.ALACRITREE_SOCKET and not vim.env.TMUX then
         mux = {
-          zoomed = function() return false end,
+          zoomed = function()
+            return false
+          end,
           navigate = function(_, direction)
             local action = ({ h = "FocusLeft", l = "FocusRight" })[direction]
             if action then
-              vim.fn.jobstart({ "alacritree.exe", "action", action })
+              vim.fn.jobstart({ alacritree, "action", action })
             end
           end,
         }
