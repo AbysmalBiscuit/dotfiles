@@ -3,11 +3,27 @@
   "lines": [
     [
       {
-        "id": "1",
+        "id": "4ce3014d-067b-4302-a84a-c7bd24394142",
         "type": "model",
         "color": "ansi256:77",
         "bold": false,
         "rawValue": true
+      },
+      {
+        "id": "cf909f83-8d7d-451e-bc41-99f0f49c405f",
+        "type": "custom-text",
+        "customText": " ("
+      },
+      {
+        "id": "2bbe0524-a1cd-4d28-a410-facbb93a6196",
+        "type": "thinking-effort",
+        "rawValue": true,
+        "color": "ansi256:77"
+      },
+      {
+        "id": "7b9e7581-cc4c-4b7d-9f2a-f8df57df44ba",
+        "type": "custom-text",
+        "customText": ")"
       },
       {
         "id": "3",
@@ -96,8 +112,8 @@
         "id": "6f7e6cd8-6045-40ac-b9ab-68828c0d4b7a",
         "type": "custom-command",
         "commandPath": "bash -c ~/.claude/statusline-cost.py",
-        "timeout": 5000,
-        "preserveColors": false
+        "preserveColors": false,
+        "timeout": 5000
       }
     ]
   ],
