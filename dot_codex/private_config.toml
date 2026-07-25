@@ -1,5 +1,8 @@
 approvals_reviewer = "auto_review"
 
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
 [marketplaces.devkit]
 source_type = "git"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
@@ -30,3 +33,6 @@ enabled = true
 
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
