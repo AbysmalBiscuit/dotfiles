@@ -21,16 +21,32 @@
       import React, {
         useState,
         useEffect,
+        useRef,
       } from 'https://esm.sh/react@18?dev';
       import { createRoot } from 'https://esm.sh/react-dom@18/client?dev';
       import * as zebar from 'https://esm.sh/zebar@3.0';
+
+      const BATTERY_REFRESH_MS = 10000;
+
+      // Tolerate a few dropped polls before distrusting the reading.
+      const BATTERY_STALE_MS = BATTERY_REFRESH_MS * 4;
+
+      const WATCHDOG_MS = 5000;
+
+      // A watchdog tick arriving this late means the machine was
+      // suspended rather than merely busy.
+      const CLOCK_JUMP_MS = WATCHDOG_MS * 3;
+
+      // Each restart re-acquires an OS battery handle, so back off
+      // instead of retrying at watchdog speed.
+      const BATTERY_RESTART_BACKOFF_MS = [15000, 60000, 300000];
 
       const providers = zebar.createProviderGroup({
         network: { type: 'network' },
         glazewm: { type: 'glazewm' },
         cpu: { type: 'cpu' },
         date: { type: 'date', formatting: 'EEE d MMM HH:mm' },
-        battery: { type: 'battery', refreshInterval: 10000 },
+        battery: { type: 'battery', refreshInterval: BATTERY_REFRESH_MS },
         memory: { type: 'memory' },
         weather: { type: 'weather' },
       });
@@ -40,21 +56,83 @@
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
 
-        // Keep the last good battery reading. On a failed poll the
-        // battery provider sets its output-map entry to null; any other
-        // provider's tick then pushes that null into state and unmounts
-        // the indicator. Caching the last non-null reading keeps it
-        // visible until a battery poll succeeds again.
-        const [battery, setBattery] = useState(
-          providers.outputMap.battery ?? null,
-        );
+        // Keep the last good battery reading alongside when it arrived. A
+        // failed poll nulls the provider's output-map entry, and the next
+        // tick from any other provider pushes that null into state, so
+        // without a cache the indicator unmounts on a single hiccup. The
+        // timestamp is what keeps the cache honest: a reading that stops
+        // being refreshed must not go on presenting itself as current.
+        const [battery, setBattery] = useState(() => {
+          const initial = providers.outputMap.battery;
+          return initial ? { output: initial, at: Date.now() } : null;
+        });
+
+        const [batteryStale, setBatteryStale] = useState(false);
+
+        const batteryAt = useRef(battery?.at ?? null);
 
         useEffect(() => {
-          providers.onOutput(() => {
-            const map = providers.outputMap;
+          providers.onOutput(map => {
             setOutput(map);
-            if (map.battery) setBattery(map.battery);
+
+            if (map.battery) {
+              batteryAt.current = Date.now();
+              setBattery({ output: map.battery, at: batteryAt.current });
+              setBatteryStale(false);
+            }
           });
+
+          // Errors null the failing provider's entry without firing an
+          // output event, so mirror the map here too — otherwise a dead
+          // provider's last value stays on the bar indefinitely.
+          providers.onError(() => setOutput(providers.outputMap));
+        }, []);
+
+        // The battery provider acquires its OS battery handle once and
+        // then only refreshes through it. Across a suspend/resume cycle
+        // that handle can stop yielding updates, stranding the readout at
+        // whatever charge it last saw. Restarting the provider is what
+        // re-acquires the handle; nothing else recovers it.
+        useEffect(() => {
+          let lastTick = Date.now();
+          let attempt = 0;
+          let nextRestartAt = 0;
+
+          const watchdog = setInterval(() => {
+            const now = Date.now();
+            const resumed = now - lastTick > CLOCK_JUMP_MS;
+            lastTick = now;
+
+            // Never having seen a reading means there is nothing to
+            // recover — a machine with no battery would restart forever.
+            if (batteryAt.current === null) return;
+
+            const stale = now - batteryAt.current > BATTERY_STALE_MS;
+            setBatteryStale(stale);
+
+            if (!stale && !resumed) {
+              attempt = 0;
+              nextRestartAt = 0;
+              return;
+            }
+
+            if (resumed) {
+              attempt = 0;
+              nextRestartAt = 0;
+            }
+
+            if (now >= nextRestartAt) {
+              providers.raw.battery.restart().catch(() => {});
+              nextRestartAt =
+                now +
+                BATTERY_RESTART_BACKOFF_MS[
+                  Math.min(attempt, BATTERY_RESTART_BACKOFF_MS.length - 1)
+                ];
+              attempt += 1;
+            }
+          }, WATCHDOG_MS);
+
+          return () => clearInterval(watchdog);
         }, []);
 
         // Get icon to show for current network status.
@@ -224,13 +302,6 @@
                 </div>
               )}
 
-              {output.memory && (
-                <div className="memory">
-                  <i className="nf nf-fae-chip"></i>
-                  {Math.round(output.memory.usage)}%
-                </div>
-              )}
-
               {output.cpu && (
                 <div className="cpu">
                   <i className="nf nf-oct-cpu"></i>
@@ -244,30 +315,47 @@
                 </div>
               )}
 
+              {output.memory && (
+                <div className="memory">
+                  <i className="nf nf-fae-chip"></i>
+                  {Math.round(output.memory.usage)}%
+                </div>
+              )}
+
               {battery && (
-                <div className={`battery ${getBatteryClass(battery)}`}>
+                <div
+                  className={`battery ${getBatteryClass(battery.output)} ${
+                    batteryStale ? 'stale' : ''
+                  }`}
+                >
                   {/* Show a plug when on power: charging or topped off. */}
-                  {(battery.state === 'charging' ||
-                    battery.state === 'full') && (
+                  {(battery.output.state === 'charging' ||
+                    battery.output.state === 'full') && (
                     <i className="nf nf-md-power_plug charging-icon"></i>
                   )}
-                  {getBatteryIcon(battery)}
-                  {Math.round(battery.chargePercent)}%
+                  {getBatteryIcon(battery.output)}
+                  {Math.round(battery.output.chargePercent)}%
+                  {/* Mark the number as no-longer-current rather than
+                      letting it pass for a live reading. */}
+                  {batteryStale && (
+                    <i className="nf nf-md-alert_outline stale-icon"></i>
+                  )}
                 </div>
               )}
 
               {/* Time estimate in its own slot, labeled by a battery
                   icon (empty = time left, full = time to full) so it
-                  stays short on narrow/vertical screens. */}
-              {battery?.timeTillEmpty != null && (
+                  stays short on narrow/vertical screens. Estimates from a
+                  stale reading are meaningless, so drop them. */}
+              {!batteryStale && battery?.output.timeTillEmpty != null && (
                 <div className="battery-time">
-                  {formatTimeRemaining(battery.timeTillEmpty)}
+                  {formatTimeRemaining(battery.output.timeTillEmpty)}
                   <i className="nf nf-md-battery_outline"></i>
                 </div>
               )}
-              {battery?.timeTillFull != null && (
+              {!batteryStale && battery?.output.timeTillFull != null && (
                 <div className="battery-time-full">
-                  {formatTimeRemaining(battery.timeTillFull)}
+                  {formatTimeRemaining(battery.output.timeTillFull)}
                   <i className="nf nf-md-battery"></i>
                 </div>
               )}

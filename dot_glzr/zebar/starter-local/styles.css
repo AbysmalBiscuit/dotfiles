@@ -196,6 +196,19 @@ body,
   margin: 0 0 0 4px;
 }
 
+/* A reading that stopped refreshing: dimmed so it reads as last-known
+   rather than current, and the level coloring is dropped so a stale 15%
+   can't masquerade as a live low-battery warning. */
+.battery.stale,
+.battery.stale i {
+  color: rgb(255 255 255 / 45%);
+}
+
+.battery.stale .stale-icon {
+  color: #e0a100;
+  margin: 0 0 0 4px;
+}
+
 .battery .charging-icon {
   position: absolute;
   font-size: 7px;
