@@ -28,12 +28,26 @@ fallback = [
 [ui]
 confirm_session_close = "busy"
 last_session_close = "navigate"
+# a removal moves the terminal to the neighbouring row rather than the first
+sidebar_focus = "follow"
 # PR status badges on worktree rows (polls gh)
 pr_status = true
 # clicking a sidebar moves keyboard focus to it
 sidebar_click_focus = true
 # hold attention pings and drop them if the agent resumes within the window
 attention_grace_ms = 2000
+# restart required — present each frame as soon as it is drawn
+vsync = false
+
+# zed-style paths: filename first, parent trailing it, $HOME as ~
+# the git header is a directory, so it abbreviates instead of reordering
+[ui.path_style]
+diff_title = "zed"
+git_rows = "zed"
+git_header = "fish"
+
+[ui.path_style.filename]
+bold = true
 
 # list session rows even for single-session workspaces
 [ui.session_display]
