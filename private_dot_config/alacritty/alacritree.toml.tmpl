@@ -64,40 +64,8 @@ size = 10.6
 [ui.focus_outline]
 sidebar = true
 
-# session management
-[[keyboard.bindings]]
-key = "T"
-mods = "Control|Shift"
-action = "SpawnNewInstance"
-
-[[keyboard.bindings]]
-key = "PageUp"
-mods = "Control|Shift"
-action = "SelectPreviousSession"
-
-[[keyboard.bindings]]
-key = "PageDown"
-mods = "Control|Shift"
-action = "SelectNextSession"
-
-# directional panel focus (TUI-aware; tmux/nvim keep the key till their edge)
-[[keyboard.bindings]]
-key = "Left"
-mods = "Control"
-action = "FocusLeft"
-
-[[keyboard.bindings]]
-key = "Right"
-mods = "Control"
-action = "FocusRight"
-
-# close/delete/remove the sidebar-cursored row (sidebar-scoped, like the
-# default Delete)
-[[keyboard.bindings]]
-key = "D"
-action = "DeleteSelected"
-
 # {{- if .is_windows }}
+
 [terminal.shell]
 program = "pwsh"
 args = ["-NoLogo"]

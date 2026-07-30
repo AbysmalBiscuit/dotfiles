@@ -51,6 +51,29 @@ bindings = [
     { key = "Enter", mods = "Shift", chars = "\u001B\u000D" },
     { key = "Q", mods = "Control", action = "ReceiveChar" },
     { key = "Q", mods = "Control|Shift", action = "Quit" },
+
+    # session management
+    { key = "T", mods = "Control|Shift", action = "SpawnNewInstance" },
+    { key = "PageUp", mods = "Control|Shift", action = "SelectPreviousSession" },
+    { key = "PageDown", mods = "Control|Shift", action = "SelectNextSession" },
+
+    # directional panel focus (TUI-aware; tmux/nvim keep the key till their edge)
+    { key = "Left", mods = "Control", action = "FocusLeft" },
+    { key = "Right", mods = "Control", action = "FocusRight" },
+
+    # projects sidebar: close/delete/remove the cursored row, and the PR-state
+    # filters. A binding on a key drops every default sharing that key, so the
+    # git-sidebar filters D and M displaced below are re-declared alongside;
+    # each entry fires only in the panel its action belongs to.
+    { key = "D", action = "DeleteSelected" },
+    { key = "P", action = "TogglePrOpenFilter" },
+    { key = "T", action = "TogglePrDraftFilter" },
+    { key = "M", action = "TogglePrMergedFilter" },
+    { key = "C", action = "TogglePrClosedFilter" },
+
+    # git sidebar
+    { key = "D", action = "ToggleDeletedFilter" },
+    { key = "M", action = "ToggleModifiedFilter" },
 ]
 
 [mouse]
