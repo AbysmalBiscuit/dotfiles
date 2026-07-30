@@ -55,6 +55,31 @@ Goal: do the migration. Validate that everything works correctly **before and af
   row type from the base-table builder (`InferResult`) or a hand-written schema —
   never infer it from the view's/RPC's generated `Selectable` type (duplicating the
   shape is expected and correct).
+- **Consult version-correct docs; don't migrate from memory.** Before writing or
+  restructuring a builder — and whenever you hit a query-builder type error or are
+  about to reach for a raw ``sql`` template tag or ``sql<T>`` — invoke the
+  **`kysely-docs` skill** (it reads this repo's pinned Kysely 0.28.x source, not model
+  memory). For any *other* library you must reason about during the migration (pg,
+  zod, nitro, date libs, …), invoke the **`docs` skill** (`/docs` — devkit's
+  ``docm``-backed, version-correct source lookup) rather than recalling its API. Read
+  `apps/api/docs/` for house style.
+- **Types must be inferred, not asserted — this is the cleanup goal, not a nicety.**
+  Express the query in the builder (`selectFrom`/joins/`jsonArrayFrom`/`jsonObjectFrom`/
+  CTEs/`$narrowType`) so the row type falls out of the query. Eliminate
+  `$castTo<…>()`, `.as()`-driven coercions, and `as SomeRow`/`as X` on builder output
+  wherever the builder can infer the shape; a raw ``sql``/``sql<T>`` is a last resort,
+  allowed only when there is genuinely no builder equivalent (confirm via
+  `kysely-docs` first). A cast survives only where inference is truly impossible, in
+  its narrowest safe form, justified in a one-line comment **and** in the PR body.
+  `as any`, `as unknown as T`, `@ts-ignore`/`@ts-expect-error`, and non-null `!`
+  remain banned outright (this restates and sharpens "no type smuggling via
+  `unknown`" below).
+- **Prove it before opening the PR.** `git diff origin/staging...HEAD` and grep the
+  changed query paths for new `$castTo`, ` as ` casts on builder output, and
+  ``sql``/``sql<`` usages. In the PR's validation section, either state "no asserted
+  types introduced on query paths" or list each remaining assertion with the reason
+  inference was impossible. An endpoint functionally on Kysely but still asserting its
+  result types is **not** done.
 - Do **not** change the `withAdminDB` helper. You may add new reasons for bypassing
   via `withAdminDB`, but you may not modify the helper and you may not add any new
   helpers.

@@ -1,116 +1,100 @@
 ---
-description: Request (re-)review of the current issue worktree via `issue review` — push, open/reuse the PR, add the reviewer, and Slack them
+description: Request (re-)review of the current issue worktree via `issue review request` — push, open/reuse the PR, add the reviewer, and Slack them
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__plugin_slack_slack__slack_send_message, mcp__plugin_slack_slack__slack_create_conversation
 argument-hint: "[reviewer-alias] (optional — defaults to igor)"
 ---
 
 # /issue-review
 
-Hand a finished (or just-updated) issue worktree to a reviewer using `issue review`,
-which does the mechanics for you: pushes the branch, opens **or** reuses the PR, adds
-the GitHub reviewer, and Slacks them the body + PR link.
+Hand a finished (or just-updated) issue worktree to a reviewer using
+`issue review request`, which does the mechanics: pushes the branch, opens **or**
+reuses the PR, adds the GitHub reviewer, and Slacks them the body + PR link.
 
-Run this from **inside the issue worktree**. `issue review` detects the PR state and
-does the right thing — your job is to feed it a good PR title/body (first review) or a
-tight summary of what changed (re-review), and to pick the reviewer.
+## What already happened
 
-## Reviewer
+`~/.claude/scripts/issue-review-recon.sh` has **already run**, read-only. It resolved
+the reviewer alias, detected the PR state, picked the branch of the workflow that
+applies, and gathered the diff you need. Its output is below.
 
-The reviewer is the **person alias** `$ARGUMENTS` (from `[people]` in devkit.toml),
-or **`igor`** when that is empty. Resolve it once and substitute it for `<alias>` in
-the commands below. Known aliases: `igor`, `theo`, `liza`, `arnaud`, `lev`. The alias
-resolves to both the GitHub handle (for `--reviewer`) and the Slack user (for the DM);
-you pass the alias to `--to`, not a raw id.
+It ends with `IR-BRANCH: A | B | STOP` and `IR-RESULT: <STATUS>`. Everything you need
+about worktree, PR, and diff state is in that output. Do not re-run `issue info`,
+`gh pr view`, `git status`, `git log`, or `git diff` to orient yourself.
 
-## Steps
+It deliberately did **not** commit, push, or run `issue review request` — those need
+prose only you can write. That is the work left for you.
 
-Invoke the **`checklist` skill** first and track the steps for whichever branch below
-applies. Stop and ask the user if any step fails or is ambiguous — never force-push,
-never invent a summary you can't back with the diff.
+---
 
-### 1. Confirm context + detect PR state
+!`bash ~/.claude/scripts/issue-review-recon.sh "$ARGUMENTS" 2>&1 || true`
 
-- Confirm the cwd is an issue worktree on a feature branch (not `staging`/`main`):
-  `git rev-parse --abbrev-ref HEAD`.
-- Detect the PR for the current branch:
+---
 
-  ```bash
-  gh pr view --json number,state,url,headRefName,reviewRequests,latestReviews 2>/dev/null
-  ```
+## Act on the result
 
-  A non-zero exit / empty output ⇒ **no PR** → go to **Branch A**.
-  A PR in state `OPEN` ⇒ go to **Branch B**.
-  A `MERGED`/`CLOSED` PR ⇒ stop and report; there's nothing to review.
+| `IR-RESULT` | What to do |
+|---|---|
+| `READY` + `IR-BRANCH: A` | First review request — Branch A below. |
+| `READY` + `IR-BRANCH: B` | Re-review after comments — Branch B below. |
+| `NOTHING-NEW` | Tell the user there's nothing new to re-review. Stop. |
+| `PR-MERGED` / `PR-CLOSED` | Report it; there's nothing to review. Stop. |
+| `PROTECTED` | Report the branch and ask which worktree they meant. Stop. |
+| `NOT-ISSUE-WORKTREE` | Report it. Ask whether to run from an issue worktree or supply title/body without the templates. Stop. |
+| `UNKNOWN-REVIEWER` | Report the alias and the known ones, and ask. Stop. |
+| `ERROR` | Read the message, fix the precondition, re-run the script. |
 
-  (`issue review` enforces the same rules — base-branch guard and merged/closed stop —
-  so this is to pick the right inputs below, not to duplicate its logic.)
+On `READY`, open the four steps of the branch named in `IR-BRANCH` as tasks —
+`TaskCreate` one per step, `TaskUpdate` each to `in_progress` as you start it and
+`completed` as it lands — then work them. If those tools are unavailable, keep the
+four steps as a list in your replies; do not go looking for a tracking tool.
 
-### Branch A — No PR yet (work just finished)
+On any other result there is nothing to track — report and stop.
 
-1. **Review the work.** Show `git status --short` and `git diff --stat` (plus the full
-   diff if small). Confirm the change actually looks complete before shipping it.
-2. **Commit** any pending work with a conventional-commit message derived from the
-   issue + diff. If everything is already committed, skip. (`issue review` pushes but
-   does **not** commit — commit first.)
-3. **Draft the PR title + body.** Title is a conventional-commit subject; body is what
-   changed + why, with the Linear issue link. Use the **`/write` skill** for the body.
-4. **Ship it** — `issue review` pushes, opens the PR against the default base
-   (`staging`), requests the reviewer, and DMs them:
+Stop and ask if any step below fails or is ambiguous — never force-push, never invent
+a summary the diff doesn't support.
 
-   ```bash
-   issue review --to "<alias>" \
-     --pr-title "<conventional-commit title>" \
-     --pr-body  "<what changed + why + Linear link>" \
-     "<one-line Slack ask, e.g. opened the PR for <issue>, mind reviewing? 🙏>"
-   ```
+### Branch A — no PR yet
 
-   The trailing positional is the Slack body; the default `slack` template appends the
-   PR URL, so don't paste the link into it yourself.
+1. **Judge the work.** The diff is above. Confirm the change is actually complete and
+   coherent before shipping it. Untracked files are listed separately — decide
+   whether each belongs in the commit.
+2. **Commit** anything pending with a conventional-commit message derived from the
+   issue + diff. (`issue review request` pushes but does not commit.)
+3. **Draft the PR title + body** with the **`/write` skill**. Leave the Linear id out
+   of both — the `pr_title` / `pr_body` templates append the `[<ISSUE>]` suffix and the
+   `Closes <ISSUE>` line from the worktree's issue record, and writing them yourself
+   costs title budget the template accounts for.
+4. **Ship it** with the command printed under `== next ==`, filling in the three
+   placeholders. The trailing positional is the Slack body; the `review_request`
+   template appends the PR URL, so don't paste the link into it.
 
-### Branch B — PR exists, changes made to address comments
+   Add `--arg linear_magic_word=Ref` if this PR must **not** close the issue (partial
+   work, one of several PRs) — it still links, but merging won't transition the issue.
+   Other contributing words: `references`, `part of`, `related to`, `contributes to`,
+   `towards`. Ask the user if it's unclear whether the PR closes the issue.
 
-1. **Confirm there are new changes.** There must be something new to re-review —
-   uncommitted changes, unpushed commits, or commits newer than the reviewer's last
-   review:
+### Branch B — PR open, comments addressed
 
-   ```bash
-   git status --short
-   git log --oneline @{u}..HEAD 2>/dev/null   # unpushed commits
-   ```
-
-   If nothing is pending and HEAD is already what they last reviewed, tell the user
-   there's nothing new to re-review and stop.
-2. **Commit** the pending changes (conventional-commit message describing the review
-   fixes) so the PR reflects the addressed comments. `issue review` will push them.
-3. **Summarize what changed.** Gather the diff that addresses the comments — the
-   commits since the reviewer's last review:
-
-   ```bash
-   git log --reverse --format='%s%n%b' <last-reviewed-sha>..HEAD
-   git diff <last-reviewed-sha>..HEAD
-   ```
-
-   Then use the **`/write` skill** to produce a tight **1–2 sentence** summary.
-4. **Re-request the review** — on an OPEN PR `issue review` adds the reviewer back and
-   DMs them the summary:
-
-   ```bash
-   issue review --to "<alias>" \
-     "addressed your comments: <1–2 sentence summary>. Mind taking another look? 🙏"
-   ```
-
-   No `--pr-title`/`--pr-body` needed — the PR already exists.
+1. **Judge the work.** The diff above is scoped to what the reviewer has *not* seen
+   (since their last review, or since the pushed tip if they haven't reviewed yet).
+2. **Commit** anything pending with a conventional-commit message describing the
+   review fixes.
+3. **Summarize** with the **`/write` skill** — a tight 1–2 sentences on what changed,
+   backed by that diff.
+4. **Re-request** with the command printed under `== next ==`. No
+   `--pr-title`/`--pr-body`; the PR already exists.
 
 ## Notes
 
-- `issue review` posts the Slack DM itself when `SLACK_TOKEN` is configured. If it has
-  no token it prints a JSON **intent** (`slack_id`, `text`, `pr_url`, …) instead of
-  sending — in that case send the DM yourself with `slack_send_message` to that
-  `slack_id` (open the DM with `slack_create_conversation` if needed).
-- Never force-push. `issue review` runs a plain `git push -u`; if the branch has
+- The subcommand is `issue review request`, not `issue review` — the latter is a
+  command group and exits non-zero.
+- `issue review request` posts the Slack DM itself when `SLACK_TOKEN` is configured.
+  Without a token it prints a JSON **intent** (`slack_id`, `text`, `pr_url`, …) instead
+  of sending — then send the DM yourself with `slack_send_message` to that `slack_id`
+  (open the DM with `slack_create_conversation` if needed). The recon output shows the
+  reviewer's `slack:` id.
+- Never force-push. `issue review request` runs a plain `git push -u`; if the branch has
   diverged it fails — surface the error and ask, don't retry blindly.
 - Override the GitHub handle or base only when needed: `--reviewer <gh-handle>`,
   `--base <branch>`. Skip the push with `--no-push`.
-- Keep the Slack body in the user's voice — short, direct, no AI throat-clearing. The
-  `/write` skill output is the body; don't pad it.
-- If `issue review` fails, show the exact error and stop.
+- Keep the Slack body in the user's voice — short, direct, no AI throat-clearing.
+- If `issue review request` fails, show the exact error and stop.

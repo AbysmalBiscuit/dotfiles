@@ -175,14 +175,10 @@ smallest test that exercises the broken path: a unit test on the faulty function
 or an integration test when the bug spans modules / IO / multiple apps. If the bug
 genuinely can't be covered by an automated test, say so explicitly and explain why.
 
-## Before committing (TS apps)
+## Formatting and linting
 
-CI runs `oxlint --deny-warnings && oxfmt --check`. Before committing TS changes,
-run oxfmt + oxlint on the modified files from the monorepo root:
-```bash
-oxfmt --write <changed_files>
-oxlint --fix <changed_files>
-```
+CI runs `oxlint --deny-warnings && oxfmt --check`; the prek pre-push hook runs both
+for you. Don't invoke oxfmt or oxlint by hand.
 ```
 
 ### 6. Report back

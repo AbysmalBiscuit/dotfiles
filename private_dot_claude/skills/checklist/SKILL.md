@@ -1,7 +1,7 @@
 ---
 name: checklist
 description: Use when a request involves 3+ distinct steps, sequential phases ("then", "after that", "finally"), a numbered or bulleted list of items, repeating an operation over several files/targets ("for each", "all of the"), or executing a plan — before taking the first action. Especially when rushed ("quickly", "just get it done") or when the steps seem obvious.
-allowed-tools: TodoWrite
+allowed-tools: TaskCreate, TaskUpdate
 ---
 
 # Tracking Multi-Step Work
@@ -12,7 +12,7 @@ Multi-step work gets a visible checklist BEFORE the first action. The task list 
 
 ## The Rule
 
-If the work has 3+ distinct steps, create one task per step with `TodoWrite` **before doing anything else**. It takes one task per call — `subject` (brief title) and `description` (what needs doing) as top-level strings; there is no `tasks`/`todos` array parameter, so call it once per step. Then, for every step:
+If the work has 3+ distinct steps, create one task per step with `TaskCreate` **before doing anything else**. It takes one task per call — `subject` (brief title) and `description` (what needs doing) as top-level strings; there is no `tasks`/`todos` array parameter, so call it once per step. Then, for every step:
 
 1. Mark it `in_progress` with `TaskUpdate` before starting it (exactly one at a time)
 2. Do the work
