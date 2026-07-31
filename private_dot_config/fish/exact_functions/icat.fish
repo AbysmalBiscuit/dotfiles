@@ -1,6 +1,3 @@
-# {{- if .tool.kitty -}}
-# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 function icat --wraps='kitty +kitten icat' --description 'alias icat=kitty +kitten icat --align left'
     kitty +kitten icat --align left $argv
 end
-# {{- end -}}

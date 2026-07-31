@@ -1,7 +1,4 @@
-# {{- if .tool.trash_cli -}}
-# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 function trash-put --wraps='trash-put' --description 'Sets TRASHDIR automatically based on current realpath'
     set -l trashdir (__get_trash_dir)
     command trash-put --trash-dir $trashdir $argv
 end
-# {{- end -}}

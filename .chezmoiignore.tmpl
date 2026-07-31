@@ -173,6 +173,20 @@ AppData/Roaming/ConEmu.xml
 AppData/**
 Documents
 **\.ps1
+
+{{- if not (index $.tool "trash_cli") }}
+.config/fish/exact_functions/__get_trash_dir.fish
+.config/fish/exact_functions/trash-empty.fish
+.config/fish/exact_functions/trash-empty.fish
+.config/fish/exact_functions/trash-list.fish
+.config/fish/exact_functions/trash-put.fish
+.config/fish/exact_functions/trash-restore.fish
+.config/fish/exact_functions/trash.fish
+{{- end }}
+
+{{- if not (index $.tool "kitty") }}
+.config/fish/exact_functions/icat.fish.tmpl
+{{- end }}
 {{- end }}
 
 {{- if not .personal }}
