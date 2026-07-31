@@ -1,5 +1,5 @@
 ---
-description: Cold-start a session inside an issue worktree — load the ISSUE_SUMMARY handoff and orient
+description: Cold-start a session inside an issue worktree — load the ISSUE_SUMMARY handoff and orient [is]
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource
 ---
 

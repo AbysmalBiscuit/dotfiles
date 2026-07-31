@@ -1,5 +1,5 @@
 ---
-description: Generate a standardized HTML PR-review report under pr-reviews/
+description: Generate a standardized HTML PR-review report under pr-reviews/ [rpr]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Set up worktrees for multiple Linear issues at once — bugs get Sentry/Vercel/PostHog recon, everything else gets plain setup
+description: Set up worktrees for multiple Linear issues at once — bugs get Sentry/Vercel/PostHog recon, everything else gets plain setup [isb]
 allowed-tools: Bash, Read, Workflow, TaskOutput, AskUserQuestion
 argument-hint: "<ENG-1234 ENG-1235 https://linear.app/... — space/comma/newline separated> [--dry-run]"
 ---

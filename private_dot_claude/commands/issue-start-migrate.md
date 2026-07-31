@@ -1,5 +1,5 @@
 ---
-description: Cold-start an issue worktree via /issue-start, then do the kysely ServiceContext→kysely migration under fixed directives
+description: Cold-start an issue worktree via /issue-start, then do the kysely ServiceContext→kysely migration under fixed directives [ism]
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
 ---
 

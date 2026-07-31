@@ -1,5 +1,5 @@
 ---
-description: Run validation after migrating endpoint to kysely.
+description: Run validation after migrating endpoint to kysely. [vm]
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
 ---
 

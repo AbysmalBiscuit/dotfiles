@@ -1,5 +1,5 @@
 ---
-description: Generate a standardized self-contained HTML report under reports/ for summarizing and giving context about anything
+description: Generate a standardized self-contained HTML report under reports/ for summarizing and giving context about anything [r]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 

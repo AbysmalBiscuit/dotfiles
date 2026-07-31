@@ -1,5 +1,5 @@
 ---
-description: Add PR labels required to deploy a prod preview instance
+description: Add PR labels required to deploy a prod preview instance [pp]
 allowed-tools: Bash, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 

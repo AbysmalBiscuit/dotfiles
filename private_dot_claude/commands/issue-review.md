@@ -1,5 +1,5 @@
 ---
-description: Request (re-)review of the current issue worktree via `issue review request` — push, open/reuse the PR, add the reviewer, and Slack them
+description: Request (re-)review of the current issue worktree via `issue review request` — push, open/reuse the PR, add the reviewer, and Slack them [ir]
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__plugin_slack_slack__slack_send_message, mcp__plugin_slack_slack__slack_create_conversation
 argument-hint: "[reviewer-alias] (optional — defaults to igor)"
 ---

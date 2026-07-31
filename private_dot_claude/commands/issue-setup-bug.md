@@ -1,5 +1,5 @@
 ---
-description: Set up an issue worktree via /issue-setup for a bug, fanning Vercel/Sentry/PostHog recon out to subagents, then tracing the error path with /graphify
+description: Set up an issue worktree via /issue-setup for a bug, fanning Vercel/Sentry/PostHog recon out to subagents, then tracing the error path with /graphify [isb]
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__list_comments, mcp__linear__save_comment, mcp__plugin_sentry_sentry__search_issues, mcp__plugin_sentry_sentry__find_projects, mcp__plugin_sentry_sentry__execute_sentry_tool, mcp__plugin_sentry_sentry__get_sentry_resource, mcp__plugin_sentry_sentry__analyze_issue_with_seer, mcp__plugin_sentry_sentry__search_events, mcp__plugin_posthog_posthog__exec, mcp__plugin_slack_slack__slack_read_thread, mcp__plugin_slack_slack__slack_read_channel, mcp__plugin_slack_slack__slack_search_public
 argument-hint: "<ENG-1234 | Linear URL | Slack thread URL | free-text bug description>"
 ---

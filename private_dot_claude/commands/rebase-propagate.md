@@ -1,5 +1,5 @@
 ---
-description: Rebase on latest staging and propagate down the stack of dependent PRs
+description: Rebase on latest staging and propagate down the stack of dependent PRs [rp]
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 
