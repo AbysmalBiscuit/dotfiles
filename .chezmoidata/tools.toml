@@ -1934,9 +1934,11 @@ init_command_only_if_no = []
 lang = "rust"
 name = "devkit"
 cmds = [
+    "devkit",
     "devkit-mcp",
     "devkitd",
     "devrun",
+    "docm",
     "issue",
     "lockm",
     "portm"
