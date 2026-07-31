@@ -45,7 +45,7 @@
         "type": "git-review",
         "rawValue": false,
         "metadata": {
-          "hideNoGit": "false",
+          "hideNoGit": "true",
           "hideStatus": "false",
           "hideTitle": "true"
         }
@@ -58,7 +58,10 @@
         "id": "d5efaea6-4aac-4bce-8f61-b63fc952ef3e",
         "type": "git-worktree",
         "color": "brightBlue",
-        "bold": true
+        "bold": true,
+        "metadata": {
+          "hideNoGit": "true"
+        }
       }
     ],
     [
