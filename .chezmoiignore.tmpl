@@ -54,6 +54,9 @@ localSettings.yaml
 .glzr/
 {{- end }}
 
+{{- if not (index .tool "devkit") }}
+.config/fish/conf.d/devkit.fish
+{{- end }}
 
 # os specific exclusions
 
