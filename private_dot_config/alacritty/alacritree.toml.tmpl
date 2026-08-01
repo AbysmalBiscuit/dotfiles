@@ -36,6 +36,9 @@ pr_status = true
 sidebar_click_focus = true
 # a sidebar query reaches every row; the toggle filters resume when it empties
 search_scope = "all"
+# every row offers its full name on hover, so sweeping the list never falls back
+# to the half-second delay on a name that happens to fit
+sidebar_tooltips = "always"
 # hold attention pings and drop them if the agent resumes within the window
 attention_grace_ms = 2000
 # restart required — present each frame as soon as it is drawn
