@@ -6,6 +6,8 @@
 # {{- end }}
 # {{- $path_prepend := list -}}
 # {{- $path_append := list -}}
+# {{- $man_prepend := list -}}
+# {{- $man_append := list -}}
 # {{- $shell := .shell -}}
 # {{- /* $shell := "zsh" */ -}}
 # {{- /* Only cache env on personal and non-ephemeral systems */ -}}
@@ -219,7 +221,7 @@ export PSTLROOT="/opt/intel/pstl"
 export DAALROOT="/opt/intel/daal"
 export PKG_CONFIG_PATH="/opt/intel/mkl/bin/pkgconfig"
 export TBB_PATH="/opt/intel/tbb"
-export MANPATH="/opt/intel/man/common:/opt/intel/documentation_2020/en/debugger/gdb-ia/man/:$MANPATH"
+# {{- $man_prepend = concat $man_prepend (list "/opt/intel/man/common" "/opt/intel/documentation_2020/en/debugger/gdb-ia/man") }}
 export DYLD_LIBRARY_PATH="/opt/intel/lib:/opt/intel/lib/intel64:/opt/intel/ipp/lib:/opt/intel/mkl/lib:/opt/intel/tbb/lib:/opt/intel/daal/lib:$DYLD_LIBRARY_PATH"
 export INFOPATH="/opt/intel/documentation_2020/en/debugger/gdb-ia/info/:$INFOPATH"
 export IPPROOT="/opt/intel/ipp"
@@ -422,8 +424,25 @@ EOF
 # PATH_SYS='# {{/* $path_sys | join ":" */}}'
 # PATH='# {{/* $path | join ":" */}}'
 
+# Split PATH into linux and windows parts
+# {{- $path_clean := $path -}}
+# {{- $path_windows := list -}}
+# {{- if .is_wsl -}}
+# {{- $path_clean = list -}}
+# {{- range $path -}}
+    # {{- if regexMatch "^/mnt/[a-z]" . -}}
+        # {{- $path_windows = append $path_windows . -}}
+    # {{- else -}}
+        # {{- $path_clean = append $path_clean . -}}
+    # {{- end -}}
+# {{- end -}}
+# {{- end }}
+
 # MANPATH='# {{/* output "man" "--path" | trim */}}'
-# {{ $man_path := output "manpath" | trim }}
+# manpath(1) reads $PATH, so passing the clean PATH keeps the slow /mnt man dirs
+# out; MANPATH must be unset or manpath echoes it back instead of reading config.
+# {{- $man_dirs := output "/usr/bin/env" "-u" "MANPATH" (printf "PATH=%s" ($path_clean | join ":")) "manpath" | trim | splitList ":" -}}
+# {{- $man_path := concat $man_prepend $man_dirs $man_append | compact | uniq | join ":" }}
 
 # Configure python paths
 # {{- if .tool.python }}
@@ -436,20 +455,6 @@ export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
 # {{- end }}
 
 # {{- if .is_wsl }}
-
-# Exclude windows man paths as it makes man very slow
-# export MANPATH="$(remove_windows_paths "$MANPATH")"
-
-# {{- $items := splitList ":" $man_path -}}
-# {{- $filtered := list -}}
-
-# {{- range $items -}}
-    # {{- if not (regexMatch "^/mnt/[a-z]" .) -}}
-        # {{- $filtered = append $filtered . -}}
-    # {{- end -}}
-# {{- end -}}
-
-# {{- $man_path = $filtered | uniq | join ":" }}
 
 # WSL Specific
 export WINHOME=# {{ (index (index .secrets.system .system.hostname | default dict) "wsl_winhome") | quote }}
@@ -474,26 +479,13 @@ export BROWSER=# {{ (index (index .secrets.system .system.hostname | default dic
 # PATH_CLEAN="${PATH_CLEAN:1}"
 # PATH_WINDOWS="${PATH_WINDOWS:1}"
 
-
-# {{- $items := $path -}}
-# {{- $path_clean := list -}}
-# {{- $path_windows := list -}}
-
-# {{- range $items -}}
-    # {{- if not (regexMatch "^/mnt/[a-z]" .) -}}
-        # {{- $path_clean = append $path_clean . -}}
-    # {{- else -}}
-        # {{- $path_windows = append $path_windows . -}}
-    # {{- end -}}
-# {{- end -}}
-
 # {{- $path_clean = $path_clean | compact | uniq | join ":" }}
 # {{- $path_windows = $path_windows | compact | uniq | join ":" }}
 
 export PATH_CLEAN='# {{ $path_clean }}'
 export PATH_WINDOWS='# {{ $path_windows }}'
 # export PATH_SYS_CLEAN="$(remove_windows_paths "$PATH_SYS")"
-# {{- else -}}
+# {{- else }}
 # else
 export PATH_CLEAN='# {{ $path | join ":" }}'
 # export PATH_SYS_CLEAN="$PATH_SYS"
