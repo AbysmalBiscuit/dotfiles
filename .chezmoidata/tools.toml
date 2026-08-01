@@ -1562,9 +1562,15 @@ url = ""
 git = "https://github.com/mathix420/alacritree"
 comment = ""
 install_command = "cargo install --git https://github.com/mathix420/alacritree"
-completions_command = ""
+completions_command = "CMD completions SHELL"
 init_command = ""
-supported_shells = []
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "powershell",
+    "zsh"
+]
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
