@@ -98,9 +98,14 @@
   cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d $LOCAL $MERGED $REMOTE
   ff=false
   conflictStyle=diff3
+{{ if not .is_windows }}
 [credential "https://github.com"]
-	helper =
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper =
 	helper = !/usr/bin/gh auth git-credential
+{{ else }}
+[credential "https://github.com"]
+	helper = "C:/Program Files/GitHub CLI/gh.exe" auth git-credential
+[credential "https://gist.github.com"]
+	helper = "C:/Program Files/GitHub CLI/gh.exe" auth git-credential
+{{ end }}
