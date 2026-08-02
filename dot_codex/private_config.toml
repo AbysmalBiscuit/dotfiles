@@ -34,5 +34,20 @@ enabled = true
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
 
+[tui]
+status_line = [
+    "model-with-reasoning",
+    "current-dir",
+    "project-name",
+    "git-branch",
+    "pull-request-number",
+    "run-state",
+    "approval-mode",
+    "context-used",
+    "five-hour-limit",
+    "weekly-limit",
+]
+status_line_use_colors = true
+
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 2
