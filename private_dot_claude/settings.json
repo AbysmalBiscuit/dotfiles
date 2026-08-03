@@ -1,5 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
+    "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+  },
   "fileSuggestion": {
     "type": "command",
     "command": "~/.claude/file-suggestion.sh"
@@ -11,7 +15,7 @@
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_NO_FLICKER": "1",
-    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "1",
+    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000"
   },
@@ -150,6 +154,11 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/block-rg-replace-footgun.py",
             "statusMessage": "Checking rg flags"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/prefer-tsgo.py",
+            "statusMessage": "Checking for tsc"
           }
         ]
       }
@@ -180,8 +189,32 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/alacritree-follow.sh",
-            "async": true,
-            "timeout": 10
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "timeout": 10,
+            "async": true
           }
         ]
       }
@@ -198,7 +231,6 @@
     "claude-md-management@claude-plugins-official": true,
     "devkit@devkit": true,
     "elements-of-style@superpowers-marketplace": true,
-    "linear@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
     "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
@@ -209,7 +241,8 @@
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true,
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "linear@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
