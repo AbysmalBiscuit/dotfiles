@@ -156,8 +156,12 @@ localSettings.yaml
 {{- if not (lookPath "ConEmu.exe") }}
 AppData/Roaming/ConEmu.xml
 {{- end }}
+
 {{- else -}}
+
 # is not windows
+**.ps1
+**.ps1.tmpl
 {{- if not (index $.tool "tmux") }}
 .tmux/*
 .tmux.conf
@@ -172,7 +176,6 @@ AppData/Roaming/ConEmu.xml
 .local/bin/tmux-*.ps1
 AppData/**
 Documents
-**\.ps1
 
 {{- if not (index $.tool "trash_cli") }}
 .config/fish/exact_functions/__get_trash_dir.fish
