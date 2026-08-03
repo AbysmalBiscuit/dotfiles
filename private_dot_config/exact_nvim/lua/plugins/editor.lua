@@ -45,6 +45,15 @@
 ---@type LazyPluginSpec[]
 return {
   {
+    -- Neovim 0.13 moved the `search_match_*` globals flash reads over FFI into
+    -- an exported `Search` struct, so upstream flash errors with
+    -- "undefined symbol: search_match_lines". Fork carries the pending
+    -- compatibility patch (folke/flash.nvim#496); drop once it lands upstream.
+    "folke/flash.nvim",
+    url = "https://github.com/pedro757/flash.nvim.git",
+    branch = "fix/neovim-0.13-search-state",
+  },
+  {
     "mikavilpas/yazi.nvim",
     -- event = "VeryLazy",
     enabled = true,
