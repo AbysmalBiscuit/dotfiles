@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "Uses git-stack navigation (git-stack previous) to reach the earlier commit instead of copying SHAs", "passed": true, "evidence": "Primary uses relative ref `git-stack amend HEAD~2` (no SHA copy) and an explicit alternative `git-stack previous 2 --stash` to navigate to the earliest commit."},
+    {"text": "Uses `git-stack amend` (optionally with -a) to meld the staged fix into the target commit", "passed": true, "evidence": "`git-stack amend HEAD~2` melds the staged fix into the earliest commit."},
+    {"text": "Notes that git-stack automatically rebases the descendant commits onto the amended commit", "passed": true, "evidence": "\"git-stack automatically rebases the two commits stacked on top onto the rewritten version.\""},
+    {"text": "Does NOT recommend `git rebase -i` / interactive rebase or `git commit --amend` + manual rebase as the primary method", "passed": true, "evidence": "Primary method is git-stack amend; no interactive rebase or commit --amend + manual rebase recommended."}
+  ],
+  "score": 1.0,
+  "summary": "All four assertions satisfied: git-stack amend with navigation, auto-restack noted, no manual rebase."
+}

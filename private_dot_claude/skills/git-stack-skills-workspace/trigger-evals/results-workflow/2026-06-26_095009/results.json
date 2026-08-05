@@ -1,0 +1,792 @@
+{
+  "exit_reason": "max_iterations (3)",
+  "original_description": "Drive the day-to-day stacked-branch authoring loop with the `git-stack` CLI: syncing against upstream, viewing the stack, navigating between commits/branches, editing earlier commits (amend/reword/fixup), running checks across the stack, and restacking branches onto new bases. Use this WHENEVER the user is working with stacked branches or stacked PRs, mentions `git-stack`/`git stack`/`git sync`/ `git next`/`git prev`/`git amend`/`git reword`, asks to \"rebase my stack\", \"sync my branches\", \"edit an earlier commit\", \"fix up a parent commit\", \"navigate the stack\", or \"run tests across the stack\" \u2014 even if they don't name git-stack explicitly but the repo clearly uses a stacked-diff workflow. For pushing branches as PRs use `git-stack-publish`; for undoing/repairing a broken stack use `git-stack-recover`.",
+  "best_description": "Drive the day-to-day stacked-branch authoring loop with the `git-stack` CLI: syncing against upstream, viewing the stack, navigating between commits/branches, editing earlier commits (amend/reword/fixup), running checks across the stack, and restacking branches onto new bases. Use this WHENEVER the user is working with stacked branches or stacked PRs, mentions `git-stack`/`git stack`/`git sync`/ `git next`/`git prev`/`git amend`/`git reword`, asks to \"rebase my stack\", \"sync my branches\", \"edit an earlier commit\", \"fix up a parent commit\", \"navigate the stack\", or \"run tests across the stack\" \u2014 even if they don't name git-stack explicitly but the repo clearly uses a stacked-diff workflow. For pushing branches as PRs use `git-stack-publish`; for undoing/repairing a broken stack use `git-stack-recover`.",
+  "best_score": "3/6",
+  "best_train_score": "6/12",
+  "best_test_score": "3/6",
+  "final_description": "Use when someone working with stacked branches, stacked commits, or stacked PRs wants to build or revise that stack \u2014 especially with the `git-stack` CLI, but trigger even if they only say \"git stack\" or describe the workflow. Fires for any of these intents: sync or rebase the whole stack onto an updated upstream/main at the start of the day; amend or fold staged changes into an earlier (or HEAD) commit and carry the descendants along; reword an earlier/parent commit's message and bring its children; fold a `fixup!` commit into its target further down the stack; jump to or edit the Nth commit down (e.g. fix a typo in the 2nd commit) without breaking the commits above it; or run a build/test command across every commit in the stack. In short: editing or restacking earlier commits while keeping children rebased. For pushing or opening stacked PRs use `git-stack-publish`; for conflicts, lost branches, or undoing a rewrite use `git-stack-recover`.",
+  "iterations_run": 3,
+  "holdout": 0.4,
+  "train_size": 12,
+  "test_size": 6,
+  "history": [
+    {
+      "iteration": 1,
+      "description": "Drive the day-to-day stacked-branch authoring loop with the `git-stack` CLI: syncing against upstream, viewing the stack, navigating between commits/branches, editing earlier commits (amend/reword/fixup), running checks across the stack, and restacking branches onto new bases. Use this WHENEVER the user is working with stacked branches or stacked PRs, mentions `git-stack`/`git stack`/`git sync`/ `git next`/`git prev`/`git amend`/`git reword`, asks to \"rebase my stack\", \"sync my branches\", \"edit an earlier commit\", \"fix up a parent commit\", \"navigate the stack\", or \"run tests across the stack\" \u2014 even if they don't name git-stack explicitly but the repo clearly uses a stacked-diff workflow. For pushing branches as PRs use `git-stack-publish`; for undoing/repairing a broken stack use `git-stack-recover`.",
+      "train_passed": 6,
+      "train_failed": 6,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 3,
+      "test_failed": 3,
+      "test_total": 6,
+      "test_results": [
+        {
+          "query": "how do i jump back two commits in my stack so i can edit an earlier one, i don't want to copy sha hashes around",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i have feature2 stacked on feature1 but feature1 just merged \u2014 restack feature2 onto main instead",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "show me my current stack of branches on top of main, the git log graph is too noisy",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "git-stack sync stopped on a merge conflict, what do i do now",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i configure git aliases in my global gitconfig",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "stash my working tree changes so i can switch branches",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 6,
+      "failed": 6,
+      "total": 12,
+      "results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "description": "Use when a user is actively building or revising a chain of stacked branches/commits (a \"stacked diff\" or stacked-PR workflow, typically via the `git-stack` CLI) and wants to author or reshape that stack \u2014 NOT push it or fix a broken one. Trigger for: syncing/rebasing the whole stack onto updated upstream main; amending or folding staged changes into an earlier (non-HEAD) commit and carrying the descendants along; rewording an ancestor commit's message; folding a `fixup!` commit into its target lower in the stack; navigating to or editing the Nth commit down without breaking the commits above it; or running a build/test command against every commit in the stack. Assume these apply whenever the user describes editing earlier commits and keeping children rebased, even without naming `git-stack`. For pushing/opening PRs use `git-stack-publish`; for conflicts, lost branches, or undoing a rewrite use `git-stack-recover`.",
+      "train_passed": 6,
+      "train_failed": 6,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 3,
+      "test_failed": 3,
+      "test_total": 6,
+      "test_results": [
+        {
+          "query": "how do i jump back two commits in my stack so i can edit an earlier one, i don't want to copy sha hashes around",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i have feature2 stacked on feature1 but feature1 just merged \u2014 restack feature2 onto main instead",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "show me my current stack of branches on top of main, the git log graph is too noisy",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "how do i configure git aliases in my global gitconfig",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "git-stack sync stopped on a merge conflict, what do i do now",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "stash my working tree changes so i can switch branches",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 6,
+      "failed": 6,
+      "total": 12,
+      "results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 3,
+      "description": "Use when someone working with stacked branches, stacked commits, or stacked PRs wants to build or revise that stack \u2014 especially with the `git-stack` CLI, but trigger even if they only say \"git stack\" or describe the workflow. Fires for any of these intents: sync or rebase the whole stack onto an updated upstream/main at the start of the day; amend or fold staged changes into an earlier (or HEAD) commit and carry the descendants along; reword an earlier/parent commit's message and bring its children; fold a `fixup!` commit into its target further down the stack; jump to or edit the Nth commit down (e.g. fix a typo in the 2nd commit) without breaking the commits above it; or run a build/test command across every commit in the stack. In short: editing or restacking earlier commits while keeping children rebased. For pushing or opening stacked PRs use `git-stack-publish`; for conflicts, lost branches, or undoing a rewrite use `git-stack-recover`.",
+      "train_passed": 6,
+      "train_failed": 6,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 3,
+      "test_failed": 3,
+      "test_total": 6,
+      "test_results": [
+        {
+          "query": "how do i jump back two commits in my stack so i can edit an earlier one, i don't want to copy sha hashes around",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i have feature2 stacked on feature1 but feature1 just merged \u2014 restack feature2 onto main instead",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "show me my current stack of branches on top of main, the git log graph is too noisy",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "how do i configure git aliases in my global gitconfig",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "git-stack sync stopped on a merge conflict, what do i do now",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "stash my working tree changes so i can switch branches",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 6,
+      "failed": 6,
+      "total": 12,
+      "results": [
+        {
+          "query": "amend my staged changes into HEAD and rebase the descendants, i'm using git stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "reword the commit message on the parent commit of my branch and bring the children along",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i want to run `cargo nextest run` against every commit in my current stack to make sure none of them broke after i rewrote history",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "I committed a fixup! commit at the top of my branch, how do I get git-stack to fold it into the right commit lower in the stack",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "i'm on a git-stack repo, 4 commits into my branch and i need to fix a typo in the 2nd commit's code without breaking the commits above it. how?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "start of my day, can you sync my stacked branches against upstream main and rebase everything cleanly",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "write a commit message for the changes i just staged",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "push my ready branches to origin and open the PRs on github",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "how do i set up stack.pull-remote and stack.push-remote for my fork",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "i ran a git-stack rebase and it lost one of my branches, how do i get it back",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "do an interactive rebase to squash the last 3 commits on my non-stacked feature branch",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "my cargo build is failing with a borrow checker error, help me fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

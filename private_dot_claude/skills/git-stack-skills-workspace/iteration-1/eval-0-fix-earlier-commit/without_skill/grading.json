@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "Uses git-stack navigation (git-stack previous) to reach the earlier commit instead of copying SHAs", "passed": false, "evidence": "Step 0 instructs copying the short SHA (`<OLDEST>`) and uses it throughout; never uses git-stack previous to navigate."},
+    {"text": "Uses `git-stack amend` (optionally with -a) to meld the staged fix into the target commit", "passed": true, "evidence": "`git-stack amend <OLDEST>` melds the staged change into the earliest commit."},
+    {"text": "Notes that git-stack automatically rebases the descendant commits onto the amended commit", "passed": true, "evidence": "\"Rebases the two commits stacked above it onto the rewritten commit.\""},
+    {"text": "Does NOT recommend `git rebase -i` / interactive rebase or `git commit --amend` + manual rebase as the primary method", "passed": true, "evidence": "\"you do not need to do a manual interactive rebase\"; primary is git-stack amend."}
+  ],
+  "score": 0.75,
+  "summary": "Correct git-stack amend approach but relies on copying SHAs instead of git-stack navigation."
+}

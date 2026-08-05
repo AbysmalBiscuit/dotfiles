@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "Explains git-stack does NOT resolve conflicts and hands control back to plain git", "passed": true, "evidence": "\"git-stack deliberately does not resolve merge conflicts ... hands control back to plain git rebase.\""},
+    {"text": "Walks through resolving with git (edit files, git add, git rebase --continue), or git rebase --abort to bail", "passed": true, "evidence": "Edit conflicted files, `git add`, `git rebase --continue`; bail with `git rebase --abort`."},
+    {"text": "Mentions that after a manual rebase the stack may need `git-stack --repair`, or that branch-stash apply can return to the pre-sync state", "passed": true, "evidence": "Both: `git-stack --repair` for a split/diverged stack and `git-branch-stash apply` to restore pre-sync positions."},
+    {"text": "If it mentions branch-stash as the bail-out, targets the `git-stack` stash stack by name, not the default", "passed": false, "evidence": "Mentions branch-stash as bail-out but uses bare `git-branch-stash apply` with no `git-stack` stack name — incorrect per the naming requirement."}
+  ],
+  "score": 0.75,
+  "summary": "Correctly defers conflicts to git and mentions repair, but the branch-stash bail-out omits the git-stack stack name."
+}

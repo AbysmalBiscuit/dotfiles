@@ -1,0 +1,174 @@
+{
+  "skill_name": "git-stack-{workflow,publish,recover}",
+  "note": "Procedural CLI skills. Subagents produce the exact command plan + guidance for a stacked-PR scenario; they must NOT execute destructive git-stack operations (rebase/push/amend) on a real repo. Read-only inspection commands are fine.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "fix-earlier-commit",
+      "target_skill": "git-stack-workflow",
+      "prompt": "I'm working in a repo that uses git-stack. I'm 3 commits deep on my feature branch and I just noticed the very first commit renamed a function wrong (`fetchUser` should be `getUser`). I've already fixed the file in my working tree. Walk me through correcting that earliest commit with git-stack so the two commits stacked on top of it come along cleanly. Give me the exact commands. Don't run any history-rewriting commands against my repo \u2014 just give me the plan.",
+      "assertions": [
+        {
+          "text": "Uses git-stack navigation (git-stack previous) to reach the earlier commit instead of copying SHAs",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Uses `git-stack amend` (optionally with -a) to meld the staged fix into the target commit",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Notes that git-stack automatically rebases the descendant commits onto the amended commit",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Does NOT recommend `git rebase -i` / interactive rebase or `git commit --amend` + manual rebase as the primary method",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "sync-and-run",
+      "target_skill": "git-stack-workflow",
+      "prompt": "Start of my day on a git-stack repo. I want to (1) update all my stacked branches against the latest upstream main, and (2) confirm every commit in my current stack still passes `cargo test`. What git-stack commands do I run? Just the plan.",
+      "assertions": [
+        {
+          "text": "Uses `git-stack sync` to update branches against upstream",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Uses `git-stack run cargo test` to run the check across every commit in the stack",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Does NOT invent a non-existent subcommand (e.g. `git-stack push`, `git-stack rebase`, `git-stack test`) for these steps",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "push-stack-wip",
+      "target_skill": "git-stack-publish",
+      "prompt": "I have a stack of three branches: feature-a, then feature-b on top of it, then feature-c on top of that. feature-b's top commit is titled 'WIP: refactor helpers'. I want to push these and open PRs on GitHub. How do I do this with git-stack and gh? Explain what will actually get pushed and why. Don't push anything yet.",
+      "assertions": [
+        {
+          "text": "Uses `git-stack --push` (a flag on the top-level command), not a `git-stack push` subcommand",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Explains only the root/bottom branch (feature-a) is 'ready'; branches stacked on other dev branches are held back",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Identifies the 'WIP:' commit on feature-b as a blocker and suggests rewording/finishing it",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Recommends one-PR-at-a-time strategy and/or setting each gh PR base to the branch below it (not all onto main)",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "fork-remotes",
+      "target_skill": "git-stack-publish",
+      "prompt": "I contribute to a project from my own fork. `upstream` is the main repo and `origin` is my fork. I want git-stack to pull main from upstream but push my feature branches to origin. How do I configure that, and then how do I push my ready branch? Commands please.",
+      "assertions": [
+        {
+          "text": "Sets `stack.pull-remote` to upstream",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Sets `stack.push-remote` to origin",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Uses `git-stack --push` to publish after configuring remotes",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Does not confuse the two remotes (pull=upstream/shared, push=origin/fork)",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "undo-bad-rebase",
+      "target_skill": "git-stack-recover",
+      "prompt": "I just ran a git-stack rebase and it moved my branches somewhere I didn't expect \u2014 one of my feature branches isn't where it should be anymore. I haven't pushed. How do I undo this and get my branches back to where they were before the rebase? Give me the recovery steps.",
+      "assertions": [
+        {
+          "text": "Uses `git-branch-stash` (list, then apply/pop) to restore branch positions",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Explains git-stack auto-snapshots branch state before rewriting, so a restore point exists",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Recommends `apply` (or inspecting via list) before `pop`, and verifying with `git-stack` afterward",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Does NOT jump straight to manual `git reflog`/`git reset` as the primary recovery path",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Targets git-stack's snapshot stack by name (e.g. `git branch-stash pop git-stack`), not the default `recent` stack",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "sync-conflict",
+      "target_skill": "git-stack-recover",
+      "prompt": "I ran `git-stack sync` and it stopped partway through with a merge conflict. What do I do now? I expected git-stack to handle it.",
+      "assertions": [
+        {
+          "text": "Explains git-stack does NOT resolve conflicts and hands control back to plain git",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Walks through resolving with git (edit files, git add, git rebase --continue), or git rebase --abort to bail",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "Mentions that after a manual rebase the stack may need `git-stack --repair`, or that branch-stash apply can return to the pre-sync state",
+          "passed": null,
+          "evidence": ""
+        },
+        {
+          "text": "If it mentions branch-stash as the bail-out, targets the `git-stack` stash stack by name, not the default",
+          "passed": null,
+          "evidence": ""
+        }
+      ]
+    }
+  ]
+}

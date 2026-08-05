@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Uses `git-stack sync` to update branches against upstream", "passed": true, "evidence": "`git-stack sync` fetches the pull remote and rebases every branch onto the updated base."},
+    {"text": "Uses `git-stack run cargo test` to run the check across every commit in the stack", "passed": true, "evidence": "`git-stack run cargo test` runs the command against each commit in the stack."},
+    {"text": "Does NOT invent a non-existent subcommand (e.g. `git-stack push`, `git-stack rebase`, `git-stack test`) for these steps", "passed": true, "evidence": "Uses only real commands/flags: sync, run, --repair, --dry-run, --protected, --protect. No invented subcommand."}
+  ],
+  "score": 1.0,
+  "summary": "Correctly uses git-stack sync and git-stack run cargo test with no invented subcommands."
+}

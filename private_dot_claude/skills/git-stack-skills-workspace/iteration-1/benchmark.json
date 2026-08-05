@@ -1,0 +1,548 @@
+{
+  "metadata": {
+    "skill_name": "git-stack-skills",
+    "skill_path": "/home/lev/.claude/skills/git-stack-*",
+    "executor_model": "claude-opus-4-8",
+    "analyzer_model": "claude-opus-4-8",
+    "timestamp": "2026-06-26T00:00:00Z",
+    "evals_run": [
+      "fix-earlier-commit",
+      "fork-remotes",
+      "push-stack-wip",
+      "sync-and-run",
+      "sync-conflict",
+      "undo-bad-rebase"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "eval_name": "fix-earlier-commit",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 65.1,
+        "tokens": 42906,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses git-stack navigation (git-stack previous) to reach the earlier commit instead of copying SHAs",
+          "passed": true,
+          "evidence": "Primary uses relative ref `git-stack amend HEAD~2` (no SHA copy) and an explicit alternative `git-stack previous 2 --stash` to navigate to the earliest commit."
+        },
+        {
+          "text": "Uses `git-stack amend` (optionally with -a) to meld the staged fix into the target commit",
+          "passed": true,
+          "evidence": "`git-stack amend HEAD~2` melds the staged fix into the earliest commit."
+        },
+        {
+          "text": "Notes that git-stack automatically rebases the descendant commits onto the amended commit",
+          "passed": true,
+          "evidence": "\"git-stack automatically rebases the two commits stacked on top onto the rewritten version.\""
+        },
+        {
+          "text": "Does NOT recommend `git rebase -i` / interactive rebase or `git commit --amend` + manual rebase as the primary method",
+          "passed": true,
+          "evidence": "Primary method is git-stack amend; no interactive rebase or commit --amend + manual rebase recommended."
+        }
+      ],
+      "notes": [
+        "All four assertions satisfied: git-stack amend with navigation, auto-restack noted, no manual rebase."
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "fix-earlier-commit",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 136.0,
+        "tokens": 41555,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses git-stack navigation (git-stack previous) to reach the earlier commit instead of copying SHAs",
+          "passed": false,
+          "evidence": "Step 0 instructs copying the short SHA (`<OLDEST>`) and uses it throughout; never uses git-stack previous to navigate."
+        },
+        {
+          "text": "Uses `git-stack amend` (optionally with -a) to meld the staged fix into the target commit",
+          "passed": true,
+          "evidence": "`git-stack amend <OLDEST>` melds the staged change into the earliest commit."
+        },
+        {
+          "text": "Notes that git-stack automatically rebases the descendant commits onto the amended commit",
+          "passed": true,
+          "evidence": "\"Rebases the two commits stacked above it onto the rewritten commit.\""
+        },
+        {
+          "text": "Does NOT recommend `git rebase -i` / interactive rebase or `git commit --amend` + manual rebase as the primary method",
+          "passed": true,
+          "evidence": "\"you do not need to do a manual interactive rebase\"; primary is git-stack amend."
+        }
+      ],
+      "notes": [
+        "Correct git-stack amend approach but relies on copying SHAs instead of git-stack navigation."
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "sync-and-run",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 47.9,
+        "tokens": 40631,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-stack sync` to update branches against upstream",
+          "passed": true,
+          "evidence": "`git-stack sync` pulls protected branch and rebases the stack onto the fresh tip."
+        },
+        {
+          "text": "Uses `git-stack run cargo test` to run the check across every commit in the stack",
+          "passed": true,
+          "evidence": "`git-stack run cargo test` checks out each commit and runs the suite."
+        },
+        {
+          "text": "Does NOT invent a non-existent subcommand (e.g. `git-stack push`, `git-stack rebase`, `git-stack test`) for these steps",
+          "passed": true,
+          "evidence": "Only uses real subcommands/flags: sync, run, --protected, --rebase (flag). No invented subcommand."
+        }
+      ],
+      "notes": [
+        "Correctly uses git-stack sync and git-stack run cargo test with no invented subcommands."
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "sync-and-run",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 48.4,
+        "tokens": 31192,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-stack sync` to update branches against upstream",
+          "passed": true,
+          "evidence": "`git-stack sync` fetches the pull remote and rebases every branch onto the updated base."
+        },
+        {
+          "text": "Uses `git-stack run cargo test` to run the check across every commit in the stack",
+          "passed": true,
+          "evidence": "`git-stack run cargo test` runs the command against each commit in the stack."
+        },
+        {
+          "text": "Does NOT invent a non-existent subcommand (e.g. `git-stack push`, `git-stack rebase`, `git-stack test`) for these steps",
+          "passed": true,
+          "evidence": "Uses only real commands/flags: sync, run, --repair, --dry-run, --protected, --protect. No invented subcommand."
+        }
+      ],
+      "notes": [
+        "Correctly uses git-stack sync and git-stack run cargo test with no invented subcommands."
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "push-stack-wip",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 57.6,
+        "tokens": 41809,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-stack --push` (a flag on the top-level command), not a `git-stack push` subcommand",
+          "passed": true,
+          "evidence": "Uses `git-stack --push` and `git-stack --push -n` throughout."
+        },
+        {
+          "text": "Explains only the root/bottom branch (feature-a) is 'ready'; branches stacked on other dev branches are held back",
+          "passed": true,
+          "evidence": "Table: feature-a ready (root of stack); feature-b/feature-c held back because stacked on a dev branch; \"only the root-of-stack branch ... is ready.\""
+        },
+        {
+          "text": "Identifies the 'WIP:' commit on feature-b as a blocker and suggests rewording/finishing it",
+          "passed": true,
+          "evidence": "Lists WIP as a disqualifier and suggests `git-stack reword <REV>` or finishing the work."
+        },
+        {
+          "text": "Recommends one-PR-at-a-time strategy and/or setting each gh PR base to the branch below it (not all onto main)",
+          "passed": true,
+          "evidence": "Recommends one-merge-at-a-time flow and shows stacked bases (feature-b base feature-a, feature-c base feature-b)."
+        }
+      ],
+      "notes": [
+        "All assertions satisfied including correct stacking-readiness rule and WIP blocker."
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "push-stack-wip",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 61.5,
+        "tokens": 31251,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-stack --push` (a flag on the top-level command), not a `git-stack push` subcommand",
+          "passed": true,
+          "evidence": "Uses `git-stack --push` and `git-stack --push --dry-run`."
+        },
+        {
+          "text": "Explains only the root/bottom branch (feature-a) is 'ready'; branches stacked on other dev branches are held back",
+          "passed": false,
+          "evidence": "Attributes feature-c's hold-back to push ordering, not the stacking-on-dev-branch rule, and claims that after rewording feature-b \"all three branches should now show as ready\" \u2014 contradicting the rule that branches stacked on dev branches are held back."
+        },
+        {
+          "text": "Identifies the 'WIP:' commit on feature-b as a blocker and suggests rewording/finishing it",
+          "passed": true,
+          "evidence": "\"feature-b is held back because its top commit is titled 'WIP'\"; suggests `git-stack reword` to drop the WIP prefix."
+        },
+        {
+          "text": "Recommends one-PR-at-a-time strategy and/or setting each gh PR base to the branch below it (not all onto main)",
+          "passed": true,
+          "evidence": "Each `gh pr create --base` targets the branch below it (feature-a base main, feature-b base feature-a, feature-c base feature-b)."
+        }
+      ],
+      "notes": [
+        "WIP blocker and stacked PR bases correct, but incorrectly claims rewording makes all stacked branches ready."
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "fork-remotes",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 26.2,
+        "tokens": 39661,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Sets `stack.pull-remote` to upstream",
+          "passed": true,
+          "evidence": "`git config --add stack.pull-remote upstream`."
+        },
+        {
+          "text": "Sets `stack.push-remote` to origin",
+          "passed": true,
+          "evidence": "`git config --add stack.push-remote origin`."
+        },
+        {
+          "text": "Uses `git-stack --push` to publish after configuring remotes",
+          "passed": true,
+          "evidence": "`git-stack --push` (with -n dry-run) after configuring remotes."
+        },
+        {
+          "text": "Does not confuse the two remotes (pull=upstream/shared, push=origin/fork)",
+          "passed": true,
+          "evidence": "pull-remote=upstream for protected branches, push-remote=origin for feature branches; clearly distinguished."
+        }
+      ],
+      "notes": [
+        "All four assertions satisfied with correct fork remote configuration and push."
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "fork-remotes",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 48.7,
+        "tokens": 32717,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Sets `stack.pull-remote` to upstream",
+          "passed": true,
+          "evidence": "`git config --local stack.pull-remote upstream`."
+        },
+        {
+          "text": "Sets `stack.push-remote` to origin",
+          "passed": true,
+          "evidence": "`git config --local stack.push-remote origin`."
+        },
+        {
+          "text": "Uses `git-stack --push` to publish after configuring remotes",
+          "passed": true,
+          "evidence": "`git-stack --push` force-pushes ready branches to origin."
+        },
+        {
+          "text": "Does not confuse the two remotes (pull=upstream/shared, push=origin/fork)",
+          "passed": true,
+          "evidence": "Table and steps consistently map pull-remote=upstream (main repo), push-remote=origin (fork)."
+        }
+      ],
+      "notes": [
+        "All four assertions satisfied with correct fork remote configuration and push."
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "undo-bad-rebase",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 51.3,
+        "tokens": 40871,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-branch-stash` (list, then apply/pop) to restore branch positions",
+          "passed": true,
+          "evidence": "`git-branch-stash list` then `git-branch-stash apply`, with `pop`/`drop` to clean up."
+        },
+        {
+          "text": "Explains git-stack auto-snapshots branch state before rewriting, so a restore point exists",
+          "passed": true,
+          "evidence": "\"git-stack takes a branch-stash snapshot of where every branch points right before it rewrites history.\""
+        },
+        {
+          "text": "Recommends `apply` (or inspecting via list) before `pop`, and verifying with `git-stack` afterward",
+          "passed": true,
+          "evidence": "Uses apply first (keeps snapshot), verifies with `git-stack`, then pop/drop only after confirming."
+        },
+        {
+          "text": "Does NOT jump straight to manual `git reflog`/`git reset` as the primary recovery path",
+          "passed": true,
+          "evidence": "branch-stash is primary; reflog/reset only as fallback if list is empty."
+        },
+        {
+          "text": "Targets git-stack's snapshot stack by name (e.g. `git branch-stash pop git-stack`), not the default `recent` stack",
+          "passed": false,
+          "evidence": "Uses bare `git-branch-stash list`/`apply`/`pop` with no `git-stack` stack argument, and references the default `recent` stack \u2014 would miss git-stack's snapshots."
+        }
+      ],
+      "notes": [
+        "Correct branch-stash recovery flow but uses the bare default stack instead of naming the git-stack stack."
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "undo-bad-rebase",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 50.5,
+        "tokens": 30081,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses `git-branch-stash` (list, then apply/pop) to restore branch positions",
+          "passed": true,
+          "evidence": "`git branch-stash list` then `git branch-stash pop` (apply offered as alternative)."
+        },
+        {
+          "text": "Explains git-stack auto-snapshots branch state before rewriting, so a restore point exists",
+          "passed": true,
+          "evidence": "\"git-stack automatically snapshots every branch position before it rewrites anything.\""
+        },
+        {
+          "text": "Recommends `apply` (or inspecting via list) before `pop`, and verifying with `git-stack` afterward",
+          "passed": true,
+          "evidence": "Inspects via `git branch-stash list` before popping, offers apply to keep the snapshot, then verifies with `git stack`."
+        },
+        {
+          "text": "Does NOT jump straight to manual `git reflog`/`git reset` as the primary recovery path",
+          "passed": true,
+          "evidence": "Option A (branch-stash) is preferred; Option B reflog is the fallback."
+        },
+        {
+          "text": "Targets git-stack's snapshot stack by name (e.g. `git branch-stash pop git-stack`), not the default `recent` stack",
+          "passed": false,
+          "evidence": "Uses bare `git branch-stash list`/`pop` with no `git-stack` stack argument \u2014 targets the default stack and would miss git-stack's snapshots."
+        }
+      ],
+      "notes": [
+        "Sound branch-stash-first recovery but uses the bare default stack rather than naming the git-stack stack."
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "sync-conflict",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 36.2,
+        "tokens": 40164,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains git-stack does NOT resolve conflicts and hands control back to plain git",
+          "passed": true,
+          "evidence": "\"git-stack deliberately does not resolve merge conflicts ... hands control back to plain git rebase.\""
+        },
+        {
+          "text": "Walks through resolving with git (edit files, git add, git rebase --continue), or git rebase --abort to bail",
+          "passed": true,
+          "evidence": "Edit conflicted files, `git add`, `git rebase --continue`; bail with `git rebase --abort`."
+        },
+        {
+          "text": "Mentions that after a manual rebase the stack may need `git-stack --repair`, or that branch-stash apply can return to the pre-sync state",
+          "passed": true,
+          "evidence": "Both: `git-stack --repair` for a split/diverged stack and `git-branch-stash apply` to restore pre-sync positions."
+        },
+        {
+          "text": "If it mentions branch-stash as the bail-out, targets the `git-stack` stash stack by name, not the default",
+          "passed": false,
+          "evidence": "Mentions branch-stash as bail-out but uses bare `git-branch-stash apply` with no `git-stack` stack name \u2014 incorrect per the naming requirement."
+        }
+      ],
+      "notes": [
+        "Correctly defers conflicts to git and mentions repair, but the branch-stash bail-out omits the git-stack stack name."
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "sync-conflict",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains git-stack does NOT resolve conflicts and hands control back to plain git",
+          "passed": true,
+          "evidence": "\"Conflict resolution is an explicit non-feature of git-stack ... hands conflicts back to plain git rebase.\""
+        },
+        {
+          "text": "Walks through resolving with git (edit files, git add, git rebase --continue), or git rebase --abort to bail",
+          "passed": true,
+          "evidence": "Edit conflicted files, `git add`, `git rebase --continue`, with `git rebase --abort`/`--skip` escape hatches."
+        },
+        {
+          "text": "Mentions that after a manual rebase the stack may need `git-stack --repair`, or that branch-stash apply can return to the pre-sync state",
+          "passed": true,
+          "evidence": "`git stack --repair` to re-detect parent/child after manual rebase, plus branch-stash restore option."
+        },
+        {
+          "text": "If it mentions branch-stash as the bail-out, targets the `git-stack` stash stack by name, not the default",
+          "passed": true,
+          "evidence": "Uses `git branch-stash pop git-stack`, naming the git-stack stash stack explicitly."
+        }
+      ],
+      "notes": [
+        "All assertions satisfied, including the correctly named git-stack branch-stash bail-out."
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.925,
+        "stddev": 0.107
+      },
+      "time_seconds": {
+        "mean": 47.383,
+        "stddev": 12.959
+      },
+      "tokens": {
+        "mean": 41007,
+        "stddev": 1074.837
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.883,
+        "stddev": 0.118
+      },
+      "time_seconds": {
+        "mean": 57.517,
+        "stddev": 40.195
+      },
+      "tokens": {
+        "mean": 27799.333,
+        "stddev": 13005.351
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.04",
+      "time_seconds": "-10.1",
+      "tokens": "+13208"
+    }
+  },
+  "notes": []
+}

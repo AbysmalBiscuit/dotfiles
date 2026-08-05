@@ -1,0 +1,11 @@
+{
+  "expectations": [
+    {"text": "Uses `git-branch-stash` (list, then apply/pop) to restore branch positions", "passed": true, "evidence": "`git branch-stash list` then `git branch-stash pop` (apply offered as alternative)."},
+    {"text": "Explains git-stack auto-snapshots branch state before rewriting, so a restore point exists", "passed": true, "evidence": "\"git-stack automatically snapshots every branch position before it rewrites anything.\""},
+    {"text": "Recommends `apply` (or inspecting via list) before `pop`, and verifying with `git-stack` afterward", "passed": true, "evidence": "Inspects via `git branch-stash list` before popping, offers apply to keep the snapshot, then verifies with `git stack`."},
+    {"text": "Does NOT jump straight to manual `git reflog`/`git reset` as the primary recovery path", "passed": true, "evidence": "Option A (branch-stash) is preferred; Option B reflog is the fallback."},
+    {"text": "Targets git-stack's snapshot stack by name (e.g. `git branch-stash pop git-stack`), not the default `recent` stack", "passed": false, "evidence": "Uses bare `git branch-stash list`/`pop` with no `git-stack` stack argument — targets the default stack and would miss git-stack's snapshots."}
+  ],
+  "score": 0.8,
+  "summary": "Sound branch-stash-first recovery but uses the bare default stack rather than naming the git-stack stack."
+}

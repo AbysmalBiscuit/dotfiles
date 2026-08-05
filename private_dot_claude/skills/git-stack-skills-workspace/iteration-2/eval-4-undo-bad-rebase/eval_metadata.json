@@ -1,0 +1,33 @@
+{
+  "eval_id": 4,
+  "eval_name": "undo-bad-rebase",
+  "target_skill": "git-stack-recover",
+  "prompt": "I just ran a git-stack rebase and it moved my branches somewhere I didn't expect \u2014 one of my feature branches isn't where it should be anymore. I haven't pushed. How do I undo this and get my branches back to where they were before the rebase? Give me the recovery steps.",
+  "assertions": [
+    {
+      "text": "Uses `git-branch-stash` (list, then apply/pop) to restore branch positions",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Explains git-stack auto-snapshots branch state before rewriting, so a restore point exists",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Recommends `apply` (or inspecting via list) before `pop`, and verifying with `git-stack` afterward",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Does NOT jump straight to manual `git reflog`/`git reset` as the primary recovery path",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Targets git-stack's snapshot stack by name (e.g. `git branch-stash pop git-stack`), not the default `recent` stack",
+      "passed": null,
+      "evidence": ""
+    }
+  ]
+}

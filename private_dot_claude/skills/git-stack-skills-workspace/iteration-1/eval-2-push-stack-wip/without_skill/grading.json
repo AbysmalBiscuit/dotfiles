@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "Uses `git-stack --push` (a flag on the top-level command), not a `git-stack push` subcommand", "passed": true, "evidence": "Uses `git-stack --push` and `git-stack --push --dry-run`."},
+    {"text": "Explains only the root/bottom branch (feature-a) is 'ready'; branches stacked on other dev branches are held back", "passed": false, "evidence": "Attributes feature-c's hold-back to push ordering, not the stacking-on-dev-branch rule, and claims that after rewording feature-b \"all three branches should now show as ready\" — contradicting the rule that branches stacked on dev branches are held back."},
+    {"text": "Identifies the 'WIP:' commit on feature-b as a blocker and suggests rewording/finishing it", "passed": true, "evidence": "\"feature-b is held back because its top commit is titled 'WIP'\"; suggests `git-stack reword` to drop the WIP prefix."},
+    {"text": "Recommends one-PR-at-a-time strategy and/or setting each gh PR base to the branch below it (not all onto main)", "passed": true, "evidence": "Each `gh pr create --base` targets the branch below it (feature-a base main, feature-b base feature-a, feature-c base feature-b)."}
+  ],
+  "score": 0.75,
+  "summary": "WIP blocker and stacked PR bases correct, but incorrectly claims rewording makes all stacked branches ready."
+}

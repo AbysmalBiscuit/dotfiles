@@ -1,0 +1,28 @@
+{
+  "eval_id": 3,
+  "eval_name": "fork-remotes",
+  "target_skill": "git-stack-publish",
+  "prompt": "I contribute to a project from my own fork. `upstream` is the main repo and `origin` is my fork. I want git-stack to pull main from upstream but push my feature branches to origin. How do I configure that, and then how do I push my ready branch? Commands please.",
+  "assertions": [
+    {
+      "text": "Sets `stack.pull-remote` to upstream",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Sets `stack.push-remote` to origin",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Uses `git-stack --push` to publish after configuring remotes",
+      "passed": null,
+      "evidence": ""
+    },
+    {
+      "text": "Does not confuse the two remotes (pull=upstream/shared, push=origin/fork)",
+      "passed": null,
+      "evidence": ""
+    }
+  ]
+}
