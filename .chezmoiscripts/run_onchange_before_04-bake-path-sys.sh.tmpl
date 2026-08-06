@@ -1,0 +1,19 @@
+#!/bin/sh
+{{- if .is_wsl }}
+set -eu
+
+# The embedded PATH literal is the run_onchange trigger: its content changes
+# whenever the Windows PATH does, which is what re-runs this script.
+path_sys='{{ output "wsl.exe" "-d" (env "WSL_DISTRO_NAME") "-e" "/bin/bash" "--noprofile" "--norc" "-c" "printf %s \"$PATH\"" }}'
+
+case ":$path_sys:" in
+    *:/usr/bin:*) ;;
+    *)
+        echo "refusing to write ~/.path_sys: not a plausible PATH" >&2
+        exit 1
+        ;;
+esac
+
+printf '%s' "$path_sys" >"$HOME/.path_sys"
+chmod 600 "$HOME/.path_sys"
+{{- end }}
