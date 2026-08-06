@@ -101,3 +101,6 @@ tags
 graphify-out/
 **/graphify-out/
 {{- end }}
+{{- if index .has "claude" }}
+**/.claude/settings.local.json
+{{- end }}
