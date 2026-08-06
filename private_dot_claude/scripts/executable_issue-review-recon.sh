@@ -2,7 +2,7 @@
 # Read-only recon for /issue-review: work out which branch of the workflow
 # applies and gather everything needed to run `issue review request`.
 #
-# Usage: issue-review-recon.sh [reviewer-alias]     alias defaults to igor
+# Usage: issue-review-recon.sh [reviewer-alias]     omit the alias to request nobody
 #
 # Mutates nothing — no commit, no push, no `issue review request`. Those need a
 # human-authored commit message, PR body, or Slack summary, so they stay with
@@ -17,11 +17,10 @@
 #     PR-CLOSED           nothing to review
 #     PROTECTED           on a base branch, not a feature branch
 #     NOT-ISSUE-WORKTREE  no issue record, so the PR templates cannot render
-#     UNKNOWN-REVIEWER    the alias is not in the devkit config
+#     UNKNOWN-REVIEWER    an alias was passed but is not in the devkit config
 #     ERROR               preflight failed
 set -uo pipefail
 
-DEFAULT_REVIEWER=igor
 PROTECTED_BRANCHES="staging main master develop production release"
 FULL_DIFF_MAX_LINES=400
 
@@ -54,11 +53,10 @@ done
 # ---------------------------------------------------------------- reviewer
 
 alias_in=${1:-}
-[[ -z "$alias_in" ]] && alias_in="$DEFAULT_REVIEWER"
 config=${DEVKIT_CONFIG:-$HOME/.config/devkit/config.toml}
 
 gh_handle="" slack_id=""
-if [[ -f "$config" ]]; then
+if [[ -n "$alias_in" && -f "$config" ]]; then
   eval "$(awk -v want="[people.$alias_in]" '
     $0 == want { inside = 1; next }
     /^\[/      { inside = 0 }
@@ -102,9 +100,13 @@ say "worktree: $worktree"
 say "branch:   $branch"
 say "issue:    ${issue_id:-(none found)}${linear_name:+   Linear: $linear_name}"
 say "base:     $base"
-say "reviewer: $alias_in${gh_handle:+   github: $gh_handle}${slack_id:+   slack: $slack_id}"
+if [[ -n "$alias_in" ]]; then
+  say "reviewer: $alias_in${gh_handle:+   github: $gh_handle}${slack_id:+   slack: $slack_id}"
+else
+  say "reviewer: (none — no alias passed, so no review will be requested)"
+fi
 
-if [[ -z "$gh_handle" ]]; then
+if [[ -n "$alias_in" && -z "$gh_handle" ]]; then
   say ""
   say "the alias '$alias_in' has no [people.$alias_in] entry in $config"
   say "known aliases: $(awk -F'[][.]' '/^\[people\./ {print $3}' "$config" 2>/dev/null | paste -sd' ')"
@@ -197,7 +199,7 @@ if [[ "$pr_state" == "OPEN" && -n "$last_reviewed" ]] &&
    [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$last_reviewed" 2>/dev/null)" ]] &&
    [[ -z "$uncommitted$untracked" ]]; then
   say ""
-  say "HEAD is exactly what $alias_in last reviewed and the tree is clean —"
+  say "HEAD is exactly what was last reviewed and the tree is clean —"
   say "there is nothing new to re-review."
   finish NOTHING-NEW STOP 0
 fi
@@ -246,19 +248,39 @@ say "== next =="
 if [[ "$pr_state" == "NO_PR" ]]; then
   say "Branch A. Commit anything pending, then:"
   say ""
-  say "  issue review request --to \"$alias_in\" \\"
-  say "    --pr-title \"<conventional-commit subject, no [$issue_id] — the template adds it>\" \\"
-  say "    --pr-body  \"<what changed + why, no 'Closes $issue_id' — the template adds it>\" \\"
-  say "    \"<one-line Slack ask, no PR link — the template appends it>\""
+  if [[ -n "$alias_in" ]]; then
+    say "  issue review request --to \"$alias_in\" \\"
+    say "    --pr-title \"<conventional-commit subject, no [$issue_id] — the template adds it>\" \\"
+    say "    --pr-body  \"<what changed + why, no 'Closes $issue_id' — the template adds it>\" \\"
+    say "    \"<one-line ask, no PR link — the template appends it>\""
+  else
+    say "  issue review request --no-notify \\"
+    say "    --pr-title \"<conventional-commit subject, no [$issue_id] — the template adds it>\" \\"
+    say "    --pr-body  \"<what changed + why, no 'Closes $issue_id' — the template adds it>\""
+    say ""
+    say "No alias was passed. --no-notify pins the targets to --to, empty here, so the"
+    say "PR opens with no reviewer and nothing is delivered; it pushes and prints the"
+    say "PR URL. No trailing positional either — there is nobody to deliver it to."
+  fi
   say ""
-  say "Add --arg linear_magic_word=Ref if merging this PR must NOT close $issue_id."
+  say "Add --arg linear_magic_word=Ref if merging this PR must NOT close $issue_id,"
+  say "and --arg also_closes=\"<ids>\" if it resolves issues beyond $issue_id."
   finish READY A 0
 else
   say "Branch B. Commit anything pending, then:"
   say ""
-  say "  issue review request --to \"$alias_in\" \\"
-  say "    \"addressed your comments: <1-2 sentence summary>. Mind taking another look? 🙏\""
-  say ""
-  say "No --pr-title/--pr-body: PR #$pr_number already exists."
+  if [[ -n "$alias_in" ]]; then
+    say "  issue review request --to \"$alias_in\" \\"
+    say "    \"addressed your comments: <1-2 sentence summary>. Mind taking another look? 🙏\""
+    say ""
+    say "No --pr-title/--pr-body: PR #$pr_number already exists."
+  else
+    say "  issue review request --no-notify"
+    say ""
+    say "No alias was passed, so PR #$pr_number keeps the reviewers it already has."
+    say "--no-notify never falls back to the PR's current reviewers, so nobody is"
+    say "added or re-requested and nothing is delivered; it pushes and prints the PR"
+    say "URL. Re-run with an alias if someone should actually be pinged."
+  fi
   finish READY B 0
 fi
