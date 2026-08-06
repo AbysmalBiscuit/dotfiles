@@ -41,7 +41,11 @@
       "Bash(devrun config:*)",
       "Bash(devrun status:*)",
       "Bash(devrun logs:*)",
-      "Read(~/.local/share/devkit/docs/**)"
+      "Read(~/.local/share/devkit/docs/**)",
+      "Bash(bash ~/.claude/scripts/*)",
+      "Bash(python ~/.claude/scripts/*)",
+      "Bash(python3 ~/.claude/scripts/*)",
+      "Bash(uv run ~/.claude/scripts/*)"
     ],
     "deny": [
       "Read(~/.sh_env)",
