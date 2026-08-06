@@ -379,6 +379,16 @@ public class Win {
 # Aliases
 New-Alias which get-command
 
+# {{- if index .has "claude" }}
+New-Alias cl claude
+function cr {
+    claude --resume $args
+}
+function ca {
+    claude agents $args
+}
+# {{- end }}
+
 # Load configs for various programs
 function has_command {
     param([string]$Name)
