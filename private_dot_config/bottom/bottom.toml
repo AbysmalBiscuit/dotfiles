@@ -38,3 +38,9 @@ widget_title = { color = "#f2cdcd" }
 text = { color = "#cdd6f4" }
 selected_text = { color = "#11111b", bg_color = "#cba6f7" }
 disabled_text = { color = "#1e1e2e" }
+
+[processes]
+default_memory_value = true
+
+[memory_graph]
+short_gpu_names = true
