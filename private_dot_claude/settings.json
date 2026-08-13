@@ -4,9 +4,10 @@
     "commit": "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
     "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
   },
+  "autoMemoryEnabled": false,
   "fileSuggestion": {
     "type": "command",
-    "command": "~/.claude/file-suggestion.sh"
+    "command": "~/.claude/scripts/file-suggestion.sh"
   },
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
@@ -158,11 +159,6 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/block-rg-replace-footgun.py",
             "statusMessage": "Checking rg flags"
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/prefer-tsgo.py",
-            "statusMessage": "Checking for tsc"
           }
         ]
       }
