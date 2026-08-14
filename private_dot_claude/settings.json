@@ -146,6 +146,7 @@
       "Read(C:/$Recycle.Bin/**)",
       "Edit(C:/$Recycle.Bin/**)",
       "Read(C:/System Volume Information/**)",
+      "Bash(git * --no-verify *)",
       "Bash(google-chrome *)"
     ],
     "defaultMode": "auto"
