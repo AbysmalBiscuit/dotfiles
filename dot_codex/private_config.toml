@@ -40,7 +40,6 @@ url = "https://mcp.adaptyv.bio/mcp"
 [tui]
 status_line = [
     "model-with-reasoning",
-    "current-dir",
     "project-name",
     "git-branch",
     "pull-request-number",
@@ -49,6 +48,7 @@ status_line = [
     "context-used",
     "five-hour-limit",
     "weekly-limit",
+    "current-dir",
 ]
 status_line_use_colors = true
 
