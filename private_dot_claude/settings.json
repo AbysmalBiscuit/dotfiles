@@ -9,6 +9,7 @@
     "type": "command",
     "command": "~/.claude/scripts/file-suggestion.sh"
   },
+  "cleanupPeriodDays": 3650,
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
@@ -16,7 +17,6 @@
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_NO_FLICKER": "1",
-    "CLAUDE_CODE_ALT_SCREEN_FULL_REPAINT": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000"
   },
