@@ -3012,7 +3012,7 @@ init_command_only_if_no = []
 lang = "rust"
 name = "spotify-player"
 cmds = [
-    "spotify-player"
+    "spotify_player"
 ]
 desc = "A Spotify player in the terminal with full feature parity"
 url = ""
