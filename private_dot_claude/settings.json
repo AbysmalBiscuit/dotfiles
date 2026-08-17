@@ -18,6 +18,7 @@
     "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_NO_FLICKER": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
+    "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000"
   },
   "permissions": {
@@ -286,6 +287,7 @@
     "mode": "hold"
   },
   "prefersReducedMotion": true,
+  "skipWorkflowUsageWarning": true,
   "theme": "dark",
   "editorMode": "vim",
   "teammateMode": "in-process",
