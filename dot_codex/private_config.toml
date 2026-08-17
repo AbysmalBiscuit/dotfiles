@@ -24,12 +24,6 @@ enabled = true
 [plugins."claude-custom@personal"]
 enabled = true
 
-[plugins."superpowers@openai-curated"]
-enabled = true
-
-[plugins."superpowers@personal"]
-enabled = true
-
 [hooks.state]
 
 # mcp servers
