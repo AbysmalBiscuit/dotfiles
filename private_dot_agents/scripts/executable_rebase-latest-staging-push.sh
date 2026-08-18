@@ -15,6 +15,7 @@
 #   IN-PROGRESS     a rebase/merge/cherry-pick was already running, nothing done
 #   NO-COMMITS      branch has no commits of its own, nothing to push
 #   PROTECTED       current branch is a protected branch, nothing done
+#   INSTALL-FAILED  bun.lock moved in the rebase and 'bun install' failed
 #   HOOK-MODIFIED   pre-push hook rewrote files, push failed, tree now dirty
 #   REJECTED        remote moved, lease refused the push
 #   PUSH-FAILED     push failed for another reason (hook failure, network, auth)
@@ -103,6 +104,18 @@ say "branch tip: $(git log --oneline -1 HEAD)"
 say "commits to replay:"
 git log --oneline "$base_ref..HEAD" | sed 's/^/  /'
 
+# node_modules tracks whatever was last installed; the pre-rebase blob is the
+# closest proxy for that, so compare against it rather than the base branch.
+lock_file=""
+lock_before=""
+for candidate in bun.lock bun.lockb; do
+  if git cat-file -e "HEAD:$candidate" 2>/dev/null; then
+    lock_file=$candidate
+    lock_before=$(git rev-parse "HEAD:$candidate")
+    break
+  fi
+done
+
 if ! rebase_out=$(git rebase "$base_ref" 2>&1); then
   say "$rebase_out"
   say ""
@@ -123,6 +136,31 @@ if ! rebase_out=$(git rebase "$base_ref" 2>&1); then
   finish CONFLICT 10
 fi
 say "$rebase_out"
+
+if [[ -n "$lock_file" ]]; then
+  lock_after=$(git rev-parse "HEAD:$lock_file" 2>/dev/null || true)
+  if [[ "$lock_before" != "$lock_after" ]]; then
+    say ""
+    say "== bun install ($lock_file moved in the rebase) =="
+    if ! command -v bun >/dev/null 2>&1; then
+      say "bun is not on PATH — skipped; node_modules is stale against $lock_file"
+    elif install_out=$(bun install 2>&1); then
+      printf '%s\n' "$install_out" | tail -5
+      # A rewritten lockfile means the committed one does not survive a clean
+      # install; the push would carry a tree nobody can reproduce.
+      if [[ -n "$(git status --porcelain --untracked-files=no -- "$lock_file")" ]]; then
+        say ""
+        say "warning: the install rewrote $lock_file — commit it or investigate before pushing"
+      fi
+    else
+      printf '%s\n' "$install_out" | tail -20
+      say ""
+      say "the rebase succeeded and is committed; only the install failed."
+      say "fix the cause and re-run this script — it will resume at the push"
+      finish INSTALL-FAILED 23
+    fi
+  fi
+fi
 
 if [[ "$(git rev-list --count "$base_ref..HEAD")" == "0" ]]; then
   say ""

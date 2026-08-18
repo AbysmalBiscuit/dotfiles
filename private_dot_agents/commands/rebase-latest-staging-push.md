@@ -20,7 +20,8 @@ in that output. Do not re-run `git status`, `git log`, `git branch -vv`, or
 reported.
 
 Formatting and linting are handled by the prek pre-push hook — don't run oxfmt or
-oxlint by hand.
+oxlint by hand. If the rebase moved `bun.lock`, the script has already re-run
+`bun install` — don't run it again.
 
 ---
 
@@ -36,6 +37,7 @@ oxlint by hand.
 | `UP-TO-DATE` | Done, nothing to push. Say so in one line. Stop. |
 | `NO-COMMITS` | Done, branch has nothing of its own. Say so in one line. Stop. |
 | `CONFLICT` | The real work — see below. |
+| `INSTALL-FAILED` | `bun.lock` moved in the rebase and `bun install` failed. The rebase is committed; only the install failed. Read the install output, fix the cause, re-run the script. |
 | `HOOK-MODIFIED` | The hook reformatted files. Amend them into the commit that owns them if it's unambiguous (single-commit branch, or the hunks belong to one commit), otherwise ask. Then re-run the script. |
 | `DIRTY` | Uncommitted changes predate the command. Report what's uncommitted and ask whether to commit, stash, or drop. Don't decide for them. |
 | `IN-PROGRESS` | A rebase was already running before this command. Report the state and ask how to proceed. |
