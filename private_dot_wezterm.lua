@@ -91,6 +91,10 @@ local right_round = ""
 config.font_size = 13.05
 config.font = wezterm.font_with_fallback({
   "Sarasa Fixed K",
+  -- the Mono variants force icons to one cell; Propo keeps each glyph's
+  -- natural advance, which overruns the grid, so it has to come after them
+  "Symbols Nerd Font Mono",
+  "Symbols Nerd Font",
   "MesloLGM Nerd Font Propo",
   "Atkinson Hyperlegible Mono",
   "Noto Sans Mono CJK KR",
@@ -106,7 +110,6 @@ config.font = wezterm.font_with_fallback({
   "Apple Color Emoji",
   "Segoe UI Emoji",
   "Segoe UI Symbol",
-  "Symbols Nerd Font",
   "Font Awesome 6 Pro",
   "Noto Emoji",
   "Segoe UI Historic",
