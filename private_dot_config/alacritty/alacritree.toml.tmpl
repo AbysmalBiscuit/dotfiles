@@ -1,7 +1,13 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+#:schema https://raw.githubusercontent.com/AbysmalBiscuit/alacritree/integration/all-features/schema/alacritree-config.json
 [font]
 fallback = [
+  # Sarasa's cell is half an em, and nothing here fits it: Meslo's icons are
+  # 0.60em, the Symbols faces' are 0.92-1.00em. Until glyphs are fitted to the
+  # cell, the narrowest face overruns least, so Meslo leads.
   "MesloLGM Nerd Font Propo",
+  "Symbols Nerd Font Mono",
+  "Symbols Nerd Font",
   "Atkinson Hyperlegible Mono",
   "Noto Sans Mono CJK KR",
   "Noto Sans Mono CJK SC",
@@ -16,7 +22,6 @@ fallback = [
   "Apple Color Emoji",
   "Segoe UI Emoji",
   "Segoe UI Symbol",
-  "Symbols Nerd Font",
   "Font Awesome 6 Pro",
   "Noto Emoji",
   "Segoe UI Historic",
