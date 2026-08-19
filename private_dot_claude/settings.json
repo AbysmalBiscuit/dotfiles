@@ -187,14 +187,7 @@
     ],
     "CwdChanged": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
-            "timeout": 10,
-            "async": true
-          }
-        ]
+        "hooks": []
       }
     ],
     "UserPromptSubmit": [
@@ -203,6 +196,12 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "timeout": 10,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
             "timeout": 10,
             "async": true
           }
@@ -217,6 +216,23 @@
             "command": "bash ~/.claude/hooks/alacritree-follow.sh",
             "timeout": 10,
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "timeout": 10
           }
         ]
       }
