@@ -4,7 +4,6 @@
     "commit": "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
     "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
   },
-  "autoMemoryEnabled": false,
   "fileSuggestion": {
     "type": "command",
     "command": "~/.claude/scripts/file-suggestion.sh"
@@ -185,11 +184,7 @@
         ]
       }
     ],
-    "CwdChanged": [
-      {
-        "hooks": []
-      }
-    ],
+    "CwdChanged": [],
     "UserPromptSubmit": [
       {
         "hooks": [
@@ -303,7 +298,9 @@
     "mode": "hold"
   },
   "prefersReducedMotion": true,
+  "autoMemoryEnabled": false,
   "skipWorkflowUsageWarning": true,
+  "outputStyle": "unslop",
   "theme": "dark",
   "editorMode": "vim",
   "teammateMode": "in-process",
