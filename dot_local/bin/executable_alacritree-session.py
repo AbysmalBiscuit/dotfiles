@@ -422,6 +422,20 @@ def load_saved(path: Path) -> list[dict]:
     return [{"path": line.strip(), "agent": None} for line in text.splitlines() if line.strip()]
 
 
+def preview_command() -> str:
+    """The preview command, spelled for the shell the picker will run it in.
+
+    On Windows that shell is cmd.exe, which mangles a command string beginning
+    with a quote instead of honouring it -- it reports the whole string as an
+    unknown command, or the quotes reach the interpreter as part of a filename.
+    Nothing is quoted there; a POSIX shell gets the usual quoting.
+    """
+    exe, script = sys.executable, os.path.abspath(__file__)
+    if IS_WINDOWS:
+        return f"{exe} {script} show {{}}"
+    return f'"{exe}" "{script}" show {{}}'
+
+
 def pick_saved() -> list[dict]:
     """The saved files, newest first, previewing what each one would reopen."""
     directory = sessions_dir()
@@ -443,7 +457,7 @@ def pick_saved() -> list[dict]:
 
     # The picker runs from the sessions directory so the list shows bare names
     # and the preview, which inherits that directory, resolves them.
-    preview = f'"{sys.executable}" "{os.path.abspath(__file__)}" show {{}}'
+    preview = preview_command()
     # Only stdout is captured: the picker draws its interface on stderr, which
     # has to reach the terminal.
     done = subprocess.run(
@@ -471,16 +485,32 @@ def pick_saved() -> list[dict]:
 
 
 def cmd_show(args: argparse.Namespace) -> int:
-    """Print a saved file -- this is the picker's preview command."""
-    path = Path(args.file)
+    """Print a saved file -- this is the picker's preview command.
+
+    sk substitutes the selected line into the preview command already quoted,
+    and the quotes reach argv intact wherever the command does not run through
+    a shell that strips them.
+    """
+    name = args.file.strip().strip("\"'")
+    path = Path(name)
     if not path.is_absolute():
         path = sessions_dir() / path
     if not path.exists():
-        print(f"missing: {args.file}")
+        print(f"missing: {name}")
         return 0
-    for s in load_saved(path):
+
+    try:
+        sessions = load_saved(path)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print(f"unreadable: {name} ({error})")
+        return 0
+
+    agents = sum(1 for s in sessions if s.get("agent"))
+    print(f"{len(sessions)} session(s), {agents} with an agent\n")
+    for s in sessions:
         mark = f"  [agent {s['agent'][:8]}]" if s.get("agent") else ""
-        print(f"{s['path']}{mark}")
+        title = f"  {s['title']}" if s.get("title") else ""
+        print(f"{s['path']}{mark}{title}")
     return 0
 
 
@@ -597,6 +627,10 @@ def main() -> int:
     p_show.add_argument("file")
 
     args = parser.parse_args()
+    # Titles carry emoji and box drawing, which the Windows default of cp1252
+    # cannot encode -- printing one would otherwise abort a preview mid-render.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
     handlers = {"record": cmd_record, "save": cmd_save, "open": cmd_open, "show": cmd_show}
     return handlers[args.command](args)
 
