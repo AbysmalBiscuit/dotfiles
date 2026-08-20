@@ -1,6 +1,6 @@
 ---
-name: writing-for-agents
-description: Writing documents for agents. Use when creating or editing skills, modifying AGENTS.md or CLAUDE.md, or writing a prompt for a subagent, Task dispatch, workflow stage, or agent definition. [wfa]
+name: writing-for-agents-wfa
+description: Writing documents for agents. Use when creating or editing skills, modifying AGENTS.md or CLAUDE.md, or writing a prompt for a subagent, Task dispatch, workflow stage, or agent definition.
 ---
 
 Reference for writing any document an agent consumes — a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable — the agent taking the same _process_ every run, not producing the same output.

@@ -1,6 +1,6 @@
 ---
-name: open-file
-description: Use when the user asks to open, launch, preview, or view a file or directory in its default desktop application (editor, PDF viewer, image viewer, browser) rather than reading its contents into the conversation. [of]
+name: open-file-of
+description: Use when the user asks to open, launch, preview, or view a file or directory in its default desktop application (editor, PDF viewer, image viewer, browser) rather than reading its contents into the conversation.
 ---
 
 # Open File
