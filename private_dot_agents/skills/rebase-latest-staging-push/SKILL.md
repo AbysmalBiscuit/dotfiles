@@ -11,7 +11,7 @@ Takes an optional base branch argument; defaults to `staging`, else the remote H
 
 ## What already happened
 
-`~/.claude/scripts/rebase-latest-staging-push.sh` has **already run** — fetch, rebase, and push with
+`~/.agents/skills/rebase-latest-staging-push/rebase-latest-staging-push.sh` has **already run** — fetch, rebase, and push with
 `--force-with-lease --force-if-includes`. Its output is below. Invoking `/rebase-latest-staging-push`
 authorizes that force-push; it is the point of the command, not something to
 second-guess or re-confirm.
@@ -27,7 +27,7 @@ oxlint by hand. If the rebase moved `bun.lock`, the script has already re-run
 
 ---
 
-!`bash ~/.claude/scripts/rebase-latest-staging-push.sh "$ARGUMENTS" 2>&1 || true`
+!`bash ~/.agents/skills/rebase-latest-staging-push/rebase-latest-staging-push.sh "$ARGUMENTS" 2>&1 || true`
 
 ---
 
@@ -61,5 +61,5 @@ detached mid-replay. Resolve in place:
 3. `git add <files>` then `git rebase --continue`.
 4. More conflicts may follow (the script reported how many commits are still
    queued). Repeat until the rebase finishes.
-5. Re-run `bash ~/.claude/scripts/rebase-latest-staging-push.sh` to push (pass the same base branch if
+5. Re-run `bash ~/.agents/skills/rebase-latest-staging-push/rebase-latest-staging-push.sh` to push (pass the same base branch if
    one was given). It is safe to re-run at any point.
