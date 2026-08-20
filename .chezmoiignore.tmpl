@@ -244,11 +244,11 @@ Documents
 {{- end }}
 
 # cli tools
+# homedir tools
 {{ if not (index .has "aider") -}}
 .aider*
 {{- end }}
 {{- if not (index .has "claude") }}
-.claude
 .claude.json
 .config/fish/exact_completions/claude.fish
 {{- end }}
@@ -258,9 +258,21 @@ Documents
 {{ if not (index .has "ccr") -}}
 .claude-code-router
 {{- end }}
-{{ if not (index .tool "jq") -}}
-.jq
+
+{{- range $tool := list
+    "cargo"
+    "claude"
+    "codex"
+    "jq"
+    "glazewm"
+    "gpg"
+    "tmux"
+    -}}
+{{- if not (index $.tool $tool) -}}
+.{{ $tool }}
+{{ end }}
 {{- end }}
+
 # config tools
 {{- range $tool := list
     "bat"
@@ -290,5 +302,5 @@ Documents
     -}}
 {{- if not (index $.tool $tool) -}}
 .config/{{ $tool }}
+{{ end }}
 {{- end }}
-{{end}}
