@@ -108,7 +108,7 @@ function setupPrompt(c) {
     : `Run it for real.`
   return `Set up a worktree for Linear issue ${c.issueId} ("${c.title}").
 
-Read /home/lev/.claude/commands/issue-setup.md and execute its steps for this issue. Batch-mode adjustments — you are one of several concurrent setup agents and there is no user to ask:
+Read /home/lev/.claude/skills/issue-setup/SKILL.md and execute its steps for this issue. Batch-mode adjustments — you are one of several concurrent setup agents and there is no user to ask:
 - Never prompt the user. Where the command says to ask:
   - multiple plausible Sentry candidates -> assign none; list the candidate URLs in the summary's Sentry line and in notes;
   - "branch already exists" -> do not force or reuse; return status "blocked" with the branch name in notes.
