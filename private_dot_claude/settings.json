@@ -43,10 +43,14 @@
       "Bash(devrun status:*)",
       "Bash(devrun logs:*)",
       "Read(~/.local/share/devkit/docs/**)",
-      "Bash(bash ~/.claude/scripts/*)",
-      "Bash(python ~/.claude/scripts/*)",
-      "Bash(python3 ~/.claude/scripts/*)",
-      "Bash(uv run ~/.claude/scripts/*)"
+      "Bash(bash ~/.agents/scripts/*)",
+      "Bash(python ~/.agents/scripts/*.py)",
+      "Bash(python3 ~/.agents/scripts/*.py)",
+      "Bash(uv run ~/.agents/scripts/*.py)",
+      "Bash(bash ~/.agents/skills/scripts/*)",
+      "Bash(python ~/.agents/skills/scripts/*.py)",
+      "Bash(python3 ~/.agents/skills/scripts/*.py)",
+      "Bash(uv run ~/.agents/skills/scripts/*.py)"
     ],
     "deny": [
       "Read(~/.sh_env)",
