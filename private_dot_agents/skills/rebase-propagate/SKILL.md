@@ -11,7 +11,7 @@ Takes an optional base branch argument; defaults to `staging`, else the remote H
 
 ## What already happened
 
-`~/.agents/skills/rebase-propagate/rebase-propagate.sh` has **already run**. It fetched, discovered
+`~/.agents/skills/rebase-propagate/scripts/rebase-propagate.sh` has **already run**. It fetched, discovered
 the stack from GitHub (every open PR whose base is a branch in the stack, recursively),
 rebased each branch onto its new parent, pushed them all with
 `--force-with-lease --force-if-includes`, and scanned for duplicate PRs. Its output is
@@ -27,7 +27,7 @@ double-check a result the script already reported.
 
 ---
 
-!`bash ~/.agents/skills/rebase-propagate/rebase-propagate.sh "$ARGUMENTS" 2>&1 || true`
+!`bash ~/.agents/skills/rebase-propagate/scripts/rebase-propagate.sh "$ARGUMENTS" 2>&1 || true`
 
 ---
 
@@ -61,7 +61,7 @@ pushed. The remaining branches are queued behind it.
    don't silently pick a side.
 3. `git add <files>` then `git rebase --continue`, repeating for further conflicts on
    that branch.
-4. Re-run `bash ~/.agents/skills/rebase-propagate/rebase-propagate.sh`. It resumes the same run from
+4. Re-run `bash ~/.agents/skills/rebase-propagate/scripts/rebase-propagate.sh`. It resumes the same run from
    its state file — including the branches already rebased — and pushes the whole
    stack once every rebase lands. Do **not** push by hand: a partial push is exactly
    the inconsistent state this avoids.
@@ -80,5 +80,5 @@ The scan lists each extra open PR sharing a head branch with one in the stack:
 
 The retired auto-pr workflow could in principle open a dupe shortly after the push.
 The scan above already ran post-push. If you want the delayed re-check, run
-`bash ~/.agents/skills/rebase-propagate/rebase-propagate.sh --dupes` once — it is read-only. Never
+`bash ~/.agents/skills/rebase-propagate/scripts/rebase-propagate.sh --dupes` once — it is read-only. Never
 `sleep` to wait for it.
