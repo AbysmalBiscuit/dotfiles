@@ -126,7 +126,6 @@ $status\
 # Starship modules
 ## Basic prompt features
 [battery]
-disabled = {{ not .system.has_battery }}
 format = "[\b $symbol$percentage]($style bg:bg_time) "
 unknown_symbol = "?"
 display = [
