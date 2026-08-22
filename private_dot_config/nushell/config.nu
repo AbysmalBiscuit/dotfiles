@@ -339,7 +339,7 @@ $env.config = {
     color_config: $dark_theme # if you want a more interesting theme, you can replace the empty record with `$dark_theme`, `$light_theme` or another custom record
     footer_mode: 25 # always, never, number_of_rows, auto
     float_precision: 2 # the precision for displaying floats in tables
-    buffer_editor: $env.EDITOR # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.VISUAL and $env.EDITOR
+    buffer_editor: $env.EDITOR? # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.VISUAL and $env.EDITOR
     use_ansi_coloring: false
     bracketed_paste: true # enable bracketed paste, currently useless on windows
     edit_mode: vi # emacs, vi
@@ -1029,6 +1029,11 @@ if (has_command zoxide) {
   zoxide init nushell | save -f ($auto_load | path join zoxide.nu)
 }
 
-if (path_exists "$config_dir/completions-jj.nu") {
-    use completions-jj.nu *  # Or `source completions-jj.nu`
+# Generating jj's completions is slow, so only redo it after a jj upgrade.
+if (has_command jj) {
+  let jj_completions = ($auto_load | path join completions-jj.nu)
+  let jj_bin = (which jj | get path.0)
+  if (not ($jj_completions | path exists)) or ((ls $jj_bin | get modified.0) > (ls $jj_completions | get modified.0)) {
+    jj util completion nushell | save -f $jj_completions
+  }
 }

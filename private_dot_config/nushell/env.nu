@@ -3,7 +3,7 @@
 # version = "0.100.0"
 
 def create_left_prompt [] {
-    let dir = match (do --ignore-errors { $env.PWD | path relative-to $nu.home-path }) {
+    let dir = match (do --ignore-errors { $env.PWD | path relative-to $nu.home-dir }) {
         null => $env.PWD
         '' => '~'
         $relative_pwd => ([~ $relative_pwd] | path join)
@@ -34,17 +34,31 @@ def create_right_prompt [] {
     ([$last_exit_code, (char space), $time_segment] | str join)
 }
 
-# Use nushell functions to define your right and left prompt
-$env.PROMPT_COMMAND = {|| create_left_prompt }
-# FIXME: This default is not implemented in rust code as of 2023-09-08.
-$env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
+# starship's nu init owns PROMPT_COMMAND, PROMPT_COMMAND_RIGHT, PROMPT_INDICATOR
+# and PROMPT_MULTILINE_INDICATOR. The character module lives here rather than in
+# starship's `format`, because nushell re-renders only the indicator on a mode
+# switch. STARSHIP_SHELL=fish per call: starship honours --keymap only for fish,
+# zsh and cmd, so under "nu" every mode reads as insert.
+#
+# The leading \r\n is the prompt's line break. It cannot live at the end of
+# starship's `format`, because nushell strips trailing newlines off external
+# command output. \r rather than \n alone: the indicator is emitted verbatim,
+# without the \n -> \r\n rewrite render_prompt_left applies.
+$env.STARSHIP_CONFIG = ($nu.home-dir | path join ".config" "starship-nu.toml")
 
-# The prompt indicators are environmental variables that represent
-# the state of the prompt
-$env.PROMPT_INDICATOR = {|| "> " }
-$env.PROMPT_INDICATOR_VI_INSERT = {|| ": " }
-$env.PROMPT_INDICATOR_VI_NORMAL = {|| "> " }
-$env.PROMPT_MULTILINE_INDICATOR = {|| "::: " }
+$env.PROMPT_INDICATOR_VI_INSERT = {||
+  let character = (with-env {STARSHIP_SHELL: "fish"} {
+    starship module character --keymap viins --status $env.LAST_EXIT_CODE
+  })
+  $"\r\n($character)"
+}
+
+$env.PROMPT_INDICATOR_VI_NORMAL = {||
+  let character = (with-env {STARSHIP_SHELL: "fish"} {
+    starship module character --keymap default --status $env.LAST_EXIT_CODE
+  })
+  $"\r\n($character)"
+}
 
 # If you want previously entered commands to have a different prompt from the usual one,
 # you can uncomment one or more of the following lines.
