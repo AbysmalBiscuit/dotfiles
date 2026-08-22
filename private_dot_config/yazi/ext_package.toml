@@ -1,21 +1,21 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:mime-ext"
-rev = "bb758e2"
-hash = "b32d06923a619e353fca3cacf2ebe9cd"
+rev = "4848aac"
+hash = "3bcc00df11efc3ae5d15f2dba860be7"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:git"
-rev = "bb758e2"
-hash = "88e56a64b7ce7c4314427452343fef17"
+rev = "4848aac"
+hash = "5bb0bfab901d3601c370eafdd66edd31"
 
 [[plugin.deps]]
 use = "Rolv-Apneseth/starship"
-rev = "159eaba"
-hash = "7de446280b1ba8c49ffd86dbc24bbbe6"
+rev = "ea92cf4"
+hash = "9776f378459072b6c2875eae5addc49d"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:zoom"
-rev = "bb758e2"
+rev = "4848aac"
 hash = "e8e279463ee99c940e6945a14cf4aa9e"
 
 [[plugin.deps]]
@@ -26,7 +26,7 @@ hash = "fbaf0adc8efc59555b748d36aab62d40"
 [[plugin.deps]]
 use = "boydaihungst/mediainfo"
 rev = "e079a00"
-hash = "8dd8bc3484547390ba50dfa58d7436b0"
+hash = "aaf5e7e6b52a700117de486f79954dd1"
 
 [[plugin.deps]]
 use = "Sonico98/exifaudio"
@@ -40,13 +40,13 @@ hash = "50da29476e744dba37d77fb209328fd1"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "bb758e2"
-hash = "15e5b67a241172cbb86b8fbf9e63692"
+rev = "4848aac"
+hash = "5b2fbef7d1513ce38ff72623a071a5e"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:types"
-rev = "bb758e2"
-hash = "9105494e98299f392aee95340066da9f"
+rev = "4848aac"
+hash = "ff056b5acd05d915dc3a3936cb0cfd3e"
 
 [[plugin.deps]]
 use = "uhs-robert/recycle-bin"
@@ -55,5 +55,5 @@ hash = "7383d80862d3cdcc85f8658dac7b90c2"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-mocha"
-rev = "4770a34"
-hash = "7dfe41c9c3d9be76da8a844263d0bbed"
+rev = "be0b21d"
+hash = "ce320f877fe709b189433941aba747c4"
