@@ -17,7 +17,9 @@ function ocargo {
         'mold' = 'mold'; 'no-mold' = 'noMold'; 'debug' = 'debug'; 'help' = 'help'
     }
 
+    # Seed every flag: under Set-StrictMode, reading an absent hashtable key throws.
     $flag = @{}
+    foreach ($name in @($short.Values) + @($long.Values)) { $flag[$name] = $false }
     $index = 0
     while ($index -lt $args.Count) {
         $token = [string]$args[$index]
@@ -87,7 +89,8 @@ binary under test: ocargo run '--' --my-arg
     }
 
     if (($flag.mold -or $env:MOLD) -and -not $flag.noMold) {
-        $moldPath = if ($env:MOLD) { $env:MOLD } else { (Get-Command mold -ErrorAction SilentlyContinue).Source }
+        $moldCommand = Get-Command mold -ErrorAction SilentlyContinue
+        $moldPath = if ($env:MOLD) { $env:MOLD } elseif ($moldCommand) { $moldCommand.Source }
         if ($moldPath) { $rustFlags += " -C link-arg=-fuse-ld=$moldPath" }
         elseif ($flag.mold) { Write-Warning 'ocargo: mold not found on PATH, linking with the default linker' }
     }
