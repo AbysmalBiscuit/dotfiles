@@ -1,5 +1,6 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 #:schema https://raw.githubusercontent.com/AbysmalBiscuit/alacritree/integration/all-features/schema/alacritree-config.json
+# vim: shiftwidth=2
 [font]
 fallback = [
   # Sarasa's cell is half an em, and nothing here fits it: Meslo's icons are
@@ -77,9 +78,21 @@ sidebar = true
 
 # {{- if .is_windows }}
 
+# {{- if index .has "nu" }}
+[terminal.shell]
+program = "nu.exe"
+# {{- else if lookPath "pwsh.exe" }}
 [terminal.shell]
 program = "pwsh"
 args = ["-NoLogo"]
+# {{- end }}
+
+# {{- if lookPath "pwsh.exe" }}
+[[ui.profiles]]
+name = "PowerShell 7"
+program = "pwsh"
+args = ["-NoLogo"]
+# {{- end }}
 
 [[ui.profiles]]
 name = "WSL"
@@ -88,4 +101,11 @@ program = "wsl.exe"
 [[ui.profiles]]
 name = "cmd"
 program = "cmd.exe"
+
+# {{- end }}
+
+# {{- if index .has "nu" }}
+[[ui.profiles]]
+name = "nushell"
+program = "nu# {{ if .is_windows }}.exe# {{ end }}"
 # {{- end }}
