@@ -332,6 +332,13 @@ fi
 # {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".config" "composer" "vendor" "bin") -}}
 # {{- end }}
 
+# {{- $mise_shims := joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" -}}
+# {{- if stat $mise_shims }}
+# Adding mise shims to PATH
+# PATH="# {{ $mise_shims }}:$PATH"
+# {{- $path_prepend = append $path_prepend $mise_shims -}}
+# {{- end }}
+
 # Set up final PATH dirs that should overwrite everything else
 # {{- if stat (joinPath .chezmoi.homeDir "bin" "bin") }}
 # Adding user bin and bin/bin directory to PATH
