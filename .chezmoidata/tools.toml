@@ -761,6 +761,43 @@ init_command_only_if_no = []
 
 [[tools]]
 lang = "go"
+name = "carapace"
+cmds = [
+    "carapace"
+]
+desc = "A multi-shell completion library."
+url = "https://carapace.sh/"
+git = "https://github.com/carapace-sh/carapace"
+comment = "winget install -e --id rsteube.Carapace"
+install_command = "curl termux.carapace.sh | sh"
+completions_command = "carapace _carapace SHELL"
+init_command = ""
+supported_shells = [
+    "bash",
+    "cmd",
+    "elvish",
+    "fish",
+    "ion",
+    "nushell",
+    "oil",
+    "powershell",
+    "tcsh",
+    "xonsh",
+    "zsh"
+]
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = "nushell"
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "go"
 name = "chezmoi"
 cmds = [
     "chezmoi"
@@ -2470,6 +2507,35 @@ install_command = ""
 completions_command = ""
 init_command = ""
 supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
+name = "mise"
+cmds = [
+    "mise"
+]
+desc = "dev tools, env vars, task runner"
+url = "https://mise.jdx.dev/"
+git = "https://github.com/jdx/mise"
+comment = "curl https://mise.run | sh ; cargo binstall mise"
+install_command = "cargo install --locked mise"
+completions_command = ""
+init_command = ""
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
 append_fish_completion = ""
 append_fish_init = ""
 command_bash_name = ""
