@@ -207,8 +207,13 @@ if (which carapace | is-not-empty) {
             $spans
         }
 
+        # carapace styles every candidate itself, in palette-index ANSI: "blue"
+        # for flags, blue+bold for directories. Those ignore the theme, and
+        # `selected_text: {attr: r}` reverses them into a solid blue bar. fish
+        # paints every candidate alike (fish_pager_color_completion normal), so
+        # drop the styles and let $abc_menu_style.text apply.
         let out = (do --ignore-errors { ^$carapace_bin $spans.0 nushell ...$spans } | default "")
-        if ($out | is-empty) { null } else { $out | from json }
+        if ($out | is-empty) { null } else { $out | from json | reject --optional style }
     }
 }
 

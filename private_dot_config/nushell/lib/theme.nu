@@ -110,8 +110,13 @@ export const abc_theme = {
     shape_datetime: $abc.mauve
     shape_binary: $abc.mauve
 
-    shape_filepath: $abc.sky
-    shape_directory: $abc.sky
+    # fish paints path arguments with fish_color_valid_path, which this config
+    # sets to `normal`. Nushell's filepath shape is not the same signal anyway:
+    # the parser emits it from the parameter's declared type, so `cd /nope` is
+    # cyan too. Glob keeps a colour of its own, because expansion is real
+    # behaviour and worth seeing before pressing enter.
+    shape_filepath: $abc.white
+    shape_directory: $abc.white
     shape_externalarg: $abc.white
     shape_literal: $abc.white
 
