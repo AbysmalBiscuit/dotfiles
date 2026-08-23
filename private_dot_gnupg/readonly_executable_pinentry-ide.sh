@@ -8,4 +8,4 @@ if [ -n "$PINENTRY_USER_DATA" ]; then
         ;;
     esac
 fi
-exec /usr/bin/pinentry "$@"
+exec /usr/bin/pinentry-curses "$@"
