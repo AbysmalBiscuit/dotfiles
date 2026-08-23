@@ -106,7 +106,7 @@ cmds = [
     "claude"
 ]
 desc = ""
-url = ""
+url = "https://claude.com/product/claude-code"
 git = ""
 comment = ""
 install_command = ""
@@ -1901,6 +1901,31 @@ cmds = [
 desc = "A human-friendly and fast alternative to cut and (sometimes) awk."
 url = "https://github.com/theryangeary/choose#usage"
 git = ""
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "rust"
+name = "codex"
+cmds = [
+    "codex"
+]
+desc = "Lightweight coding agent that runs in your terminal"
+url = "https://learn.chatgpt.com/docs/codex/cli"
+git = "https://github.com/openai/codex"
 comment = ""
 install_command = ""
 completions_command = ""
