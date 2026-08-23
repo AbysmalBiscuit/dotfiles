@@ -34,9 +34,21 @@ Applies to every part:
 
 When the reader asks you to explain or walk through something, part 2 runs as long as the topic needs. The order and the conditions stay the same.
 
+## Persistent Writing (docs, PR bodies, commits, etc.)
+
+Persistent documents should be timeless. That is, true now, and true in the future.
+Writing hard numbers in a document makes them go stale almost immediately.
+In snapshot documents, hard numbers are the goal and are fine.
+Writing hard numbers in living docs is not ok, as they will go stale immediately.
+
+- "this folder contains doc files", not "there are 12 doc files in this folder"
+- "the loader handles the legacy formats", not "the loader handles 3 legacy formats"
+
+When its crucial to have the hard numbers, documents should carry the instructions for how to regenerate/verify them.
+
 ## Git Stash
 
-Never do weird `git stash` and `git stash` pop to "just quickly check something or run a test". There are often parallel agents working in a project and this can mess everything up.
+Never do weird `git stash` and `git stash` pop to "just quickly check something or run a test". There are often parallel agents working in a project and this can mess everything up. To inspect another revision, read it in place with `git show REV:path`.
 
 ## Git Commits
 
