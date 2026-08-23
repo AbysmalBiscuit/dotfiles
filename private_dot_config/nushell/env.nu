@@ -1,6 +1,6 @@
-# Nushell Environment Config File
+# Nushell environment file. Runs before config.nu.
 #
-# version = "0.100.0"
+# version = "0.115.0"
 
 def create_left_prompt [] {
     let dir = match (do --ignore-errors { $env.PWD | path relative-to $nu.home-dir }) {
@@ -132,4 +132,37 @@ $env.PATH = (
 
 
 mkdir $nu.cache-dir
-print "env.nu loaded"
+
+# Completions load from the autoload directories, not from a `source` here.
+# Nushell reads every .nu file in $nu.user-autoload-dirs and
+# $nu.vendor-autoload-dirs after config.nu, and silently skips a directory that
+# does not exist. That is the "only if present" behaviour: chezmoi drops the
+# generated scripts in, and a machine where it has not run yet just starts
+# without them instead of failing to parse.
+#
+#   ~/.config/nushell/autoload/          chezmoi's target, user-owned
+#   ~/.local/share/nushell/vendor/autoload/   machine-local, chezmoi-free
+#
+# Regenerate by hand after a tool upgrade, then let chezmoi re-add it:
+#   carapace _carapace nushell | save -f ~/.config/nushell/autoload/carapace.nu
+#   jj util completion nushell | save -f ~/.config/nushell/autoload/jj.nu
+mkdir ($nu.user-autoload-dirs | first)
+
+# Shell integrations, as opposed to completions. Cheap to produce and they must
+# exist for the prompt to render at all, so these stay self-healing rather than
+# waiting on chezmoi.
+const AUTOLOAD = ($nu.data-dir | path join "vendor" "autoload")
+mkdir $AUTOLOAD
+
+def regen [bin: string, out: path, gen: closure] {
+    if (which $bin | is-empty) { return }
+    if ($out | path exists) and ((ls $out | get 0.modified) > (ls (which $bin | get path.0) | get 0.modified)) { return }
+    do $gen | save --force $out
+}
+
+regen starship ($AUTOLOAD | path join "starship.nu") {|| ^starship init nu }
+regen zoxide ($AUTOLOAD | path join "zoxide.nu") {|| ^zoxide init nushell }
+
+# carapace bridges to these shells for any command it does not cover itself,
+# which is what keeps the hand-written ~/.config/fish/completions working here.
+$env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
