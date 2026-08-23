@@ -16,7 +16,7 @@
 # {{- /* ========================================================== */ -}}
 
 # {{- /* ---- Output file per shell ---- */ -}}
-# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
+# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "autoload" "_generated.nu") -}}
 
 # {{- /* ---- Filter to installed shells ---- */ -}}
 # {{- $shells := list -}}
