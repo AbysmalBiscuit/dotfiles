@@ -33,18 +33,19 @@ url = "https://mcp.adaptyv.bio/mcp"
 
 [tui]
 status_line = [
-    "model-with-reasoning",
-    "project-name",
-    "git-branch",
-    "pull-request-number",
-    "run-state",
-    "approval-mode",
-    "context-used",
-    "five-hour-limit",
-    "weekly-limit",
-    "current-dir",
+  "model-with-reasoning",
+  "project-name",
+  "git-branch",
+  "pull-request-number",
+  "run-state",
+  "approval-mode",
+  "context-used",
+  "five-hour-limit",
+  "weekly-limit",
+  "current-dir",
 ]
 status_line_use_colors = true
+vim_mode_default = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 1
