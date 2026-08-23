@@ -2,8 +2,11 @@
 # Rebase the current branch onto the latest base branch and propagate the result
 # down its stack of dependent PRs.
 #
-# Usage: rebase-propagate.sh [base-branch]   base defaults to staging, then remote HEAD
+# Usage: rebase-propagate.sh [base-branch]
 #        rebase-propagate.sh --dupes          read-only: run only the duplicate PR scan
+#
+# base-branch resolves in order: the argument, 'git config base.branch', staging,
+# the remote's default branch.
 #
 # The stack is discovered from GitHub: every open PR whose base is a branch in
 # the stack becomes a child, recursively. Each branch is rebased onto its new
@@ -151,15 +154,29 @@ base=${1:-}
 if [[ "$resume" == 1 ]]; then
   base=$(awk -F'\t' '$1=="#root" {print $3; exit}' "$state")
 fi
+[[ -z "$base" ]] && base=$(git config --get base.branch)
 if [[ -z "$base" ]]; then
   if git rev-parse --verify --quiet "refs/remotes/$REMOTE/staging" >/dev/null; then
     base=staging
   else
+    # git writes origin/HEAD once at clone time and fetch never revisits it, so a
+    # missing or renamed default branch costs one round trip to correct.
     base=$(git symbolic-ref --quiet --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null)
-    base=${base#"$REMOTE"/}
+    if [[ -z "$base" ]]; then
+      git remote set-head "$REMOTE" --auto >/dev/null 2>&1
+      base=$(git symbolic-ref --quiet --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null)
+    fi
   fi
 fi
 base=${base#"$REMOTE"/}
+
+if [[ -z "$base" ]]; then
+  say "no base branch: $REMOTE has no staging branch and no default branch"
+  say "pass one as an argument, or set it for this repo:"
+  say "  git config base.branch <branch>"
+  finish ERROR 3
+fi
+
 git rev-parse --verify --quiet "refs/remotes/$REMOTE/$base" >/dev/null || {
   say "no such base branch: $REMOTE/$base"
   finish ERROR 3

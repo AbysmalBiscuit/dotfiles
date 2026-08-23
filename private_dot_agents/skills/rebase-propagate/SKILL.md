@@ -1,13 +1,14 @@
 ---
 name: rebase-propagate-rp
-description: Rebase on latest staging and propagate down the stack of dependent PRs
+description: Rebase on the latest base branch and propagate down the stack of dependent PRs [rp]
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
-Rebase this branch on latest staging and propagate the result to every dependent PR.
+Rebase this branch on the latest base branch and propagate the result to every dependent PR.
 
-Takes an optional base branch argument; defaults to `staging`, else the remote HEAD.
+Takes an optional base branch argument. Without one, the base resolves in order:
+`git config base.branch`, then `staging`, then the remote's default branch.
 
 ## What already happened
 

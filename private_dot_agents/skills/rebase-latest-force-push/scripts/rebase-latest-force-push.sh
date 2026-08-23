@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Rebase the current branch on the latest base branch and push it.
 #
-# Usage: rlsp.sh [base-branch]        base-branch defaults to staging, then the remote HEAD
+# Usage: rlfp.sh [base-branch]
+#
+# base-branch resolves in order: the argument, 'git config base.branch', staging,
+# the remote's default branch.
 #
 # Runs the whole happy path unattended: fetch, rebase, push with lease. Stops
 # before anything ambiguous (conflicts, dirty tree, protected branch, rejected
 # push) and reports enough state for a caller to take over.
 #
-# Last line of output is always: RLSP-RESULT: <STATUS>
+# Last line of output is always: RLFP-RESULT: <STATUS>
 #   PUSHED          rebased and pushed
 #   UP-TO-DATE      already on latest base, remote already matches
 #   CONFLICT        rebase stopped on conflicts, rebase still IN PROGRESS
@@ -15,6 +18,7 @@
 #   IN-PROGRESS     a rebase/merge/cherry-pick was already running, nothing done
 #   NO-COMMITS      branch has no commits of its own, nothing to push
 #   PROTECTED       current branch is a protected branch, nothing done
+#   STACKED         branch sits on another unmerged branch, nothing done
 #   INSTALL-FAILED  bun.lock moved in the rebase and 'bun install' failed
 #   HOOK-MODIFIED   pre-push hook rewrote files, push failed, tree now dirty
 #   REJECTED        remote moved, lease refused the push
@@ -26,7 +30,7 @@ PROTECTED_BRANCHES="staging main master develop production release"
 REMOTE=origin
 
 say() { printf '%s\n' "$*" | tr '\r' '\n'; }
-finish() { say "RLSP-RESULT: $1"; exit "${2:-0}"; }
+finish() { say "RLFP-RESULT: $1"; exit "${2:-0}"; }
 
 git rev-parse --git-dir >/dev/null 2>&1 || {
   say "not inside a git repository: $PWD"
@@ -81,21 +85,71 @@ say "== fetch =="
 git fetch --prune "$REMOTE" 2>&1 | tail -20
 
 base=${1:-}
+[[ -z "$base" ]] && base=$(git config --get base.branch)
 if [[ -z "$base" ]]; then
   if git rev-parse --verify --quiet "refs/remotes/$REMOTE/staging" >/dev/null; then
     base=staging
   else
+    # git writes origin/HEAD once at clone time and fetch never revisits it, so a
+    # missing or renamed default branch costs one round trip to correct.
     base=$(git symbolic-ref --quiet --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null)
-    base=${base#"$REMOTE"/}
+    if [[ -z "$base" ]]; then
+      git remote set-head "$REMOTE" --auto >/dev/null 2>&1
+      base=$(git symbolic-ref --quiet --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null)
+    fi
   fi
 fi
 base=${base#"$REMOTE"/}
-base_ref="$REMOTE/$base"
 
+if [[ -z "$base" ]]; then
+  say "no base branch: $REMOTE has no staging branch and no default branch"
+  say "pass one as an argument, or set it for this repo:"
+  say "  git config base.branch <branch>"
+  finish ERROR 3
+fi
+
+base_ref="$REMOTE/$base"
 git rev-parse --verify --quiet "refs/remotes/$base_ref" >/dev/null || {
   say "no such base branch: $base_ref"
   finish ERROR 3
 }
+
+# A branch stacked on another open branch has to be rebased onto its parent, not
+# onto the base: replaying the parent's commits here gives them new SHAs, so the
+# child's PR shows work that belongs to the parent until the parent is rebased to
+# match. Only parents still on the remote count, since the fetch above pruned the
+# merged ones.
+parents=()
+while IFS= read -r p; do
+  [[ -n "$p" ]] && parents+=("$p")
+done < <(
+  git for-each-ref --merged HEAD --no-merged "$base_ref" \
+    --format='%(refname:short)' "refs/remotes/$REMOTE/" |
+    sed "s|^$REMOTE/||" | grep -vx -e "$branch" -e HEAD
+)
+
+if ((${#parents[@]})); then
+  nearest=${parents[0]}
+  nearest_n=-1
+  for p in "${parents[@]}"; do
+    n=$(git rev-list --count "$base_ref..$REMOTE/$p")
+    if ((n > nearest_n)); then
+      nearest_n=$n
+      nearest=$p
+    fi
+  done
+  say ""
+  say "$branch is stacked on ${#parents[@]} unmerged branch(es) on $REMOTE:"
+  printf '  %s\n' "${parents[@]}"
+  say ""
+  say "rebasing onto $base_ref would replay their commits under new SHAs and break"
+  say "the dependent PR's diff. Rebase the whole stack instead:"
+  say "  /rebase-propagate"
+  say ""
+  say "or rebase this branch onto its parent alone:"
+  say "  /rebase-latest-force-push $nearest"
+  finish STACKED 7
+fi
 
 say ""
 say "== rebase $branch onto $base_ref =="
