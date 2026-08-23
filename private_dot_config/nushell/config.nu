@@ -75,13 +75,21 @@ $env.config = {
             event: { send: openeditor }
         }
         # fish's accept-autosuggestion. reedline's vi insert map does not bind
-        # the hint completion the way its emacs map does.
+        # the hint completion the way its emacs map does. A hint and a menu never
+        # coexist, so fall through to the menu: reedline has no dedicated "accept
+        # item" event, `menunext` splices the highlighted value into the buffer
+        # and closes the menu outright when it is the only match.
         {
             name: accept_hint
             modifier: control
             keycode: char_f
             mode: [emacs vi_normal vi_insert]
-            event: { send: historyhintcomplete }
+            event: {
+                until: [
+                    { send: historyhintcomplete }
+                    { send: menunext }
+                ]
+            }
         }
         {
             name: accept_hint_right
@@ -181,6 +189,14 @@ if (which carapace | is-not-empty) {
     $env.CARAPACE_SHELL_BUILTINS = (help commands | where category != "" | get name | each { split row " " | first } | uniq | str join "\n")
     $env.CARAPACE_SHELL_FUNCTIONS = (help commands | where category == "" | get name | each { split row " " | first } | uniq | str join "\n")
 
+    # ~/.local/share/mise/shims/carapace is a symlink to the mise binary, which
+    # re-enters mise on every call: 316ms versus 16ms for the installed binary.
+    # At one invocation per keypress that is the difference between instant and
+    # sluggish, so resolve past the shim once here. `mise which` costs 13ms and
+    # answers with a `latest` symlink that survives patch upgrades.
+    let mise_resolved = (do --ignore-errors { ^mise which carapace | str trim } | default "")
+    let carapace_bin = if ($mise_resolved | is-not-empty) { $mise_resolved } else { (which carapace).0.path }
+
     $env.config.completions.external.completer = {|spans|
         # An alias has to be resolved to its target first, or carapace looks up a
         # command that does not exist.
@@ -191,7 +207,7 @@ if (which carapace | is-not-empty) {
             $spans
         }
 
-        let out = (do --ignore-errors { ^carapace $spans.0 nushell ...$spans } | default "")
+        let out = (do --ignore-errors { ^$carapace_bin $spans.0 nushell ...$spans } | default "")
         if ($out | is-empty) { null } else { $out | from json }
     }
 }
