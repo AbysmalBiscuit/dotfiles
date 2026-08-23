@@ -95,6 +95,16 @@ $env.NU_CONFIG_DIR = if $nu.os-info.name == "windows" {
 
 $env.NUPM_HOME = $env.NU_CONFIG_DIR | path join 'nupm'
 
+# sh_env builds the environment on unix and never runs on native Windows, so the
+# values lib/*.nu reads have to be resolved here instead. PATH_CLEAN and
+# PATH_WINDOWS stay unset on purpose: they only mean something under WSL, and
+# every consumer already guards on that.
+if $nu.os-info.name == "windows" {
+    $env.NVIM_EXECUTABLE = ($env.NVIM_EXECUTABLE? | default (which nvim | get path.0? | default "nvim"))
+    $env.PYTHON3_HOST_PROG = ($env.PYTHON3_HOST_PROG? | default (which python | get path.0? | default "python"))
+    $env.EDITOR = ($env.EDITOR? | default $env.NVIM_EXECUTABLE)
+}
+
 # Directories to search for scripts when calling source or use
 # The default for this is $nu.default-config-dir/scripts
 $env.NU_LIB_DIRS = [

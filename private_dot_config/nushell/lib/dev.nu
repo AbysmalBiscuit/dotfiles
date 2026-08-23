@@ -71,13 +71,25 @@ def --wrapped ocargo [...args] {
     with-env { RUSTFLAGS: $rustflags } { ^cargo ...$final_args }
 }
 
-# neovim. `nvim` runs with the WSL-clean PATH so Windows binaries on $PATH do
-# not shadow the Linux toolchain plugins shell out to; `nnvim` keeps full PATH.
-def --wrapped nvim [...args] { ^env $"PATH=($env.PATH_CLEAN)" $env.NVIM_EXECUTABLE ...$args }
-def --wrapped nnvim [...args] { ^$env.NVIM_EXECUTABLE ...$args }
-def --wrapped nvimtheme [...args] { ^env $"PATH=($env.PATH_CLEAN)" RECOMPILE_COLORSCHEME=true $env.NVIM_EXECUTABLE ...$args }
-def --wrapped neovide [...args] { ^neovide.exe --wsl ...$args }
-def update-nvim-plugins [] { ^$env.NVIM_EXECUTABLE --headless "+Lazy! sync" "+qa!" }
+# neovim. On WSL, `nvim` drops the /mnt/c entries from PATH so Windows binaries
+# do not shadow the Linux toolchain that plugins shell out to; `nnvim` keeps the
+# full PATH. PATH_CLEAN and NVIM_EXECUTABLE both come from sh_env, which never
+# runs on native Windows, so each has a fallback.
+def nvim-exe []: nothing -> string { $env.NVIM_EXECUTABLE? | default "nvim" }
+def --wrapped nvim [...args] {
+    let exe = (nvim-exe)
+    if ($env.PATH_CLEAN? | is-empty) {
+        ^$exe ...$args
+    } else {
+        with-env { PATH: ($env.PATH_CLEAN | split row (char esep)) } { ^$exe ...$args }
+    }
+}
+def --wrapped nnvim [...args] { let exe = (nvim-exe); ^$exe ...$args }
+def --wrapped nvimtheme [...args] { with-env { RECOMPILE_COLORSCHEME: "true" } { nvim ...$args } }
+def --wrapped neovide [...args] {
+    if ($env.WSL_DISTRO_NAME? | is-not-empty) { ^neovide.exe --wsl ...$args } else { ^neovide ...$args }
+}
+def update-nvim-plugins [] { let exe = (nvim-exe); ^$exe --headless "+Lazy! sync" "+qa!" }
 
 def cmsecrets [] { ^bash ([(^chezmoi source-path | str trim) edit_secrets.sh] | path join) }
 

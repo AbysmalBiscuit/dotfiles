@@ -1,9 +1,19 @@
 # OS detection, clipboard and the WSL/Windows interop wrappers.
 
-# "wsl" | "linux" | "darwin" | "unknown"
+# "wsl" | "linux" | "windows" | "darwin" | "unknown"
 def get-os []: nothing -> string {
-    let desc = (^uname -a | str lowercase)
-    if ($desc =~ "microsoft-standard-wsl") { "wsl" } else if ($desc =~ "linux") { "linux" } else if ($desc =~ "darwin") { "darwin" } else { "unknown" }
+    match $nu.os-info.name {
+        "windows" => "windows"
+        "macos" => "darwin"
+        "linux" => {
+            # WSL_DISTRO_NAME is absent in sessions WSL's init never touched, so
+            # the kernel release is the fallback: WSL2 always stamps it
+            # "microsoft".
+            let wsl = ($env.WSL_DISTRO_NAME? | is-not-empty) or ((open --raw /proc/sys/kernel/osrelease) =~ "(?i)microsoft")
+            if $wsl { "wsl" } else { "linux" }
+        }
+        _ => "unknown"
+    }
 }
 
 def is-wsl []: nothing -> bool { (get-os) == "wsl" }
@@ -12,6 +22,7 @@ def is-wsl []: nothing -> bool { (get-os) == "wsl" }
 def get-clipboard []: nothing -> string {
     match (get-os) {
         "wsl" => (^powershell.exe -command "Get-Clipboard" | str replace --all "\r" "")
+        "windows" => (^powershell -NoProfile -Command "Get-Clipboard" | str replace --all "\r" "")
         "linux" => (^xclip -o -selection c)
         "darwin" => (^pbpaste)
         _ => { error make { msg: "no clipboard reader known for this OS" } }
@@ -23,6 +34,7 @@ def set-clipboard [...text: string]: any -> nothing {
     let data = if ($text | is-not-empty) { $text | str join " " } else { $in | into string }
     match (get-os) {
         "wsl" => ($data | ^unix2dos | ^clip.exe)
+        "windows" => ($data | ^clip)
         "linux" => ($data | ^xclip -selection c)
         "darwin" => ($data | ^pbcopy)
         _ => { error make { msg: "no clipboard writer known for this OS" } }
@@ -68,6 +80,8 @@ def exp [dir?: path] {
     let target = ($dir | default $env.PWD)
     match (get-os) {
         "wsl" => (^env $"PATH=($env.PATH_WINDOWS)" explorer.exe (^wslpath -w $target))
+        # explorer.exe exits 1 even when it did open the window.
+        "windows" => (do --ignore-errors { ^explorer $target } | ignore)
         "darwin" => (^open $target)
         _ => (^xdg-open $target)
     }

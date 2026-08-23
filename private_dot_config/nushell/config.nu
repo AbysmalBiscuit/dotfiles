@@ -166,6 +166,36 @@ $env.config.menus = ($env.config.menus | each {|m|
     $m | update style ($m.style | merge $abc_menu_style)
 })
 
+# Flag and argument completions for external commands. Nushell ships none: only
+# internal commands and `extern` declarations carry flags, so without a completer
+# `git push -<tab>` opens an empty menu. carapace knows ~1000 CLIs.
+#
+# Installed only when carapace is on PATH. `null` out of the closure makes
+# nushell decline the custom result and run its own file completion instead
+# (nu-cli/src/completions/custom_completions.rs:273), which is what should happen
+# for a command carapace does not know.
+if (which carapace | is-not-empty) {
+    # carapace reads these to tell shell builtins apart from real binaries.
+    # Resolved once here rather than per keypress, which is what carapace's own
+    # generated script does.
+    $env.CARAPACE_SHELL_BUILTINS = (help commands | where category != "" | get name | each { split row " " | first } | uniq | str join "\n")
+    $env.CARAPACE_SHELL_FUNCTIONS = (help commands | where category == "" | get name | each { split row " " | first } | uniq | str join "\n")
+
+    $env.config.completions.external.completer = {|spans|
+        # An alias has to be resolved to its target first, or carapace looks up a
+        # command that does not exist.
+        let expansion = (scope aliases | where name == $spans.0 | get --optional 0.expansion)
+        let spans = if ($expansion | is-not-empty) {
+            $spans | skip 1 | prepend ($expansion | split row " " | first)
+        } else {
+            $spans
+        }
+
+        let out = (do --ignore-errors { ^carapace $spans.0 nushell ...$spans } | default "")
+        if ($out | is-empty) { null } else { $out | from json }
+    }
+}
+
 # Ported from ~/.config/fish/functions. Order matters: `source` is a parse-time
 # include, so a file may only call commands defined in an earlier one.
 source ./lib/platform.nu
