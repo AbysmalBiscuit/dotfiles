@@ -1,0 +1,51 @@
+#!/bin/sh
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+set -eu
+
+# en_CH is a hand-rolled locale: en_US character handling, en_DK (ISO 8601)
+# dates, and Swiss numbers, currency, paper and measurements. No package ships
+# it, so a glibc upgrade that rebuilds /usr/lib/locale drops it and every shell
+# then warns "setlocale: cannot change locale (en_CH.UTF-8)".
+#
+# Two things re-run this script: the locale definition embedded below, and the
+# compiled-locale count on the next line. When an upgrade wipes the locale the
+# count goes to 0, the rendered script changes, and the next apply rebuilds it.
+# compiled en_CH locales: # {{ output "sh" "-c" "locale -a 2>/dev/null | grep -c '^en_CH'; exit 0" | trim }}
+
+if ! command -v locale-gen >/dev/null 2>&1; then
+    echo "locale-gen not found, skipping en_CH locale install" >&2
+    exit 0
+fi
+
+if ! sudo -n true 2>/dev/null && [ ! -t 0 ]; then
+    echo "en_CH locale install needs sudo and there is no tty, skipping" >&2
+    exit 0
+fi
+
+locale_gen=/etc/locale.gen
+src=$(mktemp)
+trap 'rm -f "$src"' EXIT
+
+cat >"$src" <<'ENDOFLOCALE'
+{{ include ".chezmoitemplates/locale/en_CH" | trimSuffix "\n" }}
+ENDOFLOCALE
+
+echo "installing /usr/share/i18n/locales/en_CH"
+sudo install -m 0644 -o root -g root "$src" /usr/share/i18n/locales/en_CH
+
+# An "en_CH UTF-8" entry builds a locale named en_CH, but LANG=en_CH.UTF-8 makes
+# glibc look for en_CH.utf8. The name in locale.gen has to carry the codeset.
+if grep -qE '^en_CH[[:space:]]+UTF-8[[:space:]]*$' "$locale_gen"; then
+    echo "correcting the en_CH entry in $locale_gen"
+    sudo sed -i 's/^en_CH[[:space:]]\+UTF-8[[:space:]]*$/en_CH.UTF-8 UTF-8/' "$locale_gen"
+elif ! grep -qE '^en_CH\.UTF-8[[:space:]]+UTF-8[[:space:]]*$' "$locale_gen"; then
+    echo "adding en_CH.UTF-8 to $locale_gen"
+    printf 'en_CH.UTF-8 UTF-8\n' | sudo tee -a "$locale_gen" >/dev/null
+fi
+
+sudo locale-gen
+
+if ! locale -a 2>/dev/null | grep -q '^en_CH'; then
+    echo "en_CH.UTF-8 is still missing after locale-gen" >&2
+    exit 1
+fi
