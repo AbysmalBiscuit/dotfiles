@@ -133,6 +133,13 @@ export COLOREDLOGS_FIELD_STYLES='asctime=2;hostname=5;levelname=7,bold;name=4;pr
 export CHROOT="$HOME/chroot"
 # {{- end }}
 
+# {{- $mise_shims := joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" -}}
+# {{- if stat $mise_shims }}
+# Adding mise shims to PATH
+# PATH="# {{ $mise_shims }}:$PATH"
+# {{- $path_prepend = append $path_prepend $mise_shims -}}
+# {{- end }}
+
 # {{ if .is_macos -}}
 # Setting darwin only environment variables
 # Add /usr/local/bin to PATH (needed to find brew installed binaries)
@@ -330,13 +337,6 @@ fi
 # {{- if stat (joinPath .chezmoi.homeDir ".config" "composer" "vendor" "bin") }}
 # [[ -d "$HOME/.config/composer/vendor/bin" ]] && PATH="$HOME/.config/composer/vendor/bin:$PATH"
 # {{- $path_prepend = append $path_prepend (joinPath .chezmoi.homeDir ".config" "composer" "vendor" "bin") -}}
-# {{- end }}
-
-# {{- $mise_shims := joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" -}}
-# {{- if stat $mise_shims }}
-# Adding mise shims to PATH
-# PATH="# {{ $mise_shims }}:$PATH"
-# {{- $path_prepend = append $path_prepend $mise_shims -}}
 # {{- end }}
 
 # Set up final PATH dirs that should overwrite everything else
