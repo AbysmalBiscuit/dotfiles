@@ -8,4 +8,7 @@ if [ -n "$PINENTRY_USER_DATA" ]; then
         ;;
     esac
 fi
+if [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ -x /usr/bin/pinentry-qt ]; then
+    exec /usr/bin/pinentry-qt "$@"
+fi
 exec /usr/bin/pinentry-curses "$@"
