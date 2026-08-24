@@ -47,10 +47,10 @@
       "Bash(python ~/.agents/scripts/*.py)",
       "Bash(python3 ~/.agents/scripts/*.py)",
       "Bash(uv run ~/.agents/scripts/*.py)",
-      "Bash(bash ~/.agents/skills/scripts/*)",
-      "Bash(python ~/.agents/skills/scripts/*.py)",
-      "Bash(python3 ~/.agents/skills/scripts/*.py)",
-      "Bash(uv run ~/.agents/skills/scripts/*.py)"
+      "Bash(bash ~/.agents/skills/*/scripts/*)",
+      "Bash(python ~/.agents/skills/*/scripts/*.py*)",
+      "Bash(python3 ~/.agents/skills/*/scripts/*.py*)",
+      "Bash(uv run ~/.agents/skills/*/scripts/*.py*)"
     ],
     "deny": [
       "Read(~/.sh_env)",
