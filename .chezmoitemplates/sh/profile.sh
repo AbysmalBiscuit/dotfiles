@@ -1,6 +1,9 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-# {{ if .is_linux -}}
+# {{- if .is_linux }}
 export IBUS_ENABLE_SYNC_MODE=1
+# {{- end }}
+# {{- if .is_wsl }}
+chmod 700 /mnt/wslg/runtime-dir
 # {{- end }}
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
