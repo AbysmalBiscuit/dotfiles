@@ -32,6 +32,9 @@ block-rename = [
 ]
 
 [plugin]
+append_previewers = [
+    { url = "*", run = 'piper -- hexyl --border=none --terminal-width=$w "$1"' },
+]
 prepend_preloaders = [
     # Replace magick, image, video with mediainfo
     { mime = "{audio,video,image}/*", run = "mediainfo" },
@@ -50,8 +53,6 @@ prepend_previewers = [
     # Adobe Illustrator
     { mime = "application/postscript", run = "mediainfo" },
 ]
-append_previewers = [{ url = "*", run = "hexyl" }]
-
 prepend_fetchers = [
     { id = "mime", url = "local://*", run = "mime-ext.local", prio = "high", group = "mime" },
     { id = "mime", url = "remote://*", run = "mime-ext.remote", prio = "high", group = "mime" },
