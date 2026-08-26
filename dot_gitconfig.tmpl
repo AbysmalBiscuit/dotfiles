@@ -41,6 +41,14 @@
   st = status
   unstage = reset HEAD --
   reset-to-remote = "!bash ~/.local/bin/git-reset-pr-branch.sh"
+{{- if index .has "git-stack" }}
+  next = stack next
+  prev = stack previous
+  reword = stack reword
+  amend = stack amend
+  sync = stack sync
+  run = stack run
+{{- end }}
 [credential]
 {{- if .is_wsl }}
   helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
