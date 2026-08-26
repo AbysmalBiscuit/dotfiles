@@ -1,0 +1,10 @@
+id: comment-oversized-typescript
+language: typescript
+severity: warning
+message: "inline comment block over 12 lines; if the code needs a paragraph of justification, fix the code"
+rule:
+  kind: comment
+  all:
+    - regex: '(?s)^(.*\n){12,}'
+    - not:
+        regex: '^/\*\*'

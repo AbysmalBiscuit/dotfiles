@@ -1,0 +1,8 @@
+id: jsdoc-oversized-tsx
+language: tsx
+severity: warning
+message: "doc comment over 25 lines; trim to what a caller needs to know"
+rule:
+  kind: comment
+  all:
+    - regex: '(?s)^/\*\*(.*\n){25,}'

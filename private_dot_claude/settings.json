@@ -232,6 +232,48 @@
             "type": "command",
             "command": "python3 ~/.local/bin/alacritree-session.py record",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/.agents/skills/history/hist.py index",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "timeout": 10,
+            "statusMessage": "Checking conventions"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "timeout": 60,
+            "statusMessage": "Auditing changeset"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "timeout": 60,
+            "statusMessage": "Auditing changeset"
           }
         ]
       }
