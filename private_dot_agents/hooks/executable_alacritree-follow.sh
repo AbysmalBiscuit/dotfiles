@@ -10,6 +10,26 @@
 # the sidebar has drifted.
 [ -n "$ALACRITREE_SESSION_ID" ] || exit 0
 
+# The Claude Code daemon's background sessions (forks, jobs, agents) inherit
+# this terminal's ALACRITREE_SESSION_ID but run in their own directories, so a
+# move from one of them drags the pane around behind the idle session that owns
+# it. Only the process tree attached to the terminal may move anything. Where
+# /proc cannot answer, the walk stops and the move goes ahead: a missed guard
+# costs one stray move, a false one breaks `/cd` for good.
+walk=$$
+hops=0
+while [ "$hops" -lt 20 ]; do
+	[ -r "/proc/$walk/stat" ] || break
+	case $(tr '\0' ' ' <"/proc/$walk/cmdline" 2>/dev/null) in
+	*"claude daemon run"* | *bg-pty-host*) exit 0 ;;
+	esac
+	# comm sits in parentheses and may itself contain them, so drop everything
+	# through the last one; state is then field 1 and the parent pid field 2.
+	walk=$(sed 's/.*) //' "/proc/$walk/stat" | cut -d' ' -f2)
+	[ -n "$walk" ] && [ "$walk" -gt 1 ] 2>/dev/null || break
+	hops=$((hops + 1))
+done
+
 # CwdChanged carries the destination in new_cwd; its base `cwd` field still
 # holds the directory being left.
 cwd=$(jq -r '.new_cwd // .cwd // empty' 2>/dev/null)
