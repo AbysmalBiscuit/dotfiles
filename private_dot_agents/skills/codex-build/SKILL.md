@@ -26,7 +26,7 @@ Adapted from Peter Steinberger's `codex-first` pattern (agent-scripts), rebuilt 
 |-----|---------|---------|
 | `SPEC_FILE` | `PLAN.md` | The frozen spec Codex implements. |
 | `MAX_FIX_ROUNDS` | `2` | Fix iterations via resume before Claude takes over and finishes directly. |
-| `LOG_FILE` | `PLAN-REVIEW-LOG.md` | Append-only build transcript. If it exists (Act 1/2 ran), append `## Act 3 — Build`; else create it. |
+| `LOG_FILE` | `PLAN-REVIEW-LOG.local.md` | Append-only build transcript. If it exists (Act 1/2 ran), append `## Act 3 — Build`; else create it. |
 | `PROOF_CMD` | from spec | Exact test/verify command Codex must run as proof. If the spec lacks one, ask the user ONE question to get it before launching. |
 
 Echo resolved values before starting.

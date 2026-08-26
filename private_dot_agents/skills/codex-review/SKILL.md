@@ -22,7 +22,7 @@ This is a **deliberate, high-stakes tool** — reach for it on auth, data models
 |-----|---------|---------|
 | `MAX_ROUNDS` | `5` | Hard cap on review rounds. The loop ALWAYS terminates at this. |
 | `PLAN_FILE` | `PLAN.md` | Where the evolving plan lives (repo root). |
-| `LOG_FILE` | `PLAN-REVIEW-LOG.md` | Append-only transcript of the argument (every round's critique + what changed). The artifact. |
+| `LOG_FILE` | `PLAN-REVIEW-LOG.local.md` | Append-only transcript of the argument (every round's critique + what changed). The artifact. |
 | `MODEL` | `gpt-5.6-sol` | OpenAI model for the critic → the `model` tool param. Default `sol` is the strongest tier. Override with a weaker tier (e.g. `gpt-5.6-tera`) for a faster pass; set empty to omit the param and use the `~/.codex/config.toml` default. |
 | `EFFORT` | `xhigh` | Reasoning effort → `config.model_reasoning_effort`. Supported: `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`, `ultra`. Keep adversarial review at `high` or above. |
 | `FAST_MODE` | _(off)_ | Set `true` to add `config.fast_mode = true` (faster output). Optional; off by default for review. |
