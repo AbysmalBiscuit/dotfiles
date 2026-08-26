@@ -16,40 +16,96 @@ set -uo pipefail
 SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
 CONFIG_DIR="${AGENT_GUARD_CONFIG_DIR:-$(dirname "$(dirname "$SELF")")}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agent-guard"
-SGCONFIG="$CONFIG_DIR/sgconfig.yml"
 
-[[ -f "$CONFIG_DIR/config.env" ]] && . "$CONFIG_DIR/config.env"
-
-# Blocking is opt-in. A gate that is wrong once teaches every agent to route
-# around it, so a rule earns the right to block only after it proves quiet.
-BLOCK="${AGENT_GUARD_BLOCK:-0}"
-MAX_BLOCKS="${AGENT_GUARD_MAX_BLOCKS:-2}"
-USE_FALLOW="${AGENT_GUARD_FALLOW:-1}"
-FALLOW_TIMEOUT="${AGENT_GUARD_FALLOW_TIMEOUT:-45}"
-MAX_FINDINGS="${AGENT_GUARD_MAX_FINDINGS:-8}"
-# Bound on symbols reference-counted per changeset, so a wide diff stays cheap.
-MAX_SYMBOLS="${AGENT_GUARD_MAX_SYMBOLS:-40}"
-# A function with one caller is often a fine module boundary, so that half is
-# opt-in. The test-only-consumer case is the one that is nearly always wrong.
-SINGLE_CALLER="${AGENT_GUARD_SINGLE_CALLER:-0}"
-
-# Registered in user settings, so it would otherwise fire in every project on
-# the machine. Only trees matching this run; widen it as the rules generalize.
-SCOPE_RE="${AGENT_GUARD_SCOPE:-/adaptyv/}"
-# Generated code is duplicated by design; flagging it trains agents to ignore
-# the hook. Override with a project-specific regex in config.env.
-IGNORE_RE="${AGENT_GUARD_IGNORE:-(db-types|api-client|modal-clients|plate-api-client)/|/types/supabase\\.ts$|/_shared/supabase\\.ts$|\\.gen\\.|/generated/|/__generated__/|\\.d\\.ts$}"
+# Rules come in layers: the global install, then the repo's own checked-in root,
+# then a machine-local overlay. Later roots add rules and tighten settings; a
+# repo opts in by creating one of these directories and nothing here changes.
+REPO_ROOTS=(.agents/plugins/agent-guard .agents/plugins/agent-guard.local)
+CONFIG_ROOTS=("$CONFIG_DIR")
 
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# Depends on the working directory, so it runs after the payload's cwd is applied.
+discover_roots() {
+  local repo dir
+  repo="$(git rev-parse --show-toplevel 2>/dev/null)" || return 0
+  [[ -n "$repo" ]] || return 0
+  for dir in "${REPO_ROOTS[@]}"; do
+    dir="$repo/$dir"
+    [[ -d "$dir" && "$dir" != "$CONFIG_DIR" ]] || continue
+    [[ -f "$dir/sgconfig.yml" || -d "$dir/rules" ]] || continue
+    CONFIG_ROOTS+=("$dir")
+  done
+}
+
+# Every root's config.env, in order, so a repo tunes scope, extensions and ignore
+# patterns for its own tree without editing the global install.
+load_config() {
+  local dir
+  for dir in "${CONFIG_ROOTS[@]}"; do
+    [[ -f "$dir/config.env" ]] && . "$dir/config.env"
+  done
+  return 0
+}
+
+# A root ships either a full sgconfig.yml — required for custom languages, whose
+# libraryPath resolves relative to it — or just a rules/ directory. Synthesise a
+# config for the latter, cached in the state dir and refreshed when rules change.
+sgconfig_for() {
+  local root="$1" generated
+  if [[ -f "$root/sgconfig.yml" ]]; then
+    printf '%s' "$root/sgconfig.yml"
+    return 0
+  fi
+  [[ -d "$root/rules" ]] || return 1
+  generated="$STATE_DIR/generated/$(printf '%s' "$root" | tr -c 'A-Za-z0-9' '_').yml"
+  mkdir -p "$(dirname "$generated")" 2>/dev/null
+  [[ -f "$generated" && "$generated" -nt "$root/rules" ]] \
+    || printf 'ruleDirs:\n  - %s\n' "$root/rules" > "$generated"
+  printf '%s' "$generated"
+}
+
+# Reads whatever load_config resolved, so it runs after that.
+resolve_settings() {
+  # Blocking is opt-in. A gate that is wrong once teaches every agent to route
+  # around it, so a rule earns the right to block only after it proves quiet.
+  BLOCK="${AGENT_GUARD_BLOCK:-0}"
+  MAX_BLOCKS="${AGENT_GUARD_MAX_BLOCKS:-2}"
+  USE_FALLOW="${AGENT_GUARD_FALLOW:-1}"
+  FALLOW_TIMEOUT="${AGENT_GUARD_FALLOW_TIMEOUT:-45}"
+  MAX_FINDINGS="${AGENT_GUARD_MAX_FINDINGS:-8}"
+  # Bound on symbols reference-counted per changeset, so a wide diff stays cheap.
+  MAX_SYMBOLS="${AGENT_GUARD_MAX_SYMBOLS:-40}"
+  # A function with one caller is often a fine module boundary, so that half is
+  # opt-in. The test-only-consumer case is the one that is nearly always wrong.
+  SINGLE_CALLER="${AGENT_GUARD_SINGLE_CALLER:-0}"
+
+  # Which files the per-file rules run on. A repo adding rules for another
+  # language widens this in its own config.env.
+  EXT_RE="${AGENT_GUARD_EXTENSIONS:-\\.(ts|tsx|mts|cts)$}"
+
+  # Registered in user settings, so it would otherwise fire in every project on
+  # the machine. Only trees matching this run; widen it as the rules generalize.
+  SCOPE_RE="${AGENT_GUARD_SCOPE:-/adaptyv/}"
+  # Generated code is duplicated by design; flagging it trains agents to ignore
+  # the hook. Override with a project-specific regex in config.env.
+  IGNORE_RE="${AGENT_GUARD_IGNORE:-(db-types|api-client|modal-clients|plate-api-client)/|/types/supabase\\.ts$|/_shared/supabase\\.ts$|\\.gen\\.|/generated/|/__generated__/|\\.d\\.ts$}"
+}
 
 # A hook that is silent when healthy is indistinguishable from one that is
 # silently broken, so make the difference inspectable.
 if [[ "${1:-}" == "doctor" ]]; then
-  printf 'agent-guard doctor\n  config dir : %s\n  sgconfig   : %s\n  scope      : %s\n' \
-    "$CONFIG_DIR" \
-    "$([[ -f "$SGCONFIG" ]] && echo present || echo MISSING)" \
-    "$SCOPE_RE"
-  printf '  rules      : %s\n' "$(ls "$CONFIG_DIR/rules"/*.yml 2>/dev/null | wc -l)"
+  discover_roots
+  load_config
+  resolve_settings
+  printf 'agent-guard doctor\n  scope      : %s\n  extensions : %s\n  roots      :\n' \
+    "$SCOPE_RE" "$EXT_RE"
+  for root in "${CONFIG_ROOTS[@]}"; do
+    printf '    %s\n      config   : %s\n      rules    : %s\n' \
+      "$root" \
+      "$(sgconfig_for "$root" 2>/dev/null || echo NONE)" \
+      "$(ls "$root/rules"/*.yml 2>/dev/null | wc -l)"
+  done
   for t in jq ast-grep fallow git timeout sha256sum; do
     printf '  %-10s : %s\n' "$t" "$(command -v "$t" 2>/dev/null || echo 'not installed')"
   done
@@ -58,6 +114,7 @@ if [[ "${1:-}" == "doctor" ]]; then
   printf '  fallow missing   -> changeset duplication check skipped\n'
   printf '  timeout missing  -> fallow runs unbounded\n'
   printf '  sha256sum missing-> repeat-run caching disabled\n'
+  printf '  no root listed   -> repo has no .agents/plugins/agent-guard\n'
   exit 0
 fi
 
@@ -82,15 +139,21 @@ check_file() {
   local file
   file="$(jq -r '.tool_input.file_path // empty' <<<"$PAYLOAD")"
   [[ -n "$file" && -f "$file" ]] || emit_silent
-  [[ "$file" =~ \.(ts|tsx|mts|cts)$ ]] || emit_silent
+  [[ "$file" =~ $EXT_RE ]] || emit_silent
   have ast-grep || emit_silent
-  [[ -f "$SGCONFIG" ]] || emit_silent
 
-  local findings
-  findings="$(ast-grep scan -c "$SGCONFIG" --json=compact "$file" 2>/dev/null \
-    | jq -r --argjson n "$MAX_FINDINGS" '
-        (. // []) | .[:$n] | .[]
-        | "  \(.file):\(.range.start.line + 1)  [\(.ruleId | sub("-(typescript|tsx)$";""))] \(.message)"' 2>/dev/null)"
+  # One scan per root rather than one merged config: each root's sgconfig resolves
+  # its own ruleDirs and custom-language libraryPath relative to itself.
+  local findings="" root config hits
+  for root in "${CONFIG_ROOTS[@]}"; do
+    config="$(sgconfig_for "$root")" || continue
+    hits="$(ast-grep scan -c "$config" --json=compact "$file" 2>/dev/null \
+      | jq -r '
+          (. // []) | .[]
+          | "  \(.file):\(.range.start.line + 1)  [\(.ruleId | sub("-(typescript|tsx)$";""))] \(.message)"' 2>/dev/null)"
+    [[ -n "$hits" ]] && findings+="$hits"$'\n'
+  done
+  findings="$(printf '%s' "$findings" | grep -v '^[[:space:]]*$' | head -n "$MAX_FINDINGS")"
   [[ -n "$findings" ]] || emit_silent
 
   emit "PostToolUse" "agent-guard found convention violations in the file you just wrote. Fix them now rather than leaving them for review:
@@ -139,15 +202,22 @@ find_duplication() {
 find_over_extraction() {
   local changed="$1" seen_file="$2"
   have ast-grep || return 0
-  local out="" checked=0 file lang query names name refs testrefs otherrefs mark
+  local out="" checked=0 file lang query names name refs testrefs otherrefs mark i
 
   while IFS= read -r file; do
     [[ -f "$file" ]] || continue
     [[ "$file" =~ $IGNORE_RE ]] && continue
     [[ "$file" =~ (test|spec)\.|/tests?/|__tests__ ]] && continue
     case "$file" in *.tsx) lang=tsx ;; *.ts) lang=typescript ;; *) continue ;; esac
-    query="$CONFIG_DIR/queries/exported-symbols-$lang.yml"
-    [[ -f "$query" ]] || continue
+    # Last root wins, so a repo can replace the global query with its own.
+    query=""
+    for (( i = ${#CONFIG_ROOTS[@]} - 1; i >= 0; i-- )); do
+      if [[ -f "${CONFIG_ROOTS[i]}/queries/exported-symbols-$lang.yml" ]]; then
+        query="${CONFIG_ROOTS[i]}/queries/exported-symbols-$lang.yml"
+        break
+      fi
+    done
+    [[ -n "$query" ]] || continue
 
     names="$(ast-grep scan -r "$query" --json=compact "$file" 2>/dev/null \
              | jq -r '.[]?.metaVariables.single.NAME.text' 2>/dev/null | sort -u)"
@@ -245,7 +315,16 @@ SESSION="$(jq -r '.session_id // "nosession"' <<<"$PAYLOAD")"
 CWD="$(jq -r '.cwd // empty' <<<"$PAYLOAD")"
 AGENT_TYPE="$(jq -r '.agent_type // empty' <<<"$PAYLOAD")"
 [[ -n "$CWD" && -d "$CWD" ]] && cd "$CWD" 2>/dev/null
-[[ "$PWD/" =~ $SCOPE_RE ]] || exit 0
+
+discover_roots
+load_config
+resolve_settings
+
+# A repo carrying its own root has opted in by doing so, so the global scope
+# regex gates only the trees that supply no root of their own.
+if [[ "${#CONFIG_ROOTS[@]}" -le 1 ]]; then
+  [[ "$PWD/" =~ $SCOPE_RE ]] || exit 0
+fi
 
 case "$EVENT" in
   PostToolUse)       check_file ;;
