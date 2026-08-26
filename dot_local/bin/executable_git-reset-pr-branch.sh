@@ -6,6 +6,7 @@
 # destructive step unless -y is given.
 #
 # Usage: git-reset-pr-branch.sh [-C <dir>] [-y] [--clean] [-h]
+#        git reset-to-remote [-C <dir>] [-y] [--clean] [-h]
 #   -C <dir>   operate in <dir> instead of the current directory
 #   -y         skip the confirmation prompt
 #   --clean    also `git clean -fd` (remove untracked files/dirs) after reset
@@ -20,7 +21,7 @@ do_clean=0
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,6 +32,10 @@ while [[ $# -gt 0 ]]; do
     *) die "unknown argument: $1 (see -h)" ;;
   esac
 done
+
+# Git runs `!`-aliases from the worktree root. GIT_PREFIX points back at the
+# caller's directory, keeping relative -C and `git clean -fd` scoped to it.
+cd "${GIT_PREFIX:-.}"
 
 [[ -n "$dir" ]] && cd "$dir"
 

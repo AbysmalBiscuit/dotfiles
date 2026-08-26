@@ -40,6 +40,7 @@
   update-index = update-index
   st = status
   unstage = reset HEAD --
+  reset-to-remote = "!bash ~/.local/bin/git-reset-pr-branch.sh"
 [credential]
 {{- if .is_wsl }}
   helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
