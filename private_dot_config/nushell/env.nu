@@ -48,14 +48,14 @@ $env.STARSHIP_CONFIG = ($nu.home-dir | path join ".config" "starship-nu.toml")
 
 $env.PROMPT_INDICATOR_VI_INSERT = {||
   let character = (with-env {STARSHIP_SHELL: "fish"} {
-    starship module character --keymap viins --status $env.LAST_EXIT_CODE
+    starship module character --keymap viins $"--status=($env.LAST_EXIT_CODE)"
   })
   $"\r\n($character)"
 }
 
 $env.PROMPT_INDICATOR_VI_NORMAL = {||
   let character = (with-env {STARSHIP_SHELL: "fish"} {
-    starship module character --keymap default --status $env.LAST_EXIT_CODE
+    starship module character --keymap default $"--status=($env.LAST_EXIT_CODE)"
   })
   $"\r\n($character)"
 }
