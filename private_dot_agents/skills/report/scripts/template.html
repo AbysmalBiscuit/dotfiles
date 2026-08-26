@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{Report title}}</title>
+<style>
+<!--#include theme.css-->
+</style>
+</head>
+<body>
+<button id="menu-btn" aria-label="Toggle contents">☰ Contents</button>
+<div class="layout">
+
+  <nav class="toc">
+    <p class="t">On this page</p>
+    <ol>
+      <!--#slot toc-->
+    </ol>
+  </nav>
+
+  <main class="content">
+
+  <p style="margin:0 0 6px">
+    <span class="pill tag {{warn|bad|good|}}">{{TAG e.g. INFO | DRAFT | ACTION NEEDED}}</span>
+  </p>
+  <h1>{{Report title with inline <code> where useful}}</h1>
+  <p class="muted">{{One-sentence summary. What this answers, for whom. No hedging.}}</p>
+
+  <div class="meta">
+    <div><div class="k">Topic</div><div class="v">{{topic}}</div></div>
+    <div><div class="k">Kind</div><div class="v">{{overview | investigation | ...}}</div></div>
+    <div><div class="k">Scope</div><div class="v">{{what's covered / boundaries}}</div></div>
+    <div><div class="k">Sources</div><div class="v">{{files / commands / links}}</div></div>
+    <div><div class="k">Status</div><div class="v">{{confirmed | in progress | draft}}</div></div>
+    <div><div class="k">Owner</div><div class="v">{{who / team, if relevant}}</div></div>
+  </div>
+
+  <h2 id="tldr">TL;DR</h2>
+  <div class="callout">
+    <strong>Summary</strong>
+    {{Two or three sentences. The whole report compressed. Concrete.}}
+  </div>
+  <div class="callout good">
+    <strong>Key takeaway</strong>
+    {{The one thing the reader should leave with. Drop if redundant.}}
+  </div>
+  <div class="callout warn">
+    <strong>Watch out</strong> (drop if nothing to flag)
+    {{The caveat, risk, or open question.}}
+  </div>
+
+  <h2 id="how">How to use this report</h2>
+  <p>{{Reading path: which section to read first and why, then the order to walk
+  the rest. Name the one section that frames everything else.}}</p>
+  <ul>
+    <li><strong>Pills / callouts.</strong> {{What the status pills and coloured
+    callouts mean here, and which to read first. Drop if the report uses none.}}</li>
+    <li><strong>Source links.</strong> The <code>⎘ path:Lx-Ly</code> links open the
+    file at a pinned commit, anchored to the cited lines. {{Drop if no code is cited.}}</li>
+    <li><strong>Verified vs quoted.</strong> {{Say what was checked first-hand
+    versus taken from a description or third party. See Method &amp; limitations.}}</li>
+  </ul>
+
+  <!--#slot body-->
+
+  <h2 id="method">Method &amp; limitations</h2>
+  <p>{{How this report was assembled: files read, commands run, links fetched.}}</p>
+  <div class="callout warn">
+    <strong>What this does not establish</strong> (drop if everything was verified)
+    {{Name what was quoted from a description or assumed rather than reproduced
+    first-hand. Line ranges are "look here", not byte-exact, unless checked.}}
+  </div>
+
+  <footer>
+    {{Report kind}} on {{topic}} ·
+    sources: {{files / commands / links}} ·
+    {{how verified, if applicable}}
+  </footer>
+
+  </main>
+</div>
+
+<!--#include lightbox.html-->
+
+<script>
+(function(){
+<!--#include permalinks.js-->
+<!--#include nav.js-->
+<!--#include lightbox.js-->
+})();
+</script>
+
+<!--#include mermaid-init.html-->
+</body>
+</html>
