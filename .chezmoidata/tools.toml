@@ -2034,6 +2034,7 @@ command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
 completions_cmds = [
+    "devkit",
     "devkit-mcp",
     "devrun",
     "issue",
