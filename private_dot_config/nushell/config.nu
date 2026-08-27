@@ -40,10 +40,19 @@ $env.config = {
         sort: "smart"
     }
 
+    # fish shows a session the commands it ran plus everything on disk from
+    # before it started, and never the live typing of a sibling terminal.
+    # `isolation` is the same rule: reedline filters on
+    # `session_id = :session OR start_timestamp < :session_start`. It is
+    # sqlite-only, and nushell rejects the pair at startup under plaintext.
+    #
+    # No `sync_on_enter`: it re-reads the history file on every prompt, which
+    # is what pulls a sibling shell's commands in, and the sqlite backend
+    # ignores it anyway (reedline SqliteBackedHistory::sync is a no-op).
     history: {
         max_size: 100_000
-        sync_on_enter: true
-        file_format: "plaintext"
+        file_format: "sqlite"
+        isolation: true
     }
 
     explore: {
@@ -221,12 +230,18 @@ if (which carapace | is-not-empty) {
 # include, so a file may only call commands defined in an earlier one.
 source ./lib/platform.nu
 source ./lib/files.nu
+source ./lib/completions/claude.nu
 source ./lib/aliases.nu
 source ./lib/media.nu
 source ./lib/dev.nu
 source ./lib/maint.nu
 
-# No `source` for completions. Nushell autoloads every .nu file under
+# Generated completions need no `source`. Nushell autoloads every .nu file under
 # $nu.user-autoload-dirs and $nu.vendor-autoload-dirs after this file runs, and
 # skips a missing directory without complaining, so a machine chezmoi has not
 # reached yet still gets a working shell. See env.nu for where they land.
+#
+# lib/completions/ is the exception, sourced above, one file per command:
+# autoload runs after this file, and an alias binds to whatever declaration
+# exists when the alias itself is parsed. Autoloading claude.nu would leave
+# `cr` and `ca` with no completions.

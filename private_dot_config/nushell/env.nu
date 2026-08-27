@@ -46,18 +46,26 @@ def create_right_prompt [] {
 # without the \n -> \r\n rewrite render_prompt_left applies.
 $env.STARSHIP_CONFIG = ($nu.home-dir | path join ".config" "starship-nu.toml")
 
+# ctrl-c at an idle prompt repaints the indicator, and the SIGINT reaches
+# starship before it can answer. Nushell reports every signal-killed child, so
+# without the catch a single ctrl-c prints a `terminated_by_signal` dump with
+# this file quoted in it. The fallback mirrors [character] in starship-nu.toml
+# and survives one frame, until the next repaint calls starship again.
+def starship-character [keymap: string, fallback: string] {
+  with-env {STARSHIP_SHELL: "fish"} {
+    try {
+      starship module character --keymap $keymap $"--status=($env.LAST_EXIT_CODE)"
+    } catch { $fallback }
+  }
+}
+
 $env.PROMPT_INDICATOR_VI_INSERT = {||
-  let character = (with-env {STARSHIP_SHELL: "fish"} {
-    starship module character --keymap viins $"--status=($env.LAST_EXIT_CODE)"
-  })
-  $"\r\n($character)"
+  let colour = if $env.LAST_EXIT_CODE == 0 { (ansi green_bold) } else { (ansi red_bold) }
+  $"\r\n(starship-character viins $'($colour)[I]❯(ansi reset)')"
 }
 
 $env.PROMPT_INDICATOR_VI_NORMAL = {||
-  let character = (with-env {STARSHIP_SHELL: "fish"} {
-    starship module character --keymap default $"--status=($env.LAST_EXIT_CODE)"
-  })
-  $"\r\n($character)"
+  $"\r\n(starship-character default $'(ansi blue_bold)[N]❯(ansi reset)')"
 }
 
 # If you want previously entered commands to have a different prompt from the usual one,
@@ -72,20 +80,10 @@ $env.PROMPT_INDICATOR_VI_NORMAL = {||
 # $env.TRANSIENT_PROMPT_MULTILINE_INDICATOR = {|| "" }
 # $env.TRANSIENT_PROMPT_COMMAND_RIGHT = {|| "" }
 
-# Specifies how environment variables are:
-# - converted from a string to a value on Nushell startup (from_string)
-# - converted from a value back to a string when running external commands (to_string)
-# Note: The conversions happen *after* config.nu is loaded
-$env.ENV_CONVERSIONS = {
-    "PATH": {
-        from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
-        to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
-    }
-    "Path": {
-        from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
-        to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
-    }
-}
+# No PATH entry in $env.ENV_CONVERSIONS: nushell already splits PATH/Path into a
+# list at startup and re-joins it, tilde-expanded, when launching an external
+# (nu-engine/src/env.rs). A conversion closure here only duplicates that, and
+# ctrl-c can interrupt it mid-run and hand the external a truncated PATH.
 
 $env.NU_CONFIG_DIR = if $nu.os-info.name == "windows" {
   $env.APPDATA | path join 'nushell' 'nupm'
@@ -167,7 +165,11 @@ mkdir $AUTOLOAD
 def regen [bin: string, out: path, gen: closure] {
     if (which $bin | is-empty) { return }
     if ($out | path exists) and ((ls $out | get 0.modified) > (ls (which $bin | get path.0) | get 0.modified)) { return }
-    do $gen | save --force $out
+    # Capture before writing. `do $gen | save` truncates the target the moment
+    # the pipeline opens, so a generator killed by a ctrl-c leaves an empty init
+    # file that is newer than the binary and so never regenerated again.
+    let generated = (try { do $gen } catch { "" })
+    if ($generated | is-not-empty) { $generated | save --force $out }
 }
 
 regen starship ($AUTOLOAD | path join "starship.nu") {|| ^starship init nu }
