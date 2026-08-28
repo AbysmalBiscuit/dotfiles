@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.agents/skills/history/hist.py index",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
