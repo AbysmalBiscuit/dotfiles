@@ -1,9 +1,0 @@
-id: env-var-unprefixed-tsx
-language: tsx
-severity: warning
-message: "public env var lacks an app prefix; use NEXT_PUBLIC_<APP>_<SERVICE>_... to avoid Doppler collisions"
-rule:
-  pattern: process.env.$NAME
-constraints:
-  NAME:
-    regex: '^NEXT_PUBLIC_(POSTHOG|SENTRY|SUPABASE|VERCEL|STRIPE|SLACK|GOOGLE|OPENAI|ANTHROPIC)_'

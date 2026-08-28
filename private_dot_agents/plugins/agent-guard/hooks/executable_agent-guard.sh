@@ -17,29 +17,49 @@ SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")
 CONFIG_DIR="${AGENT_GUARD_CONFIG_DIR:-$(dirname "$(dirname "$SELF")")}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agent-guard"
 
-# Rules come in layers: the global install, then the repo's own checked-in root,
-# then a machine-local overlay. Later roots add rules and tighten settings; a
-# repo opts in by creating one of these directories and nothing here changes.
-REPO_ROOTS=(.agents/plugins/agent-guard .agents/plugins/agent-guard.local)
+# Rules come in layers, each named by its directory in a tree: the tracked one
+# first, then a machine-local overlay beside it that outranks it. Later roots add
+# rules and tighten settings, and a tree opts in by creating one of these
+# directories — nothing in the global install changes.
+ROOT_NAMES=(.agents/plugins/agent-guard .agents/plugins/agent-guard.local)
 CONFIG_ROOTS=("$CONFIG_DIR")
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# Depends on the working directory, so it runs after the payload's cwd is applied.
-discover_roots() {
-  local repo dir
-  repo="$(git rev-parse --show-toplevel 2>/dev/null)" || return 0
-  [[ -n "$repo" ]] || return 0
-  for dir in "${REPO_ROOTS[@]}"; do
-    dir="$repo/$dir"
-    [[ -d "$dir" && "$dir" != "$CONFIG_DIR" ]] || continue
-    [[ -f "$dir/sgconfig.yml" || -d "$dir/rules" ]] || continue
-    CONFIG_ROOTS+=("$dir")
-  done
+# A config.env alone is enough to be a root: a tree that wants only the global
+# rules under its own settings still opts in by carrying the directory.
+is_root() {
+  [[ -d "$1" ]] && [[ -d "$1/rules" || -f "$1/sgconfig.yml" || -f "$1/config.env" ]]
 }
 
-# Every root's config.env, in order, so a repo tunes scope, extensions and ignore
-# patterns for its own tree without editing the global install.
+# Walks every ancestor of the working directory, outermost first, so a nearer
+# tree layers over a wider one — a checkout over the directory that holds every
+# checkout of that project, over the global install. Deliberately not keyed on
+# the git toplevel: worktrees of one repository share settings that belong in the
+# directory above them rather than in the repository's own history.
+# Depends on the working directory, so it runs after the payload's cwd is applied.
+discover_roots() {
+  local dir="$PWD" dirs=() root name i
+  while :; do
+    dirs+=("$dir")
+    [[ "$dir" == "/" ]] && break
+    dir="${dir%/*}"
+    [[ -n "$dir" ]] || dir=/
+  done
+  for (( i = ${#dirs[@]} - 1; i >= 0; i-- )); do
+    for name in "${ROOT_NAMES[@]}"; do
+      root="${dirs[i]}/$name"
+      [[ "$root" != "$CONFIG_DIR" ]] || continue
+      is_root "$root" && CONFIG_ROOTS+=("$root")
+    done
+  done
+  return 0
+}
+
+# Every root's config.env, in order, so a tree tunes extensions, ignore patterns
+# and which checks run without editing the global install. Sourcing is what makes
+# a root a root: a directory whose config.env you would not run is not one to
+# open a shell in either.
 load_config() {
   local dir
   for dir in "${CONFIG_ROOTS[@]}"; do
@@ -77,19 +97,24 @@ resolve_settings() {
   # Bound on symbols reference-counted per changeset, so a wide diff stays cheap.
   MAX_SYMBOLS="${AGENT_GUARD_MAX_SYMBOLS:-40}"
   # A function with one caller is often a fine module boundary, so that half is
-  # opt-in. The test-only-consumer case is the one that is nearly always wrong.
+  # opt-in.
   SINGLE_CALLER="${AGENT_GUARD_SINGLE_CALLER:-0}"
+  # Exports whose only consumer is their own test. A tree mid-migration, where a
+  # parity test is deliberately the sole caller of the new path, turns this off.
+  TEST_ONLY="${AGENT_GUARD_TEST_ONLY:-1}"
 
   # Which files the per-file rules run on. A repo adding rules for another
   # language widens this in its own config.env.
   EXT_RE="${AGENT_GUARD_EXTENSIONS:-\\.(ts|tsx|mts|cts)$}"
 
-  # Registered in user settings, so it would otherwise fire in every project on
-  # the machine. Only trees matching this run; widen it as the rules generalize.
-  SCOPE_RE="${AGENT_GUARD_SCOPE:-/adaptyv/}"
   # Generated code is duplicated by design; flagging it trains agents to ignore
-  # the hook. Override with a project-specific regex in config.env.
-  IGNORE_RE="${AGENT_GUARD_IGNORE:-(db-types|api-client|modal-clients|plate-api-client)/|/types/supabase\\.ts$|/_shared/supabase\\.ts$|\\.gen\\.|/generated/|/__generated__/|\\.d\\.ts$}"
+  # the hook. Only the language-wide shapes are listed — a project names its own
+  # generated directories through the additive knob below.
+  IGNORE_RE="${AGENT_GUARD_IGNORE:-\\.gen\\.|/generated/|/__generated__/|\\.d\\.ts$}"
+  # Appended rather than assigned, so a layer adds paths without restating the
+  # defaults. Restating them by hand invites a stray leading '|', whose empty
+  # alternation matches every path and silently disables the whole check.
+  [[ -z "${AGENT_GUARD_IGNORE_EXTRA:-}" ]] || IGNORE_RE="$IGNORE_RE|$AGENT_GUARD_IGNORE_EXTRA"
 }
 
 # A hook that is silent when healthy is indistinguishable from one that is
@@ -98,8 +123,8 @@ if [[ "${1:-}" == "doctor" ]]; then
   discover_roots
   load_config
   resolve_settings
-  printf 'agent-guard doctor\n  scope      : %s\n  extensions : %s\n  roots      :\n' \
-    "$SCOPE_RE" "$EXT_RE"
+  printf 'agent-guard doctor\n  extensions : %s\n  ignore     : %s\n  roots      :\n' \
+    "$EXT_RE" "$IGNORE_RE"
   for root in "${CONFIG_ROOTS[@]}"; do
     printf '    %s\n      config   : %s\n      rules    : %s\n' \
       "$root" \
@@ -114,7 +139,7 @@ if [[ "${1:-}" == "doctor" ]]; then
   printf '  fallow missing   -> changeset duplication check skipped\n'
   printf '  timeout missing  -> fallow runs unbounded\n'
   printf '  sha256sum missing-> repeat-run caching disabled\n'
-  printf '  no root listed   -> repo has no .agents/plugins/agent-guard\n'
+  printf '  only the global root listed -> nothing here opted in; the hook is inert\n'
   exit 0
 fi
 
@@ -194,13 +219,15 @@ find_duplication() {
         + (if (.instances | length) > 4 then "\n    ... and \((.instances | length) - 4) more" else "" end)' <<<"$groups" 2>/dev/null
 }
 
-# Helpers extracted past the point of usefulness. Two shapes are reported: an
-# export whose only consumer is its own test, and an export with exactly one
-# real caller. Barrel re-exports do not count as consumers.
+# Helpers extracted past the point of usefulness. Two shapes are reported, each
+# behind its own switch: an export whose only consumer is its own test, and an
+# export with exactly one real caller. Barrel re-exports do not count as
+# consumers.
 # Reference counting is name-based, so it is a heuristic, which is why this
 # stays advisory: a same-named symbol elsewhere reads as a consumer.
 find_over_extraction() {
   local changed="$1" seen_file="$2"
+  [[ "$TEST_ONLY" == "1" || "$SINGLE_CALLER" == "1" ]] || return 0
   have ast-grep || return 0
   local out="" checked=0 file lang query names name refs testrefs otherrefs mark i
 
@@ -233,7 +260,7 @@ find_over_extraction() {
       otherrefs="$(printf '%s\n' "$refs" | grep -vE '(test|spec)\.|/tests?/|__tests__|/index\.tsx?$' 2>/dev/null | grep -c . || true)"
 
       mark=""
-      if [[ "$otherrefs" -eq 0 && "$testrefs" -gt 0 ]]; then
+      if [[ "$TEST_ONLY" == "1" && "$otherrefs" -eq 0 && "$testrefs" -gt 0 ]]; then
         mark="  $file:$name is exported but consumed only by its test. Inline it, or drop the export and the test with it."
       elif [[ "$SINGLE_CALLER" == "1" && "$otherrefs" -eq 1 ]]; then
         mark="  $file:$name has exactly one caller. Inline it there unless the split earns its keep."
@@ -320,11 +347,11 @@ discover_roots
 load_config
 resolve_settings
 
-# A repo carrying its own root has opted in by doing so, so the global scope
-# regex gates only the trees that supply no root of their own.
-if [[ "${#CONFIG_ROOTS[@]}" -le 1 ]]; then
-  [[ "$PWD/" =~ $SCOPE_RE ]] || exit 0
-fi
+# Registered in user settings, so it is reachable from every project on the
+# machine. Carrying an agent-guard directory somewhere above the working
+# directory is the whole opt-in; with only the global root discovered there is
+# nothing here to enforce, and the hook stays out of the way.
+[[ "${#CONFIG_ROOTS[@]}" -gt 1 ]] || exit 0
 
 case "$EVENT" in
   PostToolUse)       check_file ;;
