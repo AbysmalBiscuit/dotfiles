@@ -2016,13 +2016,14 @@ url = ""
 git = "https://github.com/AbysmalBiscuit/devkit.git"
 comment = ""
 install_command = ""
-completions_command = "CMD completions SHELL"
+completions_command = "devkit completions --all SHELL"
 init_command = ""
 supported_shells = [
     "bash",
     "elvish",
     "fish",
     "powershell",
+    "nushell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2034,12 +2035,6 @@ command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
 completions_cmds = [
-    "devkit",
-    "devkit-mcp",
-    "devrun",
-    "issue",
-    "lockm",
-    "portm"
 ]
 init_command_only_if_no = []
 
