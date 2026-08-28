@@ -2022,8 +2022,8 @@ supported_shells = [
     "bash",
     "elvish",
     "fish",
-    "powershell",
     "nushell",
+    "powershell",
     "zsh"
 ]
 append_fish_completion = ""
@@ -2034,8 +2034,7 @@ command_nu_name = ""
 command_powershell_name = ""
 command_zsh_name = ""
 completions_command_only_if_no = []
-completions_cmds = [
-]
+completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
