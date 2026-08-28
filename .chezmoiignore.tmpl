@@ -51,6 +51,9 @@ localSettings.yaml
 .agents/skills/graphify
 **/.graphify_version
 
+{{- if not (index .tool "graphify") }}
+.agents/skills/graphify-query
+{{- end }}
 
 {{- if not (index .tool "glazewm") }}
 .glzr/
