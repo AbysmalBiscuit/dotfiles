@@ -8,5 +8,5 @@ function fish_user_key_bindings
     # The argument specifies the initial mode (insert, "default" or visual).
     fish_vi_key_bindings --no-erase insert
 
-    bind --mode insert right forward-path-component
+    bind --mode insert right __accept_path_component_or_forward_char
 end
