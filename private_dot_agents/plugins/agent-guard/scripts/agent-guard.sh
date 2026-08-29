@@ -4,7 +4,8 @@
 # single entry point works for every hook it is registered under.
 #
 #   PostToolUse (Edit|Write|MultiEdit)  fast per-file ast-grep rules and
-#                                       checks/ scripts, advisory
+#                                       checks/ scripts, advisory, on the lines
+#                                       the branch introduced
 #   Stop | SubagentStop                 fallow audit on the changeset, gating
 #
 # Always exits 0 and speaks through the hookSpecificOutput JSON contract, so a
@@ -104,6 +105,13 @@ resolve_settings() {
   # parity test is deliberately the sole caller of the new path, turns this off.
   TEST_ONLY="${AGENT_GUARD_TEST_ONLY:-1}"
 
+  # Which lines of an edited file the per-file findings are reported on.
+  # 'diff' keeps only the lines the branch introduced; 'file' reports the whole
+  # file. Inherited debt is not the editing agent's to answer for, and a report
+  # mostly made of it is one an agent learns to skim past, so a file whose
+  # findings all predate the branch stays silent.
+  SCOPE="${AGENT_GUARD_SCOPE:-diff}"
+
   # Which files the per-file rules run on. A repo adding rules for another
   # language widens this in its own config.env.
   EXT_RE="${AGENT_GUARD_EXTENSIONS:-\\.(ts|tsx|mts|cts)$}"
@@ -124,8 +132,8 @@ if [[ "${1:-}" == "doctor" ]]; then
   discover_roots
   load_config
   resolve_settings
-  printf 'agent-guard doctor\n  extensions : %s\n  ignore     : %s\n  roots      :\n' \
-    "$EXT_RE" "$IGNORE_RE"
+  printf 'agent-guard doctor\n  scope      : %s\n  extensions : %s\n  ignore     : %s\n  roots      :\n' \
+    "$SCOPE" "$EXT_RE" "$IGNORE_RE"
   for root in "${CONFIG_ROOTS[@]}"; do
     printf '    %s\n      config   : %s\n      rules(own): %s\n      checks   : %s\n' \
       "$root" \
@@ -141,6 +149,8 @@ if [[ "${1:-}" == "doctor" ]]; then
   printf '  fallow missing   -> changeset duplication check skipped\n'
   printf '  timeout missing  -> fallow runs unbounded\n'
   printf '  sha256sum missing-> repeat-run caching disabled\n'
+  printf '  scope=diff       -> per-file findings limited to lines the branch\n'
+  printf '                      added; findings older than it stay quiet\n'
   printf '  only the global root listed -> nothing here opted in; the hook is inert\n'
   exit 0
 fi
@@ -183,8 +193,38 @@ run_checks() {
   return 0
 }
 
+# Line numbers one file gained since the branch's base, one per line. Printing
+# nothing while returning 0 is a real answer meaning the branch added no lines to
+# it, and the caller then reports none. Non-zero means git cannot answer at all
+# (no repository, or a file it has never tracked), which the caller reads as
+# "every line is the agent's".
+#
+# The base is the merge-base with the upstream branch, matching the changeset
+# audit. With no upstream it falls back to HEAD, so the scope degrades to the
+# uncommitted working tree rather than back to the whole file.
+changed_lines() {
+  local file="$1" base
+  have git || return 1
+  git rev-parse --git-dir >/dev/null 2>&1 || return 1
+  git ls-files --error-unmatch -- "$file" >/dev/null 2>&1 || return 1
+
+  base="${AGENT_GUARD_BASE:-}"
+  [[ -n "$base" ]] || base="$(git merge-base HEAD "$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo origin/HEAD)" 2>/dev/null)"
+  [[ -n "$base" ]] || base="$(git rev-parse HEAD 2>/dev/null)"
+  [[ -n "$base" ]] || return 1
+
+  git diff --unified=0 "$base" -- "$file" 2>/dev/null | awk '
+    /^@@/ {
+      split($3, hunk, ",")
+      start = substr(hunk[1], 2) + 0
+      count = (hunk[2] == "" ? 1 : hunk[2] + 0)
+      for (i = 0; i < count; i++) print start + i
+    }'
+}
+
 # Per-file syntactic rules. Must stay in the low milliseconds: this fires on
-# every edit from every agent and subagent, so its cost multiplies.
+# every edit from every agent and subagent, so its cost multiplies. Git is
+# consulted only once a rule has fired, so a clean file costs no subprocess.
 check_file() {
   local file
   file="$(jq -r '.tool_input.file_path // empty' <<<"$PAYLOAD")"
@@ -206,6 +246,15 @@ check_file() {
   fi
   hits="$(run_checks "$file")"
   [[ -n "$hits" ]] && findings+="$hits"$'\n'
+  [[ -n "${findings//[[:space:]]/}" ]] || emit_silent
+
+  local lines
+  if [[ "$SCOPE" == "diff" ]] && lines="$(changed_lines "$file")"; then
+    findings="$(printf '%s\n' "$findings" | awk -v set="$lines" '
+      BEGIN { n = split(set, added, "\n"); for (i = 1; i <= n; i++) if (added[i] != "") keep[added[i] + 0] = 1 }
+      match($0, /:[0-9]+  \[/) { if (substr($0, RSTART + 1, RLENGTH - 4) + 0 in keep) print }')"
+  fi
+
   findings="$(printf '%s' "$findings" | grep -v '^[[:space:]]*$' | head -n "$MAX_FINDINGS")"
   [[ -n "$findings" ]] || emit_silent
 
