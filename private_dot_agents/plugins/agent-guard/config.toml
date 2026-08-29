@@ -48,9 +48,10 @@ scope = "diff"
 # string, so the backslashes reach the regex engine as written.
 # extensions = '\.(ts|tsx|mts|cts|gd)$'
 
-# Paths whose duplication is generated rather than written. This holds only the
-# shapes every TypeScript tree shares; a project names its own generated
-# directories through ignore_extra, which is appended to this rather than
-# replacing it.
-# ignore = '\.gen\.|/generated/|/__generated__/|\.d\.ts$'
-# ignore_extra = '(db-types|api-client)/'
+# Paths the hook skips entirely: code that is generated rather than written, and
+# vendored code the tree does not own. This holds only the shapes every
+# TypeScript tree shares; a project names its own directories through
+# ignore_extra, which is appended to this rather than replacing it. Match both
+# separators, because a hook payload carries whatever form the platform uses.
+# ignore = '\.gen\.|[/\\](generated|__generated__|node_modules)[/\\]|\.d\.ts$'
+# ignore_extra = '[/\\](db-types|api-client)[/\\]'

@@ -192,10 +192,16 @@ class Settings:
         # language widens this in its own config.toml.
         self.ext_src = _str(g("extensions"), r"\.(ts|tsx|mts|cts)$")
         self.ext_re = _compile(self.ext_src)
-        # Generated code is duplicated by design; flagging it trains agents to
-        # ignore the hook. Only the language-wide shapes are listed here, and a
-        # project names its own generated directories through the additive knob.
-        ignore = _str(g("ignore"), r"\.gen\.|/generated/|/__generated__/|\.d\.ts$")
+        # Paths this hook has nothing useful to say about: code that is
+        # generated rather than written, and vendored code the tree does not own.
+        # Flagging either trains agents to ignore the hook. Only the language-wide
+        # shapes are listed here, and a project names its own directories through
+        # the additive knob. Separators are matched both ways, because a hook
+        # payload carries whatever form the platform uses.
+        ignore = _str(
+            g("ignore"),
+            r"\.gen\.|[/\\](generated|__generated__|node_modules)[/\\]|\.d\.ts$",
+        )
         extra = _str(g("ignore_extra"), "")
         # Appended rather than assigned, so a layer adds paths without restating
         # the defaults. Restating them by hand invites a stray leading '|', whose
@@ -429,7 +435,7 @@ def check_file(payload, roots, settings, cwd):
     path = (payload.get("tool_input") or {}).get("file_path") or ""
     if not path or not Path(path).is_file():
         emit_silent()
-    if not settings.ext_re.search(path):
+    if not settings.ext_re.search(path) or settings.ignore_re.search(path):
         emit_silent()
 
     findings = scan_file(path, roots, cwd)
