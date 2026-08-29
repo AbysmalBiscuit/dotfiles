@@ -2,6 +2,9 @@ approvals_reviewer = "auto_review"
 model = "gpt-5.6-sol"
 model_reasoning_effort = "xhigh"
 
+[features]
+experimental_use_rmcp_client = true
+
 [marketplaces.devkit]
 source_type = "git"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
@@ -33,16 +36,16 @@ url = "https://mcp.adaptyv.bio/mcp"
 
 [tui]
 status_line = [
-  "model-with-reasoning",
-  "project-name",
-  "git-branch",
-  "pull-request-number",
-  "run-state",
-  "approval-mode",
-  "context-used",
-  "five-hour-limit",
-  "weekly-limit",
-  "current-dir",
+    "model-with-reasoning",
+    "project-name",
+    "git-branch",
+    "pull-request-number",
+    "run-state",
+    "approval-mode",
+    "context-used",
+    "five-hour-limit",
+    "weekly-limit",
+    "current-dir",
 ]
 status_line_use_colors = true
 vim_mode_default = true
