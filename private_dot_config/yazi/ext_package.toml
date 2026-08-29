@@ -1,11 +1,11 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:mime-ext"
-rev = "044c3cc"
+rev = "c591a36"
 hash = "3bcc00df11efc3ae5d15f2dba860be7"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:git"
-rev = "044c3cc"
+rev = "c591a36"
 hash = "5bb0bfab901d3601c370eafdd66edd31"
 
 [[plugin.deps]]
@@ -15,7 +15,7 @@ hash = "9776f378459072b6c2875eae5addc49d"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:zoom"
-rev = "044c3cc"
+rev = "c591a36"
 hash = "e8e279463ee99c940e6945a14cf4aa9e"
 
 [[plugin.deps]]
@@ -26,7 +26,7 @@ hash = "868db729374b97871bc30b96d0e9061f"
 [[plugin.deps]]
 use = "boydaihungst/mediainfo"
 rev = "73a3658"
-hash = "fa787a8ef785f2976ea2861f62b8c6c4"
+hash = "884c3d74866db9c7831844f19359e106"
 
 [[plugin.deps]]
 use = "Sonico98/exifaudio"
@@ -35,12 +35,12 @@ hash = "4761fffb60a12d37096c34a356380cdf"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "044c3cc"
+rev = "c591a36"
 hash = "5b2fbef7d1513ce38ff72623a071a5e"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:types"
-rev = "044c3cc"
+rev = "c591a36"
 hash = "ff056b5acd05d915dc3a3936cb0cfd3e"
 
 [[plugin.deps]]
