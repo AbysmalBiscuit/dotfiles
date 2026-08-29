@@ -3,7 +3,8 @@
 # to the model. Dispatches on the hook event name in the payload on stdin, so a
 # single entry point works for every hook it is registered under.
 #
-#   PostToolUse (Edit|Write|MultiEdit)  fast per-file ast-grep rules, advisory
+#   PostToolUse (Edit|Write|MultiEdit)  fast per-file ast-grep rules and
+#                                       checks/ scripts, advisory
 #   Stop | SubagentStop                 fallow audit on the changeset, gating
 #
 # Always exits 0 and speaks through the hookSpecificOutput JSON contract, so a
@@ -29,7 +30,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # A config.env alone is enough to be a root: a tree that wants only the global
 # rules under its own settings still opts in by carrying the directory.
 is_root() {
-  [[ -d "$1" ]] && [[ -d "$1/rules" || -f "$1/sgconfig.yml" || -f "$1/config.env" ]]
+  [[ -d "$1" ]] && [[ -d "$1/rules" || -d "$1/checks" || -f "$1/sgconfig.yml" || -f "$1/config.env" ]]
 }
 
 # Walks every ancestor of the working directory, outermost first, so a nearer
@@ -126,16 +127,17 @@ if [[ "${1:-}" == "doctor" ]]; then
   printf 'agent-guard doctor\n  extensions : %s\n  ignore     : %s\n  roots      :\n' \
     "$EXT_RE" "$IGNORE_RE"
   for root in "${CONFIG_ROOTS[@]}"; do
-    printf '    %s\n      config   : %s\n      rules    : %s\n' \
+    printf '    %s\n      config   : %s\n      rules(own): %s\n      checks   : %s\n' \
       "$root" \
       "$(sgconfig_for "$root" 2>/dev/null || echo NONE)" \
-      "$(ls "$root/rules"/*.yml 2>/dev/null | wc -l)"
+      "$(ls "$root/rules"/*.yml 2>/dev/null | wc -l)" \
+      "$(ls "$root/checks"/*.sh 2>/dev/null | wc -l)"
   done
   for t in jq ast-grep fallow git timeout sha256sum; do
     printf '  %-10s : %s\n' "$t" "$(command -v "$t" 2>/dev/null || echo 'not installed')"
   done
   printf '\n  jq missing      -> hook is fully inert\n'
-  printf '  ast-grep missing -> per-file rules skipped\n'
+  printf '  ast-grep missing -> per-file rules skipped (checks/ still run)\n'
   printf '  fallow missing   -> changeset duplication check skipped\n'
   printf '  timeout missing  -> fallow runs unbounded\n'
   printf '  sha256sum missing-> repeat-run caching disabled\n'
@@ -158,6 +160,29 @@ emit() {
   exit 0
 }
 
+# Conventions ast-grep cannot reach. Tree-sitter discards whitespace, so nothing
+# about blank lines or vertical spacing is expressible as a rule; those live here
+# instead. A root's checks/ holds bash scripts, each called with one file path and
+# printing findings on stdout in the shape the ast-grep scan produces:
+#
+#   <2 spaces><file>:<line><2 spaces>[<rule-id>] <message>
+#
+# Run through bash rather than executed directly, because the executable bit does
+# not survive a clone onto the team's Windows machines. Same latency budget as the
+# rules: this fires on every edit.
+run_checks() {
+  local file="$1" root script out
+  for root in "${CONFIG_ROOTS[@]}"; do
+    [[ -d "$root/checks" ]] || continue
+    for script in "$root/checks"/*.sh; do
+      [[ -f "$script" ]] || continue
+      out="$(bash "$script" "$file" 2>/dev/null)"
+      [[ -n "$out" ]] && printf '%s\n' "$out"
+    done
+  done
+  return 0
+}
+
 # Per-file syntactic rules. Must stay in the low milliseconds: this fires on
 # every edit from every agent and subagent, so its cost multiplies.
 check_file() {
@@ -165,19 +190,22 @@ check_file() {
   file="$(jq -r '.tool_input.file_path // empty' <<<"$PAYLOAD")"
   [[ -n "$file" && -f "$file" ]] || emit_silent
   [[ "$file" =~ $EXT_RE ]] || emit_silent
-  have ast-grep || emit_silent
 
   # One scan per root rather than one merged config: each root's sgconfig resolves
   # its own ruleDirs and custom-language libraryPath relative to itself.
   local findings="" root config hits
-  for root in "${CONFIG_ROOTS[@]}"; do
-    config="$(sgconfig_for "$root")" || continue
-    hits="$(ast-grep scan -c "$config" --json=compact "$file" 2>/dev/null \
-      | jq -r '
-          (. // []) | .[]
-          | "  \(.file):\(.range.start.line + 1)  [\(.ruleId | sub("-(typescript|tsx)$";""))] \(.message)"' 2>/dev/null)"
-    [[ -n "$hits" ]] && findings+="$hits"$'\n'
-  done
+  if have ast-grep; then
+    for root in "${CONFIG_ROOTS[@]}"; do
+      config="$(sgconfig_for "$root")" || continue
+      hits="$(ast-grep scan -c "$config" --json=compact "$file" 2>/dev/null \
+        | jq -r '
+            (. // []) | .[]
+            | "  \(.file):\(.range.start.line + 1)  [\(.ruleId | sub("-(typescript|tsx)$";""))] \(.message)"' 2>/dev/null)"
+      [[ -n "$hits" ]] && findings+="$hits"$'\n'
+    done
+  fi
+  hits="$(run_checks "$file")"
+  [[ -n "$hits" ]] && findings+="$hits"$'\n'
   findings="$(printf '%s' "$findings" | grep -v '^[[:space:]]*$' | head -n "$MAX_FINDINGS")"
   [[ -n "$findings" ]] || emit_silent
 

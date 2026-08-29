@@ -24,8 +24,6 @@
     "allow": [
       "Bash(curl * http://localhost:*)",
       "Bash(curl * https://localhost:*)",
-      "Bash(npm run lint)",
-      "Bash(npm run test:*)",
       "Bash(cs test:*)",
       "Bash(pytest:*)",
       "Bash(bun test*)",
@@ -33,15 +31,8 @@
       "Bash(bun next dev*)",
       "Bash(bun run turbo dev*)",
       "Bash(cargo test:*)",
-      "Bash(docm list)",
-      "Bash(docm info:*)",
-      "Bash(docm path:*)",
-      "Bash(devrun task:*)",
-      "Bash(devrun up:*)",
-      "Bash(devrun down:*)",
-      "Bash(devrun config:*)",
-      "Bash(devrun status:*)",
-      "Bash(devrun logs:*)",
+      "Bash(docm:*)",
+      "Bash(devrun:*)",
       "Read(~/.local/share/devkit/docs/**)",
       "Bash(bash ~/.agents/scripts/*)",
       "Bash(python ~/.agents/scripts/*.py)",
@@ -53,103 +44,80 @@
       "Bash(uv run ~/.agents/skills/*/scripts/*.py*)"
     ],
     "deny": [
-      "Read(~/.sh_env)",
-      "Read(~/.local/share/chezmoi/**)",
+      "Read(//**/.ssh/**)",
+      "Edit(//**/.ssh/**)",
+      "Read(//**/.gnupg/**)",
+      "Edit(//**/.gnupg/**)",
+      "Read(//**/.password-store/**)",
+      "Edit(//**/.password-store/**)",
+      "Read(//**/.aws/**)",
+      "Edit(//**/.aws/**)",
+      "Read(//**/.azure/**)",
+      "Edit(//**/.azure/**)",
+      "Read(//**/.kube/**)",
+      "Edit(//**/.kube/**)",
+      "Read(//**/.config/gcloud/**)",
+      "Edit(//**/.config/gcloud/**)",
+      "Read(//**/.config/gh/**)",
+      "Edit(//**/.config/gh/**)",
+      "Read(//**/*.age)",
+      "Edit(//**/*.age)",
+      "Read(//**/.config/chezmoi/chezmoistate.boltdb)",
+      "Edit(//**/.config/chezmoi/chezmoistate.boltdb)",
+      "Read(//**/.config/chezmoi/chezmoi.toml)",
+      "Edit(//**/.config/chezmoi/chezmoi.toml)",
+      "Read(//**/.config/chezmoi/*key*)",
+      "Edit(//**/.config/chezmoi/*key*)",
+      "Read(//**/.config/chezmoi/secrets.*)",
+      "Edit(//**/.config/chezmoi/secrets.*)",
+      "Read(//**/.config/chezmoi/private/**)",
+      "Edit(//**/.config/chezmoi/private/**)",
+      "Read(//**/.local/share/chezmoi/**)",
+      "Edit(//**/.local/share/chezmoi/**)",
+      "Read(//**/.docker/config.json)",
+      "Edit(//**/.docker/config.json)",
+      "Read(//**/.netrc)",
+      "Edit(//**/.netrc)",
+      "Read(//**/.npmrc)",
+      "Edit(//**/.npmrc)",
+      "Read(//**/.pypirc)",
+      "Edit(//**/.pypirc)",
+      "Read(//**/.git-credentials)",
+      "Edit(//**/.git-credentials)",
+      "Read(//**/.claude.json)",
+      "Edit(//**/.claude.json)",
+      "Read(//**/.sh_env)",
+      "Edit(//**/.sh_env)",
+      "Read(//**/.env)",
+      "Edit(//**/.env)",
+      "Read(//**/.env.*)",
+      "Edit(//**/.env.*)",
+      "Read(//**/secrets/**)",
+      "Edit(//**/secrets/**)",
+      "Read(//**/AppData/Local/**)",
+      "Edit(//**/AppData/Local/**)",
+      "Read(//**/AppData/LocalLow/**)",
+      "Edit(//**/AppData/LocalLow/**)",
+      "Read(//**/AppData/Roaming/**)",
+      "Edit(//**/AppData/Roaming/**)",
+      "Read(//**/Windows/**)",
+      "Edit(//**/Windows/**)",
+      "Read(//**/Program Files/**)",
+      "Edit(//**/Program Files/**)",
+      "Read(//**/Program Files (x86)/**)",
+      "Edit(//**/Program Files (x86)/**)",
+      "Read(//**/ProgramData/**)",
+      "Edit(//**/ProgramData/**)",
+      "Read(//**/$Recycle.Bin/**)",
+      "Edit(//**/$Recycle.Bin/**)",
+      "Read(//**/System Volume Information/**)",
+      "Read(//**/NTUSER.DAT*)",
+      "Read(//etc/**)",
+      "Edit(//etc/**)",
       "Read(~/.cache/**)",
-      "Read(~/.config/chezmoi/**)",
-      "Read(/etc/*)",
-      "Read(~/.ssh/**)",
-      "Read(~/.aws/**)",
-      "Read(~/.config/gcloud/**)",
-      "Read(~/.azure/**)",
-      "Read(~/.kube/**)",
-      "Read(~/.gnupg/**)",
-      "Read(~/.docker/config.json)",
-      "Read(~/.netrc)",
-      "Read(~/.npmrc)",
-      "Read(~/.pypirc)",
-      "Read(~/.git-credentials)",
-      "Read(~/.password-store/**)",
-      "Read(~/.config/gh/**)",
-      "Read(~/.claude.json)",
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(**/secrets/**)",
-      "Edit(~/.local/share/chezmoi/**)",
-      "Edit(~/.config/chezmoi/**)",
-      "Edit(/etc/*)",
-      "Edit(~/.ssh/**)",
       "Edit(~/.bashrc)",
       "Edit(~/.zshrc)",
       "Edit(~/.profile)",
-      "Edit(~/.aws/**)",
-      "Edit(~/.config/gcloud/**)",
-      "Edit(~/.azure/**)",
-      "Edit(~/.kube/**)",
-      "Edit(~/.gnupg/**)",
-      "Edit(~/.docker/config.json)",
-      "Edit(~/.netrc)",
-      "Edit(~/.npmrc)",
-      "Edit(~/.pypirc)",
-      "Edit(~/.git-credentials)",
-      "Edit(~/.password-store/**)",
-      "Edit(~/.config/gh/**)",
-      "Edit(~/.claude.json)",
-      "Edit(./.env)",
-      "Edit(./.env.*)",
-      "Edit(**/secrets/**)",
-      "Read(/mnt/c/Windows/**)",
-      "Edit(/mnt/c/Windows/**)",
-      "Read(/mnt/c/Program Files/**)",
-      "Edit(/mnt/c/Program Files/**)",
-      "Read(/mnt/c/Program Files (x86)/**)",
-      "Edit(/mnt/c/Program Files (x86)/**)",
-      "Read(/mnt/c/ProgramData/**)",
-      "Edit(/mnt/c/ProgramData/**)",
-      "Read(/mnt/c/Users/*/AppData/**)",
-      "Edit(/mnt/c/Users/*/AppData/**)",
-      "Read(/mnt/c/Users/*/.cache/**)",
-      "Read(/mnt/c/Users/*/.config/chezmoi/**)",
-      "Read(/mnt/c/Users/*/.ssh/**)",
-      "Edit(/mnt/c/Users/*/.ssh/**)",
-      "Read(/mnt/c/Users/*/.aws/**)",
-      "Read(/mnt/c/Users/*/.azure/**)",
-      "Read(/mnt/c/Users/*/.kube/**)",
-      "Read(/mnt/c/Users/*/.gnupg/**)",
-      "Read(/mnt/c/Users/*/.docker/config.json)",
-      "Read(/mnt/c/Users/*/.git-credentials)",
-      "Read(/mnt/c/Users/*/.config/gh/**)",
-      "Read(/mnt/c/Users/*/.claude.json)",
-      "Read(/mnt/c/Users/*/NTUSER.DAT*)",
-      "Read(/mnt/c/$Recycle.Bin/**)",
-      "Edit(/mnt/c/$Recycle.Bin/**)",
-      "Read(/mnt/c/System Volume Information/**)",
-      "Read(C:/Windows/**)",
-      "Edit(C:/Windows/**)",
-      "Read(C:/Program Files/**)",
-      "Edit(C:/Program Files/**)",
-      "Read(C:/Program Files (x86)/**)",
-      "Edit(C:/Program Files (x86)/**)",
-      "Read(C:/ProgramData/**)",
-      "Edit(C:/ProgramData/**)",
-      "Read(C:/Users/*/AppData/**)",
-      "Edit(C:/Users/*/AppData/**)",
-      "Read(C:/Users/*/.cache/**)",
-      "Read(C:/Users/*/.config/chezmoi/**)",
-      "Read(C:/Users/*/.ssh/**)",
-      "Edit(C:/Users/*/.ssh/**)",
-      "Read(C:/Users/*/.aws/**)",
-      "Read(C:/Users/*/.azure/**)",
-      "Read(C:/Users/*/.kube/**)",
-      "Read(C:/Users/*/.gnupg/**)",
-      "Read(C:/Users/*/.docker/config.json)",
-      "Read(C:/Users/*/.git-credentials)",
-      "Read(C:/Users/*/.config/gh/**)",
-      "Read(C:/Users/*/.claude.json)",
-      "Read(C:/Users/*/NTUSER.DAT*)",
-      "Read(C:/$Recycle.Bin/**)",
-      "Edit(C:/$Recycle.Bin/**)",
-      "Read(C:/System Volume Information/**)",
       "Bash(git * --no-verify *)",
       "Bash(google-chrome *)"
     ],
@@ -162,8 +130,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/block-rg-replace-footgun.py",
+            "command": "python3 ~/.claude/scripts/block-rg-replace-footgun.py",
             "statusMessage": "Checking rg flags"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/block-secret-decrypt.py",
+            "statusMessage": "Checking for secret decryption"
           }
         ]
       }
@@ -173,7 +146,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/worktree-create.sh"
+            "command": "bash ~/.claude/scripts/worktree-create.sh"
           }
         ]
       }
@@ -183,7 +156,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/worktree-remove.sh"
+            "command": "bash ~/.claude/scripts/worktree-remove.sh"
           }
         ]
       }
@@ -194,7 +167,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
             "timeout": 10,
             "async": true
           },
@@ -212,7 +185,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/alacritree-follow.sh",
+            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
             "timeout": 10,
             "async": true
           },
@@ -237,6 +210,11 @@
             "type": "command",
             "command": "~/.agents/skills/history/hist.py index",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/prune-temp.sh",
+            "timeout": 30
           }
         ]
       }
@@ -247,7 +225,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
             "timeout": 10,
             "statusMessage": "Checking conventions"
           }
@@ -259,7 +237,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -271,7 +249,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/hooks/agent-guard.sh",
+            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -284,71 +262,76 @@
     "command": "ccstatusline",
     "padding": 0,
     "refreshInterval": 10
-  },
-  "enabledPlugins": {
-    "ast-grep@ast-grep-marketplace": true,
-    "claude-md-management@claude-plugins-official": true,
-    "devkit@devkit": true,
-    "elements-of-style@superpowers-marketplace": true,
-    "plugin-dev@claude-plugins-official": true,
-    "posthog@claude-plugins-official": true,
-    "pr-crucible@pr-crucible": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "sentry@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "slack@claude-plugins-official": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "superpowers@superpowers-marketplace": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "linear@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "claude-plugins-official": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-plugins-official"
+  "statusLine": {
+      "type": "command",
+      "command": "ccstatusline",
+      "padding": 0,
+      "refreshInterval": 10
+    },
+    "enabledPlugins": {
+      "ast-grep@ast-grep-marketplace": true,
+      "claude-md-management@claude-plugins-official": true,
+      "devkit@devkit": true,
+      "elements-of-style@superpowers-marketplace": true,
+      "plugin-dev@claude-plugins-official": true,
+      "posthog@claude-plugins-official": true,
+      "pr-crucible@pr-crucible": true,
+      "pyright-lsp@claude-plugins-official": true,
+      "rust-analyzer-lsp@claude-plugins-official": true,
+      "sentry@claude-plugins-official": true,
+      "skill-creator@claude-plugins-official": true,
+      "slack@claude-plugins-official": true,
+      "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+      "superpowers@superpowers-marketplace": true,
+      "typescript-lsp@claude-plugins-official": true,
+      "linear@claude-plugins-official": true
+    },
+    "extraKnownMarketplaces": {
+      "claude-plugins-official": {
+        "source": {
+          "source": "github",
+          "repo": "anthropics/claude-plugins-official"
+        }
+      },
+      "ast-grep-marketplace": {
+        "source": {
+          "source": "github",
+          "repo": "ast-grep/agent-skill"
+        }
+      },
+      "pr-crucible": {
+        "source": {
+          "source": "github",
+          "repo": "AbysmalBiscuit/pr-crucible"
+        }
+      },
+      "superpowers-marketplace": {
+        "source": {
+          "source": "github",
+          "repo": "obra/superpowers-marketplace"
+        }
+      },
+      "devkit": {
+        "source": {
+          "source": "github",
+          "repo": "AbysmalBiscuit/devkit"
+        }
       }
     },
-    "ast-grep-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "ast-grep/agent-skill"
-      }
+    "feedbackSurveyRate": 0,
+    "effortLevel": "high",
+    "companyAnnouncements": [],
+    "tui": "fullscreen",
+    "voice": {
+      "enabled": true,
+      "mode": "hold"
     },
-    "pr-crucible": {
-      "source": {
-        "source": "github",
-        "repo": "AbysmalBiscuit/pr-crucible"
-      }
-    },
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
-      }
-    },
-    "devkit": {
-      "source": {
-        "source": "github",
-        "repo": "AbysmalBiscuit/devkit"
-      }
-    }
-  },
-  "feedbackSurveyRate": 0,
-  "effortLevel": "high",
-  "companyAnnouncements": [],
-  "tui": "fullscreen",
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  },
-  "prefersReducedMotion": true,
-  "autoMemoryEnabled": false,
-  "skipWorkflowUsageWarning": true,
-  "outputStyle": "unslop",
-  "theme": "dark",
-  "editorMode": "vim",
-  "teammateMode": "in-process",
-  "model": "opus"
-}
+    "prefersReducedMotion": true,
+    "autoMemoryEnabled": false,
+    "skipWorkflowUsageWarning": true,
+    "outputStyle": "unslop",
+    "theme": "dark",
+    "editorMode": "vim",
+    "teammateMode": "in-process",
+    "model": "opus"
+  }
