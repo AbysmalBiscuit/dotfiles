@@ -41,12 +41,16 @@ is_root() {
 # directory above them rather than in the repository's own history.
 # Depends on the working directory, so it runs after the payload's cwd is applied.
 discover_roots() {
-  local dir="$PWD" dirs=() root name i
+  local dir="$PWD" dirs=() parent root name i
   while :; do
     dirs+=("$dir")
     [[ "$dir" == "/" ]] && break
-    dir="${dir%/*}"
-    [[ -n "$dir" ]] || dir=/
+    parent="${dir%/*}"
+    [[ -n "$parent" ]] || parent=/
+    # An MSYS drive root such as "C:" has no slash left to strip, so the chop
+    # reaches a fixed point that never equals "/". Stop when it stops moving.
+    [[ "$parent" == "$dir" ]] && break
+    dir="$parent"
   done
   for (( i = ${#dirs[@]} - 1; i >= 0; i-- )); do
     for name in "${ROOT_NAMES[@]}"; do
