@@ -1,0 +1,56 @@
+# agent-guard settings, read by ~/.agents/plugins/agent-guard/scripts/agent-guard.py.
+#
+# This is the global layer, and on its own it does nothing: the hook runs only
+# where some directory at or above the working directory holds
+# .agents/plugins/agent-guard/ (tracked) or .agents/plugins/agent-guard.local/
+# (machine-local). Those are discovered by walking up from the working
+# directory, outermost first, so a checkout layers over the directory holding
+# every checkout of that project, which layers over this file. A root holds a
+# rules/ directory, a config.toml, or both; it needs its own sgconfig.yml only
+# to register a custom language. Each config.toml is read in that order, so a
+# nearer one tightens any setting below without editing it. An
+# AGENT_GUARD_<KEY> environment variable outranks every file for one run.
+#
+# Run `agent-guard doctor` inside a tree to list the roots actually found.
+
+# Blocking is off until the rules prove they stay quiet on good code.
+# true lets Stop/SubagentStop actually refuse to finish.
+block = false
+
+# Cap on how many times one session may be blocked before the hook downgrades
+# itself to advisory. There is no built-in loop protection on Stop hooks.
+max_blocks = 2
+
+# Cross-file analysis via fallow on Stop/SubagentStop. false for per-file only.
+fallow = true
+fallow_timeout = 45
+
+# Findings shown per report, so feedback stays inside working memory.
+max_findings = 8
+
+# Exported functions reference-counted per changeset, bounding a wide diff.
+max_symbols = 40
+
+# Flag an export whose only consumer is its own test. false where a parity test
+# is deliberately the sole caller of a path still being migrated onto.
+test_only = true
+
+# Also flag exported functions with exactly one caller. Off by default: a single
+# caller is often a legitimate module boundary, and the rule is noisy.
+single_caller = false
+
+# Which lines per-file findings are reported on. "diff" keeps only the lines the
+# branch introduced; "file" reports the whole file.
+scope = "diff"
+
+# Which files the per-file rules run on. A repo whose rules target another
+# language widens this in its own config.toml. Single quotes are a TOML literal
+# string, so the backslashes reach the regex engine as written.
+# extensions = '\.(ts|tsx|mts|cts|gd)$'
+
+# Paths whose duplication is generated rather than written. This holds only the
+# shapes every TypeScript tree shares; a project names its own generated
+# directories through ignore_extra, which is appended to this rather than
+# replacing it.
+# ignore = '\.gen\.|/generated/|/__generated__/|\.d\.ts$'
+# ignore_extra = '(db-types|api-client)/'
