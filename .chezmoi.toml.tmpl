@@ -18,6 +18,7 @@
 {{- $has_battery := false -}}
 {{- $secrets_system := dict -}}
 {{- $shell := "" -}}
+{{- $shell_interactive := "" -}}
 {{- $default_wsl_distro := "" -}}
 {{- $copy_command := "" -}}
 {{- $paste_command := "" -}}
@@ -264,8 +265,17 @@
   {{- if $secrets_system.shell -}}
     {{- $shell = index $secrets_system.shell |  default "" -}}
   {{- end -}}
+  {{- if $secrets_system.shell_interactive -}}
+    {{- $shell_interactive = $secrets_system.shell_interactive -}}
+  {{- end -}}
   {{- if and $is_wsl $secrets_system.wsl_shell -}}
     {{- $shell = $secrets_system.wsl_shell -}}
+  {{- end -}}
+  {{- if and $is_wsl $secrets_system.wsl_shell_interactive -}}
+    {{- $shell_interactive = $secrets_system.wsl_shell_interactive -}}
+  {{- end -}}
+  {{- if not $shell_interactive -}}
+    {{- $shell_interactive = $shell -}}
   {{- end -}}
   {{- /* if $is_wsl */ -}}
   {{- /* else if $is_linux */ -}}
@@ -382,8 +392,10 @@ is_phone = {{ $is_phone }}
 is_tablet = {{ $is_tablet }}
 {{ if $shell -}}
 shell = {{ $shell | quote }}
+shell_interactive = {{ $shell_interactive | quote }}
 {{- else -}}
 shell = {{ env "SHELL" | base | quote }}
+shell_interactive = {{ env "SHELL" | base | quote }}
 {{- end }}
 zshPlugins = [
     "per-directory-history",
