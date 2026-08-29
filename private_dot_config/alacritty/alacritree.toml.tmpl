@@ -54,6 +54,7 @@ attention_grace_ms = 2000
 vsync = false
 # draw the grid through an OpenGL paint callback instead of an epaint mesh
 gpu_grid = true
+focus_priority_boost = false
 
 # zed-style paths: filename first, parent trailing it, $HOME as ~
 # the git header is a directory, so it abbreviates instead of reordering
@@ -104,9 +105,19 @@ program = "wsl.exe"
 name = "cmd"
 program = "cmd.exe"
 
+[[ui.profiles]]
+name = "Claude"
+program = "claude"
+
+[[ui.profiles]]
+name = "Claude (kali)"
+program = "wsl.exe"
+args = ["-d", "kali-linux", "--", "sh", "-lc", "exec claude"]
+
 # {{- end }}
 
 # {{- if index .has "nu" }}
+
 [[ui.profiles]]
 name = "nushell"
 program = "nu# {{ if .is_windows }}.exe# {{ end }}"
