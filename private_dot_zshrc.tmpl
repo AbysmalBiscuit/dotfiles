@@ -23,7 +23,7 @@
 export GPG_TTY=$(tty)
 
 # Starting fish shell
-if [[
+if [[ 
     -x $(command -v fish 2>/dev/null) &&
     x"$FORCESH" != x"1" &&
     (! -v ZED_TERM || "$ZED_TERM" != "true") ]] \
@@ -43,6 +43,8 @@ source "$interactive_cache"
 # {{- end }}
 
 # {{ template "sh/debug_startup_end.sh" }}
+
+export PATH="$PATH_CLEAN:$PATH_WINDOWS"
 
 # Avoid error message after shell start
 return 0

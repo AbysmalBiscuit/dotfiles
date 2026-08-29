@@ -499,7 +499,8 @@ export PATH_CLEAN='# {{ $path | join ":" }}'
 export PATH_WINDOWS
 # {{- end }}
 
-export PATH='# {{ $path | join ":" }}'
+# export PATH='# {{ $path | join ":" }}'
+export PATH='# {{ $path_clean | join ":" }}'
 
 # {{ if .is_macos -}}
 # Ensure that a non-login, non-interactive shell has a defined environment.

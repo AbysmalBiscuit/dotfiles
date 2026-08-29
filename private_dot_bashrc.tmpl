@@ -123,5 +123,7 @@ fi
 
 # {{ template "sh/debug_startup_end.sh" }}
 
+export PATH="$PATH_CLEAN:$PATH_WINDOWS"
+
 # Avoid error message after shell start
 return 0
