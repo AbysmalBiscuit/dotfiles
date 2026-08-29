@@ -225,7 +225,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
             "timeout": 10,
             "statusMessage": "Checking conventions"
           }
@@ -237,7 +237,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -249,7 +249,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.agents/plugins/agent-guard/scripts/agent-guard.sh",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
