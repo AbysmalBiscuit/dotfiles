@@ -1,5 +1,5 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-# vim:filetype=toml
+# vim:filetype=toml.chezmoitmpl
 [wsl2]
 #gpuSupport=false
 # {{- $cpus := 1 -}}
@@ -7,8 +7,8 @@
 # {{-   $cpus = atoi (env "NUMBER_OF_PROCESSORS") -}}
 # {{- else if lookPath "nproc" -}}
 # {{-   $cpus = atoi (trim (output "nproc")) -}}
-# {{- end -}}
-processors=# {{ max 1 (sub $cpus 2) }}
+# {{- end }}
+# processors=# {{ max 1 (sub $cpus 2) }}
 swap=34359738368
 
 [experimental]
