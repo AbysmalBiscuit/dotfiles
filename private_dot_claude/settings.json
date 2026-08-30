@@ -328,6 +328,7 @@
   "theme": "dark",
   "editorMode": "vim",
   "teammateMode": "in-process",
+  "agentPushNotifEnabled": true,
   "remoteControlAtStartup": false,
   "model": "opus"
 }
