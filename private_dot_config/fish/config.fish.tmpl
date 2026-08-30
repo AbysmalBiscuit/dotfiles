@@ -43,6 +43,16 @@ end
 # Set keybindings
 set --global fish_key_bindings fish_vi_key_bindings
 
+# {{- if .is_wsl }}
+
+# Set path again on wsl if windows paths weren't added
+set -l clean (string split -n : -- $PATH_CLEAN)
+set -l windows (string split -n : -- $PATH_WINDOWS)
+if test (count $PATH) -lt (count $clean $windows)
+    set -gx PATH $clean $windows
+end
+# {{- end }}
+
 #@ functions -c fish_vi_key_bindings __original_vi_key_bindings
 # functions -c fish_user_key_bindings fish_key_bindings
 
