@@ -684,6 +684,56 @@ completions_cmds = []
 init_command_only_if_no = []
 
 [[tools]]
+lang = "c#"
+name = "PowerShell"
+cmds = [
+    "powershell"
+]
+desc = ""
+url = ""
+git = ""
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
+lang = "c#"
+name = "PowerShell7"
+cmds = [
+    "pwsh"
+]
+desc = "PowerShell is a cross-platform (Windows, Linux, and macOS) automation and configuration tool/framework that works well with your existing tools and is optimized for dealing with structured data (e.g. JSON, CSV, XML, etc.), REST APIs, and object models."
+url = "https://microsoft.com/PowerShell"
+git = "https://github.com/powershell/powershell"
+comment = ""
+install_command = ""
+completions_command = ""
+init_command = ""
+supported_shells = []
+append_fish_completion = ""
+append_fish_init = ""
+command_bash_name = ""
+command_fish_name = ""
+command_nu_name = ""
+command_powershell_name = ""
+command_zsh_name = ""
+completions_command_only_if_no = []
+completions_cmds = []
+init_command_only_if_no = []
+
+[[tools]]
 lang = "c++"
 name = "mold"
 cmds = [
