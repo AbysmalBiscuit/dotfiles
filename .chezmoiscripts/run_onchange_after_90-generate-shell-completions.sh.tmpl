@@ -11,12 +11,21 @@
 # {{- /* If init_command is set, it takes priority over completions. */ -}}
 # {{- /* No forks at template eval — stat/lookPath are internal.    */ -}}
 # {{- /*                                                            */ -}}
-# {{- /* Shell renaming: command_SHELL_name overrides the SHELL     */ -}}
-# {{- /* placeholder (e.g. command_nu_name = "nushell").             */ -}}
+# {{- /* Shell naming: the spelling a tool declares in                */ -}}
+# {{- /* supported_shells is the argument it gets (see $shell_names). */ -}}
+# {{- /* command_SHELL_name overrides that when a CLI wants a name    */ -}}
+# {{- /* it does not advertise.                                      */ -}}
 # {{- /* ========================================================== */ -}}
 
 # {{- /* ---- Output file per shell ---- */ -}}
 # {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "autoload" "_generated.nu") -}}
+
+# {{- /* ---- Spellings a tool may use in supported_shells for a given shell ---- */ -}}
+# {{- /* CLIs disagree: clap_complete_nushell renders "nushell", watchexec wants  */ -}}
+# {{- /* "nu". Whichever spelling a tool declares is the argument it receives, so */ -}}
+# {{- /* command_SHELL_name is only needed when the two genuinely differ. Later   */ -}}
+# {{- /* entries win if a tool declares more than one.                           */ -}}
+# {{- $shell_names := dict "nu" (list "nu" "nushell") -}}
 
 # {{- /* ---- Filter to installed shells ---- */ -}}
 # {{- $shells := list -}}
@@ -95,7 +104,15 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-         end -}}
     # {{-       end -}}
     # {{-       if $live -}}
-    # {{-         if has $shell $tool.supported_shells -}}
+    # {{- /* ---- Match any accepted spelling; the match is the default arg ---- */ -}}
+    # {{-         $accepted := index $shell_names $shell | default (list $shell) -}}
+    # {{-         $declared := "" -}}
+    # {{-         range $n := $accepted -}}
+    # {{-           if has $n $tool.supported_shells -}}
+    # {{-             $declared = $n -}}
+    # {{-           end -}}
+    # {{-         end -}}
+    # {{-         if $declared -}}
     # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
     # {{-           $use_cmd := "" -}}
     # {{-           $append_key := "" -}}
@@ -127,8 +144,8 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-             $skip = true -}}
     # {{-           end -}}
     # {{-           if not $skip -}}
-    # {{- /* ---- Shell arg: use command_SHELL_name if non-empty, else $shell ---- */ -}}
-    # {{-             $shell_arg := $shell -}}
+    # {{- /* ---- Shell arg: command_SHELL_name if set, else the declared spelling ---- */ -}}
+    # {{-             $shell_arg := $declared -}}
     # {{-             $name_key := printf "command_%s_name" $shell -}}
     # {{-             $custom := index $tool $name_key | default "" -}}
     # {{-             if $custom -}}
