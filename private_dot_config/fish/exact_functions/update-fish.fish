@@ -1,24 +1,30 @@
-function update-fish --description 'Builds and installs fish from source'
-    set fish_repo_dir $XDG_CACHE_HOME/fish_shell_repo
-    mkdir -p $fish_repo_dir
-    cd $fish_repo_dir
-    if not test -d $fish_repo_dir
-        git clone https://github.com/fish-shell/fish-shell .
+function update-fish --description 'Builds and installs the latest fish release from source'
+    set -l repo https://github.com/fish-shell/fish-shell
+    set -l dir $XDG_CACHE_HOME/fish_shell_repo
+
+    # The repo carries non-version tags (official, pre_fishfish, OpenBeta_r1) that
+    # sort above the releases under -v:refname, so keep only numeric ones.
+    set -l ref (git ls-remote --tags --refs --sort=-v:refname $repo \
+        | string replace -rf '.*refs/tags/' '' \
+        | string match -r '^\d+\.\d+(?:\.\d+)?$' \
+        | head -1)
+
+    if test -z "$ref"
+        echo "update-fish: could not resolve a release tag from $repo" >&2
+        return 1
+    end
+
+    if test -d $dir/.git
+        git -C $dir fetch --depth 1 origin tag $ref
+        or return
+        git -C $dir checkout --force --detach $ref
+        or return
     else
-        git pull
+        git clone --depth 1 --branch $ref $repo $dir
+        or return
     end
 
-    if test -d build
-        rm -rf build
-    end
-    if test -d target
-        rm -rf target
-    end
+    rm -rf $dir/build $dir/target
 
-    RUSTFLAGS="$RUSTFLAGS_RELEASE" cargo install --path .
-
-    # mkdir build
-    # cd build
-    # cmake .. -DCMAKE_Rust_CARGO_TARGET=release
-    # cmake --build .
+    RUSTFLAGS="$RUSTFLAGS_RELEASE" cargo install --force --path $dir
 end
