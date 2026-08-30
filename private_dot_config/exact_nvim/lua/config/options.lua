@@ -351,25 +351,44 @@ end
 --------------------------------------------------------------------------------
 if g.is_windows then
   -- Windows-specific settings
-  if LazyVim ~= nil then
-    LazyVim.terminal.setup("pwsh")
-  elseif vim.fn.executable("C:/Program Files/PowerShell/7/pwsh.exe") == 1 then
-    o.shell = "pwsh"
-    o.shellcmdflag =
-      "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-    o.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
-    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
+  local shell_encoding_preamble = "[Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();"
+    .. "$PSDefaultParameterValues['Out-File:Encoding']='utf8';"
+
+  local pwsh = nil
+  if vim.fn.executable("pwsh") == 1 then
+    pwsh = "pwsh"
+  else
+    for _, candidate in ipairs({
+      vim.fn.expand("~/AppData/Local/Microsoft/WindowsApps/pwsh.exe"),
+      "C:/Program Files/PowerShell/7/pwsh.exe",
+    }) do
+      if vim.fn.filereadable(candidate) == 1 then
+        -- 'shell' splits on spaces unless the whole path is quoted
+        pwsh = '"' .. candidate .. '"'
+      end
+    end
+  end
+
+  if pwsh ~= nil then
+    o.shell = pwsh
+    o.shellcmdflag = "-NoProfile -NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command "
+      .. shell_encoding_preamble
+      .. "$PSStyle.OutputRendering='plaintext';"
+      .. "Remove-Alias -Force -ErrorAction SilentlyContinue tee;"
+    o.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+    o.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
     o.shellquote = ""
     o.shellxquote = ""
-  elseif vim.fn.executable("powershell.exe") == 1 then
+  elseif vim.fn.executable("powershell") == 1 then
+    -- Windows PowerShell 5.1 has neither $PSStyle nor Remove-Alias, and its
+    -- Tee-Object writes UTF-16, so the pwsh 7 settings above cannot be reused.
     o.shell = "powershell"
-    -- o.shellcmdflag = "-command"
-    o.shellcmdflag =
-      "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-    o.shellredir = "-RedirectStandardOutput %s -NoNewWindow -Wait"
-    o.shellpipe = "2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode"
-    -- o.shellquote = '"'
-    -- o.shellxquote = ""
+    o.shellcmdflag = "-NoProfile -NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command "
+      .. shell_encoding_preamble
+    o.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+    o.shellpipe = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+    o.shellquote = ""
+    o.shellxquote = ""
   else
     o.shell = "cmd"
   end

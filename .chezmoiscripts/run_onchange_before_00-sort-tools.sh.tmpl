@@ -90,12 +90,12 @@ def sort_file(file) -> None:
     blocks = "\n\n".join(tool_to_toml(table_name, tool) for tool in tools)
     output = header + blocks
 
-    current = file.read_text(encoding="utf-8")
+    current = file.read_bytes().decode("utf-8")
     if current == output:
         print(f"No need to sort {file.name}")
         return
 
-    file.write_text(output, encoding="utf-8")
+    file.write_text(output, encoding="utf-8", newline="\n")
     print(f"Sorted {len(tools)} packages in {file.name}")
 
 
