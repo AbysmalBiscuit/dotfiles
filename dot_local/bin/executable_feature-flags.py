@@ -21,12 +21,15 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import copy
+import itertools
 import json
 import os
 import shutil
 import subprocess
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
@@ -126,6 +129,43 @@ def run_sql(query: str) -> list[dict]:
     return [dict(zip(cols, line.split("|", len(cols) - 1))) for line in lines[1:] if line]
 
 
+# ---------------------------------------------------------------------- progress
+
+
+FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+
+@contextlib.contextmanager
+def spinner(label: str):
+    """Animate `label` on stderr while a slow call runs.
+
+    Results go to stdout, so a piped or redirected run stays clean and the
+    animation is skipped entirely when stderr is not a terminal. The first
+    frame waits out the interval, so a fast call draws nothing at all.
+    """
+    if not sys.stderr.isatty():
+        yield
+        return
+    done = threading.Event()
+
+    def spin() -> None:
+        for tick in itertools.count():
+            if done.wait(0.08):
+                return
+            sys.stderr.write(f"\r\033[2K{FRAMES[tick % len(FRAMES)]} {label}")
+            sys.stderr.flush()
+
+    thread = threading.Thread(target=spin, daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        done.set()
+        thread.join()
+        sys.stderr.write("\r\033[2K")
+        sys.stderr.flush()
+
+
 # ---------------------------------------------------------------------- fetching
 
 
@@ -207,6 +247,19 @@ def fetch_calls(days: int, key: str | None = None) -> dict[str, dict[str, int]]:
 
 def fetch_definition(flag_id: int) -> dict:
     return run_tool("feature-flag-get-definition", {"id": flag_id})
+
+
+def recent_evaluations(keys: list[str], hours: int) -> dict[str, int]:
+    """Evaluation counts over a short window, to catch flags a deploy still reads."""
+    quoted = ", ".join("'" + k.replace("'", "''") + "'" for k in keys)
+    with spinner(f"checking the last {hours}h of evaluations"):
+        rows = run_sql(
+            "SELECT properties.$feature_flag AS flag, count() AS n FROM events "
+            "WHERE event = '$feature_flag_called' "
+            f"AND timestamp > now() - INTERVAL {hours} HOUR "
+            f"AND properties.$feature_flag IN ({quoted}) GROUP BY flag"
+        )
+    return {r["flag"]: int(r["n"] or 0) for r in rows}
 
 
 # --------------------------------------------------------------------- formatting
@@ -378,10 +431,30 @@ COMPARISONS = {
 
 
 def vocabulary() -> str:
+    """Every filter field, grouped by the kind of value it holds."""
     return (
-        f"  on its own: {', '.join(sorted(BOOLEAN))}\n"
-        f"  compared:   {', '.join(sorted(NUMERIC))} with > >= < <= == !=\n"
-        f"  matched:    {', '.join(sorted(TEXT))} with = (exact) or ~ (contains)"
+        f"  boolean, on its own:  {', '.join(sorted(BOOLEAN))}\n"
+        f"  numeric, compared:    {', '.join(sorted(NUMERIC))}\n"
+        "                        with > >= < <= == !=\n"
+        f"  text, matched:        {', '.join(sorted(TEXT))}\n"
+        "                        with = exact, ~ contains, !~ excludes\n"
+        "\n"
+        f"  quote-free spellings: {' '.join(sorted(DOTTED))}\n"
+        "  prefix any term with ! to invert it\n"
+        "  age and changed are whole days; rollout is the widest release condition"
+    )
+
+
+def filter_help() -> str:
+    """The filter reference, shown under both `--help` and `list --help`."""
+    return (
+        "filters, comma-separated, all of which must hold:\n"
+        "  -f enabled,rollout.lt.100               enabled but not fully rolled out\n"
+        "  -f 'disabled,rollout==100'              armed to 100 but switched off\n"
+        "  -f unused,age.gt.60                     old and never evaluated\n"
+        "  -f 'tag~kysely,!archived,off.gt.500'    busy kysely gates still serving off\n"
+        "\n"
+        f"{vocabulary()}"
     )
 
 
@@ -459,7 +532,7 @@ EMPTY_CALLS = {"n_off": 0, "n_on": 0, "n_err": 0}
 
 
 def load_all(days: int, include_archived: bool) -> list[dict]:
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with spinner("loading flags"), ThreadPoolExecutor(max_workers=4) as pool:
         jobs = [
             pool.submit(fetch_flags, include_archived),
             pool.submit(fetch_active_ids),
@@ -493,7 +566,8 @@ def resolve_many(names: list[str]) -> list[dict]:
     Resolution happens before any write, so a typo in the tenth flag of a batch
     fails the run instead of leaving the first nine changed. Repeats collapse.
     """
-    flags = fetch_flags(include_archived=False)
+    with spinner("resolving flags"):
+        flags = fetch_flags(include_archived=False)
     archived: list[dict] | None = None
     resolved: dict[int, dict] = {}
     problems: list[str] = []
@@ -501,7 +575,8 @@ def resolve_many(names: list[str]) -> list[dict]:
         matches = candidates(flags, name)
         if not matches:
             if archived is None:
-                archived = fetch_flags(include_archived=True)
+                with spinner("searching archived flags"):
+                    archived = fetch_flags(include_archived=True)
             matches = candidates(archived, name)
         if not matches:
             problems.append(f"No flag matches {name!r}.")
@@ -517,7 +592,7 @@ def resolve_many(names: list[str]) -> list[dict]:
 
 def load_one(flag_id: int, key: str, days: int) -> dict:
     """One flag, read from the definition endpoint so a just-written change shows."""
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    with spinner(f"reading {key}"), ThreadPoolExecutor(max_workers=2) as pool:
         counts = pool.submit(fetch_calls, days, key)
         defn = fetch_definition(flag_id)
     defn["calls"] = counts.result().get(defn["key"], dict(EMPTY_CALLS))
@@ -551,7 +626,9 @@ def show_many(flags: list[dict], args) -> None:
     if len(flags) == 1:
         show_one(flags[0]["id"], flags[0]["key"], args)
         return
-    with ThreadPoolExecutor(max_workers=8) as pool:
+    with spinner(f"reading {len(flags)} flags"), ThreadPoolExecutor(
+        max_workers=8
+    ) as pool:
         counts = pool.submit(fetch_calls, args.days)
         defns = list(pool.map(lambda f: fetch_definition(f["id"]), flags))
     calls = counts.result()
@@ -601,7 +678,8 @@ def cmd_toggle(args) -> None:
     verb = "enabled" if want else "disabled"
     plan, blocked = [], []
     for flag in resolve_many(args.flag):
-        defn = fetch_definition(flag["id"])
+        with spinner(f"reading {flag['key']}"):
+            defn = fetch_definition(flag["id"])
         if want and defn.get("archived"):
             blocked.append(
                 f"{defn['key']} is archived. Unarchive it in PostHog before enabling."
@@ -617,9 +695,75 @@ def cmd_toggle(args) -> None:
         if plan:
             print("dry run, nothing was written.")
         return
-    for flag in plan:
-        run_tool("update-feature-flag", {"id": flag["id"], "active": want})
+    with spinner(f"writing {len(plan)} flags"):
+        for flag in plan:
+            run_tool("update-feature-flag", {"id": flag["id"], "active": want})
     show_many(plan, args)
+
+
+ARCHIVED_PREFIX = "[archived] "
+
+
+def archive_changes(defn: dict) -> tuple[dict, list[str]]:
+    """The fields still needing a write to leave this flag fully archived.
+
+    Archived state lives in three places that can disagree: PostHog's own
+    `archived` field, the `active` switch it requires, and the description
+    prefix the HogQL views read because they cannot see `archived`. Each is
+    written only when it is wrong, so a repeat run is a no-op and a partly
+    archived flag gets just the missing piece.
+    """
+    payload: dict = {}
+    notes: list[str] = []
+    if defn["active"]:
+        payload["active"] = False
+        notes.append("disable")
+    if not defn.get("archived"):
+        payload["archived"] = True
+        notes.append("archive")
+    name = defn.get("name") or ""
+    if not name.startswith(ARCHIVED_PREFIX):
+        payload["name"] = ARCHIVED_PREFIX + name
+        notes.append("prefix the description")
+    return payload, notes
+
+
+def cmd_archive(args) -> None:
+    plan: list[tuple[dict, dict]] = []
+    for flag in resolve_many(args.flag):
+        with spinner(f"reading {flag['key']}"):
+            defn = fetch_definition(flag["id"])
+        payload, notes = archive_changes(defn)
+        if not payload:
+            print(f"{defn['key']} is already archived.")
+            continue
+        print(f"{defn['key']}: {', '.join(notes)}")
+        plan.append((flag, payload))
+    if not plan:
+        return
+
+    disabling = [flag["key"] for flag, payload in plan if "active" in payload]
+    if disabling and not args.force:
+        serving = {
+            key: n
+            for key, n in recent_evaluations(disabling, args.since).items()
+            if n
+        }
+        if serving:
+            listing = "\n  ".join(f"{k}: {n:,}" for k, n in serving.items())
+            raise SystemExit(
+                "Archiving disables the flag, so a caller that evaluated it in "
+                f"the last {args.since}h would fall through to its off branch:\n  "
+                f"{listing}\n"
+                "Wait for the retirement to deploy, or pass --force."
+            )
+    if args.dry_run:
+        print("dry run, nothing was written.")
+        return
+    with spinner(f"writing {len(plan)} flags"):
+        for flag, payload in plan:
+            run_tool("update-feature-flag", {"id": flag["id"], **payload})
+    show_many([flag for flag, _ in plan], args)
 
 
 def planned_filters(defn: dict, args) -> dict:
@@ -657,7 +801,8 @@ def cmd_rollout(args) -> None:
         raise SystemExit("Rollout must be between 0 and 100.")
     plan, dormant = [], []
     for flag in resolve_many(args.flag):
-        defn = fetch_definition(flag["id"])
+        with spinner(f"reading {flag['key']}"):
+            defn = fetch_definition(flag["id"])
         filters = planned_filters(defn, args)
         before, after = describe_rollout(defn.get("filters")), describe_rollout(filters)
         if before == after:
@@ -671,8 +816,9 @@ def cmd_rollout(args) -> None:
         if plan:
             print("dry run, nothing was written.")
         return
-    for flag, filters in plan:
-        run_tool("update-feature-flag", {"id": flag["id"], "filters": filters})
+    with spinner(f"writing {len(plan)} flags"):
+        for flag, filters in plan:
+            run_tool("update-feature-flag", {"id": flag["id"], "filters": filters})
     if dormant:
         tool = os.path.basename(sys.argv[0])
         print(
@@ -685,7 +831,16 @@ def cmd_rollout(args) -> None:
 # ------------------------------------------------------------------------ parsing
 
 
-COMMANDS = {"list", "ls", "status", "enable", "disable", "set", "rollout"}
+COMMANDS = {
+    "list",
+    "ls",
+    "status",
+    "enable",
+    "disable",
+    "archive",
+    "set",
+    "rollout",
+}
 
 
 def normalize(argv: list[str]) -> list[str]:
@@ -731,23 +886,12 @@ def build_parser() -> argparse.ArgumentParser:
             "  feature-flags.py swe-10519              status of the one flag matching it\n"
             "  feature-flags.py my-flag enable\n"
             "  feature-flags.py my-flag set rollout 50\n"
+            "  feature-flags.py my-flag archive           once the code is deployed\n"
             "  feature-flags.py one two three enable      several at once\n"
             "  feature-flags.py rollout one two 100       command-first form\n"
             "\n"
-            "filters, comma-separated, all of which must hold:\n"
-            "  -f enabled,rollout.lt.100               enabled but not fully rolled out\n"
-            "  -f 'disabled,rollout==100'              armed to 100 but switched off\n"
-            "  -f unused,age.gt.60                     old and never evaluated\n"
-            "  -f 'tag~kysely,!archived,off.gt.500'    busy kysely gates still serving off\n"
+            f"{filter_help()}\n"
             "\n"
-            "  on its own: archived, disabled, enabled, stale, tagged, unused, used\n"
-            "  compared:   age, changed, err, off, on, reqs, rollout\n"
-            "              with > >= < <= == !=, or the shell-safe .gt. .gte. .lt.\n"
-            "              .lte. .eq. .ne. spellings that need no quoting\n"
-            "  matched:    key, name, tag with = (exact) or ~ (contains)\n"
-            "  prefix any term with ! to invert it\n"
-            "\n"
-            "age and changed are in days. rollout is the widest release condition.\n"
             "Flag names match on the full key, or on any unique substring of it."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -755,7 +899,12 @@ def build_parser() -> argparse.ArgumentParser:
     subs = parser.add_subparsers(dest="command")
 
     listing = subs.add_parser(
-        "list", aliases=["ls"], parents=[common], help="table of every flag"
+        "list",
+        aliases=["ls"],
+        parents=[common],
+        help="table of every flag",
+        epilog=filter_help(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     listing.add_argument("search", nargs="?", help="match against key and description")
     listing.add_argument(
@@ -763,7 +912,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--filters",
         action="append",
         metavar="EXPR[,EXPR...]",
-        help="comma-separated filters, all of which must hold; see the examples",
+        help="comma-separated filters, all of which must hold; fields listed below",
     )
     listing.add_argument("--tag", help="shorthand for --filters tag=TAG")
     listing.add_argument("--enabled", action="store_true", help="shorthand filter")
@@ -784,6 +933,26 @@ def build_parser() -> argparse.ArgumentParser:
         toggle = subs.add_parser(verb, parents=[common, write], help=f"{verb} flags")
         toggle.add_argument("flag", nargs="+")
         toggle.set_defaults(func=cmd_toggle)
+
+    arch = subs.add_parser(
+        "archive",
+        parents=[common, write],
+        help="disable, archive, and prefix the description",
+    )
+    arch.add_argument("flag", nargs="+")
+    arch.add_argument(
+        "--since",
+        type=int,
+        default=6,
+        metavar="HOURS",
+        help="evaluation window checked before disabling (default 6)",
+    )
+    arch.add_argument(
+        "--force",
+        action="store_true",
+        help="archive even while callers still evaluate the flag",
+    )
+    arch.set_defaults(func=cmd_archive)
 
     roll = subs.add_parser(
         "rollout", parents=[common, write], help="set the rollout percentage"
