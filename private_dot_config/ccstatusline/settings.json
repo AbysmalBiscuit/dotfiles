@@ -41,20 +41,6 @@
         "character": "|"
       },
       {
-        "id": "69cab550-17a4-48d5-871e-c40e9462b00e",
-        "type": "git-review",
-        "rawValue": false,
-        "metadata": {
-          "hideNoGit": "true",
-          "hideStatus": "false",
-          "hideTitle": "true"
-        }
-      },
-      {
-        "id": "5",
-        "type": "separator"
-      },
-      {
         "id": "d5efaea6-4aac-4bce-8f61-b63fc952ef3e",
         "type": "git-worktree",
         "color": "brightBlue",
@@ -122,6 +108,7 @@
   "flexMode": "full-minus-40",
   "compactThreshold": 60,
   "colorLevel": 2,
+  "defaultPaddingSide": "both",
   "inheritSeparatorColors": false,
   "globalBold": false,
   "gitCacheTtlSeconds": 5,
