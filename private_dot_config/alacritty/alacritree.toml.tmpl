@@ -54,7 +54,8 @@ attention_grace_ms = 2000
 vsync = false
 # draw the grid through an OpenGL paint callback instead of an epaint mesh
 gpu_grid = true
-focus_priority_boost = false
+focus_priority_boost = true
+reap_descendants_on_close = true
 
 # zed-style paths: filename first, parent trailing it, $HOME as ~
 # the git header is a directory, so it abbreviates instead of reordering
@@ -81,12 +82,14 @@ sidebar = true
 
 # {{- if .is_windows }}
 
-# {{- if index .has "nu" }}
 [terminal.shell]
+# {{- if index .has "nu" }}
 program = "nu.exe"
 # {{- else if lookPath "pwsh.exe" }}
-[terminal.shell]
 program = "pwsh"
+args = ["-NoLogo"]
+# {{- else }}
+program = "powershell"
 args = ["-NoLogo"]
 # {{- end }}
 
@@ -122,3 +125,7 @@ args = ["-d", "kali-linux", "--", "sh", "-lc", "exec claude"]
 name = "nushell"
 program = "nu# {{ if .is_windows }}.exe# {{ end }}"
 # {{- end }}
+
+# [debug]
+# gpu_timing = true
+# persistent_logging = true
