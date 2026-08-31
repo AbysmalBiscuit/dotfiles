@@ -1,4 +1,4 @@
-# vim:shiftwidth=2
+# vim: shiftwidth=2 tabstop=2 expandtab
 [user]
   email = {{ .personal.email | quote }}
   name = {{ .personal.fullname | quote }}
@@ -11,6 +11,7 @@
   eol = lf
   autocrlf = input
   whitespace = warn
+  longpaths = true
   editor = {{ .path.editor | replaceAllRegex "\\\\" "/" | quote }}
 {{- if index .tool "delta" }}
   pager = delta
