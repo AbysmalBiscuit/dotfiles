@@ -21,3 +21,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 & ([scriptblock]::Create($rendered))
+chezmoi init
