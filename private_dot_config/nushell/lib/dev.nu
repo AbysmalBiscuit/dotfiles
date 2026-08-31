@@ -1,74 +1,9 @@
 # Toolchain wrappers: cargo, neovim, gpg, chezmoi, bash interop.
 
-const OCARGO_FLAGS = ["-n" "--nightly" "-f" "--fat" "-l" "--lto" "-d" "--dylib" "-m" "--mold" "--no-mold" "--debug" "-h" "--help"]
-
-const OCARGO_HELP = "Run cargo with compiler optimizations enabled
-
-Usage: ocargo [OCARGO_OPTS] CARGO_CMD [CARGO_CMD_OPTS]
-
-OCARGO_OPTS:
--n, --nightly    Use nightly compiler
--f, --fat        Enable fat LTO
--l, --lto        Enable thin LTO
--d, --dylib      Enable dylib-lto flag
--m, --mold       Use mold linker, even if $MOLD isn't set
---no-mold        Don't use mold linker, even if it's available
---debug          Print ocargo debug information
--h, --help       Print help
-
-Run 'cargo --help' to see help for cargo"
-
-def ocargo-has [mine: list<string>, names: list<string>]: nothing -> bool { $names | any {|n| $n in $mine } }
-
-# cargo with release-grade codegen flags. Everything that is not an ocargo flag
-# is handed to cargo untouched, so `ocargo -l build --release` works.
+# cargo with release-grade codegen flags. The flag parsing, RUSTFLAGS assembly
+# and nightly check all live in ocargo.py so every shell shares one implementation.
 def --wrapped ocargo [...args] {
-    let mine = ($args | where {|a| $a in $OCARGO_FLAGS })
-    let rest = ($args | where {|a| $a not-in $OCARGO_FLAGS })
-    if (ocargo-has $mine ["-h" "--help"]) { print $OCARGO_HELP; return }
-
-    let base = ($env.RUSTFLAGS_RELEASE? | default $env.RUSTFLAGS? | default "")
-    mut flags = if ($base | is-empty) {
-        ["-C target-cpu=native" "-C opt-level=3" "-C debuginfo=none" "-C debug_assertions=no" "-C codegen-units=1"]
-    } else {
-        mut f = [$base]
-        for pair in [[needle, flag]; ["target-cpu", "-C target-cpu=native"] ["opt-level=3", "-C opt-level=3"] ["debuginfo", "-C debuginfo=none"] ["debug_assertions", "-C debug_assertions=no"] ["codegen-units", "-C codegen-units=1"]] {
-            if not ($base | str contains $pair.needle) { $f = ($f | append $pair.flag) }
-        }
-        $f
-    }
-
-    if (ocargo-has $mine ["-m" "--mold"]) and not ("--no-mold" in $mine) {
-        let mold = ($env.MOLD? | default (which mold | get path.0? | default ""))
-        if ($mold | is-empty) {
-            print --stderr "ocargo: mold requested but not found"
-        } else {
-            $flags = ($flags | append $"-C link-arg=-fuse-ld=($mold)")
-        }
-    }
-    if (ocargo-has $mine ["-l" "--lto"]) { $flags = ($flags | append "-C lto=thin -C embed-bitcode=yes") }
-    if (ocargo-has $mine ["-f" "--fat"]) { $flags = ($flags | append "-C lto=fat -C embed-bitcode=yes") }
-
-    mut cargo_args = $rest
-    if (ocargo-has $mine ["-n" "--nightly"]) {
-        if ($env.HAS_NIGHTLY_RUST? | default "false") != "true" {
-            print "nightly rust is not available. to install it run:"
-            print "rustup toolchain install nightly"
-            return
-        }
-        $cargo_args = ($cargo_args | prepend "+nightly")
-        if (ocargo-has $mine ["-d" "--dylib"]) { $flags = ($flags | append "-Zdylib-lto") }
-    }
-
-    let rustflags = ($flags | str join " ")
-    let final_args = $cargo_args
-    if ("--debug" in $mine) {
-        print "ocargo debug information:"
-        print $"RUSTFLAGS='($rustflags)'"
-        print $"cargo ($final_args | str join ' ')"
-        return
-    }
-    with-env { RUSTFLAGS: $rustflags } { ^cargo ...$final_args }
+    ^python3 ~/.local/bin/ocargo.py ...$args
 }
 
 # neovim. On WSL, `nvim` drops the /mnt/c entries from PATH so Windows binaries

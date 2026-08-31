@@ -1,0 +1,18 @@
+name: ocargo
+description: Run cargo with compiler optimizations enabled
+parsing: non-interspersed
+flags:
+  -n, --nightly: Use nightly compiler
+  -f, --fat: Enable fat LTO
+  -l, --lto: Enable thin LTO
+  -d, --dylib: Enable dylib-lto flag
+  -m, --mold: Use mold linker, even if $MOLD isn't set
+  --no-mold: Don't use mold linker, even if it's available
+  --debug: Print ocargo debug information
+  -h, --help: Print help
+exclusiveflags:
+  - [fat, lto]
+  - [mold, no-mold]
+completion:
+  positionalany:
+    - $carapace.bridge.CarapaceBin(["cargo"])
