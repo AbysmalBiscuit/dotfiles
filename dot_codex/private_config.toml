@@ -1,4 +1,5 @@
 #:schema https://developers.openai.com/codex/config-schema.json
+# vim: shiftwidth=4 tabstop=4 expandtab
 approvals_reviewer = "auto_review"
 model = "gpt-5.6-sol"
 model_reasoning_effort = "xhigh"
@@ -6,7 +7,14 @@ model_reasoning_effort = "xhigh"
 [features]
 experimental_use_rmcp_client = true
 
-[projects]
+[hooks]
+
+[[hooks.SessionEnd]]
+hooks = [
+  { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
+]
+
+[hooks.state]
 
 [marketplaces]
 
@@ -15,6 +23,18 @@ last_updated = ""
 last_revision = ""
 source_type = "git"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
+
+[marketplaces.superpowers]
+last_updated = ""
+last_revision = ""
+source_type = "git"
+source = "https://github.com/obra/superpowers"
+
+[mcp_servers]
+
+[mcp_servers.adaptyv_bio_mcp]
+url = "https://mcp.adaptyv.bio/mcp"
+
 
 [plugins]
 
@@ -33,36 +53,26 @@ enabled = true
 [plugins."posthog@openai-curated"]
 enabled = true
 
-[hooks]
+[plugins."superpowers@superpowers"]
+enabled = true
 
-[[hooks.SessionEnd]]
-hooks = [
-    { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
-]
-
-[hooks.state]
-
-[mcp_servers]
-
-[mcp_servers.adaptyv_bio_mcp]
-url = "https://mcp.adaptyv.bio/mcp"
+[projects]
 
 [tui]
 status_line = [
-    "model-with-reasoning",
-    "project-name",
-    "git-branch",
-    "pull-request-number",
-    "run-state",
-    "approval-mode",
-    "context-used",
-    "five-hour-limit",
-    "weekly-limit",
-    "current-dir",
+  "model-with-reasoning",
+  "project-name",
+  "git-branch",
+  "pull-request-number",
+  "run-state",
+  "approval-mode",
+  "context-used",
+  "five-hour-limit",
+  "weekly-limit",
+  "current-dir",
 ]
 status_line_use_colors = true
 vim_mode_default = true
 
 [tui.model_availability_nux]
-"gpt-5.5" = 1
 "gpt-5.6-sol" = 2
