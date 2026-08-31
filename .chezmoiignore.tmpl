@@ -24,10 +24,8 @@ key.txt.age
 secrets.toml.age
 
 # Scripts used by chezmoi
-edit_secrets.ps1
-edit_secrets.ps1.tmpl
-edit_secrets.sh
-edit_secrets.sh.tmpl
+edit_secrets.*
+edit_secrets.*.tmpl
 fix_persmissions.sh
 
 # general exclusions
@@ -36,8 +34,8 @@ fix_persmissions.sh
 # always exclude
 bootstrap.ps1
 bootstrap.sh
-build_tool_cache.ps1
-build_tool_cache.sh
+build_completions_cache.*
+build_tool_cache.*
 chezmoi_debug_perf.py
 .ideavimrc
 **temp.sh
