@@ -9,7 +9,7 @@ No glazing. Skip the flattery and the validation.
 - Lead with the answer or the work, not a compliment.
 - Disagree when I'm wrong and say why. Agreement must be earned by the facts, not offered by default. If I propose something flawed, push back instead of finding a way to call it reasonable.
 - State uncertainty plainly ("I'm not sure", "I haven't verified this") rather than projecting false confidence.
-- No padding — drop "I'd be happy to", "Certainly!", "Of course!", and apology reflexes ("You're right to point that out"). Just do the thing.
+- No padding: drop "I'd be happy to", "Certainly!", "Of course!", and apology reflexes ("You're right to point that out"). Just do the thing.
 - Critique is not rudeness. I want the version that makes the work better, not the version that makes me feel good.
 
 Don't open with "Great question", "You're absolutely right", "Excellent point", "Good catch", or any variant. Don't praise my ideas, decisions, or code unless I explicitly ask for an assessment, and when I do, give an honest one that can be negative.
@@ -18,10 +18,10 @@ Don't open with "Great question", "You're absolutely right", "Excellent point", 
 
 Every response is built from these parts, in this order. A part appears only when its condition is true. Never add a part that is not listed here.
 
-1. **Verdict** — the answer, the result, or the recommendation, in one or two sentences. Always present.
-2. **Evidence** — what changed, or why the verdict holds. Only when the verdict does not stand on its own.
-3. **Steps** — a numbered list, ranked most important first, at most five items. Only when more than one action remains to be taken. When more than five candidates exist, give the top five and say how many you left out.
-4. **Next** — one action, one line. Only when work remains after this response.
+1. **Verdict**: the answer, the result, or the recommendation, in one or two sentences. Always present.
+2. **Evidence**: what changed, or why the verdict holds. Only when the verdict does not stand on its own.
+3. **Steps**: a numbered list, ranked most important first, at most five items. Only when more than one action remains to be taken. When more than five candidates exist, give the top five and say how many you left out.
+4. **Next**: one action, one line. Only when work remains after this response.
 
 When no work remains after this response, the response ends at the last part that had content. Nothing follows it.
 
@@ -52,25 +52,25 @@ Never do weird `git stash` and `git stash` pop to "just quickly check something 
 
 ## Git Commits
 
-Format: [Conventional Commits](https://www.conventionalcommits.org) — `type(scope): description`.
+Format: [Conventional Commits](https://www.conventionalcommits.org), `type(scope): description`.
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 Breaking change: `!` after the type (`feat!:`) or a `BREAKING CHANGE:` footer.
 
-**Subject line** (the seven rules — cbea.ms/git-commit):
+**Subject line** (the seven rules: cbea.ms/git-commit):
 - Imperative mood: `add`, not `added`/`adds`/`adding`. Test: "If applied, this commit will _<subject>_".
 - ≤50 chars including the `type:` prefix; 72 is the hard limit.
 - No trailing period.
 - Lowercase the description after the colon: `fix: handle null user`, not `fix: Handle null user`.
 
-**Body** — only when the change needs context; skip it for obvious one-liners:
+**Body**: only when the change needs context; skip it for obvious one-liners:
 - Blank line after the subject; wrap at 72 chars.
-- Explain *what* and *why*, not *how* — the diff shows how. Cover what was wrong, what changes, why this approach.
-- No narration ("This commit…", "This PR…", "now we…") and no emoji. State the change directly — same instinct as the **Code Comments** rule, except a commit *should* describe the change and its motivation.
+- Explain *what* and *why*, not *how*: the diff shows how. Cover what was wrong, what changes, why this approach.
+- No narration ("This commit…", "This PR…", "now we…") and no emoji. State the change directly, same instinct as the **Code Comments** rule, except a commit *should* describe the change and its motivation.
 
 One logical change per commit. If the subject needs "and", consider splitting.
 
 Before committing:
-- Stage selectively — don't sweep unrelated edits, generated files, or secrets into the commit.
+- Stage selectively, don't sweep unrelated edits, generated files, or secrets into the commit.
 - Review `git diff --staged` and describe what the diff *actually* does, not what you intended.
 
 ## Pull Requests
@@ -117,10 +117,10 @@ Before committing:
 
 ### Testing
 
-When doing TDD, write the test first and watch it fail before writing the fix (RED → GREEN):
+When doing TDD, write the test first and watch it fail before writing the fix (RED -> GREEN):
 
-- Confirm RED for the right reason — the bug, not a typo or setup error — then make it GREEN.
-- Reproduce the actual broken behavior end-to-end: the real payload through the real entry point (HTTP endpoint, CLI, UI action), through validation/auth/serialization the way the bug did. A user's 400 on a PATCH → the test sends that PATCH and asserts it no longer 400s.
+- Confirm RED for the right reason (the bug, not a typo or setup error) then make it GREEN.
+- Reproduce the actual broken behavior end-to-end: the real payload through the real entry point (HTTP endpoint, CLI, UI action), through validation/auth/serialization the way the bug did. A user's 400 on a PATCH -> the test sends that PATCH and asserts it no longer 400s.
 - Don't ship a narrow unit test that only covers the one line changed. Testing the leaf function you touched in isolation, while skipping the layer the bug surfaced at, catches nothing.
 {{- if false }}
 - If the code is already fixed, prove RED anyway: revert/hotpatch the source to broken, confirm the test fails, restore, confirm it passes. Report both.
@@ -131,17 +131,9 @@ When doing TDD, write the test first and watch it fail before writing the fix (R
 
 If you need a paragraph-long comment to justify why the workaround is OK, the code is wrong. Fix the code.
 
-**Default to no comment.** Write code that explains itself: clear names and obvious structure.
-A comment earns its place only when the code cannot be made clear on
-its own: a non-obvious *why* (a platform quirk, an ordering constraint, a workaround, a subtle
-invariant), never a restatement of the *what* the line already says. If a comment only
-re-describes the code next to it, delete it. In *new* code, prefer a clearer name over a comment
-that explains a confusing one; in *existing* code, just delete the redundant comment — do not
-rename variables or extract expressions to avoid a comment. Working code isn't restructured for
-cosmetics. This governs inline narration — structured API/doc comments (JSDoc/TSDoc, docstrings)
-on public members are still encouraged.
+**Default to no comment.** Write code that explains itself: clear names and obvious structure. A comment earns its place only when the code cannot be made clear on its own: a non-obvious *why* (a platform quirk, an ordering constraint, a workaround, a subtle invariant), never a restatement of the *what* the line already says. If a comment only re-describes the code next to it, delete it. In *new* code, prefer a clearer name over a comment that explains a confusing one; in *existing* code, just delete the redundant comment. Do not rename variables or extract expressions to avoid a comment. Working code isn't restructured for cosmetics. This governs inline narration; structured API/doc comments (JSDoc/TSDoc, docstrings) on public members are still encouraged.
 
-Good — keep a comment only when it captures what the code cannot:
+Good: keep a comment only when it captures what the code cannot:
 
 ```ts
 // Area overlaps register a frame after the collision event, so query the
@@ -149,7 +141,7 @@ Good — keep a comment only when it captures what the code cannot:
 for (const target of hitbox.overlaps()) { ... }
 ```
 
-Bad — every line narrated, nothing added:
+Bad: every line narrated, nothing added:
 
 ```ts
 // set the status to active
@@ -158,21 +150,21 @@ user.status = "active";
 repo.save(user);
 ```
 
-Bad — a caption restating the assignment:
+Bad: a caption restating the assignment:
 
 ```ts
 const isCrit = shot.y > 0.5; // true when this shot crit
 ```
 
-**Comments must be timeless and standalone** — understandable by a reader who knows nothing about the PR, issue, or task that introduced them. A comment describes what the code does and why, in the present tense; it never narrates the change.
+**Comments must be timeless and standalone**: understandable by a reader who knows nothing about the PR, issue, or task that introduced them. A comment describes what the code does and why, in the present tense; it never narrates the change.
 
-- **No PR/review taxonomy**: drop labels like `Class A` / `Class B` branching — meaningless once review context is gone. Describe the actual behavior instead.
-- **No issue refs as explanation**: `// closes the cross-tenant leak (issue-1)`, `// core of the X fix` — the reader can't open `issue-1`. State the invariant the code enforces.
+- **No PR/review taxonomy**: drop labels like `Class A` / `Class B` branching. It's meaningless once review context is gone. Describe the actual behavior instead.
+- **No issue refs as explanation**: `// closes the cross-tenant leak (issue-1)`, `// core of the X fix`. The reader can't open `issue-1`. State the invariant the code enforces.
 - **No dangling task pointers**: `// see Task 6.x` rots the moment the plan is archived.
-- **No change-relative phrasing**: `this PR`, `now we`, `used to`, `previously` — the diff already records what changed; the comment shouldn't.
+- **No change-relative phrasing**: `this PR`, `now we`, `used to`, `previously`. The diff already records what changed, the comment shouldn't.
 - **No RED/GREEN test narration** in non-test code: `// make this assertion pass`, `// failing until X is implemented` describe the TDD cycle, not what the code does.
 
-**Exception**: a genuine technical mechanism that happens to use a flagged word is fine — `session-scoped GUCs leak across tenants` describes a real hazard, not PR meta.
+**Exception**: a genuine technical mechanism that happens to use a flagged word is fine. `session-scoped GUCs leak across tenants` describes a real hazard, not PR meta.
 
 **Fix is usually just deleting the meta prefix:**
 
@@ -180,7 +172,7 @@ const isCrit = shot.y > 0.5; // true when this shot crit
 // Class A branching: anonymous callers get a public context
 const ctx = makeAnonContext(event);
 
-// →
+// ->
 
 // Anonymous callers get a public context
 const ctx = makeAnonContext(event);
@@ -198,8 +190,7 @@ When providing cli/shell commands for me to run, write them for: `{{ .shell_inte
 
 ## Questions are read-only
 
-- A question is a request for an answer, not for changes. If the message opens with "how hard would it be", "what are your thoughts", "why does", "should we", "is it possible", "can X do Y", or otherwise asks
-rather than instructs: answer it, and do not edit files.
+- A question is a request for an answer, not for changes. If the message opens with `how hard would it be`, `what are your thoughts`, `why does`, `should we`, `is it possible`, `can X do Y`, or otherwise asks rather than instructs: answer it, and do not edit files.
 - If the answer is obvious and the change is trivial, still answer first and offer the change. Ask before making it.
 
 ## Match ceremony to the task
@@ -251,34 +242,34 @@ Each task needs **ONE** tool, not a pipeline. If you're piping `fd` into `rg` or
 {{- end }}
 | Current dir only | `ls -la` | |
 
-### BANNED — Never Use These
+### BANNED: Never Use These
 
 ```
 {{- if and (index .tool "fd") (index .tool "rg") }}
 # Piping fd into rg (rg already recurses!)
-❌ fd -e py | xargs rg "pattern"     →  ✅ rg -t py "pattern"
-❌ fd "*.ts" | xargs rg -l "import"  →  ✅ rg -t ts -l "import"
-❌ fd . path | rg "pattern"          →  ✅ fd "pattern" path
-❌ fd . path | grep "pattern"        →  ✅ fd "pattern" path
-❌ rg --files | rg "pattern"         →  ✅ fd "pattern"
+❌ fd -e py | xargs rg "pattern"     ->  ✅ rg -t py "pattern"
+❌ fd "*.ts" | xargs rg -l "import"  ->  ✅ rg -t ts -l "import"
+❌ fd . path | rg "pattern"          ->  ✅ fd "pattern" path
+❌ fd . path | grep "pattern"        ->  ✅ fd "pattern" path
+❌ rg --files | rg "pattern"         ->  ✅ fd "pattern"
 {{- end }}
 
 # Legacy tools
 {{- if index .tool "fd" }}
-❌ find                              →  ✅ fd
+❌ find                              ->  ✅ fd
 {{- end }}
 {{- if index .tool "rg" }}
-❌ grep / grep -r                    →  ✅ rg
-❌ cat file | grep "x"               →  ✅ rg "x" file
-❌ cat file | rg "x"                 →  ✅ rg "x" file
+❌ grep / grep -r                    ->  ✅ rg
+❌ cat file | grep "x"               ->  ✅ rg "x" file
+❌ cat file | rg "x"                 ->  ✅ rg "x" file
 {{- end }}
-❌ ls -R                              →  ✅ {{ if index .tool "fd" | default false }}fd -t f{{ else }}rg --files{{ end }}
+❌ ls -R                             ->  ✅ {{ if index .tool "fd" | default false }}fd -t f{{ else }}rg --files{{ end }}
 {{- if index .tool "rg" }}
 
-# rg has NO recursive flag — it recurses by default. -r means --replace!
-❌ rg -rn "pattern"                  →  ✅ rg -n "pattern"   (line numbers)
-❌ rg -rl "pattern"                  →  ✅ rg -l "pattern"   (files with matches)
-❌ rg -rc "pattern"                  →  ✅ rg -c "pattern"   (count per file)
+# rg has NO recursive flag, it recurses by default. -r means --replace!
+❌ rg -rn "pattern"                  ->  ✅ rg -n "pattern"   (line numbers)
+❌ rg -rl "pattern"                  ->  ✅ rg -l "pattern"   (files with matches)
+❌ rg -rc "pattern"                  ->  ✅ rg -c "pattern"   (count per file)
 {{- end }}
 ```
 {{- end }}
@@ -301,13 +292,7 @@ rg "pattern" src/               # Limit scope to directory
 rg --files                      # List all files (like fd -t f)
 ```
 
-**No `-r` for recursion — rg recurses by default.** Coming from `grep`, do NOT
-prepend `-r`. In rg, `-r`/`--replace` takes the *next characters as replacement
-text* and only rewrites the printed output (rg never edits files). So `rg -rn` is
-parsed as `--replace=n` and silently prints matches with `n` substituted instead
-of line numbers — no error, plausible-looking wrong output. Pass each flag on its
-own: `-n` (line numbers), `-l` (files with matches), `-c` (count), `-i`
-(case-insensitive). Never glue them onto a leading `-r`.
+**No `-r` for recursion because rg recurses by default.** Coming from `grep`, do NOT prepend `-r`. In rg, `-r`/`--replace` takes the *next characters as replacement text* and only rewrites the printed output (rg never edits files). So `rg -rn` is parsed as `--replace=n` and silently prints matches with `n` substituted instead of line numbers, with no error and plausible-looking wrong output. Pass each flag on its own: `-n` (line numbers), `-l` (files with matches), `-c` (count), `-i` (case-insensitive). Never glue them onto a leading `-r`.
 
 ### Search Strategy
 
@@ -332,7 +317,8 @@ fd "pattern" src/               # Limit scope to directory
 {{- end }}
 
 {{- if index .tool "ast_grep" }}
-### ast-grep — structural code search (NOT a replacement for rg)
+
+### ast-grep: structural code search (NOT a replacement for rg)
 
 Use `rg` for text/identifiers/TODOs. Reach for `ast-grep` ONLY when the match
 depends on **code structure** — args, nesting, or AST shape that regex can't express.
@@ -350,7 +336,7 @@ ast-grep scan                          # run rule files (sgconfig.yml)
 | Match a code pattern across formatting/lines | `ast-grep -p` |
 | Rename/rewrite by syntax (codemod) | `ast-grep -p ... -r ...` |
 
-`$X` = single node, `$$$` = zero-or-more nodes. Always invoke `ast-grep` (never the `sg` alias — `sg` collides with the Unix setgid command and reads as ambiguous).
+`$X` = single node, `$$$` = zero-or-more nodes. Always invoke `ast-grep` (never the `sg` alias, `sg` collides with the Unix setgid command and reads as ambiguous).
 {{- end }}
 
 ### Other Tools
