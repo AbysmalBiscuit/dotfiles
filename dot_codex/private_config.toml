@@ -11,7 +11,7 @@ experimental_use_rmcp_client = true
 
 [[hooks.SessionEnd]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
+    { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
 ]
 
 [hooks.state]
@@ -35,10 +35,12 @@ source = "https://github.com/obra/superpowers"
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
 
-
 [plugins]
 
 [plugins."devkit@devkit"]
+enabled = true
+
+[plugins."superpowers@superpowers"]
 enabled = true
 
 [plugins."sentry@openai-curated"]
@@ -53,23 +55,21 @@ enabled = true
 [plugins."posthog@openai-curated"]
 enabled = true
 
-[plugins."superpowers@superpowers"]
-enabled = true
 
 [projects]
 
 [tui]
 status_line = [
-  "model-with-reasoning",
-  "project-name",
-  "git-branch",
-  "pull-request-number",
-  "run-state",
-  "approval-mode",
-  "context-used",
-  "five-hour-limit",
-  "weekly-limit",
-  "current-dir",
+    "model-with-reasoning",
+    "project-name",
+    "git-branch",
+    "pull-request-number",
+    "run-state",
+    "approval-mode",
+    "context-used",
+    "five-hour-limit",
+    "weekly-limit",
+    "current-dir",
 ]
 status_line_use_colors = true
 vim_mode_default = true
