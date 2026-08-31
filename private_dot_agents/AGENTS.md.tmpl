@@ -367,4 +367,7 @@ hyperfine "command"             # Benchmarking
 {{- if index .tool "watchexec" }}
 watchexec "command"             # Run on file changes
 {{- end }}
+{{- if index .tool "cargo_nextest" }}
+cargo nextest run               # Run cargo tests
+{{- end }}
 ```
