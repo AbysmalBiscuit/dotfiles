@@ -688,6 +688,49 @@ def find_over_extraction(changed, seen_file, roots, settings, cwd):
     return "\n".join(out)
 
 
+SOURCE_GLOBS = ("*.ts", "*.tsx", "*.js", "*.jsx")
+
+
+def changed_files(base, cwd):
+    """What the branch touched, including what git does not track yet. A file an
+    agent wrote and has not committed never appears in `git diff`, and it is the
+    likeliest place for a copy of something that already exists: written from
+    scratch by someone who did not find the original. --exclude-standard keeps
+    ignored trees such as node_modules out."""
+    listings = (
+        ["git", "diff", "--name-only", base, "--", *SOURCE_GLOBS],
+        ["git", "ls-files", "--others", "--exclude-standard", "--", *SOURCE_GLOBS],
+    )
+    out, seen = [], set()
+    for cmd in listings:
+        for line in run(cmd, cwd=cwd).splitlines():
+            rel = line.strip()
+            if rel and rel not in seen:
+                seen.add(rel)
+                out.append(rel)
+    return out[:200]
+
+
+def changeset_fingerprint(base, changed, cwd):
+    """Everything a report would be derived from, hashed. The diff alone cannot
+    stand in for it: an untracked file's content is absent from the diff, so a
+    second new file after a first report would read as no change at all and the
+    report would be skipped. The diff still goes in, because a deletion moves it
+    while leaving nothing on disk to read."""
+    digest = hashlib.sha256()
+    digest.update(
+        run(["git", "diff", base, "--", *SOURCE_GLOBS], cwd=cwd).encode("utf-8", "replace")
+    )
+    for rel in changed:
+        digest.update(rel.encode("utf-8", "replace"))
+        path = cwd / rel
+        try:
+            digest.update(path.read_bytes())
+        except OSError:
+            continue
+    return digest.hexdigest()[:16]
+
+
 def check_changeset(event, session, agent_type, roots, settings, cwd):
     """Cross-file analysis on the changeset. Only findings the changeset
     introduced are reported; inherited debt is not this agent's to answer for."""
@@ -695,14 +738,7 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
         emit_silent()
 
     base = git_base(settings, cwd)
-    changed = [
-        line
-        for line in run(
-            ["git", "diff", "--name-only", base, "--", "*.ts", "*.tsx", "*.js", "*.jsx"],
-            cwd=cwd,
-        ).splitlines()
-        if line.strip()
-    ][:200]
+    changed = changed_files(base, cwd)
     if not changed:
         emit_silent()
 
@@ -719,8 +755,7 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
             pass
 
     # Skip re-running when the changeset has not moved since the last report.
-    diff_text = run(["git", "diff", base, "--", "*.ts", "*.tsx"], cwd=cwd)
-    fingerprint = hashlib.sha256(diff_text.encode("utf-8", "replace")).hexdigest()[:16]
+    fingerprint = changeset_fingerprint(base, changed, cwd)
     last = sdir / "last-diff"
     try:
         if last.is_file() and last.read_text(encoding="utf-8").strip() == fingerprint:
