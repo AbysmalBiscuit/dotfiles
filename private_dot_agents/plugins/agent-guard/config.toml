@@ -5,13 +5,15 @@
 # .agents/plugins/agent-guard/ (tracked) or .agents/plugins/agent-guard.local/
 # (machine-local). Those are discovered by walking up from the working
 # directory, outermost first, so a checkout layers over the directory holding
-# every checkout of that project, which layers over this file. A root holds a
-# rules/ directory, a config.toml, or both; it needs its own sgconfig.yml only
-# to register a custom language. Each config.toml is read in that order, so a
+# every checkout of that project, which layers over this file. A root holds any
+# of a rules/ directory, a checks/ or tool-checks/ directory, and a config.toml;
+# it needs its own sgconfig.yml only to register a custom language. Each
+# config.toml is read in that order, so a
 # nearer one tightens any setting below without editing it. An
 # AGENT_GUARD_<KEY> environment variable outranks every file for one run.
 #
-# Run `agent-guard doctor` inside a tree to list the roots actually found.
+# Run `python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py doctor`
+# inside a tree to list the roots actually found.
 
 # Blocking is off until the rules prove they stay quiet on good code.
 # true lets Stop/SubagentStop actually refuse to finish.
@@ -20,6 +22,12 @@ block = false
 # Cap on how many times one session may be blocked before the hook downgrades
 # itself to advisory. There is no built-in loop protection on Stop hooks.
 max_blocks = 2
+
+# PreToolUse scripts under a root's tool-checks/, each given the tool name as its
+# argument and the hook payload on stdin. Empty stdout is silence; stdout with
+# exit 0 is advisory; stdout with a non-zero exit denies the call. false is the
+# kill switch when one of them misfires and starts refusing real work.
+tool_checks = true
 
 # Cross-file analysis via fallow on Stop/SubagentStop. false for per-file only.
 fallow = true

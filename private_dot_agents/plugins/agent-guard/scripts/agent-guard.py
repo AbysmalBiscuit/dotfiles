@@ -3,6 +3,8 @@
 to the model. Dispatches on the hook event name in the payload on stdin, so a
 single entry point works for every hook it is registered under.
 
+  PreToolUse                          tool-checks/ scripts on the call about to
+                                      run, advisory or denying
   PostToolUse (Edit|Write|MultiEdit)  fast per-file ast-grep rules and checks/
                                       scripts, advisory, on the lines the branch
                                       introduced
@@ -41,7 +43,8 @@ def arm_watchdog(seconds):
 arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 55))
 
 # Everything this hook needs lives beside it, so the whole directory relocates as
-# one unit. Resolved through the symlink on PATH, not from it.
+# one unit. Resolved through any symlink, so the plugin directory can itself be
+# a link without the roots below it moving.
 SELF = Path(__file__).resolve()
 CONFIG_DIR = Path(os.environ.get("AGENT_GUARD_CONFIG_DIR") or SELF.parent.parent)
 STATE_DIR = (
@@ -88,6 +91,27 @@ def run(cmd, timeout=20, cwd=None, stdin=None, env=None):
         return ""
 
 
+def run_full(cmd, timeout=20, cwd=None, stdin=None, env=None):
+    """Stdout and exit code together, for callers whose contract reads both. A
+    failure to spawn at all reports code 0, so a missing interpreter stays
+    silent rather than denying every call."""
+    try:
+        p = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=cwd,
+            env=env,
+            input=stdin,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return p.stdout or "", p.returncode
+    except Exception:
+        return "", 0
+
+
 def succeeds(cmd, timeout=20, cwd=None):
     try:
         return (
@@ -104,6 +128,7 @@ def is_root(path):
     return path.is_dir() and (
         (path / "rules").is_dir()
         or (path / "checks").is_dir()
+        or (path / "tool-checks").is_dir()
         or (path / "sgconfig.yml").is_file()
         or (path / CONFIG_NAME).is_file()
     )
@@ -169,6 +194,10 @@ class Settings:
         # There is no built-in loop protection on Stop hooks, so cap how often
         # one session may be refused before this downgrades itself to advisory.
         self.max_blocks = _int(g("max_blocks"), 2)
+        # tool-checks/ can refuse a call outright, so it needs a kill switch a
+        # denied agent's operator can reach without editing a script:
+        # AGENT_GUARD_TOOL_CHECKS=0 for one run.
+        self.tool_checks = _bool(g("tool_checks"), True)
         self.use_fallow = _bool(g("fallow"), True)
         self.fallow_timeout = _float(g("fallow_timeout"), 45.0)
         # Findings shown per report, so feedback stays inside working memory.
@@ -390,6 +419,48 @@ def run_checks(path, roots, cwd):
             if text:
                 out.append(text)
     return "\n".join(out)
+
+
+def check_tool(payload, roots, settings, cwd):
+    """The call the agent is about to make, before it makes it. A root's
+    tool-checks/ holds Python scripts, each given the tool name as its argument
+    and the whole hook payload on stdin, and answering in three ways:
+
+      empty stdout            the call is fine, say nothing
+      stdout, exit 0          advisory: the call proceeds, the text is context
+      stdout, exit non-zero   deny: the call never runs, the text is the reason
+
+    A denial is read by the model, not by a person, so a script's text earns its
+    keep by naming what to do instead. Scripts run through this interpreter
+    rather than their shebang, because the executable bit does not survive a
+    clone onto Windows."""
+    if not settings.tool_checks:
+        emit_silent()
+    raw = json.dumps(payload, separators=(",", ":"))
+    tool = payload.get("tool_name") or ""
+
+    advice, denials = [], []
+    for root in roots:
+        checks = root / "tool-checks"
+        if not checks.is_dir():
+            continue
+        for script in sorted(checks.glob("*.py")):
+            out, code = run_full(
+                [sys.executable, str(script), tool],
+                timeout=5,
+                cwd=cwd,
+                stdin=raw,
+            )
+            out = out.strip()
+            if not out:
+                continue
+            (denials if code else advice).append(out)
+
+    if denials:
+        emit("PreToolUse", "\n\n".join(denials + advice), "\n\n".join(denials))
+    if advice:
+        emit("PreToolUse", "\n\n".join(advice))
+    emit_silent()
 
 
 _FINDING_LINE = re.compile(r":(\d+)  \[")
@@ -714,14 +785,22 @@ def doctor(cwd):
         config = sgconfig_for(root)
         rules = len(list((root / "rules").glob("*.yml"))) if (root / "rules").is_dir() else 0
         checks = len(list((root / "checks").glob("*.sh"))) if (root / "checks").is_dir() else 0
+        tool_checks = (
+            len(list((root / "tool-checks").glob("*.sh")))
+            if (root / "tool-checks").is_dir()
+            else 0
+        )
         print(f"    {root}")
-        print(f"      config   : {config if config else 'NONE'}")
-        print(f"      rules(own): {rules}")
-        print(f"      checks   : {checks}")
+        print(f"      config     : {config if config else 'NONE'}")
+        print(f"      rules(own) : {rules}")
+        print(f"      checks     : {checks}")
+        print(f"      tool-checks: {tool_checks}")
     for tool in ("ast-grep", "fallow", "git", "rg"):
         print(f"  {tool:<10} : {shutil.which(tool) or 'not installed'}")
     print(f"  {'bash':<10} : {bash_exe() or 'not installed'}")
     print()
+    print(f"  tool_checks      : {'on' if settings.tool_checks else 'off'}")
+    print("  bash missing     -> tool-checks/ and checks/ skipped")
     print("  ast-grep missing -> per-file rules skipped (checks/ still run)")
     print("  fallow missing   -> changeset duplication check skipped")
     print("  rg missing       -> over-extraction check skipped")
@@ -763,7 +842,12 @@ def main():
     if len(roots) <= 1:
         sys.exit(0)
 
-    if event == "PostToolUse":
+    if event == "PreToolUse":
+        # Fires ahead of every matched call, so the agent waits on it. A check
+        # that has not answered in this long has nothing worth waiting for.
+        arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 6))
+        check_tool(payload, roots, settings, cwd)
+    elif event == "PostToolUse":
         arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 9))
         check_file(payload, roots, settings, cwd)
     elif event in ("Stop", "SubagentStop"):

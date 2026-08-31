@@ -133,6 +133,17 @@
             "statusMessage": "Checking for secret decryption"
           }
         ]
+      },
+      {
+        "matcher": "Bash|ToolSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "timeout": 8,
+            "statusMessage": "Checking tool conventions"
+          }
+        ]
       }
     ],
     "WorktreeCreate": [
