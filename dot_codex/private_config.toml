@@ -5,9 +5,17 @@ model_reasoning_effort = "xhigh"
 [features]
 experimental_use_rmcp_client = true
 
+[projects]
+
+[marketplaces]
+
 [marketplaces.devkit]
+last_updated = ""
+last_revision = ""
 source_type = "git"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
+
+[plugins]
 
 [plugins."devkit@devkit"]
 enabled = true
@@ -27,9 +35,11 @@ enabled = true
 [plugins."claude-custom@personal"]
 enabled = true
 
+[hooks]
+
 [hooks.state]
 
-# mcp servers
+[mcp_servers]
 
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
