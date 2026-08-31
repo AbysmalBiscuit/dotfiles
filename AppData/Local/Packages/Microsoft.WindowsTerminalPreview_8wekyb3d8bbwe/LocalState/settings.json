@@ -509,9 +509,16 @@
                 "source": "Windows.Terminal.Wsl"
             },
             {
+                "commandline": "\"nu.exe\"",
+                "guid": "{47302f9c-1ac4-566c-aa3e-8cf29889d6ab}",
+                "hidden": false,
+                "name": "Nushell",
+                "source": "nu"
+            },
+            {
                 "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
                 "hidden": false,
-                "name": "PowerShell",
+                "name": "PowerShell7",
                 "source": "Windows.Terminal.PowershellCore"
             },
             {
@@ -547,12 +554,12 @@
                 "pathTranslationStyle": "wsl"
             },
             {
-                "commandline": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\"",
+                "commandline": "pwsh.exe",
                 "elevate": true,
                 "guid": "{633d29d4-e79b-4482-8518-bcb9e8ee556f}",
                 "hidden": false,
                 "icon": "ms-appx:///ProfileIcons/pwsh.png",
-                "name": "PowerShell (Admin)"
+                "name": "PowerShell7 (Admin)"
             },
             {
                 "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
@@ -569,13 +576,6 @@
                 "hidden": false,
                 "icon": "%PROGRAMFILES%/Git/mingw64/share/git/git-for-windows.ico",
                 "name": "Windows Git-Bash (Admin)"
-            },
-            {
-                "commandline": "\"nu.exe\"",
-                "guid": "{47302f9c-1ac4-566c-aa3e-8cf29889d6ab}",
-                "hidden": false,
-                "name": "Nushell",
-                "source": "nu"
             },
             {
                 "guid": "{2ece5bfe-50ed-5f3a-ab87-5cd4baafed2b}",
