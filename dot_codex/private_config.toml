@@ -33,10 +33,12 @@ enabled = true
 [plugins."posthog@openai-curated"]
 enabled = true
 
-[plugins."claude-custom@personal"]
-enabled = true
-
 [hooks]
+
+[[hooks.SessionEnd]]
+hooks = [
+    { type = "command", command = "~/.agents/skills/history/hist.py index", timeout = 3 },
+]
 
 [hooks.state]
 
