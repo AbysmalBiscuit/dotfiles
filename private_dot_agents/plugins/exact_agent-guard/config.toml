@@ -23,8 +23,8 @@ block = false
 # itself to advisory. There is no built-in loop protection on Stop hooks.
 max_blocks = 2
 
-# PreToolUse scripts under a root's tool-checks/, each given the tool name as its
-# argument and the hook payload on stdin. Empty stdout is silence; stdout with
+# PreToolUse Python scripts under a root's tool-checks/, each given the tool name
+# as its argument and the hook payload on stdin. Empty stdout is silence; stdout with
 # exit 0 is advisory; stdout with a non-zero exit denies the call. false is the
 # kill switch when one of them misfires and starts refusing real work.
 tool_checks = true

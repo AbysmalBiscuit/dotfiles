@@ -786,7 +786,7 @@ def doctor(cwd):
         rules = len(list((root / "rules").glob("*.yml"))) if (root / "rules").is_dir() else 0
         checks = len(list((root / "checks").glob("*.sh"))) if (root / "checks").is_dir() else 0
         tool_checks = (
-            len(list((root / "tool-checks").glob("*.sh")))
+            len(list((root / "tool-checks").glob("*.py")))
             if (root / "tool-checks").is_dir()
             else 0
         )
@@ -800,7 +800,7 @@ def doctor(cwd):
     print(f"  {'bash':<10} : {bash_exe() or 'not installed'}")
     print()
     print(f"  tool_checks      : {'on' if settings.tool_checks else 'off'}")
-    print("  bash missing     -> tool-checks/ and checks/ skipped")
+    print("  bash missing     -> checks/ skipped (tool-checks/ are Python)")
     print("  ast-grep missing -> per-file rules skipped (checks/ still run)")
     print("  fallow missing   -> changeset duplication check skipped")
     print("  rg missing       -> over-extraction check skipped")
