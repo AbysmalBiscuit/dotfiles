@@ -124,21 +124,30 @@
       "shift shift": null,
       // Git
       "space g b": "git::Blame",
-      "space g g": "git_panel::ToggleFocus",
+      "space g g": "git_panel::Toggle",
       "space g d": "git::Diff",
       // Side panel (Dock)
       "space E": "workspace::ToggleLeftDock",
-      "space e": "project_panel::ToggleFocus",
+      "space e": "project_panel::Toggle",
       // Searching
       "space f f": "file_finder::Toggle",
       "space space": "file_finder::Toggle",
       "space s s": "outline::Toggle",
       "space s shift-s": "project_symbols::Toggle",
-      "space s g": "pane::DeploySearch",
+      // `included_files: ""` flips filters_enabled without pre-filling the field
+      "space s g": [
+        "pane::DeploySearch",
+        {
+          "regex": true,
+          "included_files": ""
+        }
+      ],
       "space s shift-r": [
         "pane::DeploySearch",
         {
-          "replace_enabled": true
+          "replace_enabled": true,
+          "regex": true,
+          "included_files": ""
         }
       ],
       "space ,": "tab_switcher::Toggle",
@@ -151,7 +160,7 @@
       "space c L": "editor::RestartLanguageServer",
       "space c d": "editor::Hover",
       // Trouble
-      "space x s": "outline_panel::ToggleFocus",
+      "space x s": "outline_panel::Toggle",
       "space x x": "diagnostics::Deploy",
       // UI
       "space u e": "editor::ToggleInlineDiagnostics",
@@ -186,11 +195,19 @@
   {
     "context": "vim_mode == visual",
     "bindings": {
-      "space s g": "pane::DeploySearch",
+      "space s g": [
+        "pane::DeploySearch",
+        {
+          "regex": true,
+          "included_files": ""
+        }
+      ],
       "space s r": [
         "pane::DeploySearch",
         {
-          "replace_enabled": true
+          "replace_enabled": true,
+          "regex": true,
+          "included_files": ""
         }
       ],
       // Edit bindings
@@ -868,7 +885,7 @@
   {
     "context": "vim_mode == normal",
     "bindings": {
-      "ctrl-/": "terminal_panel::ToggleFocus",
+      "ctrl-/": "terminal_panel::Toggle",
       "ctrl-[": "editor::Cancel",
       "escape": "editor::Cancel",
       ":": "command_palette::Toggle",
@@ -1115,6 +1132,10 @@
     "context": "Terminal",
     "bindings": {
       "ctrl-/": "terminal_panel::Toggle",
+      // Zed's default zoom key is nulled globally above, so rebind it here.
+      // The zoom flag survives close_panel, so a maximized terminal comes back
+      // maximized after ctrl-/ hides and reopens it.
+      "shift-escape": "workspace::ToggleZoom",
     },
   },
   {
@@ -1859,4 +1880,174 @@
   //     "space a a": "agent::ToggleNewThreadMenu"
   //   }
   // }
+  //////////////////////////////////////////////////////////////////////////////
+  // LazyVim / nvim parity
+  //
+  // Ported from private_dot_config/exact_nvim/lua/config/keymaps.lua and the
+  // LazyVim defaults. Zed resolves later blocks first at equal context
+  // specificity, so these override the vim defaults copied above.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Leader (space) bindings, normal mode + panels
+  {
+    "context": "!(Dock > Editor) && (((Workspace || Editor || AssistantPanel) && vim_mode == normal) || (ProjectPanel) || (EmptyPane))",
+    "bindings": {
+      // Top level
+      // Zed has no yazi. The project panel is the nearest file browser, so the
+      // three keys that open yazi in nvim all land there.
+      // <leader>/ = Yazi toggle, <leader>- = Yazi cwd, <leader>_ = Yazi at file
+      "space /": "project_panel::Toggle",
+      "space -": "project_panel::Toggle",
+      "space :": "command_palette::Toggle",
+      "space l": "zed::Extensions",
+      "space |": "pane::SplitRight",
+
+      // Buffers
+      "space b b": "pane::AlternateFile",
+      "space b d": "pane::CloseActiveItem",
+      "space b o": "pane::CloseOtherItems",
+      "space b l": "pane::CloseItemsToTheLeft",
+      "space b r": "pane::CloseItemsToTheRight",
+      "space b p": "pane::TogglePinTab",
+
+      // Tabs (panes carry tabs in Zed, so these mirror <leader><tab>)
+      "space tab ]": "pane::ActivateNextItem",
+      "space tab [": "pane::ActivatePreviousItem",
+      "space tab d": "pane::CloseActiveItem",
+      "space tab o": "pane::CloseOtherItems",
+      "space tab f": ["pane::ActivateItem", 0],
+      "space tab l": "pane::ActivateLastItem",
+
+      // Files
+      "space f n": "workspace::NewFile",
+      "space f p": "projects::OpenRecent",
+      "space f c": "zed::OpenSettingsFile",
+      "space f t": "terminal_panel::Toggle",
+      "space f shift-t": "workspace::NewTerminal",
+
+      // Search
+      "space s b": "buffer_search::Deploy",
+      "space s d": "diagnostics::Deploy",
+      "space s k": "zed::OpenKeymapFile",
+      "space s c": "command_palette::Toggle",
+      "space s p": "zed::Extensions",
+      // No "grep word under cursor" action; select the word, then project search
+      "space s w": ["workspace::SendKeystrokes", "v i w g /"],
+
+      // Code / LSP
+      "space c a": "editor::ToggleCodeActions",
+      "space c l": "lsp_tool::ToggleMenu",
+
+      // Git
+      "space g s": "git_panel::Toggle",
+      "space g l": "git_panel::ActivateHistoryTab",
+      "space g o": "editor::ExpandAllDiffHunks",
+      "space g shift-b": "editor::OpenPermalinkToLine",
+      "space g shift-y": "editor::CopyPermalinkToLine",
+
+      // Debug (dap.core parity)
+      "space d c": "debugger::Continue",
+      "space d b": "editor::ToggleBreakpoint",
+      "space d shift-b": "debugger::ClearAllBreakpoints",
+      "space d i": "debugger::StepInto",
+      "space d o": "debugger::StepOut",
+      "space d shift-o": "debugger::StepOver",
+      "space d shift-p": "debugger::Pause",
+      "space d t": "debugger::Stop",
+      "space d a": "debugger::Start",
+      "space d l": "debugger::RerunSession",
+      "space d u": "debug_panel::Toggle",
+      "space d s": "debugger::ToggleSessionPicker",
+
+      // Tasks (closest Zed analogue to neotest / overseer)
+      "space t t": "task::Spawn",
+      "space t l": "task::Rerun",
+
+      // Quit / save
+      "space q w": "workspace::Save",
+      "space q a": "workspace::SaveAll",
+      "space q q": "zed::Quit",
+
+      // Windows
+      "space w d": "pane::CloseAllItems",
+      "space w m": "workspace::ToggleZoom",
+
+      // UI toggles
+      "space u l": "editor::ToggleLineNumbers",
+      "space u shift-l": "editor::ToggleRelativeLineNumbers",
+      "space u h": "editor::ToggleInlayHints",
+      "space u g": "editor::ToggleIndentGuides",
+      "space u shift-a": "editor::ToggleTabBar",
+      "space u shift-c": "theme_selector::Toggle",
+      "space u n": "workspace::ClearAllNotifications",
+      "space u shift-z": "workspace::ToggleZoom",
+      "space u z": "workspace::ToggleCenteredLayout",
+      "space u p": "editor::ToggleEditPrediction",
+    },
+  },
+
+  // Non-leader normal mode
+  {
+    "context": "vim_mode == normal",
+    "bindings": {
+      // LazyVim rebinds H/L to buffer navigation, replacing vim's
+      // WindowTop/WindowBottom. [b and ]b do the same.
+      "shift-h": "pane::ActivatePreviousItem",
+      "shift-l": "pane::ActivateNextItem",
+      "[ b": "pane::ActivatePreviousItem",
+      "] b": "pane::ActivateNextItem",
+
+      // Severity-filtered diagnostic jumps
+      "] e": ["editor::GoToDiagnostic", { "severity": { "min": "error", "max": "error" } }],
+      "[ e": ["editor::GoToPreviousDiagnostic", { "severity": { "min": "error", "max": "error" } }],
+      "] w": ["editor::GoToDiagnostic", { "severity": { "min": "warning", "max": "warning" } }],
+      "[ w": ["editor::GoToPreviousDiagnostic", { "severity": { "min": "warning", "max": "warning" } }],
+
+      // Half-page scroll recentres the cursor
+      "ctrl-d": ["workspace::SendKeystrokes", "ctrl-d z z"],
+      "ctrl-u": ["workspace::SendKeystrokes", "ctrl-u z z"],
+      "pagedown": ["workspace::SendKeystrokes", "ctrl-d z z"],
+      "pageup": ["workspace::SendKeystrokes", "ctrl-u z z"],
+
+      // Move lines (LazyVim <A-j>/<A-k>)
+      "alt-j": "editor::MoveLineDown",
+      "alt-k": "editor::MoveLineUp",
+
+      // Change without clobbering the unnamed register
+      "shift-c": ["workspace::SendKeystrokes", "\" _ c $"],
+      "space shift-c": "vim::ChangeToEndOfLine",
+      "space p": ["workspace::SendKeystrokes", "v $ h shift-p"],
+    },
+  },
+
+  // Visual mode
+  {
+    "context": "vim_mode == visual",
+    "bindings": {
+      // J/K move the selection instead of joining lines
+      "shift-j": "editor::MoveLineDown",
+      "shift-k": "editor::MoveLineUp",
+      "alt-j": "editor::MoveLineDown",
+      "alt-k": "editor::MoveLineUp",
+
+      // p keeps the register intact, P is the clobbering paste
+      "p": ["vim::Paste", { "preserve_clipboard": true }],
+      "shift-p": ["vim::Paste", {}],
+
+      // Change without clobbering the unnamed register
+      "c": ["workspace::SendKeystrokes", "\" _ c"],
+
+      // Double v enters block visual
+      "v": "vim::ToggleVisualBlock",
+    },
+  },
+
+  // Insert mode
+  {
+    "context": "vim_mode == insert",
+    "bindings": {
+      "alt-j": "editor::MoveLineDown",
+      "alt-k": "editor::MoveLineUp",
+    },
+  },
 ]
