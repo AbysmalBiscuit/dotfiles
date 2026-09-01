@@ -207,6 +207,7 @@ Documents
 {{- if not (index $.tool "alacritree") }}
 .config/fish/exact_functions/alacritree.fish
 {{- end }}
+# end of windows exclusions
 {{- end }}
 
 {{- if not .personal }}
@@ -225,7 +226,9 @@ Documents
 .ssh/**
 {{ end }}
 
-{{ if not (eq .shell "zsh") -}}
+{{- if not (eq .shell "zsh") }}
+
+# zsh
 .zsh*
 .zprofile
 .oh-my-zsh/**
