@@ -356,6 +356,12 @@ hardlink = {{ not $is_wsl }}
 [github]
 refreshPeriod = "12h"
 
+[hooks]
+{{ if and (index $has "devkit") (index $has "python3") -}}
+[hooks.upgrade.post]
+script = {{ joinPath .chezmoi.sourceDir "hooks" "upgrade_post_docm_pin_chezmoi.py" | replaceAllRegex "\\\\" "/" | quote }}
+{{ end }}
+
 [keepassxc]
 command = "{{ $keepassxc_cli }}"
 database = "{{ $keepassxc_database }}"
