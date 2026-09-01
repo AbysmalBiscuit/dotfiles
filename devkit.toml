@@ -1,0 +1,4 @@
+#:schema https://github.com/AbysmalBiscuit/devkit/releases/latest/download/devkit-config.json
+
+[harness]
+enforce_writes = true
