@@ -235,6 +235,7 @@ source ./lib/aliases.nu
 source ./lib/media.nu
 source ./lib/dev.nu
 source ./lib/maint.nu
+source ./lib/chezmoi.nu
 
 # Generated completions need no `source`. Nushell autoloads every .nu file under
 # $nu.user-autoload-dirs and $nu.vendor-autoload-dirs after this file runs, and
