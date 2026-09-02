@@ -1,0 +1,61 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+# vim: shiftwidth=4 tabstop=4 expandtab
+approvals_reviewer = "auto_review"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "xhigh"
+
+[features]
+experimental_use_rmcp_client = true
+
+[hooks]
+
+[[hooks.SessionEnd]]
+hooks = [
+    { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
+]
+
+[marketplaces.devkit]
+source = "https://github.com/AbysmalBiscuit/devkit.git"
+source_type = "git"
+
+[marketplaces.superpowers]
+source = "https://github.com/obra/superpowers"
+source_type = "git"
+
+[mcp_servers.adaptyv_bio_mcp]
+url = "https://mcp.adaptyv.bio/mcp"
+
+[plugins."devkit@devkit"]
+enabled = true
+
+[plugins."linear@openai-curated"]
+enabled = true
+
+[plugins."posthog@openai-curated"]
+enabled = true
+
+[plugins."sentry@openai-curated"]
+enabled = true
+
+[plugins."slack@openai-curated"]
+enabled = true
+
+[plugins."superpowers@superpowers"]
+enabled = true
+
+
+[tui]
+status_line = [
+    "model-with-reasoning",
+    "project-name",
+    "git-branch",
+    "pull-request-number",
+    "run-state",
+    "approval-mode",
+    "context-used",
+    "five-hour-limit",
+    "weekly-limit",
+    "current-dir",
+]
+status_line_use_colors = true
+vim_mode_default = true

@@ -1,0 +1,30 @@
+# Maps settings.json keys to a merge strategy (enforce, seed, union, or
+# ignore); see engine/merge.py for what each strategy does.
+
+enforce = [
+  ["permissions", "deny"],
+  ["permissions", "defaultMode"],
+  ["hooks", "*"],
+  ["env", "*"],
+  ["statusLine"],
+  ["extraKnownMarketplaces", "*"],
+  ["$schema"],
+  ["attribution"],
+  ["fileSuggestion"],
+  ["cleanupPeriodDays"],
+]
+union = [
+  ["permissions", "allow"],
+]
+seed = [
+  ["model"], ["theme"], ["outputStyle"], ["editorMode"], ["effortLevel"],
+  ["enabledPlugins", "*"],
+  ["autoMemoryEnabled"], ["skipWorkflowUsageWarning"], ["teammateMode"],
+  ["agentPushNotifEnabled"], ["remoteControlAtStartup"],
+  ["tui"], ["voice"], ["prefersReducedMotion"],
+]
+ignore = [
+  ["feedbackSurveyRate"],
+  ["companyAnnouncements"],
+  ["env", "TEMP"], ["env", "TMP"],
+]

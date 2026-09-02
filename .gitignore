@@ -1,3 +1,10 @@
 chezmoi_execute_template_reference.md
 chezmoi_execute_template_reference_windows.md
 .ltex/*
+
+# superpowers working docs (specs, plans)
+.superpowers/
+
+# python working artifacts
+__pycache__/
+.hypothesis/

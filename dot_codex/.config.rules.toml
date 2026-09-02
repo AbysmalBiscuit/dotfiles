@@ -1,0 +1,30 @@
+# Maps config.toml keys to a merge strategy (enforce, seed, union, or
+# ignore); see engine/merge.py for what each strategy does.
+
+enforce = [
+  ["features", "*"],
+  ["marketplaces", "*", "source"],
+  ["marketplaces", "*", "source_type"],
+  ["mcp_servers", "*"],
+  ["hooks", "SessionEnd"],
+  ["tui", "status_line"],
+  ["tui", "status_line_use_colors"],
+]
+seed = [
+  ["model"], ["model_reasoning_effort"], ["approvals_reviewer"],
+  ["plugins", "*", "enabled"],
+  ["mcp_servers", "*", "enabled"],
+  ["tui", "vim_mode_default"],
+]
+ignore = [
+  ["projects", "*"],
+  ["hooks", "state", "*"],
+  ["marketplaces", "*", "last_updated"],
+  ["marketplaces", "*", "last_revision"],
+  ["tui", "model_availability_nux", "*"],
+  ["notice", "*"],
+  ["mcp_servers", "archi"],
+  # Outscores the mcp_servers.*.enabled seed rule, which would otherwise
+  # win at that depth and report archi live-only on every check.
+  ["mcp_servers", "archi", "enabled"],
+]

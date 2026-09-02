@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "agentPushNotifEnabled": true,
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
+    "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+  },
+  "autoMemoryEnabled": false,
+  "cleanupPeriodDays": 3650,
+  "editorMode": "vim",
+  "effortLevel": "high",
+  "enabledPlugins": {
+    "ast-grep@ast-grep-marketplace": true,
+    "claude-md-management@claude-plugins-official": true,
+    "devkit@devkit": true,
+    "elements-of-style@superpowers-marketplace": true,
+    "linear@claude-plugins-official": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": true,
+    "posthog@claude-plugins-official": true,
+    "pr-crucible@pr-crucible": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "slack@claude-plugins-official": true,
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "superpowers@superpowers-marketplace": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "env": {
+    "CLAUDE_AFK_TIMEOUT_MS": "3600000",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+    "CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL": "0",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+    "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1"
+  },
+  "extraKnownMarketplaces": {
+    "ast-grep-marketplace": {
+      "source": {
+        "repo": "ast-grep/agent-skill",
+        "source": "github"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "repo": "anthropics/claude-plugins-official",
+        "source": "github"
+      }
+    },
+    "devkit": {
+      "source": {
+        "repo": "AbysmalBiscuit/devkit",
+        "source": "github"
+      }
+    },
+    "pr-crucible": {
+      "source": {
+        "repo": "AbysmalBiscuit/pr-crucible",
+        "source": "github"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "repo": "obra/superpowers-marketplace",
+        "source": "github"
+      }
+    }
+  },
+  "fileSuggestion": {
+    "command": "~/.claude/scripts/file-suggestion.sh",
+    "type": "command"
+  },
+  "hooks": {
+    "CwdChanged": [],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "timeout": 10,
+            "statusMessage": "Checking conventions"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|ToolSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "timeout": 8,
+            "statusMessage": "Checking tool conventions"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/.agents/skills/history/hist.py index",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/prune-temp.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
+            "timeout": 10,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "timeout": 60,
+            "statusMessage": "Auditing changeset"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "timeout": 60,
+            "statusMessage": "Auditing changeset"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
+            "timeout": 10,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/worktree-create.sh"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/worktree-remove.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "model": "opus",
+  "outputStyle": "unslop",
+  "permissions": {
+    "allow": [
+      "Bash(bash ~/.agents/scripts/*)",
+      "Bash(bash ~/.agents/skills/*/scripts/*)",
+      "Bash(bun next dev*)",
+      "Bash(bun nitro dev*)",
+      "Bash(bun run turbo dev*)",
+      "Bash(bun test*)",
+      "Bash(cargo test:*)",
+      "Bash(cs test:*)",
+      "Bash(curl * http://localhost:*)",
+      "Bash(curl * https://localhost:*)",
+      "Bash(devrun:*)",
+      "Bash(docm:*)",
+      "Bash(pytest:*)",
+      "Bash(python ~/.agents/scripts/*.py)",
+      "Bash(python ~/.agents/skills/*/scripts/*.py*)",
+      "Bash(python3 ~/.agents/scripts/*.py)",
+      "Bash(python3 ~/.agents/skills/*/scripts/*.py*)",
+      "Bash(uv run ~/.agents/scripts/*.py)",
+      "Bash(uv run ~/.agents/skills/*/scripts/*.py*)",
+      "Read(~/.local/share/devkit/docs/**)"
+    ],
+    "defaultMode": "auto",
+    "deny": [
+      "Bash(git * --no-verify *)",
+      "Bash(google-chrome *)",
+      "Edit(//**/$Recycle.Bin/**)",
+      "Edit(//**/*.age)",
+      "Edit(//**/.aws/**)",
+      "Edit(//**/.azure/**)",
+      "Edit(//**/.claude.json)",
+      "Edit(//**/.config/chezmoi/*key*)",
+      "Edit(//**/.config/chezmoi/chezmoi.toml)",
+      "Edit(//**/.config/chezmoi/chezmoistate.boltdb)",
+      "Edit(//**/.config/chezmoi/secrets.*)",
+      "Edit(//**/.config/gcloud/**)",
+      "Edit(//**/.config/gh/**)",
+      "Edit(//**/.docker/config.json)",
+      "Edit(//**/.env)",
+      "Edit(//**/.env.*)",
+      "Edit(//**/.git-credentials)",
+      "Edit(//**/.gnupg/**)",
+      "Edit(//**/.kube/**)",
+      "Edit(//**/.netrc)",
+      "Edit(//**/.npmrc)",
+      "Edit(//**/.password-store/**)",
+      "Edit(//**/.pypirc)",
+      "Edit(//**/.sh_env)",
+      "Edit(//**/.ssh/**)",
+      "Edit(//**/Program Files*/**)",
+      "Edit(//**/ProgramData/**)",
+      "Edit(//**/Users/*/AppData/Local/**)",
+      "Edit(//**/Users/*/AppData/LocalLow/**)",
+      "Edit(//**/Users/*/AppData/Roaming/**)",
+      "Edit(//**/secrets/**)",
+      "Edit(//c/Windows/**)",
+      "Edit(//etc/**)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.profile)",
+      "Edit(~/.zshrc)",
+      "Read(//**/$Recycle.Bin/**)",
+      "Read(//**/*.age)",
+      "Read(//**/.aws/**)",
+      "Read(//**/.azure/**)",
+      "Read(//**/.claude.json)",
+      "Read(//**/.config/chezmoi/*key*)",
+      "Read(//**/.config/chezmoi/chezmoi.toml)",
+      "Read(//**/.config/chezmoi/chezmoistate.boltdb)",
+      "Read(//**/.config/chezmoi/secrets.*)",
+      "Read(//**/.config/gcloud/**)",
+      "Read(//**/.config/gh/**)",
+      "Read(//**/.docker/config.json)",
+      "Read(//**/.env)",
+      "Read(//**/.env.*)",
+      "Read(//**/.git-credentials)",
+      "Read(//**/.gnupg/**)",
+      "Read(//**/.kube/**)",
+      "Read(//**/.netrc)",
+      "Read(//**/.npmrc)",
+      "Read(//**/.password-store/**)",
+      "Read(//**/.pypirc)",
+      "Read(//**/.sh_env)",
+      "Read(//**/.ssh/**)",
+      "Read(//**/NTUSER.DAT*)",
+      "Read(//**/Program Files*/**)",
+      "Read(//**/ProgramData/**)",
+      "Read(//**/System Volume Information/**)",
+      "Read(//**/Users/*/AppData/Local/**)",
+      "Read(//**/Users/*/AppData/LocalLow/**)",
+      "Read(//**/Users/*/AppData/Roaming/**)",
+      "Read(//**/secrets/**)",
+      "Read(//c/Windows/**)",
+      "Read(//etc/**)",
+      "Read(~/.cache/**)"
+    ]
+  },
+  "prefersReducedMotion": true,
+  "remoteControlAtStartup": false,
+  "skipWorkflowUsageWarning": true,
+  "statusLine": {
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10,
+    "type": "command"
+  },
+  "teammateMode": "in-process",
+  "theme": "dark",
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  }
+}

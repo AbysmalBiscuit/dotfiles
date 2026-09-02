@@ -14,39 +14,18 @@ hooks = [
     { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
 ]
 
-[hooks.state]
-
-[marketplaces]
-
 [marketplaces.devkit]
-last_updated = ""
-last_revision = ""
-source_type = "git"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
+source_type = "git"
 
 [marketplaces.superpowers]
-last_updated = ""
-last_revision = ""
-source_type = "git"
 source = "https://github.com/obra/superpowers"
-
-[mcp_servers]
+source_type = "git"
 
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
 
-[plugins]
-
 [plugins."devkit@devkit"]
-enabled = true
-
-[plugins."superpowers@superpowers"]
-enabled = true
-
-[plugins."sentry@openai-curated"]
-enabled = true
-
-[plugins."slack@openai-curated"]
 enabled = true
 
 [plugins."linear@openai-curated"]
@@ -55,8 +34,15 @@ enabled = true
 [plugins."posthog@openai-curated"]
 enabled = true
 
+[plugins."sentry@openai-curated"]
+enabled = true
 
-[projects]
+[plugins."slack@openai-curated"]
+enabled = true
+
+[plugins."superpowers@superpowers"]
+enabled = true
+
 
 [tui]
 status_line = [
@@ -73,6 +59,3 @@ status_line = [
 ]
 status_line_use_colors = true
 vim_mode_default = true
-
-[tui.model_availability_nux]
-"gpt-5.6-sol" = 2
