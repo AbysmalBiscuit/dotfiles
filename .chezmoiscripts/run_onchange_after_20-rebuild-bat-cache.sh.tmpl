@@ -1,0 +1,29 @@
+#!/bin/sh
+# bat reads themes from ~/.config/bat/themes and syntaxes from
+# ~/.config/bat/syntaxes, but highlights from a compiled cache, so an edited
+# .tmTheme or .sublime-syntax has no effect until the cache is rebuilt.
+# yazi parses the .tmTheme directly and needs nothing here.
+#
+# One hash per file, so chezmoi re-runs this when any of them changes. A new
+# theme or syntax file needs a line here too.
+# ABC: {{ include "ABC.tmTheme" | sha256sum }}
+# Catppuccin Mocha: {{ include "private_dot_config/bat/themes/Catppuccin Mocha.tmTheme" | sha256sum }}
+# bash.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/bash.sublime-syntax" | sha256sum }}
+# fish.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/fish.sublime-syntax" | sha256sum }}
+# gotmpl.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/gotmpl.sublime-syntax" | sha256sum }}
+# json.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/json.sublime-syntax" | sha256sum }}
+# lua.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/lua.sublime-syntax" | sha256sum }}
+# markdown.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/markdown.sublime-syntax" | sha256sum }}
+# powershell.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/powershell.sublime-syntax" | sha256sum }}
+# toml.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/toml.sublime-syntax" | sha256sum }}
+# yaml.sublime-syntax: {{ include "private_dot_config/bat/syntaxes/yaml.sublime-syntax" | sha256sum }}
+
+set -eu
+
+for bat_bin in batcat bat; do
+    if command -v "$bat_bin" >/dev/null 2>&1; then
+        exec "$bat_bin" cache --build
+    fi
+done
+
+echo "bat not installed; skipping theme cache rebuild" >&2
