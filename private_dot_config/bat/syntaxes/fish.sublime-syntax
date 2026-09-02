@@ -1,0 +1,16 @@
+%YAML 1.2
+---
+# Overlays Go template actions on Fish. The empty match pushes the base
+# syntax so with_prototype reaches every context it enters, which is what makes
+# {{ }} highlight inside base-language strings rather than only at top level.
+name: Fish (Go template)
+scope: source.shell.fish.gotmpl
+file_extensions:
+  - fish.tmpl
+contexts:
+  main:
+    - match: ''
+      push:
+        - include: scope:source.shell.fish
+      with_prototype:
+        - include: scope:source.gotmpl#action

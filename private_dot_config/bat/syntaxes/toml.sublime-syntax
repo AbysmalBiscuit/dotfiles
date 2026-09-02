@@ -1,0 +1,16 @@
+%YAML 1.2
+---
+# Overlays Go template actions on TOML. The empty match pushes the base
+# syntax so with_prototype reaches every context it enters, which is what makes
+# {{ }} highlight inside base-language strings rather than only at top level.
+name: TOML (Go template)
+scope: source.toml.gotmpl
+file_extensions:
+  - toml.tmpl
+contexts:
+  main:
+    - match: ''
+      push:
+        - include: scope:source.toml
+      with_prototype:
+        - include: scope:source.gotmpl#action

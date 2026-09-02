@@ -1,0 +1,65 @@
+%YAML 1.2
+---
+# Go text/template actions, as used by chezmoi. Stands alone for .tmpl files
+# whose name carries no base extension; the per-language syntaxes next to this
+# file pull in the `action` context to overlay it on a real base language.
+name: Go Template
+scope: source.gotmpl
+file_extensions:
+  - tmpl
+  - gotmpl
+contexts:
+  main:
+    - include: action
+
+  action:
+    - match: '\{\{-?\s*/\*'
+      scope: punctuation.definition.comment.begin.gotmpl
+      push:
+        - meta_scope: comment.block.gotmpl
+        - match: '\*/\s*-?\}\}'
+          scope: punctuation.definition.comment.end.gotmpl
+          pop: true
+    - match: '\{\{-?'
+      scope: punctuation.section.embedded.begin.gotmpl
+      push: action-body
+
+  action-body:
+    - meta_scope: meta.embedded.gotmpl
+    - match: '-?\}\}'
+      scope: punctuation.section.embedded.end.gotmpl
+      pop: true
+    - match: '\b(if|else|end|range|with|template|define|block|break|continue)\b'
+      scope: keyword.control.gotmpl
+    - match: '\b(and|or|not|eq|ne|lt|le|gt|ge|len|index|slice|call|print|printf|println|html|js|urlquery)\b'
+      scope: support.function.builtin.gotmpl
+    - match: '\b(true|false|nil)\b'
+      scope: constant.language.gotmpl
+    - match: '"'
+      scope: punctuation.definition.string.begin.gotmpl
+      push:
+        - meta_scope: string.quoted.double.gotmpl
+        - match: '\\.'
+          scope: constant.character.escape.gotmpl
+        - match: '"'
+          scope: punctuation.definition.string.end.gotmpl
+          pop: true
+    - match: '`'
+      scope: punctuation.definition.string.begin.gotmpl
+      push:
+        - meta_scope: string.quoted.other.gotmpl
+        - match: '`'
+          scope: punctuation.definition.string.end.gotmpl
+          pop: true
+    - match: '\b\d+(\.\d+)?\b'
+      scope: constant.numeric.gotmpl
+    - match: ':=|\|'
+      scope: keyword.operator.gotmpl
+    - match: '\$[A-Za-z_][A-Za-z0-9_]*'
+      scope: variable.other.gotmpl
+    - match: '\.[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*'
+      scope: variable.other.member.gotmpl
+    - match: '\.'
+      scope: variable.language.gotmpl
+    - match: '[A-Za-z_][A-Za-z0-9_]*'
+      scope: support.function.gotmpl

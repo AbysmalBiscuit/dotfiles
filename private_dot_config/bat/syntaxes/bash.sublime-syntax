@@ -1,0 +1,17 @@
+%YAML 1.2
+---
+# Overlays Go template actions on Bash. The empty match pushes the base
+# syntax so with_prototype reaches every context it enters, which is what makes
+# {{ }} highlight inside base-language strings rather than only at top level.
+name: Bash (Go template)
+scope: source.shell.bash.gotmpl
+file_extensions:
+  - sh.tmpl
+  - bash.tmpl
+contexts:
+  main:
+    - match: ''
+      push:
+        - include: scope:source.shell.bash
+      with_prototype:
+        - include: scope:source.gotmpl#action

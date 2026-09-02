@@ -5,7 +5,7 @@
 # Specify desired highlighting theme (e.g. "TwoDark"). Run `bat --list-themes`
 # for a list of all available themes
 # --theme="TwoDark"
---theme="Catppuccin Mocha"
+--theme="ABC"
 
 # Enable this to use italic text on the terminal. This is not supported on all
 # terminal emulators (like tmux, by default):
@@ -17,10 +17,26 @@
 # Uncomment the following line if you are using less version >= 551 and want to
 # enable mouse scrolling support in `bat` when running inside tmux. This might
 # disable text selection, unless you press shift.
-#--pager="less --RAW-CONTROL-CHARS --quit-if-one-screen --mouse"
+# --pager="less --RAW-CONTROL-CHARS --quit-if-one-screen --mouse"
 
 # Syntax mappings: map a certain filename pattern to a language.
 #   Example 1: use the C++ syntax for Arduino .ino files
 #   Example 2: Use ".gitignore"-style highlighting for ".ignore" files
 #--map-syntax "*.ino:C++"
 #--map-syntax ".ignore:Git Ignore"
+
+# chezmoi templates. The syntaxes in syntaxes/ overlay Go template actions on a
+# base language, but syntect only ever matches the extension after the final
+# dot, so a `toml.tmpl` file_extensions entry never fires on its own and these
+# globs are what actually route the file. A .tmpl name with no base extension
+# falls through to the plain Go Template syntax.
+--map-syntax "*.toml.tmpl:TOML (Go template)"
+--map-syntax "*.json.tmpl:JSON (Go template)"
+--map-syntax "*.yaml.tmpl:YAML (Go template)"
+--map-syntax "*.yml.tmpl:YAML (Go template)"
+--map-syntax "*.fish.tmpl:Fish (Go template)"
+--map-syntax "*.sh.tmpl:Bash (Go template)"
+--map-syntax "*.bash.tmpl:Bash (Go template)"
+--map-syntax "*.ps1.tmpl:PowerShell (Go template)"
+--map-syntax "*.md.tmpl:Markdown (Go template)"
+--map-syntax "*.lua.tmpl:Lua (Go template)"
