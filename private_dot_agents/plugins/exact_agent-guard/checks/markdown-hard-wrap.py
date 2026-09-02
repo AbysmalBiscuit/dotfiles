@@ -7,11 +7,11 @@ lines that did not change, and the diff shows a paragraph rewritten instead of
 a word. Tree-sitter discards the line breaks this depends on, so the check
 cannot be an ast-grep rule.
 
-A paragraph is called hand-wrapped when three or more consecutive prose lines
-sit in a narrow band of widths and every break is forced: the first word of the
-next line could not have fitted on the line before it. A break that was not
-forced is a deliberate one (one clause per line, a sentence per line) and takes
-the whole paragraph out of scope.
+A paragraph is called hand-wrapped when its lines sit in a narrow band of
+widths and every break is forced: the first word of the next line could not
+have fitted on the line before it. A break that was not forced is a deliberate
+one (one clause per line, a sentence per line) and takes the whole paragraph
+out of scope.
 """
 
 import re
@@ -24,6 +24,10 @@ MESSAGE = (
 )
 
 MIN_LINES = 3
+# A list item wraps onto one continuation line far more often than three, and
+# the marker makes the run's extent unambiguous, so two lines carry enough
+# signal there.
+MIN_LIST_LINES = 2
 # Below this a short paragraph looks wrapped by coincidence; above it the lines
 # are long enough that nothing was wrapping them to a column in the first place.
 MIN_COLUMN = 45
@@ -41,18 +45,32 @@ SENTENCE_END = re.compile(r"[.!?:;]$")
 FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
 LIST_ITEM = re.compile(r"^\s{0,3}([-*+]|\d+[.)])\s")
 # Lines that are not flowing prose: headings, tables, quotes, thematic breaks,
-# raw HTML, link reference definitions and indented code.
-NOT_PROSE = re.compile(
-    r"^(\s{4,}|\s{0,3}(#{1,6}\s|\||>|<|\[[^\]]+\]:\s|([-*_])\s*(\3\s*){2,}$))"
+# raw HTML, link reference definitions and indented code. Four spaces mean code
+# only where no list item is open; under one they are the item's own body, so
+# the continuation form drops that clause and is matched against the dedented
+# line.
+_NOT_PROSE_BODY = (
+    r"\s{0,3}(?:#{1,6}\s|\||>|<|\[[^\]]+\]:\s"
+    r"|(?P<break>[-*_])\s*(?:(?P=break)\s*){2,}$)"
 )
+NOT_PROSE = re.compile(r"^(?:\s{4,}|" + _NOT_PROSE_BODY + r")")
+NOT_PROSE_CONTINUATION = re.compile(r"^" + _NOT_PROSE_BODY)
 
 
 def paragraphs(lines):
-    """Runs of consecutive prose lines, as (first line number, texts). A list
-    item opens a run of its own: its marker line and any continuation under it
-    are one wrapped unit, and the item above it is another."""
-    current, start = [], 0
+    """Runs of consecutive prose lines, as (first line number, texts, list). A
+    list item opens a run of its own: its marker line and the indented lines
+    under it are one wrapped unit, and the item above it is another. A nested
+    marker under an open item opens the next run rather than extending it."""
+    current, start, listy = [], 0, False
     fence = ""
+
+    def close():
+        nonlocal current, listy
+        pending = (start, current, listy) if current else None
+        current, listy = [], False
+        return pending
+
     for number, raw in enumerate(lines, 1):
         text = raw.rstrip("\n").rstrip()
         opener = FENCE.match(text)
@@ -61,35 +79,42 @@ def paragraphs(lines):
                 fence = ""
             continue
         if opener:
-            if current:
-                yield start, current
-            current, fence = [], opener.group(1)
+            done = close()
+            if done:
+                yield done
+            fence = opener.group(1)
             continue
-        if not text or NOT_PROSE.match(text):
-            if current:
-                yield start, current
-            current = []
+        stripped = text.lstrip()
+        # An indented line while a list item is open belongs to that item.
+        continuation = bool(listy and current and stripped and stripped != text)
+        pattern = NOT_PROSE_CONTINUATION if continuation else NOT_PROSE
+        if not text or pattern.match(stripped if continuation else text):
+            done = close()
+            if done:
+                yield done
             continue
         # A trailing double space is a hard line break the author asked for, so
         # the run it sits in was never a reflow.
         if raw.rstrip("\n").endswith("  "):
-            current = []
+            close()
             continue
-        if LIST_ITEM.match(text):
-            if current:
-                yield start, current
-            current, start = [text], number
+        marker = LIST_ITEM.match(stripped if continuation else text)
+        if marker:
+            done = close()
+            if done:
+                yield done
+            current, start, listy = [text], number, True
             continue
         if not current:
-            start = number
+            start, listy = number, False
         current.append(text)
     if current:
-        yield start, current
+        yield start, current, listy
 
 
-def wrap_column(texts):
+def wrap_column(texts, listy=False):
     """The column a run was reflowed at, or None when it was not reflowed."""
-    if len(texts) < MIN_LINES:
+    if len(texts) < (MIN_LIST_LINES if listy else MIN_LINES):
         return None
     widths = [len(t) for t in texts]
     width = max(widths)
@@ -124,8 +149,8 @@ def main():
         end = lines.index("---", 1)
         lines = [""] * (end + 1) + lines[end + 1:]
     findings = []
-    for start, texts in paragraphs(lines):
-        width = wrap_column(texts)
+    for start, texts, listy in paragraphs(lines):
+        width = wrap_column(texts, listy)
         if width is not None:
             findings.append(
                 "  {}:{}  [{}] {}".format(path, start, RULE, MESSAGE.format(width=width))
