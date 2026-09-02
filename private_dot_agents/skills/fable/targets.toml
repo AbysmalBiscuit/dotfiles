@@ -1,0 +1,40 @@
+# Who each harness hands work to, and how the call is actually made.
+#
+# [harness.NAME]  what a caller running under that harness does: which target it escalates to when -m names none, and how it invokes a skill by name
+# [target.NAME]   a senior model: which model, at what effort, and how each harness reaches it
+#
+# from.<harness> is one of:
+#   "agent"         the harness's own subagent dispatch
+#   "mcp:codex"     the mcp__codex__codex tool
+#   a command line  with {model}, {effort}, {permission} and {prompt} filled in. {prompt} is a file fable.py names, so the prompt never has to survive shell quoting.
+#
+# An "agent:" route takes its model and effort from ~/.claude/agents/<type>.md, not from the model and effort here, because the Agent tool has no effort parameter. fable.py reports it when the two disagree.
+#
+# permission.write and permission.read are the fragments a command line needs to let the senior model edit, or hold it to reading. Only command routes use them; agent and mcp routes carry the constraint in the prompt or in a tool parameter.
+#
+# Harness names match fable.py's detection: claude-code, codex.
+
+[harness.claude-code]
+target = "fable"
+skill_prefix = "/"
+
+[harness.codex]
+target = "sol"
+skill_prefix = "$"
+
+[target.fable]
+model = "fable"
+effort = "high"
+from.claude-code = "agent"
+from.codex = "claude --model {model} --effort {effort} {permission} -p < {prompt}"
+permission.write = "--permission-mode acceptEdits"
+# Plan mode is Claude Code's read-only stance: it investigates and answers, edits nothing.
+permission.read = "--permission-mode plan"
+
+[target.sol]
+model = "gpt-5.6-sol"
+effort = "xhigh"
+from.claude-code = "mcp:codex"
+from.codex = "codex exec -m {model} -c model_reasoning_effort=\"{effort}\" {permission} - < {prompt}"
+permission.write = "-s workspace-write"
+permission.read = "-s read-only"
