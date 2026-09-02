@@ -1,0 +1,14 @@
+# less binds arrow/Home/End from terminfo, and xterm-256color defines only the
+# application-cursor forms (kcud1=\EOB). A terminal that ignores less's DECCKM
+# request (\e[?1h) keeps sending the normal-mode CSI forms, which less has no
+# binding for, so it just beeps. Bind those forms too.
+
+#command
+\e[A            back-line
+\e[B            forw-line
+\e[C            right-scroll
+\e[D            left-scroll
+\e[H            goto-line
+\e[F            goto-end
+\e[1~           goto-line
+\e[4~           goto-end
