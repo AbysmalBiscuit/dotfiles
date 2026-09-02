@@ -15,6 +15,22 @@
 # Run `python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py doctor`
 # inside a tree to list the roots actually found.
 
+# Layers that still run where no tree has opted in. A tree opts in by carrying
+# its own .agents/plugins/agent-guard directory, and one that has runs every
+# layer regardless of this.
+#
+#   tool-checks  the PreToolUse guards. These describe the machine rather than
+#                any project: which search tools are installed, and that agents
+#                share one working tree.
+#   checks       the per-file scripts, so the markdown wrap rule follows you
+#                into every directory.
+#   rules        the ast-grep rules. Left out: they are TypeScript comment
+#                conventions, and firing them in a repo that never asked for
+#                them is the noise agents learn to skim past.
+#   changeset    the Stop-time duplication and over-extraction audit. Left out:
+#                it reads a branch's merge-base, which assumes a project shape.
+always = ["tool-checks", "checks"]
+
 # Blocking is off until the rules prove they stay quiet on good code.
 # true lets Stop/SubagentStop actually refuse to finish.
 block = false
@@ -22,6 +38,14 @@ block = false
 # Cap on how many times one session may be blocked before the hook downgrades
 # itself to advisory. There is no built-in loop protection on Stop hooks.
 max_blocks = 2
+
+# mandatory/ beside this file is the tier no setting below reaches. It holds
+# PreToolUse scripts under the same contract as tool-checks/, read from the
+# global install alone and resolved from the hook script's own location, so
+# neither a checkout's config.toml nor AGENT_GUARD_CONFIG_DIR can move or
+# silence it. A script changes tier by changing directory. Put a rule there only
+# when being non-negotiable is the whole point of it: secret decryption is, a
+# style convention is not.
 
 # PreToolUse Python scripts under a root's tool-checks/, each given the tool name
 # as its argument and the hook payload on stdin. Empty stdout is silence; stdout with
@@ -54,7 +78,11 @@ scope = "diff"
 # Which files the per-file rules run on. A repo whose rules target another
 # language widens this in its own config.toml. Single quotes are a TOML literal
 # string, so the backslashes reach the regex engine as written.
-# extensions = '\.(ts|tsx|mts|cts|gd)$'
+#
+# Markdown is here for checks/markdown-hard-wrap.py; the ast-grep rules are
+# language-scoped and stay quiet on it. Dropping md from this list is the off
+# switch for that check.
+extensions = '\.(ts|tsx|mts|cts|md|mdx|markdown)$'
 
 # Paths the hook skips entirely: code that is generated rather than written, and
 # vendored code the tree does not own. This holds only the shapes every

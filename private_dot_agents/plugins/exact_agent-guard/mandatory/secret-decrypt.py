@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Block decryption and key-file access attempted through Bash.
+"""agent-guard tool-check: decryption and key-file access through Bash.
 
 Permission rules gate the Read and Edit tools, not shell commands. A command
 can invoke age directly, reach plaintext through a chezmoi subcommand that
 resolves template functions, or cat an identity file, none of which a
-Read(...) deny rule sees. Exit code 2 stops the call before permission rules
+Read(...) deny rule sees. A denial here stops the call before permission rules
 are evaluated, so this holds where a Bash(age *) deny rule would not: it
 matches on the resolved basename, so an absolute path, a quoted inner command,
 or a .exe suffix does not slip past.
@@ -130,9 +130,11 @@ def find_violation(command, depth=0):
 
 
 def main():
+    if (sys.argv[1] if len(sys.argv) > 1 else "") != "Bash":
+        return 0
     try:
-        payload = json.load(sys.stdin)
-    except (ValueError, OSError):
+        payload = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
         return 0
 
     command = payload.get("tool_input", {}).get("command")
@@ -143,13 +145,19 @@ def main():
     if reason is None:
         return 0
 
-    sys.stderr.write(
+    print(
         "Blocked: %s. Decrypting secrets and reading age identities is not "
-        "permitted. Ask Lev to run this command directly if it is needed.\n"
+        "permitted. Ask Lev to run this command directly if it is needed."
         % reason
     )
-    return 2
+    return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        # A broken check degrades to silence rather than denying real work.
+        sys.exit(0)

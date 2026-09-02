@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse/Bash guard: blocks the `rg -r<flags>` footgun.
+"""agent-guard tool-check: the `rg -r<flags>` footgun.
 
 In ripgrep, `-r`/`--replace` takes the following characters as replacement text
 and only rewrites printed output (rg never edits files). Carrying over the grep
@@ -98,19 +98,21 @@ def regex_fallback(cmd):
 
 
 def main():
+    if (sys.argv[1] if len(sys.argv) > 1 else "") != "Bash":
+        return 0
     try:
-        payload = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError):
-        return
+        payload = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        return 0
     cmd = (payload.get("tool_input") or {}).get("command") or ""
     if not cmd:
-        return
+        return 0
 
     hit = bad_flag(cmd)
     if not hit:
-        return
+        return 0
 
-    reason = (
+    print(
         f"rg recurses by default and has no recursive flag. In '{hit}', -r is "
         "--replace: it swallows the remaining letters as replacement text and "
         "silently prints matches with that text substituted instead of applying "
@@ -119,14 +121,14 @@ def main():
         "-c (count). For a real replacement use the spaced form: "
         "rg -r 'text' PATTERN or rg --replace 'text' PATTERN."
     )
-    json.dump({
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
-            "permissionDecisionReason": reason,
-        }
-    }, sys.stdout)
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        # A broken check degrades to silence rather than denying real work.
+        sys.exit(0)

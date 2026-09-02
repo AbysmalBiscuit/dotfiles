@@ -40,7 +40,19 @@ def arm_watchdog(seconds):
     _watchdog.start()
 
 
-arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 55))
+def deadline(fallback):
+    """Seconds before the watchdog fires. AGENT_GUARD_DEADLINE may lengthen this
+    but not shorten it past the floor: a deadline short enough to kill the
+    process before the mandatory tier has answered would be a way to switch that
+    tier off, and that tier exists to have no off switch."""
+    try:
+        requested = float(os.environ.get("AGENT_GUARD_DEADLINE") or fallback)
+    except ValueError:
+        requested = fallback
+    return max(requested, 6.0)
+
+
+arm_watchdog(deadline(55))
 
 # Everything this hook needs lives beside it, so the whole directory relocates as
 # one unit. Resolved through any symlink, so the plugin directory can itself be
@@ -52,10 +64,15 @@ STATE_DIR = (
     / "agent-guard"
 )
 
+# The tier no setting reaches. Resolved from this file's own directory rather
+# than CONFIG_DIR, so the environment override that repoints the install cannot
+# move it, and read from the global install alone, so a checkout can neither add
+# a script that runs on every call nor drop one that must.
+MANDATORY_DIR = SELF.parent.parent / "mandatory"
+MANDATORY_TIMEOUT = 5
+
 CONFIG_NAME = "config.toml"
 _ENV_PREFIX = "AGENT_GUARD_"
-_UNSET = object()
-_BASH = _UNSET
 
 # Rules come in layers, each named by its directory in a tree: the tracked one
 # first, then a machine-local overlay beside it that outranks it. Later roots add
@@ -238,6 +255,12 @@ class Settings:
         self.ignore_src = f"{ignore}|{extra}" if extra else ignore
         self.ignore_re = _compile(self.ignore_src)
         self.base_override = _str(g("base"), "")
+        # Layers that still run where no tree has opted in. rules/ and checks/
+        # describe a project's conventions and wait to be asked for; a global
+        # tool-checks/ describes the machine, which is the same one in every
+        # directory. Empty by default, so behaviour changes only for a config
+        # that asks for it.
+        self.always = _layers(g("always"))
 
 
 def _bool(value, fallback):
@@ -264,6 +287,18 @@ def _float(value, fallback):
 
 def _str(value, fallback):
     return fallback if value is None else str(value)
+
+
+LAYERS = ("rules", "checks", "tool-checks", "changeset")
+
+
+def _layers(value):
+    """A TOML list, or the comma-separated string an environment override
+    arrives as. Unknown names are dropped rather than widening anything."""
+    if value is None:
+        return frozenset()
+    names = value if isinstance(value, list) else str(value).split(",")
+    return frozenset(str(n).strip() for n in names) & frozenset(LAYERS)
 
 
 def sgconfig_for(root):
@@ -343,82 +378,74 @@ def changed_lines(path, base, cwd):
     return added
 
 
-def bash_exe():
-    """Windows ships its own bash.exe in System32 as the WSL launcher, and it
-    usually sits ahead of Git's on PATH. That one cannot open a C:\\ path, so a
-    check script handed one fails with "No such file or directory" and the whole
-    checks/ layer goes quietly empty. Find an MSYS bash by hand, and only fall
-    back to PATH when none is installed where Git puts it."""
-    global _BASH
-    if _BASH is not _UNSET:
-        return _BASH
-    candidates = []
-    override = os.environ.get("AGENT_GUARD_BASH")
-    if override:
-        candidates.append(Path(override))
-    git = shutil.which("git")
-    if git:
-        # git.exe lives in either cmd/ or bin/ under the install root.
-        home = Path(git).resolve().parent.parent
-        candidates += [home / "usr" / "bin" / "bash.exe", home / "bin" / "bash.exe"]
-    candidates += [
-        Path(r"C:\Program Files\Git\usr\bin\bash.exe"),
-        Path(r"C:\Program Files\Git\bin\bash.exe"),
-    ]
-    for candidate in candidates:
-        if candidate.is_file():
-            _BASH = str(candidate)
-            return _BASH
-    found = shutil.which("bash")
-    system32 = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32"
-    if found and system32 in Path(found).parents:
-        found = None
-    _BASH = found
-    return _BASH
-
-
-def _bash_env(shell):
-    """A hook is spawned with the Windows PATH, which carries git.exe but not the
-    MSYS utilities beside it. Bash then starts with no awk, sed or grep, and every
-    check script dies with "command not found" while the hook stays silent. Put
-    the directories that ship with this bash in front of whatever PATH it
-    inherits."""
-    env = dict(os.environ)
-    home = Path(shell).parent.parent
-    dirs = [home / "usr" / "bin", home / "bin", Path(shell).parent]
-    prefix = [str(d) for d in dict.fromkeys(dirs) if d.is_dir()]
-    if prefix:
-        env["PATH"] = os.pathsep.join(prefix + [env.get("PATH", "")])
-    return env
-
-
 def run_checks(path, roots, cwd):
     """Conventions ast-grep cannot reach. Tree-sitter discards whitespace, so
     nothing about blank lines or vertical spacing is expressible as a rule; those
-    live here instead. A root's checks/ holds bash scripts, each called with one
-    file path and printing findings on stdout in the shape the ast-grep scan
-    produces:
+    live here instead. A root's checks/ holds Python scripts, each given one file
+    path as its argument and printing findings on stdout in the shape the
+    ast-grep scan produces:
 
       <2 spaces><file>:<line><2 spaces>[<rule-id>] <message>
 
-    Run through bash rather than executed directly, because the executable bit
-    does not survive a clone onto the team's Windows machines."""
-    shell = bash_exe()
-    if not shell:
-        return ""
-    env = _bash_env(shell)
+    A check decides for itself which files it has anything to say about, because
+    the extensions setting is one regex for the whole layer.
+
+    Run through this interpreter rather than their shebang: the executable bit
+    does not survive a clone onto Windows, and an interpreter the hook is already
+    running under is the one thing every machine is guaranteed to have."""
     out = []
     for root in roots:
         checks = root / "checks"
         if not checks.is_dir():
             continue
-        for script in sorted(checks.glob("*.sh")):
-            argv = [shell, script.as_posix(), str(path).replace("\\", "/")]
+        for script in sorted(checks.glob("*.py")):
             # Only newlines: the leading two spaces are part of the finding format.
-            text = run(argv, timeout=10, cwd=cwd, env=env).strip("\r\n")
+            text = run(
+                [sys.executable, str(script), str(path)], timeout=10, cwd=cwd
+            ).strip("\r\n")
             if text:
                 out.append(text)
     return "\n".join(out)
+
+
+def run_mandatory(payload, cwd):
+    """PreToolUse scripts no config can switch off, for rules whose whole value
+    is that an agent cannot negotiate past them. Same contract as tool-checks/,
+    so a script changes tier by changing directory.
+
+    A script that exits non-zero without saying why has crashed rather than
+    denied, and that is reported as a denial naming the file. The alternative is
+    silence, and a security check that vanishes when it breaks is worse than one
+    that is loudly in the way; this hook does not match Edit or Write, so a
+    broken script can still be fixed."""
+    if not MANDATORY_DIR.is_dir():
+        return
+    raw = json.dumps(payload, separators=(",", ":"))
+    tool = payload.get("tool_name") or ""
+
+    advice, denials = [], []
+    for script in sorted(MANDATORY_DIR.glob("*.py")):
+        out, code = run_full(
+            [sys.executable, str(script), tool],
+            timeout=MANDATORY_TIMEOUT,
+            cwd=cwd,
+            stdin=raw,
+        )
+        out = out.strip()
+        if code:
+            denials.append(
+                out
+                or f"agent-guard: the mandatory check {script.name} failed to run, "
+                "so the call it protects is refused. Fix the script; Edit and "
+                "Write are not gated by this hook."
+            )
+        elif out:
+            advice.append(out)
+
+    if denials:
+        emit("PreToolUse", "\n\n".join(denials + advice), "\n\n".join(denials))
+    if advice:
+        emit("PreToolUse", "\n\n".join(advice))
 
 
 def check_tool(payload, roots, settings, cwd):
@@ -466,9 +493,9 @@ def check_tool(payload, roots, settings, cwd):
 _FINDING_LINE = re.compile(r":(\d+)  \[")
 
 
-def scan_file(path, roots, cwd):
+def scan_file(path, roots, cwd, layers):
     findings = []
-    if have("ast-grep"):
+    if "rules" in layers and have("ast-grep"):
         # One scan per root rather than one merged config: each root's sgconfig
         # resolves its own ruleDirs and custom-language libraryPath relative to
         # itself.
@@ -493,13 +520,13 @@ def scan_file(path, roots, cwd):
                         hit.get("file", path), line, rule, hit.get("message", "")
                     )
                 )
-    extra = run_checks(path, roots, cwd)
+    extra = run_checks(path, roots, cwd) if "checks" in layers else ""
     if extra:
         findings.extend(extra.splitlines())
     return [f for f in findings if f.strip()]
 
 
-def check_file(payload, roots, settings, cwd):
+def check_file(payload, roots, settings, cwd, layers):
     """Per-file syntactic rules. Must stay in the low milliseconds: this fires on
     every edit from every agent and subagent, so its cost multiplies. Git is
     consulted only once a rule has fired, so a clean file costs no subprocess."""
@@ -509,7 +536,7 @@ def check_file(payload, roots, settings, cwd):
     if not settings.ext_re.search(path) or settings.ignore_re.search(path):
         emit_silent()
 
-    findings = scan_file(path, roots, cwd)
+    findings = scan_file(path, roots, cwd, layers)
     if not findings:
         emit_silent()
 
@@ -815,11 +842,12 @@ def doctor(cwd):
     print(f"  scope      : {settings.scope}")
     print(f"  extensions : {settings.ext_src}")
     print(f"  ignore     : {settings.ignore_src}")
+    print(f"  always     : {', '.join(sorted(settings.always)) or 'nothing'}")
     print("  roots      :")
     for root in roots:
         config = sgconfig_for(root)
         rules = len(list((root / "rules").glob("*.yml"))) if (root / "rules").is_dir() else 0
-        checks = len(list((root / "checks").glob("*.sh"))) if (root / "checks").is_dir() else 0
+        checks = len(list((root / "checks").glob("*.py"))) if (root / "checks").is_dir() else 0
         tool_checks = (
             len(list((root / "tool-checks").glob("*.py")))
             if (root / "tool-checks").is_dir()
@@ -830,18 +858,22 @@ def doctor(cwd):
         print(f"      rules(own) : {rules}")
         print(f"      checks     : {checks}")
         print(f"      tool-checks: {tool_checks}")
+    mandatory = (
+        len(list(MANDATORY_DIR.glob("*.py"))) if MANDATORY_DIR.is_dir() else 0
+    )
+    print(f"  mandatory  : {mandatory} ({MANDATORY_DIR})")
     for tool in ("ast-grep", "fallow", "git", "rg"):
         print(f"  {tool:<10} : {shutil.which(tool) or 'not installed'}")
-    print(f"  {'bash':<10} : {bash_exe() or 'not installed'}")
     print()
     print(f"  tool_checks      : {'on' if settings.tool_checks else 'off'}")
-    print("  bash missing     -> checks/ skipped (tool-checks/ are Python)")
+    print("  mandatory/       : always on; no config key or root reaches it")
     print("  ast-grep missing -> per-file rules skipped (checks/ still run)")
     print("  fallow missing   -> changeset duplication check skipped")
     print("  rg missing       -> over-extraction check skipped")
     print("  scope=diff       -> per-file findings limited to lines the branch")
     print("                      added; findings older than it stay quiet")
-    print("  only the global root listed -> nothing here opted in; the hook is inert")
+    print("  only the global root listed -> nothing here opted in, so only the")
+    print("                      layers named by `always` run")
     sys.exit(0)
 
 
@@ -867,25 +899,44 @@ def main():
     if declared and Path(declared).is_dir():
         cwd = Path(declared).resolve()
 
+    # Ahead of discovery and the config, so no root and no setting is between
+    # this tier and the call it refuses. A config.toml that will not even parse
+    # cannot take it out either.
+    if event == "PreToolUse":
+        arm_watchdog(deadline(6))
+        run_mandatory(payload, cwd)
+
     roots = discover_roots(cwd)
     settings = Settings(load_config(roots))
 
     # Registered in user settings, so it is reachable from every project on the
     # machine. Carrying an agent-guard directory somewhere above the working
-    # directory is the whole opt-in; with only the global root discovered there
-    # is nothing here to enforce, and the hook stays out of the way.
-    if len(roots) <= 1:
+    # directory is the whole opt-in, and a tree that has opted in runs every
+    # layer. Everywhere else only the layers named in `always` run, so a rule
+    # about the machine reaches every directory while a project's conventions
+    # still wait to be asked for.
+    scoped = len(roots) > 1
+    allowed = frozenset(LAYERS) if scoped else settings.always
+    if not allowed:
         sys.exit(0)
 
     if event == "PreToolUse":
-        # Fires ahead of every matched call, so the agent waits on it. A check
-        # that has not answered in this long has nothing worth waiting for.
-        arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 6))
+        # The watchdog is already armed by the mandatory tier above. A check that
+        # has not answered by then has nothing worth waiting for.
+        if "tool-checks" not in allowed:
+            sys.exit(0)
         check_tool(payload, roots, settings, cwd)
     elif event == "PostToolUse":
-        arm_watchdog(float(os.environ.get("AGENT_GUARD_DEADLINE") or 9))
-        check_file(payload, roots, settings, cwd)
+        # One event drives two layers, so it carries the permitted set down
+        # rather than deciding here.
+        layers = allowed & frozenset(("rules", "checks"))
+        if not layers:
+            sys.exit(0)
+        arm_watchdog(deadline(9))
+        check_file(payload, roots, settings, cwd, layers)
     elif event in ("Stop", "SubagentStop"):
+        if "changeset" not in allowed:
+            sys.exit(0)
         check_changeset(event, session, agent_type, roots, settings, cwd)
     sys.exit(0)
 
