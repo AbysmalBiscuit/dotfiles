@@ -31,6 +31,14 @@ _COLOUR = {
     Strategy.UNION: "\x1b[36m",
     Strategy.IGNORE: "\x1b[33m",
 }
+_SEQUENCE = {
+    b"[A": "up",
+    b"[B": "down",
+    b"OP": "help",
+    b"[11~": "help",
+    b"[[A": "help",
+}
+
 _DIM = "\x1b[2m"
 _RED = "\x1b[31m"
 _BOLD = "\x1b[1m"
@@ -79,7 +87,7 @@ class _Reader:
     def _windows(self) -> str:
         ch = self._msvcrt.getch()
         if ch in (b"\x00", b"\xe0"):
-            return {b"H": "up", b"P": "down"}.get(self._msvcrt.getch(), "")
+            return {b"H": "up", b"P": "down", b";": "help"}.get(self._msvcrt.getch(), "")
         return {b"\r": "enter", b"\x03": "quit", b"\x1b": "quit", b" ": "space"}.get(
             ch, ch.decode("latin-1", "ignore").lower()
         )
@@ -104,13 +112,56 @@ class _Reader:
         ch = os.read(self._fd, 1)
         if ch == b"\x1b":
             rest = self._pending(2)
-            return {b"[A": "up", b"[B": "down"}.get(rest, "quit")
+            # Terminals disagree about F1, and its three encodings run to
+            # different lengths. Draining the tail keeps the leftover bytes
+            # from arriving as separate keystrokes.
+            if rest == b"[1":
+                rest += self._pending(2)
+            elif rest == b"[[":
+                rest += self._pending(1)
+            return _SEQUENCE.get(rest, "quit")
         return {b"\r": "enter", b"\n": "enter", b"\x03": "quit", b" ": "space"}.get(
             ch, ch.decode("latin-1", "ignore").lower()
         )
 
     def key(self) -> str:
         return self._read()
+
+
+_HELP = (
+    ("what each strategy does", (
+        ("s  seed", "the repo fills this in only while the app has no value of its own"),
+        ("e  enforce", "the repo owns it, and every apply overwrites what the app wrote"),
+        ("u  union", "merge the two lists, the app's entries first; lists on both sides"),
+        ("i  ignore", "the app owns it, never stored in the repo, never asked again"),
+        ("   skip", "decide later; the path comes back as a candidate next run"),
+    )),
+    ("what a row means", (
+        ("[ ]", "skipped, nothing is written for this path"),
+        ("[x]", "selected, with the chosen strategy at the end of the row"),
+        ("[!]", "screened as a secret; only ignore is allowed, this repo is public"),
+    )),
+    ("keys", (
+        ("space", "select this row, or clear it back to skip"),
+        ("j k", "move down and up; the arrow keys work too"),
+        ("a", "select every row using its default strategy"),
+        ("n", "clear every row back to skip"),
+        ("enter", "write the selected rows and leave"),
+        ("q", "leave without writing anything"),
+    )),
+)
+
+
+def _help_frame() -> str:
+    width = max(len(key) for _, pairs in _HELP for key, _ in pairs)
+    out = ["\x1b[H\x1b[J", f"{_BOLD}agentcfg{_OFF}", ""]
+    for heading, pairs in _HELP:
+        out.append(f"{_BOLD}{heading}{_OFF}")
+        for key, text in pairs:
+            out.append(f"  {key:<{width}}  {_DIM}{text}{_OFF}")
+        out.append("")
+    out.append(f"{_DIM}any key returns to the list{_OFF}")
+    return "\r\n".join(out)
 
 
 def preview(value: object, width: int) -> str:
@@ -146,8 +197,8 @@ def _render(title, rows, choices, cursor, top, height) -> str:
     if blocked:
         out.append(f"{_RED}  {blocked} value(s) screened as secrets; they can only be ignored{_OFF}")
     out.append("")
-    out.append(f"{_DIM}space toggle  s seed  e enforce  u union  i ignore  a all  n none"
-               f"  enter write  q quit{_OFF}")
+    out.append(f"{_DIM}space toggle  s/e/u/i strategy  a all  n none  enter write"
+               f"  q quit{_OFF}  {_BOLD}? help{_OFF}")
     # Raw mode clears ONLCR, so a bare newline moves down without returning to
     # column 0 and every row lands further right than the one above it.
     return "\r\n".join(out)
@@ -175,13 +226,26 @@ def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strat
         pass
     height = max(5, shutil.get_terminal_size((100, 30)).lines - 8)
 
+    showing_help = False
+
     with _Reader() as reader:
         while True:
-            sys.stdout.write(_render(title, rows, choices, cursor, top, height))
+            frame = _help_frame() if showing_help else _render(
+                title, rows, choices, cursor, top, height
+            )
+            sys.stdout.write(frame)
             sys.stdout.flush()
             key = reader.key()
+
+            if showing_help:
+                showing_help = False
+                continue
+
             item = rows[cursor]
 
+            if key in ("?", "help"):
+                showing_help = True
+                continue
             if key in ("q", "quit"):
                 sys.stdout.write("\x1b[H\x1b[J")
                 return None
