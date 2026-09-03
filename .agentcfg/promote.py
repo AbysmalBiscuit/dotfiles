@@ -121,13 +121,92 @@ def can_pick() -> bool:
     )
 
 
+# Every flag here takes a value. Reading one as valueless would turn its
+# value into a phantom target; reading a valueless flag as taking one only
+# drops a target, which costs at most a skipped run.
+_VALUE_FLAGS = frozenset({
+    "--age-recipient", "--age-recipient-file", "--cache", "--color",
+    "--config", "--config-format", "--destination", "--exclude", "--include",
+    "--mode", "--output", "--override-data", "--override-data-file",
+    "--persistent-state", "--progress", "--refresh-externals", "--source",
+    "--use-builtin-age", "--use-builtin-git", "--working-tree",
+})
+_VALUE_SHORTHANDS = frozenset("DRSWciox")
+
+
+def _positionals(argv: list[str]) -> list[str]:
+    """The tokens that are neither a flag nor the value of one."""
+    out: list[str] = []
+    expect_value = False
+    literal = False
+    for token in argv:
+        if expect_value:
+            expect_value = False
+        elif literal or token == "-" or not token.startswith("-"):
+            out.append(token)
+        elif token == "--":
+            literal = True
+        elif token.startswith("--"):
+            expect_value = "=" not in token and token in _VALUE_FLAGS
+        else:
+            cluster = token[1:]
+            for index, letter in enumerate(cluster):
+                if letter in _VALUE_SHORTHANDS:
+                    expect_value = index == len(cluster) - 1
+                    break
+    return out
+
+
+def apply_targets(chezmoi_args: str) -> list[str]:
+    """The targets chezmoi was given, empty when it was given none.
+
+    argv[0] is the executable and the first positional after it is the
+    subcommand, so the targets start at the second.
+    """
+    return _positionals(chezmoi_args.split()[1:])[1:]
+
+
+def in_scope(chezmoi_args: str, paths, home) -> bool:
+    """True when the run could reach one of the config files.
+
+    A targeted apply leaves every other file alone, so a picker that opens
+    anyway seizes a command that was never about these configs. Anything
+    unresolvable counts as in scope: skipping a run only defers the
+    question to the next one.
+
+    chezmoi joins its argv with single spaces and runs hooks from the home
+    directory rather than the caller's, so a target carrying a space or one
+    written relative to another directory does not survive the round trip.
+    """
+    argv = chezmoi_args.split()
+    if "--source-path" in argv:
+        return True
+    targets = apply_targets(chezmoi_args)
+    if not targets:
+        return True
+    for arg in targets:
+        candidate = Path(os.path.expanduser(arg))
+        if not candidate.is_absolute():
+            candidate = home / candidate
+        candidate = Path(os.path.normpath(candidate))
+        if any(candidate == path or candidate in path.parents for path in paths):
+            return True
+    return False
+
+
 def main(argv) -> int:
+    root, home = _repo_root(), _dest_root()
+    chezmoi_args = os.environ.get("CHEZMOI_ARGS", "")
+    configs = [config for config in CONFIGS
+               if in_scope(chezmoi_args, [home / config.target], home)]
+    if not configs:
+        return 0
+
     interactive = can_pick()
     list_only = "--list" in argv or not interactive
-    root, home = _repo_root(), _dest_root()
     touched = 0
 
-    for config in CONFIGS:
+    for config in configs:
         source = root / config.source_dir
         target = home / config.target
         if not target.exists():

@@ -157,3 +157,70 @@ def test_apply_rolls_back_when_the_result_will_not_load(tmp_path):
 )
 def test_dry_run_reads_chezmoi_argv(args, expected):
     assert entry.dry_run(args) is expected
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        ("/usr/bin/chezmoi apply", []),
+        ("/usr/bin/chezmoi apply foobar.conf", ["foobar.conf"]),
+        ("/usr/bin/chezmoi apply a b", ["a", "b"]),
+        ("/usr/bin/chezmoi --source /repo apply foo", ["foo"]),
+        ("/usr/bin/chezmoi apply -S /repo foo", ["foo"]),
+        ("/usr/bin/chezmoi apply -S/repo foo", ["foo"]),
+        ("/usr/bin/chezmoi apply -nv foo", ["foo"]),
+        ("/usr/bin/chezmoi apply --exclude=scripts foo", ["foo"]),
+        ("/usr/bin/chezmoi apply -x scripts foo", ["foo"]),
+        ("/usr/bin/chezmoi apply -- -weird", ["-weird"]),
+        ("", []),
+    ],
+)
+def test_apply_targets_drops_flags_and_their_values(args, expected):
+    assert entry.apply_targets(args) == expected
+
+
+@pytest.mark.parametrize(
+    "target,expected",
+    [
+        ("", True),
+        (".codex/config.toml", True),
+        (".codex", True),
+        (".", True),
+        ("foobar.conf", False),
+        ("Documents", False),
+    ],
+)
+def test_in_scope_matches_the_config_and_its_parents(tmp_path, target, expected):
+    codex = tmp_path / ".codex" / "config.toml"
+    args = f"/usr/bin/chezmoi apply {target}".strip()
+    assert entry.in_scope(args, [codex], tmp_path) is expected
+
+
+def test_in_scope_accepts_an_absolute_target(tmp_path):
+    codex = tmp_path / ".codex" / "config.toml"
+    assert entry.in_scope(f"/usr/bin/chezmoi apply {codex}", [codex], tmp_path) is True
+
+
+def test_in_scope_gives_up_on_source_path_targets(tmp_path):
+    """--source-path names source entries, which the target paths cannot match."""
+    codex = tmp_path / ".codex" / "config.toml"
+    args = "/usr/bin/chezmoi apply --source-path dot_codex/config.toml"
+    assert entry.in_scope(args, [codex], tmp_path) is True
+
+
+def test_a_targeted_apply_checks_only_the_configs_it_reaches(tmp_path, monkeypatch, capsys):
+    home = tmp_path / "home"
+    (home / ".claude").mkdir(parents=True)
+    (home / ".claude" / "settings.json").write_text("{}", encoding="utf-8")
+    (home / ".codex").mkdir()
+    (home / ".codex" / "config.toml").write_text("", encoding="utf-8")
+    monkeypatch.setenv("CHEZMOI_SOURCE_DIR", str(REPO))
+    monkeypatch.setenv("CHEZMOI_DEST_DIR", str(home))
+
+    monkeypatch.setenv("CHEZMOI_ARGS", "/usr/bin/chezmoi apply .claude")
+    assert entry.main(["--list"]) == 0
+    assert ".codex" not in capsys.readouterr().out
+
+    monkeypatch.setenv("CHEZMOI_ARGS", "/usr/bin/chezmoi apply foobar.conf")
+    assert entry.main(["--list"]) == 0
+    assert capsys.readouterr().out == ""
