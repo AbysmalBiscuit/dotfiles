@@ -39,6 +39,7 @@ _COLOUR = {
 _SEQUENCE = {
     b"[A": "up",
     b"[B": "down",
+    b"[3~": "clear",
     b"OP": "help",
     b"[11~": "help",
     b"[[A": "help",
@@ -92,10 +93,11 @@ class _Reader:
     def _windows(self) -> str:
         ch = self._msvcrt.getch()
         if ch in (b"\x00", b"\xe0"):
-            return {b"H": "up", b"P": "down", b";": "help"}.get(self._msvcrt.getch(), "")
-        return {b"\r": "enter", b"\x03": "quit", b"\x1b": "quit", b" ": "space"}.get(
-            ch, ch.decode("latin-1", "ignore").lower()
-        )
+            return {b"H": "up", b"P": "down", b"S": "clear", b";": "help"}.get(
+                self._msvcrt.getch(), ""
+            )
+        return {b"\r": "enter", b"\x03": "quit", b"\x1b": "quit", b" ": "space",
+                b"\x08": "clear"}.get(ch, ch.decode("latin-1", "ignore").lower())
 
     def _pending(self, count: int, timeout: float = 0.05) -> bytes:
         """Read up to count bytes that are already on their way.
@@ -122,10 +124,12 @@ class _Reader:
             # from arriving as separate keystrokes.
             if rest == b"[1":
                 rest += self._pending(2)
-            elif rest == b"[[":
+            elif rest in (b"[[", b"[3"):
                 rest += self._pending(1)
             return _SEQUENCE.get(rest, "quit")
-        return {b"\r": "enter", b"\n": "enter", b"\x03": "quit", b" ": "space"}.get(
+        # Terminals disagree about backspace: DEL on most, ^H on a few.
+        return {b"\r": "enter", b"\n": "enter", b"\x03": "quit", b" ": "space",
+                b"\x7f": "clear", b"\x08": "clear"}.get(
             ch, ch.decode("latin-1", "ignore").lower()
         )
 
@@ -143,15 +147,16 @@ _HELP = (
         ("   skip", "decide later; the path comes back as a candidate next run"),
     )),
     ("what a row means", (
-        ("[ ]", "skipped, nothing is written for this path"),
-        ("[x]", "selected, with the chosen strategy at the end of the row"),
-        ("[!]", "screened as a secret; only ignore or remove, this repo is public"),
+        ("[ ]", "undecided, nothing is written for this path"),
+        ("[e]", "decided; the mark is the first letter of the strategy"),
+        ("[!]", "screened as a secret and still undecided; this repo is public"),
     )),
     ("keys", (
-        ("space", "select this row, or clear it back to skip"),
+        ("space", "decide this row with its default strategy, or clear it"),
+        ("backspace", "clear this row back to undecided; delete works too"),
         ("j k", "move down and up; the arrow keys work too"),
-        ("a", "select every row using its default strategy"),
-        ("n", "clear every row back to skip"),
+        ("a", "decide every row using its default strategy"),
+        ("n", "clear every row back to undecided"),
         ("enter", "write the selected rows and leave"),
         ("q", "leave without writing anything"),
     )),
@@ -187,12 +192,14 @@ def _render(title, rows, choices, cursor, top, height) -> str:
         item = rows[index]
         chosen = choices[item.path]
         here = "\u276f" if index == cursor else " "
-        if item.blocked:
+        # The mark carries the decision itself; screened rows stay red either
+        # way so a secret never loses its warning once it is decided.
+        if chosen is not SKIP:
+            mark, tint = chosen.value[0], _RED if item.blocked else _COLOUR[chosen]
+        elif item.blocked:
             mark, tint = "!", _RED
-        elif chosen is SKIP:
-            mark, tint = " ", _DIM
         else:
-            mark, tint = "x", _COLOUR[chosen]
+            mark, tint = " ", _DIM
         label = ".".join(item.path)
         tail = chosen.value if chosen else "skip"
         room = max(20, columns - len(label) - len(tail) - 12)
@@ -203,8 +210,8 @@ def _render(title, rows, choices, cursor, top, height) -> str:
     if blocked:
         out.append(f"{_RED}  {blocked} value(s) screened as secrets; they can only be ignored{_OFF}")
     out.append("")
-    out.append(f"{_DIM}space toggle  s/e/u/i/r strategy  a all  n none  enter write"
-               f"  q quit{_OFF}  {_BOLD}? help{_OFF}")
+    out.append(f"{_DIM}space toggle  s/e/u/i/r strategy  bksp clear  a all  n none"
+               f"  enter write  q quit{_OFF}  {_BOLD}? help{_OFF}")
     # Raw mode clears ONLCR, so a bare newline moves down without returning to
     # column 0 and every row lands further right than the one above it.
     return "\r\n".join(out)
@@ -264,6 +271,8 @@ def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strat
                 cursor = max(cursor - 1, 0)
             elif key == "space":
                 choices[item.path] = SKIP if choices[item.path] else default[item.path]
+            elif key == "clear":
+                choices[item.path] = SKIP
             elif key in _KEY_STRATEGY:
                 wanted = _KEY_STRATEGY[key]
                 if not item.blocked or wanted in _ALLOWED_WHEN_BLOCKED:
