@@ -146,6 +146,7 @@ def is_root(path):
         (path / "rules").is_dir()
         or (path / "checks").is_dir()
         or (path / "tool-checks").is_dir()
+        or (path / "changeset-checks").is_dir()
         or (path / "sgconfig.yml").is_file()
         or (path / CONFIG_NAME).is_file()
     )
@@ -406,6 +407,29 @@ def run_checks(path, roots, cwd):
             if text:
                 out.append(text)
     return "\n".join(out)
+
+
+def run_changeset_checks(base, roots, cwd):
+    """Conventions only a diff can show. A root's changeset-checks/ holds Python
+    scripts, each given the base revision as its argument and printing a finished
+    section on stdout when it has something to say; silence means nothing found.
+
+    The per-call layers cannot stand in for this. A PreToolUse check sees one
+    call and a PostToolUse check sees one file, so whatever reaches the branch by
+    a route neither covers arrives unexamined. The diff is where that shows up.
+
+    Run through this interpreter rather than their shebang, for the reason
+    run_checks gives."""
+    out = []
+    for root in roots:
+        directory = root / "changeset-checks"
+        if not directory.is_dir():
+            continue
+        for script in sorted(directory.glob("*.py")):
+            text = run([sys.executable, str(script), base], timeout=20, cwd=cwd).strip()
+            if text:
+                out.append(text)
+    return "\n\n".join(out)
 
 
 def run_mandatory(payload, cwd):
@@ -766,7 +790,11 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
 
     base = git_base(settings, cwd)
     changed = changed_files(base, cwd)
-    if not changed:
+    # Before the source-glob gate: the duplication audit reads TS and JS, but a
+    # changeset-check speaks for whatever files its own rule covers, and a
+    # branch that touched only markdown or shell still has to answer for them.
+    violations = run_changeset_checks(base, roots, cwd)
+    if not changed and not violations:
         emit_silent()
 
     sdir = STATE_DIR / session
@@ -782,7 +810,9 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
             pass
 
     # Skip re-running when the changeset has not moved since the last report.
-    fingerprint = changeset_fingerprint(base, changed, cwd)
+    fingerprint = changeset_fingerprint(base, changed, cwd) + hashlib.sha1(
+        violations.encode("utf-8", "replace")
+    ).hexdigest()
     last = sdir / "last-diff"
     try:
         if last.is_file() and last.read_text(encoding="utf-8").strip() == fingerprint:
@@ -794,8 +824,9 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
     who = f"Subagent '{agent_type}'" if agent_type else "This agent"
     dupes = find_duplication(base, seen_file, settings, cwd)
     extraction = find_over_extraction(changed, seen_file, roots, settings, cwd)
-
     sections = []
+    if violations:
+        sections.append(violations)
     if dupes:
         sections.append(
             f"{who} introduced duplicated code rather than reusing what already "
@@ -818,16 +849,17 @@ def check_changeset(event, session, agent_type, roots, settings, cwd):
     blocks = _int(
         blocks_file.read_text(encoding="utf-8") if blocks_file.is_file() else "0", 0
     )
-    if settings.block and dupes and blocks < settings.max_blocks:
+    if settings.block and (violations or dupes) and blocks < settings.max_blocks:
         try:
             blocks_file.write_text(str(blocks + 1), encoding="utf-8")
         except OSError:
             pass
-        emit(
-            event,
-            context,
-            "agent-guard: duplication introduced by this changeset is unresolved",
+        reason = (
+            "agent-guard: this changeset violates a rule of the tree it is in"
+            if violations
+            else "agent-guard: duplication introduced by this changeset is unresolved"
         )
+        emit(event, context, reason)
     emit(event, context)
 
 
@@ -853,11 +885,17 @@ def doctor(cwd):
             if (root / "tool-checks").is_dir()
             else 0
         )
+        diff_checks = (
+            len(list((root / "changeset-checks").glob("*.py")))
+            if (root / "changeset-checks").is_dir()
+            else 0
+        )
         print(f"    {root}")
         print(f"      config     : {config if config else 'NONE'}")
         print(f"      rules(own) : {rules}")
         print(f"      checks     : {checks}")
         print(f"      tool-checks: {tool_checks}")
+        print(f"      changeset-checks: {diff_checks}")
     mandatory = (
         len(list(MANDATORY_DIR.glob("*.py"))) if MANDATORY_DIR.is_dir() else 0
     )
