@@ -6,6 +6,11 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
+# Message rows average well over the payload a 4 KiB page holds inline, so the SQLite
+# default spills most of them onto overflow pages and wastes a large fraction of the
+# file. A larger page keeps them inline.
+PAGE_SIZE = 16384
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 
@@ -69,15 +74,35 @@ def default_path() -> Path:
     return base / "history" / "index.db"
 
 
+def repage(conn: sqlite3.Connection) -> bool:
+    """Move an existing database onto PAGE_SIZE, returning whether it now matches.
+
+    VACUUM is the only way to repage a database that already holds data, and it applies
+    page_size only outside WAL, silently leaving the file untouched otherwise.
+    """
+    if conn.execute("PRAGMA page_size").fetchone()[0] == PAGE_SIZE:
+        return True
+    try:
+        conn.execute("PRAGMA journal_mode=DELETE")
+        conn.execute(f"PRAGMA page_size={PAGE_SIZE}")
+        conn.execute("VACUUM")
+        return conn.execute("PRAGMA page_size").fetchone()[0] == PAGE_SIZE
+    except sqlite3.Error:
+        # Another agent holds the database; a later run repages it.
+        return False
+    finally:
+        conn.execute("PRAGMA journal_mode=WAL")
+
+
 def connect(path: Path | None = None, *, write: bool = True) -> sqlite3.Connection:
     path = Path(path) if path else default_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     # Parallel agents share one index; wait for a concurrent writer instead of failing.
     conn.execute("PRAGMA busy_timeout=15000")
     if write:
+        repage(conn)  # leaves the connection in WAL
         conn.execute("PRAGMA synchronous=NORMAL")
         conn.executescript(SCHEMA)
         conn.execute(
@@ -85,4 +110,6 @@ def connect(path: Path | None = None, *, write: bool = True) -> sqlite3.Connecti
             (str(SCHEMA_VERSION),),
         )
         conn.commit()
+    else:
+        conn.execute("PRAGMA journal_mode=WAL")
     return conn

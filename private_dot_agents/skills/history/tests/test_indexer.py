@@ -492,3 +492,46 @@ class BriefTest(unittest.TestCase):
         os.environ["HISTORY_HARNESS"] = "cx"
         out = self._brief([])
         self.assertIn("publishes no session id", out)
+
+
+class RepageTest(unittest.TestCase):
+    """A database created before PAGE_SIZE was raised must migrate itself."""
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.path = Path(self.dir.name) / "index.db"
+
+    def _legacy(self):
+        conn = sqlite3.connect(self.path)
+        conn.execute("PRAGMA page_size=4096")
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript(db.SCHEMA)
+        conn.execute(
+            "INSERT INTO messages(file_id, source, role, seq, text)"
+            " VALUES(1, 'cc', 'user', 0, 'ripgrep beats grep')"
+        )
+        conn.commit()
+        conn.close()
+
+    def test_a_new_database_starts_at_the_larger_page(self):
+        conn = db.connect(self.path)
+        self.addCleanup(conn.close)
+        self.assertEqual(db.PAGE_SIZE, conn.execute("PRAGMA page_size").fetchone()[0])
+
+    def test_an_existing_database_is_repaged_and_left_in_wal(self):
+        self._legacy()
+        conn = db.connect(self.path)
+        self.addCleanup(conn.close)
+        self.assertEqual(db.PAGE_SIZE, conn.execute("PRAGMA page_size").fetchone()[0])
+        self.assertEqual("wal", conn.execute("PRAGMA journal_mode").fetchone()[0])
+
+    def test_repaging_keeps_rows_searchable(self):
+        self._legacy()
+        conn = db.connect(self.path)
+        self.addCleanup(conn.close)
+        hit = conn.execute(
+            "SELECT snippet(messages_fts, 0, '<<', '>>', '…', 8) FROM messages_fts"
+            " WHERE messages_fts MATCH 'ripgrep'"
+        ).fetchone()
+        self.assertIn("<<ripgrep>>", hit[0])

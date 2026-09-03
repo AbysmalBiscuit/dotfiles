@@ -45,6 +45,14 @@ file records the byte offset consumed so far, so a later run resumes from there.
 that shrank is re-read from the start, and a half-written trailing line waits for the
 writer to finish it.
 
+Text is stored uncompressed. The database uses a page larger than the SQLite default,
+because the average message exceeds what a default page holds inline and the overflow
+pages that result waste a large share of the file. `connect()` repages an existing
+database on its own, which costs one slow run and then nothing. VACUUM is the only way to
+repage a database that holds data, and it ignores `page_size` unless WAL is dropped for
+the duration, so `repage()` does that and restores WAL afterwards. A concurrent agent
+holding the database makes the attempt a no-op, and a later run retries.
+
 Several agents can query and index at once. SQLite runs in WAL mode with a busy timeout,
 and a reader that meets a busy writer waits, then falls back to the already-indexed data.
 
