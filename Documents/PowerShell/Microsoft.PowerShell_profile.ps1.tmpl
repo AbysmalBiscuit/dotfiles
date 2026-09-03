@@ -461,6 +461,11 @@ function y {
 # {{- end }}
 # {{- if index .has "chezmoi" | default false }}
 Set-Alias -Name cm -Value chezmoi
+
+# Pick a merge strategy for live agent-config keys no rule owns.
+function agentcfg {
+    python3 '# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py' @args
+}
 # {{- end }}
 # {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
 $env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"

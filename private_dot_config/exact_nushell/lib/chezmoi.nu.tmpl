@@ -1,0 +1,12 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# chezmoi
+def --wrapped cm [...args] {
+    let token = (do --ignore-errors { ^gh auth token | str trim } | default "")
+    with-env { CHEZMOI_GITHUB_TOKEN: $token } { ^chezmoi ...$args }
+}
+alias cmexe = cm execute-template
+
+# Pick a merge strategy for live agent-config keys no rule owns.
+def --wrapped agentcfg [...args] {
+    ^python3 "# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py" ...$args
+}

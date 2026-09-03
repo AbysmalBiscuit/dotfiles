@@ -1,0 +1,4 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+function agentcfg --description 'pick a merge strategy for live agent-config keys no rule owns'
+    python3 "# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py" $argv
+end

@@ -91,3 +91,8 @@ alias wanip6='dig -6 TXT +short o-o.myaddr.l.google.com @ns1.google.com'
 # systemctl aliases
 alias systemctlu='systemctl --user'
 # {{ end -}}
+
+# agentcfg: pick a merge strategy for live agent-config keys no rule owns
+function agentcfg() {
+    python3 "# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py" "$@"
+}
