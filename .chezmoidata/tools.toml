@@ -31,6 +31,10 @@ git = "https://github.com/mlwmlw/cheerio-cli"
 lang = "bun"
 name = "claude"
 url = "https://claude.com/product/claude-code"
+update_command.default = [
+    "claude",
+    "upgrade"
+]
 
 [[tools]]
 lang = "bun"
@@ -712,6 +716,11 @@ name = "codex"
 desc = "Lightweight coding agent that runs in your terminal"
 url = "https://learn.chatgpt.com/docs/codex/cli"
 git = "https://github.com/openai/codex"
+update_command.default = [
+    "codex",
+    "update"
+]
+update_command.windows = []
 
 [[tools]]
 lang = "rust"

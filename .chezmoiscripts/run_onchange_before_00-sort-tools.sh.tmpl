@@ -26,6 +26,12 @@ FIELD_DEFAULTS = {
     "git": "",
     "comment": "",
     "install_command": "",
+    "update_command": {
+        "default": [],
+        "windows": [],
+        "linux": [],
+        "macos": [],
+    },
     "completions_command": "",
     "init_command": "",
     "supported_shells": [],
@@ -51,6 +57,7 @@ def append_value(
     field: str,
     value: str | list[str] | dict[str, Any],
     default: Any,
+    sort_list: bool = True,
 ) -> None:
     if type(value) is str:
         value = value.strip()
@@ -61,13 +68,17 @@ def append_value(
     if type(value) is str:
         lines.append(f'{field} = "{escape_toml_string(value)}"')
     elif type(value) is list:
-        value.sort()
+        if sort_list:
+            value.sort()
         lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
     elif type(value) is dict:
-        merged = deepcopy(default)
-        merged.update(value)
-        for key, val in merged.items():
-            append_value(lines, f"extra.{key}", val, default.get(key))
+        unknown_keys = value.keys() - default.keys()
+        if unknown_keys:
+            unknown = ", ".join(sorted(unknown_keys))
+            raise ValueError(f"Unknown {field} keys: {unknown}")
+        for key in default:
+            if key in value:
+                append_value(lines, f"{field}.{key}", value[key], None, sort_list=False)
 
 
 def tool_to_toml(tool_header: str, tool: dict[str, Any]) -> str:

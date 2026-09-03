@@ -2,6 +2,35 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Chezmoi tool inventory",
   "type": "object",
+  "definitions": {
+    "commandArguments": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "updateCommand": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/commandArguments"
+        },
+        "windows": {
+          "$ref": "#/definitions/commandArguments"
+        },
+        "linux": {
+          "$ref": "#/definitions/commandArguments"
+        },
+        "macos": {
+          "$ref": "#/definitions/commandArguments"
+        }
+      },
+      "description": "Argument arrays used to update an installed tool. A platform entry overrides the default; an empty array disables updates on that platform."
+    }
+  },
   "properties": {
     "tools": {
       "type": "array",
@@ -57,6 +86,9 @@
           "install_command": {
             "type": "string",
             "description": "Command used to install the tool."
+          },
+          "update_command": {
+            "$ref": "#/definitions/updateCommand"
           },
           "completions_command": {
             "type": "string",
@@ -187,6 +219,9 @@
           "install_command": {
             "type": "string",
             "description": "Command used to install the tool."
+          },
+          "update_command": {
+            "$ref": "#/definitions/updateCommand"
           },
           "completions_command": {
             "type": "string",
