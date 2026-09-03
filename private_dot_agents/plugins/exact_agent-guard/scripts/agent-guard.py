@@ -23,9 +23,39 @@ import subprocess
 import sys
 import threading
 import tomllib
+from datetime import datetime
 from pathlib import Path
 
 _watchdog = None
+
+# AGENT_GUARD_LOG names how much to write to ~/agent-guard.log. Unset, empty or
+# "0" writes nothing, so the hook costs nothing when nobody is watching.
+_LEVELS = {"0": 0, "off": 0, "1": 1, "info": 1, "2": 2, "debug": 2, "3": 3, "trace": 3}
+LOG_LEVEL = _LEVELS.get((os.environ.get("AGENT_GUARD_LOG") or "").strip().lower(), 0)
+LOG_PATH = Path.home() / "agent-guard.log"
+
+
+def log(level, event, **fields):
+    """Append one line when AGENT_GUARD_LOG asks for this level or louder.
+
+    Logging is a debugging aid and never a reason to fail, so a line that cannot
+    be written is dropped rather than reported. Levels are 1 for the decision a
+    call reached, 2 for each check's verdict, and 3 for the command text itself,
+    which is held back until then because a command line can carry a secret.
+    """
+    if level > LOG_LEVEL:
+        return
+    try:
+        stamp = datetime.now().isoformat(timespec="milliseconds")
+        rest = " ".join(
+            f"{key}={value if isinstance(value, int) else json.dumps(str(value))}"
+            for key, value in fields.items()
+            if value is not None
+        )
+        with LOG_PATH.open("a", encoding="utf-8") as handle:
+            handle.write(f"{stamp} [{level}] {event} {rest}".rstrip() + "\n")
+    except BaseException:
+        pass
 
 
 def arm_watchdog(seconds):
@@ -456,6 +486,13 @@ def run_mandatory(payload, cwd):
             stdin=raw,
         )
         out = out.strip()
+        log(
+            2,
+            "mandatory",
+            script=script.name,
+            verdict="deny" if code else "advise" if out else "silent",
+            reason=out.splitlines()[0] if out else None,
+        )
         if code:
             denials.append(
                 out
@@ -503,14 +540,24 @@ def check_tool(payload, roots, settings, cwd):
                 stdin=raw,
             )
             out = out.strip()
+            log(
+                2,
+                "tool-check",
+                script=script.name,
+                verdict="deny" if (code and out) else "advise" if out else "silent",
+                reason=out.splitlines()[0] if out else None,
+            )
             if not out:
                 continue
             (denials if code else advice).append(out)
 
     if denials:
+        log(1, "decision", tool=tool, outcome="deny", checks=len(denials))
         emit("PreToolUse", "\n\n".join(denials + advice), "\n\n".join(denials))
     if advice:
+        log(1, "decision", tool=tool, outcome="advise", checks=len(advice))
         emit("PreToolUse", "\n\n".join(advice))
+    log(1, "decision", tool=tool, outcome="allow")
     emit_silent()
 
 
@@ -936,6 +983,18 @@ def main():
     declared = payload.get("cwd") or ""
     if declared and Path(declared).is_dir():
         cwd = Path(declared).resolve()
+
+    tool_input = payload.get("tool_input") or {}
+    log(
+        1,
+        "invoke",
+        hook=event,
+        tool=payload.get("tool_name"),
+        agent=agent_type or None,
+        session=session[:8],
+        cwd=str(cwd),
+    )
+    log(3, "input", command=tool_input.get("command"), path=tool_input.get("file_path"))
 
     # Ahead of discovery and the config, so no root and no setting is between
     # this tier and the call it refuses. A config.toml that will not even parse

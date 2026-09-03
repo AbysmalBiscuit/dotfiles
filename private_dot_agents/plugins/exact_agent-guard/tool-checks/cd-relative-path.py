@@ -21,9 +21,12 @@ import sys
 # Readers whose operands name files. Their meaning survives moving the directory
 # into the path, which is what makes the rewrite mechanical.
 READERS = {"rg", "fd", "cat", "head", "tail", "wc", "ls", "stat", "du", "file", "nl", "sed", "awk"}
-# Searchers whose first operand is the pattern, so only the operands after it
-# name paths.
-PATTERN_FIRST = {"rg", "fd"}
+# Tools whose first operand is a pattern or a script rather than a path, so
+# only the operands after it name files.
+PATTERN_FIRST = {"rg", "fd", "sed", "awk"}
+# An operand that names a file even when it isn't there to be stat'd: it holds
+# a separator, starts a dotfile or a `./` prefix, or ends in an extension.
+PATH_SHAPE = re.compile(r"[/\\]|^\.|\.[A-Za-z0-9_]{1,8}$")
 # Options taking a separate operand, so the operand is not read as a path.
 OPTS_WITH_VALUE = {
     "-e", "--regexp", "-g", "--glob", "-t", "--type", "-T", "--type-not",
@@ -80,10 +83,14 @@ def segment_operands(tokens, directory):
     if name in PATTERN_FIRST and operands:
         operands = operands[1:]  # the first operand is the pattern
 
+    # Existence is a hint, not a requirement. A command probing for a file that
+    # is not there resolves no better than one reading a file that is, and on a
+    # shell whose paths the checking process cannot stat, such as an MSYS
+    # `/c/...` path under native Windows, nothing would ever resolve.
     return [
         operand for operand in operands
         if not os.path.isabs(operand)
-        and os.path.exists(os.path.join(directory, operand))
+        and (PATH_SHAPE.search(operand) or os.path.exists(os.path.join(directory, operand)))
     ]
 
 
