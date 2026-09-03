@@ -381,9 +381,9 @@ vim.lsp.config("bashls", {
   },
 })
 
--- vim.lsp.config("taplo", {
--- filetypes = { "toml", "toml.chezmoitmpl" },
--- })
+vim.lsp.config("taplo", {
+  filetypes = { "toml", "toml.chezmoitmpl" },
+})
 
 -- local ignored_vtsls_codes = { [80001] = true }
 -- local method = vim.lsp.protocol.Methods.textDocument_publishDiagnostics
