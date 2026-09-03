@@ -5,7 +5,7 @@ single entry point works for every hook it is registered under.
 
   PreToolUse                          tool-checks/ scripts on the call about to
                                       run, advisory or denying
-  PostToolUse (Edit|Write|MultiEdit)  fast per-file ast-grep rules and checks/
+  PostToolUse (edits or apply_patch)  fast per-file ast-grep rules and checks/
                                       scripts, advisory, on the lines the branch
                                       introduced
   Stop | SubagentStop                 fallow audit on the changeset, gating
@@ -27,6 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 _watchdog = None
+CODEX = "--codex" in sys.argv[1:]
 
 # AGENT_GUARD_LOG names how much to write to ~/agent-guard.log. Unset, empty or
 # "0" writes nothing, so the hook costs nothing when nobody is watching.
@@ -358,6 +359,16 @@ def emit_silent():
 
 
 def emit(event, context, deny=""):
+    if CODEX and event in ("Stop", "SubagentStop"):
+        out = (
+            {"decision": "block", "reason": context}
+            if deny
+            else {"systemMessage": context}
+        )
+        sys.stdout.write(json.dumps(out, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+        sys.exit(0)
+
     out = {"hookEventName": event}
     if deny:
         out["permissionDecision"] = "deny"
@@ -562,6 +573,34 @@ def check_tool(payload, roots, settings, cwd):
 
 
 _FINDING_LINE = re.compile(r":(\d+)  \[")
+_PATCH_FILE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
+_PATCH_MOVE = re.compile(r"^\*\*\* Move to: (.+)$", re.MULTILINE)
+
+
+def edited_paths(payload, cwd):
+    tool_input = payload.get("tool_input") or {}
+    direct = tool_input.get("file_path") or ""
+    candidates = [direct] if direct else []
+    if payload.get("tool_name") == "apply_patch":
+        command = tool_input.get("command") or ""
+        candidates.extend(_PATCH_FILE.findall(command))
+        candidates.extend(_PATCH_MOVE.findall(command))
+
+    paths = []
+    seen = set()
+    for candidate in candidates:
+        path = Path(candidate.strip())
+        if not path.is_absolute():
+            path = cwd / path
+        try:
+            path = path.resolve()
+        except OSError:
+            continue
+        key = os.path.normcase(str(path))
+        if key not in seen and path.is_file():
+            seen.add(key)
+            paths.append(str(path))
+    return paths
 
 
 def scan_file(path, roots, cwd, layers):
@@ -601,25 +640,25 @@ def check_file(payload, roots, settings, cwd, layers):
     """Per-file syntactic rules. Must stay in the low milliseconds: this fires on
     every edit from every agent and subagent, so its cost multiplies. Git is
     consulted only once a rule has fired, so a clean file costs no subprocess."""
-    path = (payload.get("tool_input") or {}).get("file_path") or ""
-    if not path or not Path(path).is_file():
-        emit_silent()
-    if not settings.ext_re.search(path) or settings.ignore_re.search(path):
-        emit_silent()
-
-    findings = scan_file(path, roots, cwd, layers)
-    if not findings:
-        emit_silent()
-
-    if settings.scope == "diff":
-        added = changed_lines(path, git_base(settings, cwd), cwd)
-        if added is not None:
-            kept = []
-            for line in findings:
-                m = _FINDING_LINE.search(line)
-                if m and int(m.group(1)) in added:
-                    kept.append(line)
-            findings = kept
+    paths = edited_paths(payload, cwd)
+    findings = []
+    base = None
+    for path in paths:
+        if not settings.ext_re.search(path) or settings.ignore_re.search(path):
+            continue
+        path_findings = scan_file(path, roots, cwd, layers)
+        if settings.scope == "diff" and path_findings:
+            if base is None:
+                base = git_base(settings, cwd)
+            added = changed_lines(path, base, cwd)
+            if added is not None:
+                path_findings = [
+                    line
+                    for line in path_findings
+                    if (match := _FINDING_LINE.search(line))
+                    and int(match.group(1)) in added
+                ]
+        findings.extend(path_findings)
 
     findings = findings[: settings.max_findings]
     if not findings:
@@ -963,7 +1002,8 @@ def doctor(cwd):
 
 
 def main():
-    argv_event = sys.argv[1] if len(sys.argv) > 1 else ""
+    args = [arg for arg in sys.argv[1:] if arg != "--codex"]
+    argv_event = args[0] if args else ""
     if argv_event == "doctor":
         doctor(Path.cwd())
 
