@@ -208,7 +208,8 @@ def _render(title, rows, choices, cursor, top, height) -> str:
         out.append(f"{_DIM}  showing {top + 1}-{min(top + height, len(rows))} of {len(rows)}{_OFF}")
     blocked = sum(1 for item in rows if item.blocked)
     if blocked:
-        out.append(f"{_RED}  {blocked} value(s) screened as secrets; they can only be ignored{_OFF}")
+        out.append(f"{_RED}  {blocked} value(s) screened as secrets; they can only "
+                   f"be ignored or removed{_OFF}")
     out.append("")
     out.append(f"{_DIM}space toggle  s/e/u/i/r strategy  bksp clear  a all  n none"
                f"  enter write  q quit{_OFF}  {_BOLD}? help{_OFF}")
