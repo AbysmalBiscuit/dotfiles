@@ -46,6 +46,18 @@ Writing hard numbers in living docs is not ok, as they will go stale immediately
 
 When its crucial to have the hard numbers, documents should carry the instructions for how to regenerate/verify them.
 
+## Absolute paths, not `cd`
+
+Write the absolute path into the command instead of changing directory first.
+A path relative to a `cd` cannot be resolved by the permission analyzer, so with
+`Read()` deny rules configured every such command stops for manual approval.
+
+- `rg -n PAT /abs/path/file.rs`, not `cd /abs/path && rg -n PAT file.rs`
+- `git -C /abs/repo diff REV -- path`, not `cd /abs/repo; git diff REV -- path`
+
+`git` after a `cd` into a different directory always prompts, whatever the path
+looks like, because git runs that directory's hooks. `git -C` avoids it.
+
 ## Git Stash
 
 Never do weird `git stash` and `git stash` pop to "just quickly check something or run a test". There are often parallel agents working in a project and this can mess everything up. To inspect another revision, read it in place with `git show REV:path`.
