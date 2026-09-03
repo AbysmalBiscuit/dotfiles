@@ -9,6 +9,10 @@ enforce = [
   ["hooks", "SessionEnd"],
   ["tui", "status_line"],
   ["tui", "status_line_use_colors"],
+  ["hooks", "PostToolUse"],
+  ["hooks", "PreToolUse"],
+  ["hooks", "Stop"],
+  ["hooks", "SubagentStop"],
 ]
 seed = [
   ["model"], ["model_reasoning_effort"], ["approvals_reviewer"],

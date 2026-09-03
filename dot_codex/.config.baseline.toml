@@ -14,6 +14,41 @@ hooks = [
     { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
 ]
 
+[[hooks.PostToolUse]]
+matcher = "^apply_patch$"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py --codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent-guard.py --codex"
+timeout = 10
+statusMessage = "Checking conventions"
+
+[[hooks.PreToolUse]]
+matcher = "^Bash$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py --codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent-guard.py --codex"
+timeout = 8
+statusMessage = "Checking tool conventions"
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py --codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent-guard.py --codex"
+timeout = 60
+statusMessage = "Auditing changeset"
+
+[[hooks.SubagentStop]]
+[[hooks.SubagentStop.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py --codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent-guard.py --codex"
+timeout = 60
+statusMessage = "Auditing changeset"
 [marketplaces.devkit]
 source = "https://github.com/AbysmalBiscuit/devkit.git"
 source_type = "git"
