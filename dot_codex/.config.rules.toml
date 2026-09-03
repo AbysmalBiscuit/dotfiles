@@ -32,3 +32,8 @@ ignore = [
   # win at that depth and report archi live-only on every check.
   ["mcp_servers", "archi", "enabled"],
 ]
+remove = [
+  ["plugins", "claude-custom@personal", "enabled"],
+  ["plugins", "superpowers@openai-curated", "enabled"],
+  ["plugins", "superpowers@personal", "enabled"],
+]
