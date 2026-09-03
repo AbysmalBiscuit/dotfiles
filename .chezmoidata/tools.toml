@@ -1100,6 +1100,15 @@ supported_shells = [
 
 [[tools]]
 lang = "rust"
+name = "taplo"
+desc = "A TOML toolkit: formatter, linter, and language server."
+url = "https://taplo.tamasfe.dev/"
+git = "https://github.com/AbysmalBiscuit/taplo"
+comment = "Fork carries the all-of completion stack overflow fix upstream lacks."
+install_command = "cargo install --git https://github.com/AbysmalBiscuit/taplo --branch fix/all-of-completion-stack-overflow --locked taplo-cli"
+
+[[tools]]
+lang = "rust"
 name = "tdf"
 desc = "A tui PDF viewer."
 url = "https://github.com/itsjunetime/tdf"
