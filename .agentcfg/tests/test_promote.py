@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import promote as entry
 from engine.check import CheckReport, classify
 from engine.codecs import JsonCodec
 from engine.promote import LIVE_ONLY, UNCLASSIFIED, candidates, screen
@@ -140,3 +141,19 @@ def test_apply_rolls_back_when_the_result_will_not_load(tmp_path):
 
     assert "rolled back" in message
     assert (baseline.read_bytes(), rules.read_bytes()) == before
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    [
+        ("/usr/bin/chezmoi apply --dry-run", True),
+        ("/usr/bin/chezmoi apply -n", True),
+        ("/usr/bin/chezmoi apply -nv", True),
+        ("/usr/bin/chezmoi apply", False),
+        ("/usr/bin/chezmoi apply -v", False),
+        ("/usr/bin/chezmoi apply --exclude=scripts", False),
+        ("", False),
+    ],
+)
+def test_dry_run_reads_chezmoi_argv(args, expected):
+    assert entry.dry_run(args) is expected

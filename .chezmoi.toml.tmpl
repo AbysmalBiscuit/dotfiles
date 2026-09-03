@@ -356,10 +356,23 @@ hardlink = {{ not $is_wsl }}
 [github]
 refreshPeriod = "12h"
 
+[interpreters]
+{{ if index $has "python3" -}}
+[interpreters.py]
+command = "python3"
+{{ end }}
+
 [hooks]
 {{ if and (index $has "devkit") (index $has "python3") -}}
 [hooks.upgrade.post]
 script = {{ joinPath .chezmoi.sourceDir "hooks" "upgrade_post_docm_pin_chezmoi.py" | replaceAllRegex "\\\\" "/" | quote }}
+{{ end }}
+{{ if index $has "python3" -}}
+# Assigns a merge strategy to live config keys no rule owns, before the apply
+# reads the source state so the choices land in the same run. Falls back to
+# printing when there is no terminal or chezmoi was invoked with --dry-run.
+[hooks.apply.pre]
+script = {{ joinPath .chezmoi.sourceDir ".agentcfg" "promote.py" | replaceAllRegex "\\\\" "/" | quote }}
 {{ end }}
 
 [keepassxc]

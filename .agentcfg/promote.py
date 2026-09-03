@@ -9,11 +9,14 @@ rules files.
 
     python .agentcfg/promote.py            pick interactively
     python .agentcfg/promote.py --list     print the candidates and exit
+
+Without a terminal, or under a chezmoi dry run, it prints instead of picking.
 """
 
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 sys.dont_write_bytecode = True
@@ -96,8 +99,30 @@ def apply_choices(config, source, live, choices, found) -> str:
     return f"  wrote {len(additions)} baseline value(s), {len(new_rules)} rule(s)"
 
 
+_DRY_RUN = re.compile(r"^(?:--dry-run|-[a-zA-Z]*n[a-zA-Z]*)$")
+
+
+def dry_run(chezmoi_args: str) -> bool:
+    """True when chezmoi's own argv asks for a dry run.
+
+    Apply hooks fire under --dry-run as well, so a picker launched from one
+    would seize a command the caller expected to change nothing. CHEZMOI_ARGS
+    carries chezmoi's whole argv and is the only signal that separates the two.
+    """
+    return any(_DRY_RUN.match(arg) for arg in chezmoi_args.split())
+
+
+def can_pick() -> bool:
+    return (
+        sys.stdin.isatty()
+        and sys.stdout.isatty()
+        and not dry_run(os.environ.get("CHEZMOI_ARGS", ""))
+    )
+
+
 def main(argv) -> int:
-    list_only = "--list" in argv
+    interactive = can_pick()
+    list_only = "--list" in argv or not interactive
     root, home = _repo_root(), _dest_root()
     touched = 0
 
@@ -121,6 +146,8 @@ def main(argv) -> int:
             for item in found:
                 flag = f"   [secret: {item.secret}]" if item.blocked else ""
                 print(f"  {item.kind:12} {'.'.join(item.path)}{flag}")
+            if not interactive:
+                print("  run `agentcfg` to assign strategies")
             continue
 
         choices = pick(found, f"{config.target}  ({len(found)} unclassified)")
