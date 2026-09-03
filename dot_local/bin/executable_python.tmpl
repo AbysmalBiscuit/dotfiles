@@ -1,0 +1,28 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false }}
+# vim:filetype=bash.chezmoitmpl
+# {{- end -}}
+# {{- $bin := joinPath .chezmoi.homeDir ".local" "bin" -}}
+# {{- $ext := "" -}}
+# {{- if .is_windows -}}
+# {{-   $ext = ".exe" -}}
+# {{- end -}}
+# {{- $exe := "" -}}
+# {{- $newest := -1 -}}
+# {{- range (glob (joinPath $bin (printf "python3.*%s" $ext))) -}}
+# {{-   $minor := trimPrefix "python3." (trimSuffix $ext (base .)) -}}
+# {{-   if regexMatch "^[0-9]+$" $minor -}}
+# {{-     if gt (atoi $minor) $newest -}}
+# {{-       $newest = (atoi $minor) -}}
+# {{-       $exe = . -}}
+# {{-     end -}}
+# {{-   end -}}
+# {{- end -}}
+#!/bin/sh
+# vim:filetype=bash
+# {{ if $exe -}}
+exec "# {{ $exe }}" "$@"
+# {{- else -}}
+echo "python3: no python3.<minor> interpreter in ~/.local/bin" >&2
+exit 127
+# {{- end }}

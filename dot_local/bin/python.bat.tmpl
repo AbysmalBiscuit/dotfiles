@@ -1,0 +1,17 @@
+{{- $bin := joinPath .chezmoi.homeDir ".local" "bin" -}}
+{{- $exe := "" -}}
+{{- $newest := -1 -}}
+{{- range (glob (joinPath $bin "python3.*.exe")) -}}
+{{-   $name := base . -}}
+{{-   if regexMatch "^python3\\.[0-9]+\\.exe$" $name -}}
+{{-     $minor := atoi (regexReplaceAll "^python3\\.([0-9]+)\\.exe$" $name "${1}") -}}
+{{-     if gt $minor $newest -}}
+{{-       $newest = $minor -}}
+{{-       $exe = . -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+{{- if $exe -}}
+@echo off
+"{{ $exe | replace "/" "\\" }}" %*
+{{ end -}}
