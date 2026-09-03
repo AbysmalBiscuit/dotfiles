@@ -71,7 +71,8 @@
 {{- $tools := include ".chezmoidata/tools.toml" | fromToml -}}
 {{- range $tool := $tools.tools -}}
   {{- $has_tool = merge $has_tool (dict ($tool.name | replaceAllRegex "[-. ]" "_" | lower) "") -}}
-  {{- range $cmd := $tool.cmds -}}
+  {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
+  {{- range $cmd := $cmds -}}
     {{- $has = merge $has (dict ($cmd | replaceAllRegex "[-. ]" "_") false) -}}
   {{- end -}}
 {{- end -}}
@@ -79,7 +80,8 @@
   {{- $wsl_tools := include ".chezmoidata/wsl_tools.toml" | fromToml -}}
   {{- range $tool := $wsl_tools.wsl_tools -}}
     {{- $has_tool = merge $has_tool (dict ($tool.name | replaceAllRegex "[-. ]" "_" | lower) "") -}}
-    {{- range $cmd := $tool.cmds -}}
+    {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
+    {{- range $cmd := $cmds -}}
       {{- $has = merge $has (dict ($cmd | replaceAllRegex "[-. ]" "_") false) -}}
     {{- end -}}
   {{- end -}}
