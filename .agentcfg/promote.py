@@ -77,11 +77,12 @@ def apply_choices(config, source, live, choices, found) -> str:
 
     kinds = {item.path: item.kind for item in found}
     additions = [(path, _value(live, path)) for path, strategy in choices.items()
-                 if strategy is not Strategy.IGNORE]
+                 if strategy not in (Strategy.IGNORE, Strategy.REMOVE)]
     # A live-only path already matches a rule and is merely missing from the
     # baseline. Appending a second pattern for it risks a load-time tie.
+    # remove is the exception: no existing rule can express a deletion.
     new_rules = [(strategy, path) for path, strategy in choices.items()
-                 if kinds[path] != LIVE_ONLY]
+                 if strategy is Strategy.REMOVE or kinds[path] != LIVE_ONLY]
 
     if additions:
         config.writer(baseline_path, additions)

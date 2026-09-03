@@ -44,6 +44,13 @@ def lint(baseline: Mapping, rules: RuleSet) -> None:
     for path, value in leaves(baseline):
         strategy = rules.resolve(path)
 
+        if rules.removes(path):
+            raise LintError(
+                f"{show(path)}: the rules declare this path removed, but the "
+                "baseline still carries a value for it. Delete it from the "
+                "baseline, or drop the remove rule."
+            )
+
         if strategy in (Strategy.IGNORE, Strategy.PASSTHROUGH):
             raise LintError(
                 f"{show(path)}: baseline value resolves to {strategy.value}, "

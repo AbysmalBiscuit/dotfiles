@@ -23,13 +23,18 @@ _KEY_STRATEGY = {
     "e": Strategy.ENFORCE,
     "u": Strategy.UNION,
     "i": Strategy.IGNORE,
+    "r": Strategy.REMOVE,
 }
+
+# A screened value may be left alone or deleted, never written to the repo.
+_ALLOWED_WHEN_BLOCKED = (Strategy.IGNORE, Strategy.REMOVE)
 
 _COLOUR = {
     Strategy.SEED: "\x1b[32m",
     Strategy.ENFORCE: "\x1b[35m",
     Strategy.UNION: "\x1b[36m",
     Strategy.IGNORE: "\x1b[33m",
+    Strategy.REMOVE: "\x1b[31m",
 }
 _SEQUENCE = {
     b"[A": "up",
@@ -134,12 +139,13 @@ _HELP = (
         ("e  enforce", "the repo owns it, and every apply overwrites what the app wrote"),
         ("u  union", "merge the two lists, the app's entries first; lists on both sides"),
         ("i  ignore", "the app owns it, never stored in the repo, never asked again"),
+        ("r  remove", "delete it from the config on every apply, and keep it deleted"),
         ("   skip", "decide later; the path comes back as a candidate next run"),
     )),
     ("what a row means", (
         ("[ ]", "skipped, nothing is written for this path"),
         ("[x]", "selected, with the chosen strategy at the end of the row"),
-        ("[!]", "screened as a secret; only ignore is allowed, this repo is public"),
+        ("[!]", "screened as a secret; only ignore or remove, this repo is public"),
     )),
     ("keys", (
         ("space", "select this row, or clear it back to skip"),
@@ -197,7 +203,7 @@ def _render(title, rows, choices, cursor, top, height) -> str:
     if blocked:
         out.append(f"{_RED}  {blocked} value(s) screened as secrets; they can only be ignored{_OFF}")
     out.append("")
-    out.append(f"{_DIM}space toggle  s/e/u/i strategy  a all  n none  enter write"
+    out.append(f"{_DIM}space toggle  s/e/u/i/r strategy  a all  n none  enter write"
                f"  q quit{_OFF}  {_BOLD}? help{_OFF}")
     # Raw mode clears ONLCR, so a bare newline moves down without returning to
     # column 0 and every row lands further right than the one above it.
@@ -260,7 +266,7 @@ def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strat
                 choices[item.path] = SKIP if choices[item.path] else default[item.path]
             elif key in _KEY_STRATEGY:
                 wanted = _KEY_STRATEGY[key]
-                if not item.blocked or wanted is Strategy.IGNORE:
+                if not item.blocked or wanted in _ALLOWED_WHEN_BLOCKED:
                     choices[item.path] = wanted
             elif key == "a":
                 for row in rows:

@@ -64,7 +64,9 @@ def classify(live: Mapping, baseline: Mapping, rules: RuleSet) -> CheckReport:
         pattern = _winning_pattern(rules, path)
         base_value, in_baseline = _get(baseline, path)
 
-        if strategy is Strategy.PASSTHROUGH:
+        if rules.removes(path):
+            continue
+        elif strategy is Strategy.PASSTHROUGH:
             report.unclassified.append(path)
         elif strategy is Strategy.IGNORE:
             continue

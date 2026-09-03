@@ -24,10 +24,24 @@ def _merge_level(
 
     for key in live:
         path = (*prefix, key)
+        if rules.resolve(path) is Strategy.REMOVE:
+            continue
         if key in baseline:
-            out[key] = _combine(baseline[key], live[key], rules, path)
+            value = _combine(baseline[key], live[key], rules, path)
+        elif descends(live[key]):
+            # Descend even with nothing curated here, or a remove rule deeper
+            # in a live-only table never runs. With no removals below, this
+            # rebuilds exactly what a deep copy would have produced.
+            value = _merge_level({}, live[key], rules, path)
         else:
-            out[key] = copy.deepcopy(live[key])
+            value = copy.deepcopy(live[key])
+        # An enforced empty baseline table means "this table exists and is
+        # empty", so only prune where remove emptied it.
+        if value == {} and descends(live[key]) and all(
+            rules.removes((*path, member)) for member in live[key]
+        ):
+            continue
+        out[key] = value
 
     for key in baseline:
         if key in live:
@@ -91,6 +105,8 @@ def _claims_exactly(rules: RuleSet, path: tuple[str, ...]) -> bool:
 
 def _write_only(base_value, rules: RuleSet, path: tuple[str, ...]):
     """Resolve a baseline key absent from live."""
+    if rules.resolve(path) is Strategy.REMOVE:
+        return _NOTHING
     if descends(base_value):
         written = {}
         for key, value in base_value.items():

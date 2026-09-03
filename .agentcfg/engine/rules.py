@@ -15,10 +15,17 @@ class Strategy(str, enum.Enum):
     SEED = "seed"
     UNION = "union"
     IGNORE = "ignore"
+    REMOVE = "remove"
     PASSTHROUGH = "passthrough"
 
 
-DECLARABLE = (Strategy.ENFORCE, Strategy.SEED, Strategy.UNION, Strategy.IGNORE)
+DECLARABLE = (
+    Strategy.ENFORCE,
+    Strategy.SEED,
+    Strategy.UNION,
+    Strategy.IGNORE,
+    Strategy.REMOVE,
+)
 
 
 def score(pattern: list[str], path: tuple[str, ...]) -> tuple[int, int] | None:
@@ -106,3 +113,15 @@ class RuleSet:
         if not matches:
             return Strategy.PASSTHROUGH
         return matches[0][1]
+
+    def removes(self, path: tuple[str, ...]) -> bool:
+        """True when this path, or a container above it, resolves to remove.
+
+        A deeper pattern outscores a remove rule on an ancestor, so resolving
+        the leaf alone would miss it: ["plugins", "*", "enabled"] wins on
+        plugins.x.enabled even where ["plugins", "x"] is declared removed.
+        """
+        return any(
+            self.resolve(path[:depth]) is Strategy.REMOVE
+            for depth in range(1, len(path) + 1)
+        )
