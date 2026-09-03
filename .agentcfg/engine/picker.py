@@ -59,12 +59,14 @@ class _Reader:
             self._read = self._windows
             self._msvcrt = msvcrt
             return self
+        import select
         import termios
         import tty
 
         self._fd = sys.stdin.fileno()
         self._saved = termios.tcgetattr(self._fd)
         tty.setraw(self._fd)
+        self._select = select
         self._read = self._posix
         return self
 
@@ -82,10 +84,26 @@ class _Reader:
             ch, ch.decode("latin-1", "ignore").lower()
         )
 
+    def _pending(self, count: int, timeout: float = 0.05) -> bytes:
+        """Read up to count bytes that are already on their way.
+
+        A lone Escape and the first byte of an arrow key are the same byte, so
+        reading the rest unconditionally waits for keystrokes a lone Escape
+        never sends. A terminal emits the whole sequence in one burst, so
+        anything still absent after the timeout was never coming.
+        """
+        data = b""
+        while len(data) < count and self._select.select([self._fd], [], [], timeout)[0]:
+            chunk = os.read(self._fd, count - len(data))
+            if not chunk:
+                break
+            data += chunk
+        return data
+
     def _posix(self) -> str:
         ch = os.read(self._fd, 1)
         if ch == b"\x1b":
-            rest = os.read(self._fd, 2)
+            rest = self._pending(2)
             return {b"[A": "up", b"[B": "down"}.get(rest, "quit")
         return {b"\r": "enter", b"\n": "enter", b"\x03": "quit", b" ": "space"}.get(
             ch, ch.decode("latin-1", "ignore").lower()
@@ -130,7 +148,9 @@ def _render(title, rows, choices, cursor, top, height) -> str:
     out.append("")
     out.append(f"{_DIM}space toggle  s seed  e enforce  u union  i ignore  a all  n none"
                f"  enter write  q quit{_OFF}")
-    return "\n".join(out)
+    # Raw mode clears ONLCR, so a bare newline moves down without returning to
+    # column 0 and every row lands further right than the one above it.
+    return "\r\n".join(out)
 
 
 def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strategy] | None:
@@ -149,7 +169,8 @@ def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strat
     _enable_ansi()
     try:
         # The frame draws box and arrow glyphs; a cp1252 stdout raises on them.
-        sys.stdout.reconfigure(encoding='utf-8')
+        # newline="" stops Windows turning the frame's \r\n into \r\r\n.
+        sys.stdout.reconfigure(encoding="utf-8", newline="")
     except (AttributeError, OSError):
         pass
     height = max(5, shutil.get_terminal_size((100, 30)).lines - 8)
