@@ -4,7 +4,8 @@
 # {{- end }}
 # {{- $cli_tools := list -}}
 # {{- range $tool := .tools -}}
-# {{- range $cmd := $tool.cmds -}}
+# {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
+# {{- range $cmd := $cmds -}}
 # {{- $cli_tools = append $cli_tools $cmd -}}
 # {{- end -}}
 # {{- end -}}
@@ -41,7 +42,7 @@ $lines | Set-Content $hasToml
 $toolLines = @(
 # {{ range $tool := .tools -}}
 # {{- $safe_name := $tool.name | replaceAllRegex "[-. ]" "_" | lower -}}
-# {{- $cmds := $tool.cmds -}}
+# {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
 # {{- $first_cmd := index $cmds 0 -}}
     "# {{ $safe_name }} = ""$(
 # {{- range $i, $cmd := $cmds -}}

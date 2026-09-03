@@ -5,7 +5,6 @@
 # # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata" "tools.toml")).modTime }}
 # # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata" "wsl_tools.toml")).modTime }}
 import json
-import re
 import tomllib
 from collections import defaultdict
 from copy import deepcopy
@@ -14,9 +13,11 @@ from typing import Any
 
 TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "tools.toml"
 WSL_TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "wsl_tools.toml"
-RE_JSON_KEY = re.compile(r"^(\s*)\"(.+?)\":")
+HEADER = (
+    "#:schema .tools.schema.json\n"
+)
 
-FIELDS_TYPES = {
+FIELD_DEFAULTS = {
     "lang": "",
     "name": "",
     "cmds": [],
@@ -41,54 +42,68 @@ FIELDS_TYPES = {
 }
 
 
-def escape_toml_string(value):
+def escape_toml_string(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
-def append_value(lines: list[str], field: str, value: str | list[str] | dict[str, Any], default: Any):
+
+def append_value(
+    lines: list[str],
+    field: str,
+    value: str | list[str] | dict[str, Any],
+    default: Any,
+) -> None:
     if type(value) is str:
-        lines.append(f'{field} = "{escape_toml_string(str(value.strip()))}"')
+        value = value.strip()
+
+    if value == default:
+        return
+
+    if type(value) is str:
+        lines.append(f'{field} = "{escape_toml_string(value)}"')
     elif type(value) is list:
         value.sort()
         lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
     elif type(value) is dict:
-        # value = json.dumps(value, indent=4, sort_keys=True)
-        # value = [RE_JSON_KEY.sub("\1\2 =", line) for line in value.splitlines()]
         merged = deepcopy(default)
         merged.update(value)
         for key, val in merged.items():
             append_value(lines, f"extra.{key}", val, default.get(key))
 
-def tool_to_toml(tool_header: str, tool: dict) -> str:
-    lines = [f"[[{tool_header}]]"]
-    for field, default in FIELDS_TYPES.items():
-        value = tool.get(field, deepcopy(default))
-        if field == "supported_shells" and (tool.get("completions_command", "") != "" or tool.get("init_command", "") != "") and value == []:
-            value = ["bash", "fish", "zsh"]
-        elif field == "cmds" and value == []:
-            value = [tool.get("name")]
 
+def tool_to_toml(tool_header: str, tool: dict[str, Any]) -> str:
+    lines = [f"[[{tool_header}]]"]
+    for field, default in FIELD_DEFAULTS.items():
+        if field == "cmds":
+            default = [tool["name"]]
+        elif field == "supported_shells" and (
+            tool.get("completions_command", "") or tool.get("init_command", "")
+        ):
+            default = ["bash", "fish", "zsh"]
+
+        value = tool.get(field, deepcopy(default))
         append_value(lines, field, value, default)
 
     return "\n".join(lines)
 
-def sort_file(file) -> None:
+
+def sort_file(file: Path) -> None:
     with file.open("rb") as f:
         data = tomllib.load(f)
 
     table_name = file.stem
     tools = data.get(table_name, [])
     tools.sort(key=lambda tool: (tool.get("lang", ""), tool.get("name", "")))
-    if len(tools) < len(set(tool["name"] for tool in tools)):
+    tool_names = [tool["name"] for tool in tools]
+    if len(tool_names) != len(set(tool_names)):
         dupe_dict = defaultdict(int)
         for tool in tools:
             dupe_dict[tool["name"]] += 1
-        dupes = ','.join([f"'{k}'" for k, v in dupe_dict.items() if v > 1])
+        dupes = ", ".join(f"'{k}'" for k, v in dupe_dict.items() if v > 1)
         msg = f"The following tools are duplicates: {dupes}. Manually clean the '{file.name}' file first."
         raise ValueError(msg)
 
-    header = "# Managed by chezmoi — sort order maintained by run_onchange_before_sort-tools.sh.tmpl\n"
     blocks = "\n\n".join(tool_to_toml(table_name, tool) for tool in tools)
-    output = header + blocks
+    output = HEADER + blocks
 
     current = file.read_bytes().decode("utf-8")
     if current == output:

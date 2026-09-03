@@ -13,14 +13,16 @@
 # {{- $cli_tools := list -}}
 # {{- $cli_tools_wsl := list -}}
 # {{- range $tool := .tools -}}
-# {{- range $cmd := $tool.cmds -}}
+# {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
+# {{- range $cmd := $cmds -}}
 # {{- $cli_tools = append $cli_tools $cmd -}}
 # {{- end -}}
 # {{- end -}}
 # {{ if $is_wsl -}}
 # {{ "" }}
 # {{- range $tool := .wsl_tools -}}
-# {{- range $cmd := $tool.cmds -}}
+# {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
+# {{- range $cmd := $cmds -}}
 # {{- $key := $cmd -}}
 # {{- $cli_tools_wsl = append $cli_tools_wsl $key -}}
 # {{- end -}}
@@ -95,8 +97,9 @@ echo >"# {{ $has_tool_file }}"
 {
     # {{ range $tool := .tools -}}
     # {{- $safe_name := $tool.name | replaceAllRegex "[-. ]" "_" | lower -}}
+    # {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
     _tool_cmd=""
-    # {{ range $cmd := $tool.cmds -}}
+    # {{ range $cmd := $cmds -}}
     [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" }} = true$' "# {{ $has_file }}" && _tool_cmd="# {{ $cmd }}"
     # {{ end -}}
     echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'
@@ -104,8 +107,9 @@ echo >"# {{ $has_tool_file }}"
     # {{ if $is_wsl -}}
     # {{ range $tool := .wsl_tools -}}
     # {{- $safe_name := printf "%s_exe" ($tool.name | replaceAllRegex "[-. ]" "_" | lower) -}}
+    # {{- $cmds := index $tool "cmds" | default (list $tool.name) -}}
     _tool_cmd=""
-    # {{ range $cmd := $tool.cmds -}}
+    # {{ range $cmd := $cmds -}}
     [ -z "$_tool_cmd" ] && "$GREP" -q '^# {{ $cmd | replaceAllRegex "[-. ]" "_" | lower }} = true$' "# {{ $has_file }}" && _tool_cmd="# {{ $cmd }}"
     # {{ end -}}
     echo '# {{ $safe_name }} = "'"$_tool_cmd"'"'

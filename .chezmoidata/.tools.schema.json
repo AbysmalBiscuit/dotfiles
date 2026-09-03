@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chezmoi tool inventory",
+  "type": "object",
+  "properties": {
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "lang",
+          "name"
+        ],
+        "additionalProperties": false,
+        "x-taplo": {
+          "initKeys": [
+            "lang",
+            "name"
+          ]
+        },
+        "properties": {
+          "lang": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Implementation language used for sorting and grouping."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name and tool-level lookup key."
+          },
+          "cmds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Executable names checked on PATH. The sorter uses the tool name when this is omitted."
+          },
+          "desc": {
+            "type": "string",
+            "description": "Short description of the tool."
+          },
+          "url": {
+            "type": "string",
+            "description": "Project or documentation URL."
+          },
+          "git": {
+            "type": "string",
+            "description": "Source repository URL."
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free-form inventory note."
+          },
+          "install_command": {
+            "type": "string",
+            "description": "Command used to install the tool."
+          },
+          "completions_command": {
+            "type": "string",
+            "description": "Command used to generate shell completions."
+          },
+          "init_command": {
+            "type": "string",
+            "description": "Command used to generate shell initialization code."
+          },
+          "supported_shells": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Shell names accepted by the completion or initialization command. The sorter uses its standard shell set when this is omitted."
+          },
+          "append_fish_completion": {
+            "type": "string",
+            "description": "Text appended to the Fish completion command."
+          },
+          "append_fish_init": {
+            "type": "string",
+            "description": "Text appended to the Fish initialization command."
+          },
+          "command_bash_name": {
+            "type": "string",
+            "description": "Bash argument override for the generation command."
+          },
+          "command_fish_name": {
+            "type": "string",
+            "description": "Fish argument override for the generation command."
+          },
+          "command_nu_name": {
+            "type": "string",
+            "description": "Nushell argument override for the generation command."
+          },
+          "command_powershell_name": {
+            "type": "string",
+            "description": "PowerShell argument override for the generation command."
+          },
+          "command_zsh_name": {
+            "type": "string",
+            "description": "Zsh argument override for the generation command."
+          },
+          "completions_command_only_if_no": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Installed commands that suppress completion generation."
+          },
+          "completions_cmds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Executable subset used when the completion command contains CMD."
+          },
+          "init_command_only_if_no": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Installed commands that suppress initialization generation."
+          }
+        }
+      }
+    },
+    "wsl_tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "lang",
+          "name"
+        ],
+        "additionalProperties": false,
+        "x-taplo": {
+          "initKeys": [
+            "lang",
+            "name"
+          ]
+        },
+        "properties": {
+          "lang": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Implementation language used for sorting and grouping."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name and tool-level lookup key."
+          },
+          "cmds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Executable names checked on PATH. The sorter uses the tool name when this is omitted."
+          },
+          "desc": {
+            "type": "string",
+            "description": "Short description of the tool."
+          },
+          "url": {
+            "type": "string",
+            "description": "Project or documentation URL."
+          },
+          "git": {
+            "type": "string",
+            "description": "Source repository URL."
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free-form inventory note."
+          },
+          "install_command": {
+            "type": "string",
+            "description": "Command used to install the tool."
+          },
+          "completions_command": {
+            "type": "string",
+            "description": "Command used to generate shell completions."
+          },
+          "init_command": {
+            "type": "string",
+            "description": "Command used to generate shell initialization code."
+          },
+          "supported_shells": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Shell names accepted by the completion or initialization command. The sorter uses its standard shell set when this is omitted."
+          },
+          "append_fish_completion": {
+            "type": "string",
+            "description": "Text appended to the Fish completion command."
+          },
+          "append_fish_init": {
+            "type": "string",
+            "description": "Text appended to the Fish initialization command."
+          },
+          "command_bash_name": {
+            "type": "string",
+            "description": "Bash argument override for the generation command."
+          },
+          "command_fish_name": {
+            "type": "string",
+            "description": "Fish argument override for the generation command."
+          },
+          "command_nu_name": {
+            "type": "string",
+            "description": "Nushell argument override for the generation command."
+          },
+          "command_powershell_name": {
+            "type": "string",
+            "description": "PowerShell argument override for the generation command."
+          },
+          "command_zsh_name": {
+            "type": "string",
+            "description": "Zsh argument override for the generation command."
+          },
+          "completions_command_only_if_no": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Installed commands that suppress completion generation."
+          },
+          "completions_cmds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Executable subset used when the completion command contains CMD."
+          },
+          "init_command_only_if_no": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Installed commands that suppress initialization generation."
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "minProperties": 1,
+  "maxProperties": 1
+}

@@ -58,15 +58,18 @@
 # {{- /* comment is emitted once per exe rather than once per shell.     */ -}}
 # {{- /* ============================================================== */ -}}
 # {{- range $tool := $all_tools -}}
-# {{-   $cmd_str := $tool.init_command | default $tool.completions_command | default "" -}}
+# {{-   $init_command := index $tool "init_command" | default "" -}}
+# {{-   $completions_command := index $tool "completions_command" | default "" -}}
+# {{-   $cmd_str := $init_command | default $completions_command -}}
 # {{-   if $cmd_str -}}
 # {{-     $exe := $cmd_str | splitList " " | first -}}
 # {{-     $has_key := $exe | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
 # {{-     if index $.has $has_key | default false -}}
 # {{-       $wanted := false -}}
+# {{-       $supported_shells := index $tool "supported_shells" | default (list "bash" "fish" "zsh") -}}
 # {{-       range $s := $shells -}}
 # {{-         range $n := (index $shell_names $s | default (list $s)) -}}
-# {{-           if has $n $tool.supported_shells -}}
+# {{-           if has $n $supported_shells -}}
 # {{-             $wanted = true -}}
 # {{-           end -}}
 # {{-         end -}}
@@ -117,40 +120,39 @@ $nuParts = [System.Collections.Generic.List[string]]::new()
 # {{-   range $tool := $final_tools -}}
 # {{- /* ---- Match any accepted spelling; the match is the default arg ---- */ -}}
 # {{-     $accepted := index $shell_names $shell | default (list $shell) -}}
+# {{-     $supported_shells := index $tool "supported_shells" | default (list "bash" "fish" "zsh") -}}
 # {{-     $declared := "" -}}
 # {{-     range $n := $accepted -}}
-# {{-       if has $n $tool.supported_shells -}}
+# {{-       if has $n $supported_shells -}}
 # {{-         $declared = $n -}}
 # {{-       end -}}
 # {{-     end -}}
 # {{-     if $declared -}}
-# {{-       $has_comp := $tool.completions_command | default "" | ne "" -}}
-# {{-       $has_init := $tool.init_command | default "" | ne "" -}}
+# {{-       $completions_command := index $tool "completions_command" | default "" -}}
+# {{-       $init_command := index $tool "init_command" | default "" -}}
+# {{-       $has_comp := $completions_command | ne "" -}}
+# {{-       $has_init := $init_command | ne "" -}}
 # {{-       if or $has_comp $has_init -}}
 # {{- /* ---- Determine which command to use and its only_if_no guard ---- */ -}}
 # {{-         $use_cmd := "" -}}
 # {{-         $append_key := "" -}}
 # {{-         $skip := false -}}
 # {{-         if $has_init -}}
-# {{-           $use_cmd = $tool.init_command -}}
+# {{-           $use_cmd = $init_command -}}
 # {{-           $append_key = printf "append_%s_init" $shell -}}
-# {{-           if $tool.init_command_only_if_no -}}
-# {{-             range $blocker := $tool.init_command_only_if_no -}}
-# {{-               $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
-# {{-               if index $.has $bkey | default false -}}
-# {{-                 $skip = true -}}
-# {{-               end -}}
+# {{-           range $blocker := index $tool "init_command_only_if_no" | default (list) -}}
+# {{-             $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-             if index $.has $bkey | default false -}}
+# {{-               $skip = true -}}
 # {{-             end -}}
 # {{-           end -}}
 # {{-         else if $has_comp -}}
-# {{-           $use_cmd = $tool.completions_command -}}
+# {{-           $use_cmd = $completions_command -}}
 # {{-           $append_key = printf "append_%s_completion" $shell -}}
-# {{-           if $tool.completions_command_only_if_no -}}
-# {{-             range $blocker := $tool.completions_command_only_if_no -}}
-# {{-               $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
-# {{-               if index $.has $bkey | default false -}}
-# {{-                 $skip = true -}}
-# {{-               end -}}
+# {{-           range $blocker := index $tool "completions_command_only_if_no" | default (list) -}}
+# {{-             $bkey := $blocker | replaceAllRegex "[^a-zA-Z0-9_]" "_" -}}
+# {{-             if index $.has $bkey | default false -}}
+# {{-               $skip = true -}}
 # {{-             end -}}
 # {{-           end -}}
 # {{-         else -}}
