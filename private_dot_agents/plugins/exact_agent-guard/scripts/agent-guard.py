@@ -14,11 +14,14 @@ Always exits 0 and speaks through the hookSpecificOutput JSON contract, so a
 broken check degrades to silence rather than wedging the session.
 """
 
+import contextlib
 import hashlib
+import io
 import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -101,6 +104,9 @@ STATE_DIR = (
 # a script that runs on every call nor drop one that must.
 MANDATORY_DIR = SELF.parent.parent / "mandatory"
 MANDATORY_TIMEOUT = 5
+# AGENT_GUARD_IN_PROCESS=0 puts every check back in its own subprocess, for
+# bisecting a check that misbehaves only when it shares this interpreter.
+IN_PROCESS = (os.environ.get("AGENT_GUARD_IN_PROCESS") or "1").strip() not in ("0", "off")
 
 CONFIG_NAME = "config.toml"
 _ENV_PREFIX = "AGENT_GUARD_"
@@ -158,6 +164,79 @@ def run_full(cmd, timeout=20, cwd=None, stdin=None, env=None):
         return p.stdout or "", p.returncode
     except Exception:
         return "", 0
+
+
+@contextlib.contextmanager
+def alarm(seconds):
+    """Raise inside the block once `seconds` pass, where the platform allows it.
+
+    Windows has no SIGALRM, and there the process watchdog is the only backstop:
+    a wedged check takes the run down with it instead of being skipped. Both
+    outcomes are silence, which is the direction a broken check should fail."""
+    if seconds <= 0 or not hasattr(signal, "SIGALRM"):
+        yield
+        return
+
+    def fire(*_):
+        raise TimeoutError("check ran longer than %ss" % seconds)
+
+    previous = signal.signal(signal.SIGALRM, fire)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
+def run_script(path, argument, stdin, cwd, timeout):
+    """One check's stdout and exit code, run in this interpreter.
+
+    Spawning a Python per check costs more than every check does put together,
+    and the checks are small pure-stdlib scripts, so they run here instead. The
+    source is executed with `__name__` set to "__main__" so the script's own
+    guard runs exactly as it would in a subprocess and its exit code arrives as
+    SystemExit; nothing about the contract changes.
+
+    Returns None when the script cannot be run this way, so the caller falls
+    back to a subprocess rather than skipping a check for a reason that has
+    nothing to do with what the check is for."""
+    if not IN_PROCESS:
+        return None
+    try:
+        source = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    captured = io.StringIO()
+    namespace = {"__name__": "__main__", "__file__": str(path), "__doc__": None}
+    argv, stdin_stream, directory = sys.argv, sys.stdin, os.getcwd()
+    code = 0
+    try:
+        sys.argv = [str(path), argument]
+        sys.stdin = io.StringIO(stdin)
+        with contextlib.suppress(OSError):
+            os.chdir(cwd)
+        with alarm(timeout), contextlib.redirect_stdout(captured):
+            with contextlib.redirect_stderr(io.StringIO()):
+                exec(compile(source, str(path), "exec"), namespace)
+    except SystemExit as stop:
+        code = stop.code if isinstance(stop.code, int) else 0
+    except TimeoutError:
+        # A subprocess that outran its timeout was reported as silence, and a
+        # check the agent cannot wait for should not become a refusal.
+        return "", 0
+    except BaseException:
+        # A check's own guard turns its crashes into silence, so reaching here
+        # means the guard itself never ran: a syntax error, or an import that
+        # failed. The interpreter would have exited 1, and the mandatory tier
+        # reads that as a denial on purpose. Report it the same way.
+        return "", 1
+    finally:
+        sys.argv, sys.stdin = argv, stdin_stream
+        with contextlib.suppress(OSError):
+            os.chdir(directory)
+    return captured.getvalue(), code
 
 
 def succeeds(cmd, timeout=20, cwd=None):
@@ -442,8 +521,11 @@ def run_checks(path, roots, cwd):
             continue
         for script in sorted(checks.glob("*.py")):
             # Only newlines: the leading two spaces are part of the finding format.
-            text = run(
-                [sys.executable, str(script), str(path)], timeout=10, cwd=cwd
+            result = run_script(script, str(path), "", cwd, 10)
+            text = (
+                result[0]
+                if result
+                else run([sys.executable, str(script), str(path)], timeout=10, cwd=cwd)
             ).strip("\r\n")
             if text:
                 out.append(text)
@@ -490,7 +572,7 @@ def run_mandatory(payload, cwd):
 
     advice, denials = [], []
     for script in sorted(MANDATORY_DIR.glob("*.py")):
-        out, code = run_full(
+        out, code = run_script(script, tool, raw, cwd, MANDATORY_TIMEOUT) or run_full(
             [sys.executable, str(script), tool],
             timeout=MANDATORY_TIMEOUT,
             cwd=cwd,
@@ -544,7 +626,7 @@ def check_tool(payload, roots, settings, cwd):
         if not checks.is_dir():
             continue
         for script in sorted(checks.glob("*.py")):
-            out, code = run_full(
+            out, code = run_script(script, tool, raw, cwd, 5) or run_full(
                 [sys.executable, str(script), tool],
                 timeout=5,
                 cwd=cwd,
