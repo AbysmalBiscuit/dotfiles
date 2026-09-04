@@ -1,6 +1,6 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 #:schema https://raw.githubusercontent.com/AbysmalBiscuit/alacritree/integration/all-features/schema/alacritree-config.json
-# vim: shiftwidth=2
+# vim: shiftwidth=2 : set ff=unix :
 [font]
 fallback = [
   # Sarasa's cell is half an em, and nothing here fits it: Meslo's icons are
@@ -55,7 +55,10 @@ vsync = false
 # draw the grid through an OpenGL paint callback instead of an epaint mesh
 gpu_grid = true
 focus_priority_boost = true
-reap_descendants_on_close = true
+reap_descendants_on_close = false
+async_session_spawn = true
+
+[ui.decorations]
 
 # zed-style paths: filename first, parent trailing it, $HOME as ~
 # the git header is a directory, so it abbreviates instead of reordering

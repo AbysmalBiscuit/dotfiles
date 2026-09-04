@@ -1,4 +1,5 @@
 #:schema https://raw.githubusercontent.com/AbysmalBiscuit/alacritree/integration/all-features/schema/alacritree-config.json
+# vim: shiftwidth=2 : set ff=unix :
 [general]
 working_directory = "~"
 
@@ -61,6 +62,10 @@ bindings = [
     # Ctrl+Shift+T spawns instead.
     { key = "T", mods = "Control", action = "ReceiveChar" },
     { key = "T", mods = "Control|Shift", action = "SpawnNewInstance" },
+  { key = "K", mods = "Control", action = "ReceiveChar" },
+  { key = "B", mods = "Control", action = "ReceiveChar" },
+  { key = "B", mods = "Control|Shift", action = "ToggleLeftSidebar" },
+  { key = "P", mods = "Control|Shift", action = "TogglePalette" },
     { key = "PageUp", mods = "Control|Shift", action = "SelectPreviousSession" },
     { key = "PageDown", mods = "Control|Shift", action = "SelectNextSession" },
 
