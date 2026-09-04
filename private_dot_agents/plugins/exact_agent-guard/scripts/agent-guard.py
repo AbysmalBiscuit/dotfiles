@@ -226,7 +226,10 @@ def run_script(path, argument, stdin, cwd, timeout):
             with contextlib.redirect_stderr(io.StringIO()):
                 exec(compile(source, str(path), "exec"), namespace)
     except SystemExit as stop:
-        code = stop.code if isinstance(stop.code, int) else 0
+        # An interpreter exits 0 for `sys.exit(None)` and 1 for `sys.exit(str)`,
+        # after printing the string to stderr. A check that denies that way
+        # denies here too.
+        code = stop.code if isinstance(stop.code, int) else (0 if stop.code is None else 1)
     except TimeoutError:
         # A subprocess that outran its timeout was reported as silence, and a
         # check the agent cannot wait for should not become a refusal.
@@ -235,8 +238,10 @@ def run_script(path, argument, stdin, cwd, timeout):
         # A check's own guard turns its crashes into silence, so reaching here
         # means the guard itself never ran: a syntax error, or an import that
         # failed. The interpreter would have exited 1, and the mandatory tier
-        # reads that as a denial on purpose. Report it the same way.
-        return "", 1
+        # reads that as a denial on purpose. Report it the same way, keeping
+        # whatever the check managed to print: a subprocess that died mid-run
+        # still delivered the stdout it had already written.
+        return captured.getvalue(), 1
     finally:
         sys.argv, sys.stdin, sys.path[:] = argv, stdin_stream, search
         # Helpers a check imported are dropped again, so two roots shipping a
