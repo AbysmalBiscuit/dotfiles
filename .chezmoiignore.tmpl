@@ -255,7 +255,7 @@ Documents
 {{- end }}
 
 
-{{- if not (or (index .has "alacritty") (index .has "alacritree")) -}}
+{{- if not (or (index .has "alacritty") (index .has "alacritree")) }}
 .config/alacritty/alacritty.toml
 {{- end }}
 {{- if not (index .has "alacritree") -}}
