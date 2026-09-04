@@ -28,13 +28,13 @@ export DEBUG_CFLAGS="-g -fvar-tracking-assignments"
 export DEBUG_CXXFLAGS="-g -fvar-tracking-assignments"
 
 #-- Make Flags: change this for DistCC/SMP systems
-# {{- if lookPath "nproc" }}
-# {{- $nproc := output "nproc" | trimSuffix "\n" }}
-export MAKEFLAGS="-j# {{ $nproc }}"
+# {{- /* if lookPath "nproc" */}}
+# {{- /* $nproc := output "nproc" | trimSuffix "\n" */}}
+export MAKEFLAGS="-j# {{ .system.build_jobs }}"
 
 #-- Numpy build flags:
-export NPY_NUM_BUILD_JOBS="# {{ $nproc }}"
-# {{- end }}
+export NPY_NUM_BUILD_JOBS="# {{ .system.build_jobs }}"
+# {{- /* end */}}
 
 # rust
 # -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes

@@ -337,6 +337,20 @@
   {{- $is_tablet = false -}}
 {{ end -}}
 
+{{- /* Figure out how many build jobs can be run in parallel. */ -}}
+{{- $cpus := 0 -}}
+{{- if $is_windows -}}
+  {{- $cpus = atoi (env "NUMBER_OF_PROCESSORS") -}}
+{{- else if and $is_macos (lookPath "sysctl") -}}
+  {{- $cpus = atoi (output "sysctl" "-n" "hw.logicalcpu" | trim) -}}
+{{- else if lookPath "nproc" -}}
+  {{- $cpus = atoi (output "nproc" | trim) -}}
+{{- end -}}
+{{- if le $cpus 1 -}}
+  {{- $cpus = 4 -}}
+{{- end -}}
+{{- $build_jobs := max 2 (div $cpus (ternary 4 2 $is_laptop)) -}}
+
 {{""}}
 {{- /* Start writing actual config file */ -}}
 {{- if ($has_age_key) -}}
@@ -490,6 +504,8 @@ gpg_key = {{ $gpg_key | quote }}
 go_level = {{ $go_level | quote }}
 has_nightly_rust = {{ output "rustup" "toolchain" "list" | contains "nightly" }}
 has_battery = {{ not $is_desktop }}
+cpus = {{ $cpus }}
+build_jobs = {{ $build_jobs }}
 hostname = {{ $hostname | quote }}
 osid = {{ $osID | quote }}
 editor = {{ $editor | quote }}

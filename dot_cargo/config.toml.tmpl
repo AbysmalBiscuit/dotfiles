@@ -4,6 +4,9 @@
 nag = "clippy -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
 fixnags = "clippy --fix -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
 
+[build]
+jobs = {{ .system.build_jobs }}
+
 [profile.dev]
 debug = "line-tables-only"
 
