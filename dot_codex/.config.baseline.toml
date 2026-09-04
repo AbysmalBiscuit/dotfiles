@@ -6,6 +6,7 @@ model_reasoning_effort = "xhigh"
 
 [features]
 experimental_use_rmcp_client = true
+hooks = true
 
 [hooks]
 
