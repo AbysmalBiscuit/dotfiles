@@ -7,5 +7,5 @@ enforce_writes = true
 name = "chezmoi"
 ecosystem = "git"
 repo = "https://github.com/twpayne/chezmoi"
-ref = "v2.72.0"
+ref = "v2.72.1"
 notes = "Matches the installed chezmoi release exactly; hooks/upgrade_post_docm_pin_chezmoi.py repins it on every chezmoi upgrade."
