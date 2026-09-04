@@ -31,11 +31,13 @@ def --wrapped wyazi [...args] {
 def --env --wrapped y [...args] { yazi-cd { |tmp| ^yazi ...$args --cwd-file $tmp } }
 def --env --wrapped wy [...args] { yazi-cd { |tmp| wyazi ...$args --cwd-file $tmp } }
 
+# Builtin mktemp and rm, not the externals. Git for Windows' coreutils report
+# msys paths (/tmp/...) that neither nushell nor a native yazi.exe can resolve.
 def --env yazi-cd [run: closure] {
-    let tmp = (^mktemp -t "yazi-cwd.XXXXXX" | str trim)
+    let tmp = (mktemp -t "yazi-cwd.XXXXXX")
     do $run $tmp
     let cwd = (open --raw $tmp | str trim)
-    ^rm -f $tmp
+    rm -pf $tmp
     if ($cwd | is-not-empty) and $cwd != $env.PWD { cd $cwd }
 }
 
