@@ -211,10 +211,15 @@ def run_script(path, argument, stdin, cwd, timeout):
     captured = io.StringIO()
     namespace = {"__name__": "__main__", "__file__": str(path), "__doc__": None}
     argv, stdin_stream, directory = sys.argv, sys.stdin, os.getcwd()
+    search, loaded = list(sys.path), set(sys.modules)
+    home = str(path.parent)
     code = 0
     try:
         sys.argv = [str(path), argument]
         sys.stdin = io.StringIO(stdin)
+        # An interpreter running a script puts its directory first, and a check
+        # that imports a helper beside it depends on that.
+        sys.path.insert(0, home)
         with contextlib.suppress(OSError):
             os.chdir(cwd)
         with alarm(timeout), contextlib.redirect_stdout(captured):
@@ -233,7 +238,15 @@ def run_script(path, argument, stdin, cwd, timeout):
         # reads that as a denial on purpose. Report it the same way.
         return "", 1
     finally:
-        sys.argv, sys.stdin = argv, stdin_stream
+        sys.argv, sys.stdin, sys.path[:] = argv, stdin_stream, search
+        # Helpers a check imported are dropped again, so two roots shipping a
+        # module of the same name do not serve each other's copy. Anything from
+        # outside the check's own directory, the standard library above all,
+        # stays cached: re-importing it per check is what this call is avoiding.
+        for name in set(sys.modules) - loaded:
+            origin = getattr(sys.modules.get(name), "__file__", None) or ""
+            if origin.startswith(home + os.sep):
+                del sys.modules[name]
         with contextlib.suppress(OSError):
             os.chdir(directory)
     return captured.getvalue(), code
@@ -858,14 +871,13 @@ def find_over_extraction(changed, seen_file, roots, settings, cwd):
             hits = json.loads(raw) if raw.strip() else []
         except ValueError:
             continue
-        names = sorted(
-            {
-                (((h.get("metaVariables") or {}).get("single") or {}).get("NAME") or {})
-                .get("text")
-                for h in hits or []
-            }
-            - {None, ""}
-        )
+        found = set()
+        for hit in hits or []:
+            single = (hit.get("metaVariables") or {}).get("single") or {}
+            text = (single.get("NAME") or {}).get("text")
+            if text:
+                found.add(text)
+        names = sorted(found)
 
         for name in names:
             if checked >= settings.max_symbols:
