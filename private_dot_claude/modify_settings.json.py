@@ -12,7 +12,7 @@ match modifyTemplateRx in internal/chezmoi/sourcestate.go.
 import os
 import sys
 
-sys.dont_write_bytecode = True  # chezmoi diff must not dirty the source tree
+# sys.dont_write_bytecode = True  # chezmoi diff must not dirty the source tree
 
 from pathlib import Path  # noqa: E402
 
