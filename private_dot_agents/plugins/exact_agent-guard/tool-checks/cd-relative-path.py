@@ -54,8 +54,9 @@ PATH_OPTS = {"-path", "-literalpath", "-filepath"}
 # fd hands everything after these to a child command, so the operands stop
 # being paths and the shape is no longer mechanical.
 EXEC_FLAGS = {"-x", "--exec", "-X", "--exec-batch"}
-# Operators that end one command and begin the next.
-SEPARATORS = {"||", "&&", "|", "|&", ";", ";;", "&", "(", ")", "\n"}
+# Operators that end one command and begin the next. A newline does too, but
+# it never reaches the lexer: `commands` separates physical lines first.
+SEPARATORS = {"||", "&&", "|", "|&", ";", ";;", "&", "(", ")"}
 # Operators whose target is a stream rather than an operand to read.
 REDIRECTS = {">", ">>", ">|", ">&", "<", "<<", "<<<", "<&", "&>", "&>>"}
 FD_NUMBER = re.compile(r"^\d+$")
@@ -89,8 +90,22 @@ def rooted(path):
     return path.startswith(("/", "\\")) or bool(WINDOWS_ROOT.match(path))
 
 
-def commands(line):
-    """The line split into its commands, each a token list, quoting respected.
+def commands(script):
+    """Every command in the script, each a token list, quoting respected.
+
+    A newline ends a command exactly as `;` does, but `whitespace_split` counts
+    it as whitespace, so lines have to be separated before lexing. Left joined,
+    a `cd` on its own line would absorb the next line's words and read them as
+    part of its target.
+    """
+    parsed = []
+    for line in script.splitlines():
+        parsed.extend(line_commands(line))
+    return parsed
+
+
+def line_commands(line):
+    """One physical line's commands.
 
     Splitting the raw text on a regex cuts inside a quoted argument: an rg
     pattern holding an alternation `|` breaks into fragments with unbalanced
@@ -135,7 +150,10 @@ def leading_cd(parsed):
         return None
     # A path carrying an escaped space arrives as several tokens once escaping
     # is off, and rejoining them costs nothing when it was one word already.
-    args = [token for token in tokens[1:] if token.lower() not in PATH_OPTS]
+    args = [
+        token for token in tokens[1:]
+        if token != "--" and token.lower() not in PATH_OPTS
+    ]
     target = os.path.expanduser(" ".join(args))
     return target if rooted(target) else None
 

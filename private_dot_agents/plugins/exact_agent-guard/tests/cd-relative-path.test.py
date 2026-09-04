@@ -92,6 +92,12 @@ MUST_BLOCK = [
     f"Set-Location {WIN_DIR}; gci -Recurse src\\bin",
     f"Set-Location {WIN_DIR}; git diff HEAD~1",
     f'cd {WIN_DIR}; C:\\bin\\rg.exe -n "a|b" crates\\x.rs',
+    # A newline separates commands like `;` does. The reader is on its own line.
+    f"cd {POSIX_DIR}\nrg -n 'a|b' crates/x.rs",
+    f"cd {POSIX_DIR}\ncargo build\ncat Cargo.toml",
+    f"cd {POSIX_DIR}\necho building\nhead -20 README.md\necho done",
+    f"cd {MSYS_DIR}\nSet-Location ignored\ngc crates\\x.rs",
+    f"cd {POSIX_DIR}\ngit diff HEAD~1",
 ]
 
 MUST_PASS = [
@@ -121,6 +127,16 @@ MUST_PASS = [
     # A redirect's target is a stream, not something the reader opens.
     f"cd {POSIX_DIR} && rg --files > /tmp/out.txt",
     "cd /nonexistent-dir-xyz && ls",
+    # A `cd` on its own line must not absorb the following lines. This shape,
+    # a shell script with a leading cd and later assignments and readers, was
+    # read as one enormous command whose cd target ran to the end of the file.
+    "cd /home/lev\n"
+    'echo "=== bare python startup ==="\n'
+    "hyperfine -w 5 -r 30 -N 'python3 -c pass' | rg 'Time' | head -2\n",
+    f"cd {POSIX_DIR}\ncargo build\nnpm test\n",
+    f"cd {POSIX_DIR}\nP=/abs/p.json\nhead -2 /abs/p.json\n",
+    f"cd {POSIX_DIR}\n\n\ncargo build\n",
+    f"cd {POSIX_DIR}\nrg -n 'a|b' {POSIX_DIR}/crates/x.rs\n",
 ]
 
 
@@ -258,6 +274,11 @@ MUTANTS = [
         "    lexer = shlex.shlex(line, posix=True, punctuation_chars=True)",
     ),
     ('posix backslash escaping', '    lexer.escape = ""', '    lexer.escape = "\\\\"'),
+    (
+        "newline not a separator",
+        "    for line in script.splitlines():",
+        "    for line in [script]:",
+    ),
     (
         "posix-only rooting",
         '    return path.startswith(("/", "\\\\")) or bool(WINDOWS_ROOT.match(path))',
