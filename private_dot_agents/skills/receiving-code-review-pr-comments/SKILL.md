@@ -5,9 +5,18 @@ disable-model-invocation: true
 user-invocable: true
 argument-hint: "Code review"
 ---
-1. Invoke `/superpowers:receiving-code-review` skill for code reviews posted as PR comments.
 
-2. Redteam the code review.
+# receiving code review pr comments
+
+1. Get PR review comments by running the following:
+
+```bash
+python3 ~/.agents/skills/receiving-code-review-pr-comments/scripts/fetch_pr_comments.py
+```
+
+2. Invoke `/superpowers:receiving-code-review` skill for code reviews posted as PR comments.
+
+3. Redteam the code review.
 
 Treat every finding as a claim to refute. Read the code it names and check the claim against the codebase — tests, callers, git history — until you can give a verdict:
 
@@ -17,7 +26,7 @@ Treat every finding as a claim to refute. Read the code it names and check the c
 
 Done when every finding has a verdict backed by something you looked at, not by the reviewer's wording.
 
-3. Then report one table, rows ordered by what to do first: blocking fixes, simple fixes, complex fixes, push-backs, open questions.
+4. Then report one table, rows ordered by what to do first: blocking fixes, simple fixes, complex fixes, push-backs, open questions.
 
 | # | Finding (file:line) | Verdict | Evidence | Action |
 
