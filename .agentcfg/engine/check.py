@@ -52,25 +52,32 @@ def _get(data: Mapping, path: tuple[str, ...]):
     return cursor, True
 
 
-def _winning_pattern(rules: RuleSet, path: tuple[str, ...]) -> tuple[str, ...] | None:
-    matches = rules.patterns_for(path)
-    return matches[0][2] if matches else None
-
-
 def classify(live: Mapping, baseline: Mapping, rules: RuleSet) -> CheckReport:
     report = CheckReport()
     for path, live_value in leaves(live):
-        strategy = rules.resolve(path)
-        pattern = _winning_pattern(rules, path)
-        base_value, in_baseline = _get(baseline, path)
-
+        # A remove rule on an ancestor covers a leaf that matches no pattern of
+        # its own, so this outranks the empty-match case below.
         if rules.removes(path):
             continue
-        elif strategy is Strategy.PASSTHROUGH:
+
+        # An empty match list is what resolve() reports as PASSTHROUGH. Taking
+        # the winning pattern from the same list that decided the strategy is
+        # what keeps the two in step: every branch that reads the pattern is one
+        # the empty case already returned from.
+        matches = rules.patterns_for(path)
+        if not matches:
             report.unclassified.append(path)
-        elif strategy is Strategy.IGNORE:
             continue
-        elif not in_baseline:
+        _, strategy, pattern = matches[0]
+
+        if strategy is Strategy.PASSTHROUGH:
+            report.unclassified.append(path)
+            continue
+        if strategy is Strategy.IGNORE:
+            continue
+
+        base_value, in_baseline = _get(baseline, path)
+        if not in_baseline:
             # Classified but absent from the baseline: the merge writes the
             # live value through and chezmoi diff stays quiet, so this is the
             # only place it surfaces. Report the member the pattern claims,
