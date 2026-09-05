@@ -29,7 +29,7 @@ def update-nvim-plugins [] { let exe = (nvim-exe); ^$exe --headless "+Lazy! sync
 def cmsecrets [] { ^bash ([(^chezmoi source-path | str trim) edit_secrets.sh] | path join) }
 
 def superpowers-flow [] {
-    if (which claude | is-not-empty) { ^$env.PYTHON3_HOST_PROG ~/.claude/superpowers-flow.py }
+    if (which claude | is-not-empty) { ^$env.PYTHON3_HOST_PROG ~/.claude/superpowers_flow.py }
 }
 
 # Warm the gpg-agent passphrase cache so commit signing does not prompt mid-rebase.
