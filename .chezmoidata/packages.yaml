@@ -1,4 +1,7 @@
 packages:
+  common:
+    bun:
+    cargo:
   darwin:
     brew:
   linux:
