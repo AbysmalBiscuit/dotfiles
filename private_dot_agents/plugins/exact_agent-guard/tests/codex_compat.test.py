@@ -11,7 +11,7 @@ import unittest
 
 
 PLUGIN_ROOT = pathlib.Path(__file__).parent.parent
-SCRIPT = PLUGIN_ROOT / "scripts" / "agent-guard.py"
+SCRIPT = PLUGIN_ROOT / "scripts" / "agent_guard.py"
 
 class CodexCompatibilityTests(unittest.TestCase):
     def test_apply_patch_payload_scans_each_written_file(self):

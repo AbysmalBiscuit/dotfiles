@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cases for mandatory/secret-decrypt.py. Run directly: python3 <this file>.
+"""Cases for mandatory/secret_decrypt.py. Run directly: python3 <this file>.
 
 Held here rather than beside the check, because mandatory/ globs every *.py
 in it and would run this file as a check on each Bash call."""
@@ -9,7 +9,7 @@ import pathlib
 import sys
 
 spec = importlib.util.spec_from_file_location(
-    "hook", pathlib.Path(__file__).parent.parent / "mandatory" / "secret-decrypt.py"
+    "hook", pathlib.Path(__file__).parent.parent / "mandatory" / "secret_decrypt.py"
 )
 hook = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hook)

@@ -8,7 +8,7 @@ for py in python3 python; do
     "$py" -c '' >/dev/null 2>&1 && exec "$py" "$0" "$@"
 done
 command -v uv >/dev/null 2>&1 && exec uv run --no-project --script "$0" "$@"
-echo "statusline-cost.py: no python interpreter found" >&2
+echo "statusline_cost.py: no python interpreter found" >&2
 exit 127
 ':'''
 """Fleet-wide agent cost statusline for ccstatusline custom-command widgets.

@@ -18,12 +18,12 @@ The next run compares against that snapshot and renders changed values as
 `before → after`, so you see what moved since you last looked.
 
 Usage:
-  pr-status.py                 both tables, current repo
-  pr-status.py -m | --mine     only the "my PRs" table
-  pr-status.py -r | --reviews  only the "reviewing" table
-  pr-status.py -R owner/repo   target a specific repo (default: current dir's repo)
-  pr-status.py --no-cache      don't read or write the diff cache this run
-  pr-status.py -h | --help     this help
+  pr_status.py                 both tables, current repo
+  pr_status.py -m | --mine     only the "my PRs" table
+  pr_status.py -r | --reviews  only the "reviewing" table
+  pr_status.py -R owner/repo   target a specific repo (default: current dir's repo)
+  pr_status.py --no-cache      don't read or write the diff cache this run
+  pr_status.py -h | --help     this help
 
 Requires: gh (authenticated), uv (resolves rich on first run).
 """

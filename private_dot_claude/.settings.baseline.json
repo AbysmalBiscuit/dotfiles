@@ -83,7 +83,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 10,
             "statusMessage": "Checking conventions"
           }
@@ -96,7 +96,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 8,
             "statusMessage": "Checking tool conventions"
           }
@@ -108,7 +108,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10
           },
           {
@@ -130,7 +130,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10,
             "async": true
           }
@@ -142,7 +142,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -154,7 +154,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -172,7 +172,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10,
             "async": true
           }

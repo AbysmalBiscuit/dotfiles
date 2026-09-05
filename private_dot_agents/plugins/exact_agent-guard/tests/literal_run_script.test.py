@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cases for run_script in scripts/agent-guard.py. Run directly: python3 <this file>.
+"""Cases for run_script in scripts/agent_guard.py. Run directly: python3 <this file>.
 
 run_script executes a check inside the runner's own interpreter instead of
 spawning a Python for it. That buys roughly a 4x speedup on a Bash call and
@@ -31,7 +31,7 @@ import sys
 import tempfile
 import types
 
-SCRIPT = pathlib.Path(__file__).parent.parent / "scripts" / "agent-guard.py"
+SCRIPT = pathlib.Path(__file__).parent.parent / "scripts" / "agent_guard.py"
 CHECKS = pathlib.Path(__file__).parent.parent / "tool-checks"
 SOURCE = SCRIPT.read_text(encoding="utf-8")
 

@@ -6,9 +6,9 @@ development task. Order is derived from each skill's own trigger
 description (brainstorming -> writing-plans -> ... -> finish).
 
 Usage:
-    superpowers-flow.py            # full flowchart (color if a TTY)
-    superpowers-flow.py --no-color # plain ASCII, no ANSI
-    superpowers-flow.py --next X   # what to reach for after skill X
+    superpowers_flow.py            # full flowchart (color if a TTY)
+    superpowers_flow.py --no-color # plain ASCII, no ANSI
+    superpowers_flow.py --next X   # what to reach for after skill X
 """
 import argparse
 import sys

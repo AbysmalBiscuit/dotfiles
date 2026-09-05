@@ -5,16 +5,16 @@
 # ///
 """Bar charts of fleet-wide agent cost, bucketed by day, month, or year.
 
-Reads the same synced merge ledgers that statusline-cost.py writes:
+Reads the same synced merge ledgers that statusline_cost.py writes:
 usage-*.json in the Nextcloud sync dir, one per machine, each a list of
 (date, agent, cost) rows. Every machine and every agent is included.
 
-  agent-cost-chart.py                 last 30 days
-  agent-cost-chart.py months          last 12 months
-  agent-cost-chart.py years           every year on record
-  agent-cost-chart.py days --by agent --limit 14
+  agent_cost_chart.py                 last 30 days
+  agent_cost_chart.py months          last 12 months
+  agent_cost_chart.py years           every year on record
+  agent_cost_chart.py days --by agent --limit 14
 
-The ledger reader is deliberately a copy of statusline-cost.py's rather than
+The ledger reader is deliberately a copy of statusline_cost.py's rather than
 an import: this script lives on PATH in ~/.local/bin, so importing would
 hardcode a path into ~/.claude.
 """
@@ -154,7 +154,7 @@ def build_chart(labels, series, width, mono):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        prog="agent-cost-chart.py",
+        prog="agent_cost_chart.py",
         description="Bar charts of fleet-wide agent cost by day, month, or year.",
     )
     ap.add_argument("period", nargs="?", default="days", choices=sorted(PERIODS))

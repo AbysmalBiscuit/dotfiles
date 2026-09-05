@@ -11,10 +11,10 @@ is Done (state type == completed), and the tree is clean.
 
 Two subcommands (default is `status`):
 
-  issue-end.py                 status of every issue worktree of the current repo
-  issue-end.py status [IDS..]  same, optionally limited to given issue IDs
-  issue-end.py clean  [IDS..]  interactively remove FINISHED worktrees
-  issue-end.py clean --clean-worktree SEL..  remove the named worktrees, gate bypassed
+  issue_end.py                 status of every issue worktree of the current repo
+  issue_end.py status [IDS..]  same, optionally limited to given issue IDs
+  issue_end.py clean  [IDS..]  interactively remove FINISHED worktrees
+  issue_end.py clean --clean-worktree SEL..  remove the named worktrees, gate bypassed
 
 `status` is always read-only. `clean` lists each finished worktree's artifacts,
 asks y/n per worktree (unless -y), then calls issue-end-cleanup.sh. With
@@ -462,7 +462,7 @@ def status(ctx: click.Context, issue_ids: tuple[str, ...]) -> None:
     if finished:
         console.print(
             f"\n[green]{finished} finished.[/] Run "
-            f"[bold]issue-end.py clean[/] to remove them."
+            f"[bold]issue_end.py clean[/] to remove them."
         )
     if not has_key:
         console.print(
@@ -554,7 +554,7 @@ def clean(
 
 
 if __name__ == "__main__":
-    # Pin the completion env var; the default derived from the "issue-end.py" prog
+    # Pin the completion env var; the default derived from the "issue_end.py" prog
     # name contains a dot (_ISSUE_END.PY_COMPLETE), which is not a valid shell
     # identifier. See the shell-completion setup note in the module docstring.
     cli(complete_var="_ISSUE_END_COMPLETE")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cases for tool-checks/cd-relative-path.py. Run directly: python3 <this file>.
+"""Cases for tool-checks/cd_relative_path.py. Run directly: python3 <this file>.
 
 Held here rather than beside the check, because tool-checks/ globs every *.py
 in it and would run this file as a check on each Bash call.
@@ -24,7 +24,7 @@ import random
 import sys
 import types
 
-CHECK = pathlib.Path(__file__).parent.parent / "tool-checks" / "cd-relative-path.py"
+CHECK = pathlib.Path(__file__).parent.parent / "tool-checks" / "cd_relative_path.py"
 SOURCE = CHECK.read_text(encoding="utf-8")
 
 POSIX_DIR = "/home/lev/Git/lev/devkit"
@@ -47,7 +47,7 @@ def verdict(module, command):
     the exit codes in the test, which is where the hook contract lives.
     """
     argv, stdin = sys.argv, sys.stdin
-    sys.argv = ["cd-relative-path.py", "Bash"]
+    sys.argv = ["cd_relative_path.py", "Bash"]
     sys.stdin = io.StringIO(json.dumps({"tool_input": {"command": command}}))
     printed = io.StringIO()
     try:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print the plain-text version of a Wikipedia article to stdout.
 
-Usage: get-wikipedia-text.py <article-url>
+Usage: get_wikipedia_text.py <article-url>
 
 Takes any Wikipedia article URL (any language subdomain, any namespace) and
 fetches the plain-text extract via the MediaWiki API.

@@ -1,4 +1,4 @@
-# agent-guard settings, read by ~/.agents/plugins/agent-guard/scripts/agent-guard.py.
+# agent-guard settings, read by ~/.agents/plugins/agent-guard/scripts/agent_guard.py.
 #
 # This is the global layer, and on its own it does nothing: the hook runs only
 # where some directory at or above the working directory holds
@@ -12,7 +12,7 @@
 # nearer one tightens any setting below without editing it. An
 # AGENT_GUARD_<KEY> environment variable outranks every file for one run.
 #
-# Run `python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py doctor`
+# Run `python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py doctor`
 # inside a tree to list the roots actually found.
 
 # Layers that still run where no tree has opted in. A tree opts in by carrying
@@ -79,7 +79,7 @@ scope = "diff"
 # language widens this in its own config.toml. Single quotes are a TOML literal
 # string, so the backslashes reach the regex engine as written.
 #
-# Markdown is here for checks/markdown-hard-wrap.py; the ast-grep rules are
+# Markdown is here for checks/markdown_hard_wrap.py; the ast-grep rules are
 # language-scoped and stay quiet on it. Dropping md from this list is the off
 # switch for that check.
 extensions = '\.(ts|tsx|mts|cts|md|mdx|markdown)$'

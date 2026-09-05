@@ -878,17 +878,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser = argparse.ArgumentParser(
-        prog="feature-flags.py",
+        prog="feature_flags.py",
         description="Inspect and change PostHog feature flags.",
         epilog=(
             "examples:\n"
-            "  feature-flags.py                        every flag, newest change first\n"
-            "  feature-flags.py swe-10519              status of the one flag matching it\n"
-            "  feature-flags.py my-flag enable\n"
-            "  feature-flags.py my-flag set rollout 50\n"
-            "  feature-flags.py my-flag archive           once the code is deployed\n"
-            "  feature-flags.py one two three enable      several at once\n"
-            "  feature-flags.py rollout one two 100       command-first form\n"
+            "  feature_flags.py                        every flag, newest change first\n"
+            "  feature_flags.py swe-10519              status of the one flag matching it\n"
+            "  feature_flags.py my-flag enable\n"
+            "  feature_flags.py my-flag set rollout 50\n"
+            "  feature_flags.py my-flag archive           once the code is deployed\n"
+            "  feature_flags.py one two three enable      several at once\n"
+            "  feature_flags.py rollout one two 100       command-first form\n"
             "\n"
             f"{filter_help()}\n"
             "\n"

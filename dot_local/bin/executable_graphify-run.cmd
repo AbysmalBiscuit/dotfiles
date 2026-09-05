@@ -1,1 +1,1 @@
-@python3 "%~dp0graphify-run.py" %*
+@python3 "%~dp0graphify_run.py" %*
