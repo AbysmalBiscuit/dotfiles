@@ -1,6 +1,6 @@
 ---
 name: write
-description: Use when drafting or editing a message to a person — email, Slack, chat reply, PR/issue comment, or any short outbound prose. Applies BLUF and inverted-pyramid structure, runs an anti-AI-slop check, and defers to elements-of-style for line-level polish.
+description: "Use when drafting or editing a message to a person: email, Slack, chat reply, PR/issue comment, or any short outbound prose. Applies BLUF and inverted-pyramid structure, runs an anti-AI-slop check, and defers to elements-of-style for line-level polish."
 ---
 
 # Drafting Messages
@@ -43,7 +43,7 @@ For longer LLM-drafted prose (docs, articles, reports) — not just short messag
 
 ## 4. Polish
 
-After structure and slop-cut, invoke `elements-of-style:writing-clearly-and-concisely` for line-level tightening (omit needless words, active voice, definite/concrete language).
+After structure and slop-cut, follow [SKILL_writing-clearly-and-concisely.md](SKILL_writing-clearly-and-concisely.md) for line-level tightening (omit needless words, active voice, definite/concrete language).
 
 ## Related
 
