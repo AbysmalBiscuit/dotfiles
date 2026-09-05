@@ -1,0 +1,55 @@
+# Pyrefly has no user-level config: discovery is an upward file search only, so
+# without this file the whole repo runs on the `basic` preset.
+
+# The dotfile filter in the default `project-includes` skips `.agentcfg`, whose
+# engine module backs every chezmoi `modify_` script, so name it explicitly.
+project-includes = [
+    "**/*.py*",
+    ".agentcfg/engine/**",
+    ".agentcfg/promote.py",
+    ".agentcfg/tests/**",
+]
+
+# Pyrefly always appends its default excludes, one of which drops every
+# dot-directory, so the includes above only survive with the defaults off. That
+# makes this list exhaustive: it restates the defaults worth keeping.
+disable-project-excludes-heuristics = true
+
+project-excludes = [
+    "**/__pycache__/**",
+    "**/node_modules/**",
+    "**/venv/**",
+    ".agentcfg/vendor/**",
+    ".git/**",
+    ".ruff_cache/**",
+    "private_dot_config/exact_nvim/syntax_examples/**",
+    "private_dot_config/fish/exact_tools/**",
+    "private_dot_config/kitty/**",
+    "private_dot_ipython/**",
+]
+
+# The skill ships its own package alongside the entry point; `.agentcfg` holds
+# the `engine` package and its vendored dependencies.
+search-path = [
+    ".agentcfg",
+    ".agentcfg/vendor",
+    "private_dot_agents/skills/history",
+]
+
+# PEP 723 script dependencies are installed by uv at run time, so they are never
+# importable from this checkout. Regenerate with:
+#   rg -l '^# /// script' --glob '*.py' | xargs -I{} sed -n '/^# \/\/\/ script/,/^# \/\/\//p' {}
+replace-imports-with-any = [
+    "click",
+    "plotext",
+    "rich.*",
+    "tabulate",
+    # Test-time only, supplied by the runner that executes .agentcfg/tests.
+    "hypothesis",
+    "hypothesis.*",
+    "pytest",
+]
+
+[[sub-config]]
+matches = "private_dot_agents/skills/history/**"
+check-unannotated-defs = true

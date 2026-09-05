@@ -1,0 +1,37 @@
+# Inherits the machine-wide config, which ruff would otherwise use directly:
+# without a project config, files here resolve to ~/.config/ruff/ruff.toml.
+extend = "~/.config/ruff/ruff.toml"
+
+extend-exclude = [
+    ".agentcfg/vendor",
+    "private_dot_config/exact_nvim/syntax_examples",
+    "private_dot_config/fish/exact_tools",
+    "private_dot_config/kitty",
+    "private_dot_ipython",
+]
+
+[lint]
+# The inherited rules target packaged application code. These are the ones that
+# fire on every file of a repo made of standalone CLI scripts.
+extend-ignore = [
+    "C901",
+    "D",
+    "EM",
+    "FBT",
+    "INP001",
+    "PLC0415",
+    "S603",
+    "S607",
+    "T201",
+    "TRY003",
+    "W505",
+]
+
+# Restated rather than inherited: ruff anchors an extended config's relative
+# per-file globs to that config's own directory, so the parent's entries resolve
+# under ~/.config/ruff and never match anything here.
+[lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests,docs,tools}/*" = ["E402"]
+"**/tests/**/*" = ["PLC1901", "PLR2004", "PLR6301", "S", "TID252"]
+"**/*.test.py" = ["PLC1901", "PLR2004", "PLR6301", "S", "TID252"]
