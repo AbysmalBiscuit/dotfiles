@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 
 from engine.lint import descends
@@ -59,10 +59,12 @@ def write_json_baseline(path: Path, additions) -> None:
     for array_path in _SORTED_ARRAYS:
         cursor = data
         for segment in array_path[:-1]:
-            cursor = cursor.get(segment) if isinstance(cursor, Mapping) else None
+            cursor = cursor.get(segment) if isinstance(cursor, MutableMapping) else None
             if cursor is None:
                 break
-        if isinstance(cursor, Mapping) and isinstance(cursor.get(array_path[-1]), list):
+        if isinstance(cursor, MutableMapping) and isinstance(
+            cursor.get(array_path[-1]), list
+        ):
             cursor[array_path[-1]] = sorted(cursor[array_path[-1]])
     text = json.dumps(_canonical(data), indent=2, ensure_ascii=False) + "\n"
     path.write_text(text, encoding="utf-8", newline="\n")
