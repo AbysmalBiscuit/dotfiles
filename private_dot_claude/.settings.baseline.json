@@ -115,11 +115,6 @@
             "type": "command",
             "command": "~/.agents/skills/history/hist.py index",
             "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/prune-temp.sh",
-            "timeout": 30
           }
         ]
       }
