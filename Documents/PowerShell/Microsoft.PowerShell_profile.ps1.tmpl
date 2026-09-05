@@ -395,6 +395,12 @@ function has_command {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+# {{- if index .has "mise" | default false }}
+# mise shims are appended, never prepended: a shim re-enters mise on every call,
+# so whatever is already on PATH wins.
+$env:PATH += ';# {{ joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" }}'
+# {{- end }}
+
 $completions_cache = '# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}'
 if (Test-Path "$completions_cache")  {
     foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1') {
