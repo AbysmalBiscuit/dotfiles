@@ -4,7 +4,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # Message rows average well over the payload a 4 KiB page holds inline, so the SQLite
 # default spills most of them onto overflow pages and wastes a large fraction of the
@@ -34,6 +34,23 @@ CREATE TABLE IF NOT EXISTS sessions(
   started    TEXT,
   ended      TEXT,
   PRIMARY KEY (source, session_id)
+);
+
+-- Sessions the user deleted on purpose. Checked before indexing, so a transcript
+-- listed here stays out even though its file is still on disk.
+CREATE TABLE IF NOT EXISTS forgotten(
+  source     TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  ts         TEXT,
+  PRIMARY KEY (source, session_id)
+);
+
+-- Transcripts an exclusion rule covers, remembered so a later run skips them without
+-- reopening the file. A row whose rule no longer applies is dropped and indexed.
+CREATE TABLE IF NOT EXISTS skipped(
+  path    TEXT PRIMARY KEY,
+  project TEXT,
+  rule    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS messages(

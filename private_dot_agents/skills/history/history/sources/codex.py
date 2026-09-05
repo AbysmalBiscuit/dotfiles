@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from ..model import Message, SessionState, cap
+from . import jsonl
 
 NAME = "cx"
 LABEL = "codex"
@@ -13,6 +14,8 @@ LABEL = "codex"
 # Codex injects instructions, environment, and plugin catalogs as user-role turns.
 INJECTED_TAG = re.compile(r"^<[a-z][a-z0-9_]*>")
 INJECTED_PREFIX = ("# AGENTS.md instructions", "Here is a list of plugin")
+
+UUID_TAIL = re.compile(r"([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})$")
 
 
 def roots() -> list[Path]:
@@ -23,6 +26,17 @@ def roots() -> list[Path]:
 
 def discover() -> list[Path]:
     return [p for root in roots() for p in root.rglob("*.jsonl")]
+
+
+def probe_project(path: Path) -> str | None:
+    """The rollout's working directory, taken from the session_meta record it opens with."""
+    return jsonl.probe(path, lambda obj: (obj.get("payload") or {}).get("cwd"))
+
+
+def session_id_for(path: Path) -> str | None:
+    """Rollout filenames end in the session uuid: rollout-<timestamp>-<uuid>.jsonl."""
+    match = UUID_TAIL.search(path.stem)
+    return match.group(1) if match else None
 
 
 def _is_injected(text: str) -> bool:

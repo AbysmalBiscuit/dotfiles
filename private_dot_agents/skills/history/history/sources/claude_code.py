@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from ..model import Message, SessionState, cap
+from . import jsonl
 
 NAME = "cc"
 LABEL = "claude-code"
@@ -31,6 +32,21 @@ def roots() -> list[Path]:
 
 def discover() -> list[Path]:
     return [p for root in roots() for p in root.rglob("*.jsonl")]
+
+
+def probe_project(path: Path) -> str | None:
+    """The transcript's working directory, without parsing the whole file.
+
+    The opening records are UI state that carries no cwd, so this reads a few lines
+    rather than only the first. The directory name is a lossy mangling of the same
+    path and cannot be inverted, so it is not used here.
+    """
+    return jsonl.probe(path, lambda obj: obj.get("cwd"))
+
+
+def session_id_for(path: Path) -> str | None:
+    """Claude Code names each transcript after its session id."""
+    return path.stem or None
 
 
 def _clean(text: str) -> str:

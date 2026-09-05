@@ -20,9 +20,50 @@ Every line below is `~/.agents/skills/history/hist.py` plus the arguments shown.
 | Replay a session | `show <session-id>` |
 | Read around a hit | `show --around <message-id>` |
 | Coverage and index size | `stats` |
+| Projects the indexer leaves alone | `exclude` |
+| Stop indexing a project, and drop what it already holds | `exclude add <path> --yes` |
+| Index that project again | `exclude rm <path>` |
+| Drop rows for everything currently excluded | `exclude purge --yes` |
+| Delete one conversation for good | `forget --session <id> --yes` |
+| Delete every conversation under a directory | `forget --project <path> --yes` |
 
 `-a` and `-am` widen the scope on any of these, filters combine, and `<command> --help`
 lists the rest.
+
+## Leaving projects out
+
+Two things keep a project out of the index, and either is enough.
+
+A **rule** is a project directory in the list beside the database, at
+`~/.cache/history/exclude`, one per line. A rule covers that directory and everything
+beneath it, so `/home/u/work` also excludes `/home/u/work/client-a` while leaving
+`/home/u/workshop` alone.
+
+A **marker file** excludes the project it sits in, and every project below it. Either
+`.history_exclude` or `.history_exclude.local` counts, and the content is ignored, so
+`touch .history_exclude` at the top of a repository is the whole setup. Use the `.local`
+variant for a personal exclusion in a shared repository, and gitignore it. A marker never
+reaches the rule list, travels with the directory it guards, and survives losing the cache
+the rule list lives in. Prefer one for anything that must stay out.
+
+```bash
+touch ~/work/client-a/.history_exclude          # this repo and anything under it
+~/.agents/skills/history/hist.py exclude     # rules and markers currently in force
+```
+
+A transcript whose working directory is excluded is never read.
+
+`exclude add`, `exclude purge`, and `forget` preview by default and change nothing
+without `--yes`.
+
+Exclusion is reversible. Lifting a rule with `exclude rm`, or deleting a marker file,
+re-indexes those transcripts on the next query. `forget` is not reversible: the session
+is recorded permanently and stays out even after `index --rebuild`. Neither touches the
+transcript files themselves, which the harnesses own.
+
+Adding a rule by hand, or dropping in a marker, only stops future indexing; anything
+already stored stays searchable. `exclude` flags what is in that state and
+`exclude purge --yes` clears it.
 
 ## Query syntax
 

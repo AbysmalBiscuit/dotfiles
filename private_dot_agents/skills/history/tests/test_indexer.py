@@ -535,3 +535,307 @@ class RepageTest(unittest.TestCase):
             " WHERE messages_fts MATCH 'ripgrep'"
         ).fetchone()
         self.assertIn("<<ripgrep>>", hit[0])
+
+
+class ExclusionTest(unittest.TestCase):
+    """Excluded projects stay out of the index, and `forget` keeps a session out for good."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.fx = Fixture(root)
+        self.rules = root / "exclude"
+        self._env = dict(os.environ)
+        os.environ["HISTORY_EXCLUDE"] = str(self.rules)
+        os.environ["HISTORY_HARNESS"] = "cc"
+        self.addCleanup(self._restore)
+
+        self.fx.write(self.fx.cc / "keep.jsonl", [cc_line(1, "user", "keep this one")])
+        # Claude Code names a transcript after its session; the fixture matches so the
+        # rebuild path, which has no files row to consult, is genuinely covered.
+        self.fx.write(self.fx.cc / "sess-secret.jsonl", [
+            json.dumps({"type": "user", "sessionId": "sess-secret", "cwd": "/home/u/Git/secret",
+                        "timestamp": "2026-08-02T10:00:00.000Z",
+                        "message": {"content": [{"type": "text", "text": "secret material"}]}}),
+        ])
+
+    def _restore(self):
+        os.environ.clear()
+        os.environ.update(self._env)
+
+    def _write_rules(self, *rules):
+        from history import excludes
+
+        excludes.save([excludes.normalize(r) for r in rules], self.rules)
+
+    def _run(self, argv):
+        from history import cli
+
+        conn = db.connect(self.fx.db)
+        args = cli.build_parser().parse_args(argv)
+        import contextlib, io
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = args.func(args, conn)
+        conn.close()
+        return code, buf.getvalue()
+
+    def _texts(self):
+        return sorted(r["text"] for r in self.fx.rows("SELECT text FROM messages"))
+
+    def test_an_excluded_project_is_never_indexed(self):
+        self._write_rules("/home/u/Git/secret")
+        stats = self.fx.index()
+        self.assertEqual(stats.files_skipped, 1)
+        self.assertEqual(self._texts(), ["keep this one"])
+
+    def test_a_sibling_sharing_a_prefix_is_not_excluded(self):
+        self._write_rules("/home/u/Git/sec")
+        self.fx.index()
+        self.assertIn("secret material", self._texts())
+
+    def test_exclude_add_needs_yes_and_then_purges(self):
+        self.fx.index()
+        self.assertIn("secret material", self._texts())
+
+        code, out = self._run(["exclude", "add", "/home/u/Git/secret"])
+        self.assertEqual(code, 1)
+        self.assertIn("would delete", out)
+        self.assertIn("secret material", self._texts())
+
+        code, out = self._run(["exclude", "add", "/home/u/Git/secret", "--yes"])
+        self.assertEqual(code, 0)
+        self.assertEqual(self._texts(), ["keep this one"])
+
+        self.fx.index()
+        self.assertEqual(self._texts(), ["keep this one"])
+
+    def test_removing_a_rule_brings_the_transcripts_back(self):
+        self._run(["exclude", "add", "/home/u/Git/secret", "--yes"])
+        self.fx.index()
+        self.assertNotIn("secret material", self._texts())
+
+        code, _ = self._run(["exclude", "rm", "/home/u/Git/secret"])
+        self.assertEqual(code, 0)
+        self.fx.index()
+        self.assertIn("secret material", self._texts())
+
+    def test_forget_needs_yes_and_survives_reindexing(self):
+        self.fx.index()
+        code, out = self._run(["forget", "--session", "sess-secret"])
+        self.assertEqual(code, 1)
+        self.assertIn("secret material", self._texts())
+
+        code, _ = self._run(["forget", "--session", "sess-secret", "--yes"])
+        self.assertEqual(code, 0)
+        self.assertEqual(self._texts(), ["keep this one"])
+
+        self.fx.index()
+        self.assertEqual(self._texts(), ["keep this one"])
+        self.fx.index(rebuild=True)
+        self.assertEqual(self._texts(), ["keep this one"])
+
+    def test_forget_survives_a_refresh_even_when_the_filename_hides_the_session(self):
+        self.fx.write(self.fx.cc / "opaque.jsonl", [
+            json.dumps({"type": "user", "sessionId": "sess-opaque", "cwd": "/home/u/Git/x",
+                        "timestamp": "2026-08-03T10:00:00.000Z",
+                        "message": {"content": [{"type": "text", "text": "opaque chatter"}]}}),
+        ])
+        self.fx.index()
+        self._run(["forget", "--session", "sess-opaque", "--yes"])
+        self.fx.index()
+        self.assertNotIn("opaque chatter", self._texts())
+
+    def test_forget_by_project_covers_everything_beneath_it(self):
+        self.fx.index()
+        code, _ = self._run(["forget", "--project", "/home/u/Git", "--yes"])
+        self.assertEqual(code, 0)
+        self.assertEqual(self._texts(), [])
+
+    def test_purging_leaves_the_full_text_index_consistent(self):
+        self.fx.index()
+        self._run(["exclude", "add", "/home/u/Git/secret", "--yes"])
+        conn = sqlite3.connect(self.fx.db)
+        conn.execute("INSERT INTO messages_fts(messages_fts) VALUES('integrity-check')")
+        remaining = conn.execute("SELECT COUNT(*) FROM messages_fts").fetchone()[0]
+        conn.close()
+        self.assertEqual(remaining, 1)
+
+
+class ProbeTest(unittest.TestCase):
+    """Both formats must yield a project and a session id without a full parse."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def test_claude_code_finds_cwd_past_the_opening_ui_records(self):
+        path = self.root / "9f1c2d3e-0000-4000-8000-000000000001.jsonl"
+        path.write_text("\n".join(
+            [json.dumps({"type": "last-prompt", "prompt": "hi"})] * 3
+            + [cc_line(1, "user", "hello")]
+        ) + "\n")
+        self.assertEqual(claude_code.probe_project(path), "/home/u/Git/demo")
+        self.assertEqual(claude_code.session_id_for(path),
+                         "9f1c2d3e-0000-4000-8000-000000000001")
+
+    def test_codex_reads_session_meta_and_the_uuid_in_the_filename(self):
+        uuid = "019fc132-814f-7950-9953-843b6c10fa77"
+        path = self.root / f"rollout-2026-08-02T08-39-00-{uuid}.jsonl"
+        path.write_text(cx_line("session_meta", {"id": uuid, "cwd": "/home/u/Git/demo"}) + "\n")
+        self.assertEqual(codex.probe_project(path), "/home/u/Git/demo")
+        self.assertEqual(codex.session_id_for(path), uuid)
+
+    def test_a_transcript_with_no_cwd_probes_to_nothing(self):
+        path = self.root / "empty.jsonl"
+        path.write_text(json.dumps({"type": "last-prompt"}) + "\n")
+        self.assertIsNone(claude_code.probe_project(path))
+
+
+class ExcludeRuleTest(unittest.TestCase):
+    def test_a_rule_covers_itself_and_everything_below(self):
+        from history import excludes
+
+        rules = ["/home/u/work"]
+        self.assertEqual(excludes.matches("/home/u/work", rules), "/home/u/work")
+        self.assertEqual(excludes.matches("/home/u/work/a/b", rules), "/home/u/work")
+        self.assertIsNone(excludes.matches("/home/u/workshop", rules))
+        self.assertIsNone(excludes.matches(None, rules))
+
+    def test_comments_and_blank_lines_are_ignored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            from history import excludes
+
+            path = Path(tmp) / "exclude"
+            path.write_text("# a comment\n\n/home/u/work/\n  /home/u/other  \n")
+            self.assertEqual(excludes.load(path), ["/home/u/work", "/home/u/other"])
+
+
+class MarkerTest(unittest.TestCase):
+    """A marker file keeps a project out without touching the rule list."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.fx = Fixture(root)
+        self.rules = root / "exclude"
+        self._env = dict(os.environ)
+        os.environ["HISTORY_EXCLUDE"] = str(self.rules)
+        os.environ["HISTORY_HARNESS"] = "cc"
+        self.addCleanup(self._restore)
+
+        # Two projects on disk, so a marker can cover one and leave the other alone.
+        self.open_dir = root / "projects" / "open"
+        self.closed_dir = root / "projects" / "closed" / "inner"
+        self.open_dir.mkdir(parents=True)
+        self.closed_dir.mkdir(parents=True)
+
+        self.fx.write(self.fx.cc / "sess-open.jsonl", [self._line("sess-open", self.open_dir)])
+        self.fx.write(self.fx.cc / "sess-closed.jsonl",
+                      [self._line("sess-closed", self.closed_dir)])
+
+    def _restore(self):
+        os.environ.clear()
+        os.environ.update(self._env)
+
+    def _line(self, session, cwd):
+        return json.dumps({
+            "type": "user", "sessionId": session, "cwd": str(cwd),
+            "timestamp": "2026-08-02T10:00:00.000Z",
+            "message": {"content": [{"type": "text", "text": f"text from {session}"}]},
+        })
+
+    def _texts(self):
+        return sorted(r["text"] for r in self.fx.rows("SELECT text FROM messages"))
+
+    def _run(self, argv):
+        from history import cli
+
+        conn = db.connect(self.fx.db)
+        args = cli.build_parser().parse_args(argv)
+        import contextlib, io
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = args.func(args, conn)
+        conn.close()
+        return code, buf.getvalue()
+
+    def test_a_marker_beside_the_project_excludes_it(self):
+        (self.closed_dir / ".history_exclude").touch()
+        self.fx.index()
+        self.assertEqual(self._texts(), ["text from sess-open"])
+
+    def test_a_marker_in_a_parent_excludes_everything_beneath(self):
+        (self.closed_dir.parent / ".history_exclude").touch()
+        self.fx.index()
+        self.assertEqual(self._texts(), ["text from sess-open"])
+
+    def test_the_local_variant_counts_too(self):
+        (self.closed_dir / ".history_exclude.local").touch()
+        self.fx.index()
+        self.assertEqual(self._texts(), ["text from sess-open"])
+
+    def test_a_marker_never_reaches_the_rule_list(self):
+        (self.closed_dir / ".history_exclude").touch()
+        self.fx.index()
+        from history import excludes
+
+        self.assertEqual(excludes.load(self.rules), [])
+        self.assertFalse(self.rules.exists())
+
+    def test_deleting_the_marker_brings_the_project_back(self):
+        marker = self.closed_dir / ".history_exclude"
+        marker.touch()
+        self.fx.index()
+        self.assertNotIn("text from sess-closed", self._texts())
+
+        marker.unlink()
+        self.fx.index()
+        self.assertIn("text from sess-closed", self._texts())
+
+    def test_a_marker_added_later_leaves_rows_that_purge_clears(self):
+        self.fx.index()
+        self.assertEqual(len(self._texts()), 2)
+
+        (self.closed_dir / ".history_exclude").touch()
+        code, out = self._run(["exclude"])
+        self.assertEqual(code, 0)
+        self.assertIn(".history_exclude", out)
+        self.assertIn("exclude purge", out)
+
+        code, out = self._run(["exclude", "purge"])
+        self.assertEqual(code, 1)
+        self.assertEqual(len(self._texts()), 2)
+
+        code, _ = self._run(["exclude", "purge", "--yes"])
+        self.assertEqual(code, 0)
+        self.assertEqual(self._texts(), ["text from sess-open"])
+
+    def test_a_purged_marker_project_returns_once_the_marker_goes(self):
+        self.fx.index()
+        marker = self.closed_dir / ".history_exclude"
+        marker.touch()
+        self._run(["exclude", "purge", "--yes"])
+        marker.unlink()
+        self.fx.index()
+        self.assertIn("text from sess-closed", self._texts())
+
+
+class ExcludeLocationTest(unittest.TestCase):
+    def test_the_rule_list_sits_beside_the_index(self):
+        from history import db as dbmod, excludes
+
+        env = dict(os.environ)
+        try:
+            os.environ.pop("HISTORY_EXCLUDE", None)
+            os.environ["HISTORY_DB"] = "/tmp/somewhere/index.db"
+            self.assertEqual(excludes.default_path(), Path("/tmp/somewhere/exclude"))
+            self.assertEqual(excludes.default_path().parent, dbmod.default_path().parent)
+        finally:
+            os.environ.clear()
+            os.environ.update(env)

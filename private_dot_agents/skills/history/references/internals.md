@@ -3,8 +3,9 @@
 ## Layout
 
 Stdlib-only Python, no dependencies. `history/` holds the SQLite schema (`db.py`), the
-incremental indexer (`indexer.py`), query building (`search.py`), and the CLI (`cli.py`).
-`history/sources/` holds one parser per transcript format.
+incremental indexer (`indexer.py`), query building (`search.py`), the exclusion list
+(`excludes.py`), and the CLI (`cli.py`). `history/sources/` holds one parser per
+transcript format.
 
 ```bash
 cd ~/.agents/skills/history && python3 -m unittest discover -s tests -t .
@@ -13,8 +14,11 @@ cd ~/.agents/skills/history && python3 -m unittest discover -s tests -t .
 ## Adding a transcript format
 
 Write a module under `history/sources/` exposing `NAME`, `LABEL`, `discover()` returning
-transcript paths, and `parse_line(obj, state, seq)` returning `Message` objects. Register
-it in `sources/__init__.py`. Then reindex, because stored text changes with the parser:
+transcript paths, and `parse_line(obj, state, seq)` returning `Message` objects. Two more
+functions let the exclusion list work without a full parse: `probe_project(path)` returns
+the transcript's working directory, and `session_id_for(path)` recovers the session id
+from the filename. `sources/jsonl.probe` reads the opening records for the first. Register
+the module in `sources/__init__.py`. Then reindex, because stored text changes with the parser:
 
 ```bash
 ~/.agents/skills/history/hist.py index --rebuild
@@ -64,6 +68,38 @@ by `CLAUDECODE` and reports its session in `CLAUDE_CODE_SESSION_ID`. Codex expor
 marker that is reliably present, so it is recognised by `CODEX_SANDBOX` or `CODEX_HOME`
 and exposes no session id, leaving `-a` as its narrowest scope. `stats` prints what
 detection resolved to.
+
+## Leaving transcripts out
+
+Two mechanisms keep a transcript out of the index, and `indexer.Skipper` applies both
+before a file is opened.
+
+Exclusion rules are project directories in `~/.cache/history/exclude`, matched as path
+prefixes on a directory boundary. The file sits beside the database so one directory holds
+everything the tool owns, which does mean clearing the cache takes the rules with it.
+A marker file has no such problem: `.history_exclude` or `.history_exclude.local` lives in
+the tree it guards, covers that directory and everything below, and is resolved fresh each
+run, so deleting one takes effect immediately. Marker lookups are cached per project
+rather than per transcript.
+Neither mechanism is index state, so lifting either restores the transcripts it covered.
+
+Forgotten sessions live in the `forgotten` table and are permanent. `purge` keeps the
+emptied `files` rows for them, which is how a later run maps a transcript back to the
+session it belongs to; a rebuild wipes those rows, so the filename is the fallback, and
+both formats name a transcript after its session.
+
+Resolving a path to its project costs a small read, so the answer is memoised in the
+`skipped` table, which only holds the transcripts that have no session row to carry the
+project for them. The decision itself is recomputed every run; a row no longer covered is
+dropped and the transcript is indexed again. `index --rebuild` clears the memo but not the
+tombstones.
+
+Excluding a project stops future indexing but leaves whatever is already stored. That is
+the state `exclude` reports and `exclude purge` clears, and it is the only path that can
+delete rows for a marker file, which has no rule to hang `exclude add` off.
+
+Deleting from `messages` is enough to keep FTS5 in step, because the delete trigger
+forwards it.
 
 ## Damaged transcripts
 

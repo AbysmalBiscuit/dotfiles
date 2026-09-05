@@ -26,5 +26,7 @@ the session. On a machine where nothing is indexed yet, that first call builds t
 and takes a couple of minutes. Let it finish.
 
 Filters, other commands, and query syntax: [`references/commands.md`](references/commands.md).
+Keeping projects out of the index with a rule or a `.history_exclude` file, and deleting
+conversations already in it: [`references/commands.md`](references/commands.md).
 What the index holds, storage, adding a parser: [`references/internals.md`](references/internals.md).
 Indexing on session end instead of on query: [`references/hooks.md`](references/hooks.md).

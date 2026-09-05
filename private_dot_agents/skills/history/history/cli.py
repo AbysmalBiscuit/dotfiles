@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import db, indexer, search
+from . import db, excludes, indexer, search
 from .sources import LABELS, current_harness, current_session, resolve
 
 PROSE_ROLES = ["user", "assistant", "summary"]
@@ -331,6 +331,136 @@ def cmd_show(args, conn) -> int:
     return 0
 
 
+def _plural(count: int, noun: str) -> str:
+    return f"{count} {noun}" + ("" if count == 1 else "s")
+
+
+def _describe(targets) -> str:
+    by_source = {}
+    for source, _ in targets:
+        by_source[source] = by_source.get(source, 0) + 1
+    parts = [_plural(n, f"{LABELS.get(src, src)} session") for src, n in sorted(by_source.items())]
+    return ", ".join(parts) or "no sessions"
+
+
+def cmd_exclude(args, conn) -> int:
+    """Projects the indexer leaves alone, and the transcripts already indexed under them."""
+    path = excludes.default_path()
+    rules = excludes.load(path)
+
+    if args.action is None:
+        return _list_exclusions(conn, path, rules)
+
+    if args.action == "purge":
+        stale = indexer.sessions_excluded(conn, indexer.Skipper.load(conn))
+        targets = [(source, session_id) for source, session_id, _ in stale]
+        if not targets:
+            print("nothing indexed is currently excluded")
+            return 0
+        if not args.yes:
+            print(f"would delete {_describe(targets)} that the current exclusions cover")
+            print("re-run with --yes to apply")
+            return 1
+        deleted = _describe(targets)
+        _, messages = indexer.purge(conn, targets, tombstone=False)
+        print(f"deleted {deleted}, {_plural(messages, 'message')}")
+        return 0
+
+    rule = excludes.normalize(args.path)
+    if not rule:
+        raise SystemExit("exclude needs a project path")
+
+    if args.action == "rm":
+        if not excludes.remove(rule, path):
+            print(f"{rule} is not excluded")
+            return 1
+        print(f"{rule} is no longer excluded."
+              f" Its transcripts are re-indexed on the next query.")
+        return 0
+
+    targets = indexer.sessions_under(conn, [rule])
+    known = rule in rules
+    if not args.yes:
+        if known:
+            print(f"{rule} is already excluded.")
+        else:
+            print(f"would stop indexing anything under {rule}")
+        print(f"would delete {_describe(targets)} already indexed under it")
+        print("re-run with --yes to apply")
+        return 1
+
+    if not known:
+        excludes.add(rule, path)
+    deleted = _describe(targets)
+    _, messages = indexer.purge(conn, targets, tombstone=False)
+    tail = ("nothing was indexed under it" if not targets
+            else f"deleted {deleted}, {_plural(messages, 'message')}")
+    print(f"excluded {rule}; {tail}")
+    return 0
+
+
+def _list_exclusions(conn, path, rules) -> int:
+    stale = indexer.sessions_excluded(conn, indexer.Skipper.load(conn))
+    by_reason = {}
+    for _, _, reason in stale:
+        by_reason[reason] = by_reason.get(reason, 0) + 1
+
+    markers = sorted({r for r in by_reason if r not in rules})
+    if not rules and not markers:
+        print(f"nothing excluded. Add a project: {EXE} exclude add <path> --yes")
+        print(f"Or drop a {excludes.MARKERS[0]} file in any project you want left alone.")
+        return 0
+
+    if rules:
+        print(path)
+        for rule in rules:
+            print(f"  {rule}{_stale_note(by_reason.get(rule, 0))}")
+    if markers:
+        print("marker files covering an indexed project")
+        for marker in markers:
+            print(f"  {marker}{_stale_note(by_reason.get(marker, 0))}")
+    if stale:
+        print(f"\n{_plural(len(stale), 'excluded session')} still in the index."
+              f" Clear with: {EXE} exclude purge --yes")
+    return 0
+
+
+def _stale_note(count: int) -> str:
+    return f"  [{count} indexed]" if count else ""
+
+
+def cmd_forget(args, conn) -> int:
+    """Delete sessions from the index for good, whether or not their project is excluded."""
+    if args.session:
+        source, session_id = _resolve_session(conn, args.session)
+        targets = [(source, session_id)]
+    else:
+        targets = indexer.sessions_under(conn, [excludes.normalize(args.project)])
+
+    if not targets:
+        print("nothing indexed matches that")
+        return 1
+    if not args.yes:
+        print(f"would delete {_describe(targets)}")
+        for source, session_id in targets[:10]:
+            meta = conn.execute(
+                "SELECT project, started FROM sessions WHERE source=? AND session_id=?",
+                (source, session_id),
+            ).fetchone()
+            print(f"  {session_id[:8]} {source} {local_time(meta['started'] if meta else None)}"
+                  f"  {short_project(meta['project'] if meta else None)}")
+        if len(targets) > 10:
+            print(f"  … and {len(targets) - 10} more")
+        print("re-run with --yes to apply")
+        return 1
+
+    forgotten = _describe(targets)
+    _, messages = indexer.purge(conn, targets, tombstone=True)
+    print(f"forgot {forgotten}, {_plural(messages, 'message')}."
+          f" The transcripts stay on disk but are never indexed again.")
+    return 0
+
+
 def cmd_stats(args, conn) -> int:
     total = conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
     path = Path(args.db) if args.db else db.default_path()
@@ -350,6 +480,12 @@ def cmd_stats(args, conn) -> int:
     sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
     files = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
     print(f"sessions  {sessions} across {files} transcript files")
+    rules = excludes.load()
+    forgotten = conn.execute("SELECT COUNT(*) FROM forgotten").fetchone()[0]
+    if rules or forgotten:
+        print(f"excluded  {len(rules)} project{'' if len(rules) == 1 else 's'},"
+              f" {forgotten} forgotten session{'' if forgotten == 1 else 's'}"
+              f"  ({EXE} exclude)")
     return 0
 
 
@@ -430,6 +566,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--source", action="append", metavar="cc|cx")
     p.set_defaults(func=cmd_index)
 
+    p = sub.add_parser("exclude", help="projects the indexer leaves alone")
+    p.add_argument("action", nargs="?", choices=("add", "rm", "purge"),
+                   help="omit to list the rules and marker files in force")
+    p.add_argument("path", nargs="?", help="project directory; covers everything beneath it")
+    p.add_argument("--yes", action="store_true", help="apply, instead of previewing")
+    p.set_defaults(func=cmd_exclude)
+
+    p = sub.add_parser("forget", help="delete indexed sessions for good")
+    target = p.add_mutually_exclusive_group(required=True)
+    target.add_argument("--session", metavar="ID", help="session id or unique prefix")
+    target.add_argument("--project", metavar="PATH",
+                        help="project directory; covers everything beneath it")
+    p.add_argument("--yes", action="store_true", help="apply, instead of previewing")
+    p.set_defaults(func=cmd_forget)
+
     p = sub.add_parser("stats", help="index size and coverage")
     p.set_defaults(func=cmd_stats)
     return parser
@@ -439,6 +590,8 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "show" and args.session is None and args.around is None:
         raise SystemExit("show needs a session id or --around <message-id>")
+    if args.command == "exclude" and args.action in ("add", "rm") and not args.path:
+        raise SystemExit(f"exclude {args.action} needs a project path")
     conn = db.connect(Path(args.db) if args.db else None)
     try:
         if args.command in ("ask", "brief", "search", "sessions", "show") and not args.no_refresh:
