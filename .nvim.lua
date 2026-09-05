@@ -171,6 +171,7 @@ local chezmoi_filetypes = {
   "conf",
   "fish",
   "gitconfig",
+  "gitignore",
   "ini",
   "json",
   "jsonc",
@@ -291,6 +292,20 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- chezmoi.vim hardcodes .chezmoiignore/.chezmoiremove to conf, but their contents are
+-- gitignore patterns and no conf parser exists, so the injection would be dropped.
+-- This has to run on FileType, after chezmoi.vim's own BufRead handler.
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("chezmoi_ignore_ft", { clear = true }),
+  pattern = "conf.chezmoitmpl",
+  callback = function(ev)
+    local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ev.buf), ":t")
+    if fname:match("^%.chezmoiignore") or fname:match("^%.chezmoiremove") then
+      vim.bo[ev.buf].filetype = "gitignore.chezmoitmpl"
+    end
+  end,
+})
+
 -- Plain .tmpl files default to base gotmpl
 vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
   pattern = "*.tmpl",
@@ -326,8 +341,16 @@ vim.api.nvim_create_autocmd("LspAttach", {
       return
     end
     local root = client.root_dir or (client.config and client.config.root_dir)
-    if root == chezmoi_source then
-      client.server_capabilities.documentHighlightProvider = false
+    if root ~= chezmoi_source then
+      return
+    end
+    client.server_capabilities.documentHighlightProvider = false
+
+    -- gopls reports every template action as one `macro` token, and semantic tokens
+    -- outrank treesitter (125 vs 110), so a single flat colour would replace the
+    -- gotmpl highlighting inside `{{ }}`. Go buffers keep their tokens.
+    if vim.bo[args.buf].filetype:match("chezmoitmpl") then
+      vim.lsp.semantic_tokens.enable(false, { bufnr = args.buf, client_id = client.id })
     end
   end,
 })
