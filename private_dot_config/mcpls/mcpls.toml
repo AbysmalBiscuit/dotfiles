@@ -1,0 +1,156 @@
+# Language servers for MCP clients (Claude Code, Codex) via mcpls.
+#
+# Servers spawn only when a project_marker matches; missing binaries are
+# skipped. One catch-all per language_id, or mcpls refuses to start.
+# Commands resolve through PATH, so the Mason-installed servers need
+# ~/.local/share/nvim/mason/bin on it.
+#
+# `roots` defaults to cwd, so launching a harness from $HOME scopes every
+# tool call over ~/.ssh and ~/.aws.
+
+[workspace]
+heuristics_max_depth = 10
+max_documents = 100
+max_file_size = 10485760
+
+[[workspace.language_extensions]]
+extensions = ["nu"]
+language_id = "nushell"
+
+[[lsp_servers]]
+language_id = "rust"
+command = "rust-analyzer"
+file_patterns = ["**/*.rs"]
+
+[lsp_servers.heuristics]
+project_markers = ["Cargo.toml", "rust-toolchain.toml"]
+
+# Defaults compile and run build.rs and proc-macros from the open repo.
+[lsp_servers.initialization_options]
+cargo.buildScripts.enable = false
+procMacro.enable = false
+
+[[lsp_servers]]
+language_id = "python"
+command = "pyrefly"
+args = ["lsp"]
+file_patterns = ["**/*.py", "**/*.pyi"]
+
+[lsp_servers.heuristics]
+project_markers = ["pyrefly.toml", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile"]
+
+# tsgo shells out to `npm` for type acquisition whatever the package manager.
+[[lsp_servers]]
+language_id = "typescript"
+command = "tsgo"
+args = ["--lsp", "--stdio"]
+file_patterns = ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
+
+[lsp_servers.heuristics]
+project_markers = ["tsconfig.json", "jsconfig.json", "package.json"]
+
+# Alternatives to tsgo. Comment tsgo out before enabling one.
+#
+# [[lsp_servers]]
+# language_id = "typescript"
+# command = "vtsls"
+# args = ["--stdio"]
+# file_patterns = ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
+# [lsp_servers.heuristics]
+# project_markers = ["tsconfig.json", "jsconfig.json", "package.json"]
+#
+# [[lsp_servers]]
+# language_id = "typescript"
+# command = "typescript-language-server"
+# args = ["--stdio"]
+# file_patterns = ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
+# [lsp_servers.heuristics]
+# project_markers = ["tsconfig.json", "jsconfig.json", "package.json"]
+
+[[lsp_servers]]
+language_id = "bash"
+command = "bash-language-server"
+args = ["start"]
+file_patterns = ["**/*.sh", "**/*.bash"]
+
+[lsp_servers.heuristics]
+project_markers = [".git"]
+
+[[lsp_servers]]
+language_id = "lua"
+command = "lua-language-server"
+file_patterns = ["**/*.lua"]
+
+[lsp_servers.heuristics]
+project_markers = [".luarc.json", "stylua.toml", ".stylua.toml", ".git"]
+
+[[lsp_servers]]
+language_id = "toml"
+command = "taplo"
+args = ["lsp", "stdio"]
+file_patterns = ["**/*.toml"]
+
+[lsp_servers.heuristics]
+project_markers = [".taplo.toml", "taplo.toml", ".git"]
+
+[[lsp_servers]]
+language_id = "yaml"
+command = "yaml-language-server"
+args = ["--stdio"]
+file_patterns = ["**/*.yaml", "**/*.yml"]
+
+[lsp_servers.heuristics]
+project_markers = [".git"]
+
+[[lsp_servers]]
+language_id = "json"
+command = "vscode-json-language-server"
+args = ["--stdio"]
+file_patterns = ["**/*.json", "**/*.jsonc"]
+
+[lsp_servers.heuristics]
+project_markers = [".git"]
+
+[[lsp_servers]]
+language_id = "css"
+command = "vscode-css-language-server"
+args = ["--stdio"]
+file_patterns = ["**/*.css", "**/*.scss", "**/*.less"]
+
+[lsp_servers.heuristics]
+project_markers = ["package.json", ".git"]
+
+[[lsp_servers]]
+language_id = "dockerfile"
+command = "docker-langserver"
+args = ["--stdio"]
+file_patterns = ["**/Dockerfile*", "**/*.dockerfile"]
+
+[lsp_servers.heuristics]
+project_markers = ["Dockerfile", "compose.yaml", "docker-compose.yml"]
+
+[[lsp_servers]]
+language_id = "markdown"
+command = "marksman"
+args = ["server"]
+file_patterns = ["**/*.md", "**/*.markdown"]
+
+[lsp_servers.heuristics]
+project_markers = [".git", ".marksman.toml"]
+
+[[lsp_servers]]
+language_id = "latex"
+command = "texlab"
+file_patterns = ["**/*.tex", "**/*.bib"]
+
+[lsp_servers.heuristics]
+project_markers = [".latexmkrc", "latexmkrc", ".texlabroot", "Tectonic.toml"]
+
+[[lsp_servers]]
+language_id = "nushell"
+command = "nu"
+args = ["--lsp"]
+file_patterns = ["**/*.nu"]
+
+[lsp_servers.heuristics]
+project_markers = [".git"]
