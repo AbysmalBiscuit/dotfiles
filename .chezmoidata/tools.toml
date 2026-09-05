@@ -920,7 +920,7 @@ desc = "dev tools, env vars, task runner"
 url = "https://mise.jdx.dev/"
 git = "https://github.com/jdx/mise"
 comment = "curl https://mise.run | sh ; cargo binstall mise"
-install_command = "cargo install --locked mise"
+install_command = "cargo install --locked mise; cargo install usage-cli"
 supported_shells = [
     "bash",
     "fish",
