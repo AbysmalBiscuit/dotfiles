@@ -870,6 +870,23 @@ url = "https://github.com/pemistahl/grex#5-how-to-use"
 
 [[tools]]
 lang = "rust"
+name = "herdr"
+desc = "A runtime for coding agents that keeps their terminals running across restarts and disconnections."
+url = "https://herdr.dev/"
+git = "https://github.com/herdrdev/herdr"
+comment = "crates.io is stale (0.1.0), so build from git. build.rs compiles the vendored libghostty-vt and needs Zig 0.15.2 on PATH (`mise use -g zig@0.15.2`) or ZIG pointing at the binary. prebuilt binaries instead: `curl -fsSL https://herdr.dev/install.sh | sh`, windows `powershell -ExecutionPolicy Bypass -c \"irm https://herdr.dev/install.ps1 | iex\"`."
+install_command = "cargo install --locked --git https://github.com/herdrdev/herdr"
+completions_command = "herdr completion SHELL"
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "powershell",
+    "zsh"
+]
+
+[[tools]]
+lang = "rust"
 name = "htmlq"
 desc = "Use CSS selectors to extract content from HTML files."
 url = "https://github.com/mgdm/htmlq#usage"
