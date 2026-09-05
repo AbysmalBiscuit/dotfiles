@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -44,7 +45,7 @@ OCARGO_OPTS:
 -f, --fat        Enable fat LTO
 -l, --lto        Enable thin LTO
 -d, --dylib      Enable dylib-lto flag
--m, --mold       Use mold linker, even if $MOLD isn't set
+-m, --mold       Use mold linker (Linux only), even if $MOLD isn't set
 --no-mold        Don't use mold linker, even if it's available
 -h, --help       Print help
 --debug          Print ocargo debug information
@@ -66,6 +67,29 @@ DEFAULTS = (
 # $MOLD doubles as an on/off switch and a convenience for anyone who set it to a
 # path, so anything non-empty that isn't one of these means "use mold".
 OFF_WORDS: frozenset[str] = frozenset({"0", "false", "no", "off"})
+
+# mold links ELF only. $MOLD and $RUSTFLAGS_RELEASE are exported from one
+# cross-platform shell profile, so a mold flag can reach a Windows or macOS run
+# that would fail the link.
+IS_LINUX: bool = sys.platform.startswith("linux")
+MOLD_LINK_ARG = re.compile(r"link-arg=(?:-fuse-ld=|--ld-path=)\S*mold\Z")
+
+
+def strip_mold(rustflags: str) -> str:
+    """Drops any mold linker selection from a RUSTFLAGS string."""
+    args = shlex.split(rustflags)
+    kept: list[str] = []
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg == "-C" and index + 1 < len(args) and MOLD_LINK_ARG.match(args[index + 1]):
+            index += 2
+        elif arg.startswith("-C") and MOLD_LINK_ARG.match(arg[2:].lstrip()):
+            index += 1
+        else:
+            kept.append(arg)
+            index += 1
+    return " ".join(kept)
 
 
 def parse_flags(argv: list[str]) -> tuple[dict[str, bool], list[str]]:
@@ -105,6 +129,13 @@ def mold_flag(explicit: bool) -> str | None:
     An explicit -m outranks an "off" value in $MOLD, mirroring how --no-mold
     outranks an "on" one.
     """
+    if not IS_LINUX:
+        if explicit:
+            print(
+                f"ocargo: mold links ELF only, ignoring --mold on {sys.platform}",
+                file=sys.stderr,
+            )
+        return None
     if not explicit and os.environ.get("MOLD", "").strip().lower() in OFF_WORDS:
         return None
     if not (shutil.which("ld.mold") or shutil.which("mold")):
@@ -142,7 +173,9 @@ def main() -> int:
         print(HELP)
         return 0
 
-    rustflags = base_rustflags()
+    # Stripped unconditionally so an inherited flag can't survive --no-mold, a
+    # non-Linux host, or double up with the one appended below.
+    rustflags = strip_mold(base_rustflags())
 
     if (flags["mold"] or os.environ.get("MOLD")) and not flags["no_mold"]:
         link_arg = mold_flag(flags["mold"])

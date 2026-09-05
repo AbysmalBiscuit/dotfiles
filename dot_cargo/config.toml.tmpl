@@ -1,25 +1,19 @@
 #:schema = https://json.schemastore.org/cargo.json
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 
 [alias]
 nag = "clippy -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
 fixnags = "clippy --fix -- -W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W clippy::expect_used"
 
 [build]
-jobs = {{ .system.build_jobs }}
+jobs = # {{ .system.build_jobs }}
 
 [profile.dev]
 debug = "line-tables-only"
-
-# [target.x86_64-unknown-linux-gnu]
-# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-#
-# [target.stable-x86_64-apple-darwin]
-# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-#
-# [target.nightly-x86_64-apple-darwin]
-# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-
-# [target.'cfg(any(target_os = "linux", target_os = "macos"))']
-[target.'cfg(any(target_os = "linux"))']
-# linker = "clang"
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+[target.'cfg(target_os = "linux")']
+rustflags = [
+  # {{- if index .has "mold" }}
+  "-C",
+  "link-arg=-fuse-ld=mold",
+  # {{- end }}
+]
