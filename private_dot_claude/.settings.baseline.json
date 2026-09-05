@@ -303,7 +303,7 @@
   "remoteControlAtStartup": false,
   "skipWorkflowUsageWarning": true,
   "statusLine": {
-    "command": "ccstatusline",
+    "command": "bunx --bun ccstatusline",
     "padding": 0,
     "refreshInterval": 10,
     "type": "command"
