@@ -131,10 +131,14 @@ $env.NU_PLUGIN_DIRS = [
 # To load from a custom file you can use:
 # source ($nu.default-config-dir | path join 'custom.nu')
 
+# mise shims are appended, never prepended: a shim re-enters mise on every call,
+# so whatever is already on PATH should win. Launched from a login shell, sh_env
+# has already placed them, and `uniq` keeps that earlier position.
 $env.PATH = (
     $env.PATH
         | split row (char esep)
         | prepend ($env.NUPM_HOME | path join "scripts")
+        | append ($env.XDG_DATA_HOME? | default ($nu.home-dir | path join ".local" "share") | path join "mise" "shims")
         | uniq
 )
 
