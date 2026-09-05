@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import sys
 
-SHORT = {
+SHORT: dict[str, str] = {
     "n": "nightly",
     "f": "fat",
     "l": "lto",
@@ -23,7 +23,7 @@ SHORT = {
     "h": "help",
 }
 
-LONG = {
+LONG: dict[str, str] = {
     "nightly": "nightly",
     "fat": "fat",
     "lto": "lto",
@@ -34,7 +34,7 @@ LONG = {
     "help": "help",
 }
 
-HELP = """\
+HELP: str = """\
 Run cargo with compiler optimizations enabled
 
 Usage: ocargo [OCARGO_OPTS] CARGO_CMD [CARGO_CMD_OPTS]
@@ -61,6 +61,11 @@ DEFAULTS = (
     ("debug_assertions", "-C debug_assertions=no"),
     ("codegen-units", "-C codegen-units=1"),
 )
+
+
+# $MOLD doubles as an on/off switch and a convenience for anyone who set it to a
+# path, so anything non-empty that isn't one of these means "use mold".
+OFF_WORDS: frozenset[str] = frozenset({"0", "false", "no", "off"})
 
 
 def parse_flags(argv: list[str]) -> tuple[dict[str, bool], list[str]]:
@@ -91,15 +96,25 @@ def base_rustflags() -> str:
 
 
 def mold_flag(explicit: bool) -> str | None:
-    path = os.environ.get("MOLD") or shutil.which("mold")
-    if path:
-        return f"-C link-arg=-fuse-ld={path}"
-    if explicit:
-        print(
-            "ocargo: mold not found on PATH, linking with the default linker",
-            file=sys.stderr,
-        )
-    return None
+    """Checks if mold should be used and returns `None` or the flag that enables it.
+
+    GCC's -fuse-ld takes a linker name, never a path, so $MOLD only decides
+    whether mold is used, not how it is named on the command line. The bare
+    name also overrides the -fuse-ld=lld that rustc passes on its own, and it
+    sends GCC looking for ld.mold on PATH, hence the two-name probe.
+    An explicit -m outranks an "off" value in $MOLD, mirroring how --no-mold
+    outranks an "on" one.
+    """
+    if not explicit and os.environ.get("MOLD", "").strip().lower() in OFF_WORDS:
+        return None
+    if not (shutil.which("ld.mold") or shutil.which("mold")):
+        if explicit:
+            print(
+                "ocargo: mold not found on PATH, linking with the default linker",
+                file=sys.stderr,
+            )
+        return None
+    return "-C link-arg=-fuse-ld=mold"
 
 
 def has_nightly() -> bool:
@@ -109,9 +124,7 @@ def has_nightly() -> bool:
     rustup = shutil.which("rustup")
     if not rustup:
         return False
-    result = subprocess.run(
-        [rustup, "toolchain", "list"], capture_output=True, text=True
-    )
+    result = subprocess.run([rustup, "toolchain", "list"], capture_output=True, text=True)
     return any(line.startswith("nightly") for line in result.stdout.splitlines())
 
 
