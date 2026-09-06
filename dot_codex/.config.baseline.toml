@@ -35,7 +35,7 @@ matcher = "^apply_patch$"
 [[hooks.PostToolUse.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent_guard.py --codex"
+command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
 timeout = 10
 statusMessage = "Checking conventions"
 
@@ -45,7 +45,7 @@ matcher = "^Bash$"
 [[hooks.PreToolUse.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent_guard.py --codex"
+command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
 timeout = 8
 statusMessage = "Checking tool conventions"
 
@@ -53,7 +53,7 @@ statusMessage = "Checking tool conventions"
 [[hooks.Stop.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent_guard.py --codex"
+command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
 timeout = 60
 statusMessage = "Auditing changeset"
 
@@ -61,7 +61,7 @@ statusMessage = "Auditing changeset"
 [[hooks.SubagentStop.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\agent_guard.py --codex"
+command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
 timeout = 60
 statusMessage = "Auditing changeset"
 [marketplaces.devkit]
