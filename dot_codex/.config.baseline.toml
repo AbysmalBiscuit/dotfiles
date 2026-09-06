@@ -9,10 +9,24 @@ experimental_use_rmcp_client = true
 hooks = true
 
 [hooks]
+[[hooks.SessionStart]]
+hooks = [
+    {
+        type = "command",
+        command = "bash '/home/lev/.codex/herdr-agent-state.sh' session",
+        command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
+        timeout = 10,
+    },
+]
 
 [[hooks.SessionEnd]]
 hooks = [
-    { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
+    {
+        type = "command",
+        command = "python3 ~/.agents/skills/history/hist.py index",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index',
+        timeout = 3,
+    },
 ]
 
 [[hooks.PostToolUse]]
