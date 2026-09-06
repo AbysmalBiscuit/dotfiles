@@ -15,6 +15,11 @@ $vars = @{
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
     # {{- end}}
 }
+# A User-scope write broadcasts WM_SETTINGCHANGE to every top-level window and
+# blocks on the slowest to answer, which costs seconds per variable. Only the
+# ones whose value actually changed are worth that.
 foreach ($k in $vars.Keys) {
-    [System.Environment]::SetEnvironmentVariable($k, $vars[$k], "User")
+    if ([System.Environment]::GetEnvironmentVariable($k, "User") -ne $vars[$k]) {
+        [System.Environment]::SetEnvironmentVariable($k, $vars[$k], "User")
+    }
 }
