@@ -401,8 +401,14 @@ function has_command {
 $env:PATH += ';# {{ joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" }}'
 # {{- end }}
 
+# Argument completers do nothing without a readline, and the generated init
+# files are worse than useless off a terminal: starship's spawns a starship
+# process on load to fetch the continuation prompt, which then fails to write
+# its session log inside an agent sandbox and pollutes every captured command.
+$interactive = -not ([Console]::IsOutputRedirected -or [Console]::IsInputRedirected)
+
 $completions_cache = '# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}'
-if (Test-Path "$completions_cache")  {
+if ($interactive -and (Test-Path "$completions_cache"))  {
     # Recurse: generated completions sit at the top level, downloaded ones in
     # a subdirectory the generator does not clear.
     foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1' -File -Recurse) {
