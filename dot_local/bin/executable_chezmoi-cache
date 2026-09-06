@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Rebuild the caches that chezmoi's own templates read.
+
+Each cache is produced by a script in .chezmoiscripts that normally runs during
+`chezmoi apply`. Rebuilding one renders that script here and runs it, then
+re-inits so the config file picks the fresh cache up in the same pass.
+
+chezmoi dispatches `chezmoi cache ...` to whatever `chezmoi-cache` resolves to on
+PATH.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from typing import TYPE_CHECKING
+
+from chezmoi_plugin import (
+    SCRIPT_SUFFIX,
+    PluginError,
+    chezmoi_init,
+    render,
+    run,
+    run_rendered,
+    source_dir,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+# Script that builds each cache, named without the extension because the POSIX
+# and Windows variants sit in different directories.
+BUILDERS: dict[str, str] = {
+    "completions": "run_onchange_after_90-generate-shell-completions",
+    "tools": "run_onchange_before_02-generate-has-cache",
+}
+
+
+def builder_path(source: Path, name: str) -> Path:
+    scripts = source / ".chezmoiscripts"
+    if SCRIPT_SUFFIX == ".ps1":
+        scripts = scripts / "windows"
+    return scripts / f"{BUILDERS[name]}{SCRIPT_SUFFIX}.tmpl"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="chezmoi cache",
+        description="Rebuild the caches chezmoi's templates read.",
+    )
+    parser.add_argument(
+        "caches",
+        nargs="*",
+        metavar="CACHE",
+        help=f"which cache to rebuild ({', '.join(BUILDERS)}); default: all of them",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    names = args.caches or list(BUILDERS)
+    if unknown := [name for name in names if name not in BUILDERS]:
+        raise PluginError(
+            f"no such cache: {', '.join(unknown)} (known: {', '.join(BUILDERS)})"
+        )
+    source = source_dir()
+
+    worst = 0
+    for name in names:
+        template = builder_path(source, name)
+        print(f"rebuilding the {name} cache from {template.name}", flush=True)
+        try:
+            worst = max(worst, run_rendered(render(template)))
+        except PluginError as err:
+            print(err, file=sys.stderr)
+            worst = max(worst, 1)
+
+    return max(worst, chezmoi_init())
+
+
+if __name__ == "__main__":
+    sys.exit(run(main))
