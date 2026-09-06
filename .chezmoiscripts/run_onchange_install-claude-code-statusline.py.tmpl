@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# vim:filetype=python.chezmoitmpl
+"""Install the Claude Code cost statusline tooling with bun.
+
+The statusline runs `bunx --bun ccstatusline`, which falls back to downloading
+the package when it is not installed globally, so this is a startup-latency
+optimisation rather than a hard requirement.
+
+Templated on .has, so chezmoi re-runs it whenever either binary's detected
+install state changes.
+"""
+
+import shutil
+import subprocess
+import sys
+
+MISSING = [
+# {{- if not (index .has "ccusage") | default false }}
+    "ccusage",
+# {{- end }}
+# {{- if not (index .has "ccstatusline") | default false }}
+    "ccstatusline",
+# {{- end }}
+]
+
+if not MISSING:
+    sys.exit(0)
+
+bun = shutil.which("bun")
+if bun is None:
+    print(
+        "bun not found - install bun first, then re-run 'chezmoi apply'.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+for package in MISSING:
+    print(f"==> installing {package} (global, via bun)")
+    subprocess.run([bun, "add", "-g", package], check=True)
