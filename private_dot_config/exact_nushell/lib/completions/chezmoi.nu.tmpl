@@ -8,6 +8,11 @@
 # external completer, so the real subcommands disappear. Wrapping the completer
 # keeps both.
 #
+# `cm` needs the same answer and cannot get it the same way: it is a custom
+# command, not an external one, so nushell resolves its arguments through the
+# call machinery and never reaches the external completer at all. The
+# `nu-complete chezmoi` below is what lib/chezmoi.nu hangs on its rest argument.
+#
 # Sourced from config.nu like the rest of lib/completions. `source` splices the
 # code in, so this sees the completer that block already installed.
 
@@ -52,4 +57,22 @@ $env.config.completions.external.completer = {|spans|
     } | where ($it.value | str starts-with $typed)
 
     if ($extra | is-empty) { $base } else { ($base | default []) ++ $extra }
+}
+
+# Completions for the `cm` wrapper, routed back through the completer above
+# under the name it stands in for. Aliases resolve first: a completer is handed
+# the raw buffer, so `cmexe ` arrives as itself rather than as `cm
+# execute-template `.
+def "nu-complete chezmoi" [context: string] {
+    let words = ($context | str trim --left | split row --regex '\s+')
+    let expansion = (scope aliases | where name == ($words | first) | get --optional 0.expansion)
+    let spans = if ($expansion | is-not-empty) {
+        ($expansion | split row --regex '\s+') ++ ($words | skip 1)
+    } else {
+        $words
+    }
+
+    let completer = $env.config.completions.external.completer
+    if ($completer | describe) != "closure" { return [] }
+    do $completer (["chezmoi"] ++ ($spans | skip 1))
 }
