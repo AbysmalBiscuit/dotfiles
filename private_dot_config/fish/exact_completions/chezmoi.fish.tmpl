@@ -1,0 +1,18 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=fish.chezmoitmpl
+# {{- end -}}
+# {{- /* Everything down to the plugin block is cobra's own fish completion,
+#        emitted here rather than left to the batch file script 90 writes:
+#        fish autoloads a completion by filename, and that file is named for
+#        the generator, not for chezmoi. */ -}}
+# {{ completion "fish" }}
+
+# cobra builds the completion above from chezmoi's command tree, which the
+# chezmoi-* plugins on PATH are not part of.
+# {{- range $plugin := .chezmoi_plugins }}
+complete -c chezmoi -n __fish_use_subcommand -a '# {{ $plugin.name }}' -d '# {{ $plugin.desc }}'
+# {{- range $arg := (index $plugin "args" | default (list)) }}
+complete -c chezmoi -n '__fish_seen_subcommand_from # {{ $plugin.name }}' -a '# {{ $arg.name }}' -d '# {{ $arg.desc }}'
+# {{- end }}
+# {{- end }}

@@ -416,6 +416,51 @@ if ($interactive -and (Test-Path "$completions_cache"))  {
     }
 }
 
+# cobra builds chezmoi's completer from its own command tree, which the chezmoi-*
+# plugins on PATH are not part of. Register-ArgumentCompleter keeps only the last
+# registration for a command, so this wraps the block the generated completion
+# left behind rather than registering a second completer beside it.
+if ($interactive -and (Get-Variable -Name '__chezmoiCompleterBlock' -Scope Global -ErrorAction Ignore)) {
+    $__chezmoiCobraCompleter = $__chezmoiCompleterBlock
+    $__chezmoiPluginArgs = @{
+# {{- range $plugin := .chezmoi_plugins }}
+# {{-   if index $plugin "args" }}
+        '# {{ $plugin.name }}' = @(
+# {{-     range $arg := index $plugin "args" }}
+            @{ Name = '# {{ $arg.name }}'; Description = '# {{ $arg.desc }}' }
+# {{-     end }}
+        )
+# {{-   end }}
+# {{- end }}
+    }
+    $__chezmoiPlugins = @(
+# {{- range $plugin := .chezmoi_plugins }}
+        @{ Name = '# {{ $plugin.name }}'; Description = '# {{ $plugin.desc }}' }
+# {{- end }}
+    )
+    Register-ArgumentCompleter -CommandName 'chezmoi' -ScriptBlock {
+        param($wordToComplete, $commandAst, $cursorPosition)
+
+        & $__chezmoiCobraCompleter $wordToComplete $commandAst $cursorPosition
+
+        # CommandElements includes the partial word under the cursor, so drop it
+        # to learn which position is being completed: 1 is the subcommand.
+        $written = @($commandAst.CommandElements | ForEach-Object { $_.ToString() })
+        if ($wordToComplete -and $written.Count -gt 1) { $written = $written[0..($written.Count - 2)] }
+        $candidates = switch ($written.Count) {
+            1 { $__chezmoiPlugins }
+            2 { $__chezmoiPluginArgs[$written[1]] }
+            default { @() }
+        }
+        foreach ($candidate in $candidates) {
+            if ($candidate.Name -like "$wordToComplete*") {
+                [System.Management.Automation.CompletionResult]::new(
+                    $candidate.Name, $candidate.Name, 'ParameterValue', $candidate.Description)
+            }
+        }
+    }
+}
+
 # Fish-style abbreviated cwd (~/G/g/alacritree) as the terminal title.
 # ConPTY forwards WindowTitle as an OSC 0 sequence, which alacritree's
 # sidebar displays.  Starship calls this hook before rendering each prompt;

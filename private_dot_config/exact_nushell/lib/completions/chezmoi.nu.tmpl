@@ -1,0 +1,55 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# Plugin subcommands for `chezmoi`, on top of what carapace answers with.
+#
+# carapace builds its chezmoi spec from cobra's command tree, which the
+# chezmoi-* scripts on PATH are not part of. An `extern "chezmoi cache"` would
+# be the obvious fix and is the wrong one: declaring any chezmoi subcommand
+# makes nushell complete the command name internally and stop calling the
+# external completer, so the real subcommands disappear. Wrapping the completer
+# keeps both.
+#
+# Sourced from config.nu like the rest of lib/completions. `source` splices the
+# code in, so this sees the completer that block already installed.
+
+const CHEZMOI_PLUGINS = [
+# {{- range $plugin := .chezmoi_plugins }}
+    { value: "# {{ $plugin.name }}", description: "# {{ $plugin.desc }}" }
+# {{- end }}
+]
+
+const CHEZMOI_PLUGIN_ARGS = {
+# {{- range $plugin := .chezmoi_plugins }}
+# {{-   if index $plugin "args" }}
+    "# {{ $plugin.name }}": [
+# {{-     range $arg := index $plugin "args" }}
+        { value: "# {{ $arg.name }}", description: "# {{ $arg.desc }}" }
+# {{-     end }}
+    ]
+# {{-   end }}
+# {{- end }}
+}
+
+let chezmoi_base_completer = $env.config.completions.external.completer
+
+$env.config.completions.external.completer = {|spans|
+    let base = if ($chezmoi_base_completer | describe) == "closure" {
+        do $chezmoi_base_completer $spans
+    } else {
+        null
+    }
+
+    if ($spans.0 | path basename | str replace --regex '\.exe$' '') != "chezmoi" {
+        return $base
+    }
+
+    # The last span is the word being typed, so its index is the position being
+    # completed: 1 is the subcommand, 2 that subcommand's own argument.
+    let typed = ($spans | last)
+    let extra = match (($spans | length) - 1) {
+        1 => $CHEZMOI_PLUGINS,
+        2 => ($CHEZMOI_PLUGIN_ARGS | get --optional $spans.1 | default []),
+        _ => [],
+    } | where ($it.value | str starts-with $typed)
+
+    if ($extra | is-empty) { $base } else { ($base | default []) ++ $extra }
+}

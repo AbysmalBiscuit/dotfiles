@@ -1,0 +1,31 @@
+# Subcommands chezmoi gains from the chezmoi-* scripts in ~/.local/bin. chezmoi
+# builds its completion scripts from cobra's command tree, which knows nothing
+# about plugins, so every shell's completion picks these up from here instead.
+#
+# Descriptions are single-quoted by the fish, zsh and PowerShell completions and
+# split on ":" by zsh, so they carry neither an apostrophe nor a colon.
+
+[[chezmoi_plugins]]
+name = "agents"
+desc = "Assign a merge strategy to live agent-config keys"
+
+[[chezmoi_plugins]]
+name = "cache"
+desc = "Rebuild the caches that chezmoi templates read"
+args = [
+    { name = "completions", desc = "the generated shell completion files" },
+    { name = "tools", desc = "the has cache of installed tools" },
+]
+
+[[chezmoi_plugins]]
+name = "edit-secrets"
+desc = "Edit the encrypted secrets file"
+
+[[chezmoi_plugins]]
+name = "tools"
+desc = "Report and install the tools inventoried in .chezmoidata"
+args = [
+    { name = "install", desc = "run the install command for a tool" },
+    { name = "list", desc = "list every inventoried tool" },
+    { name = "missing", desc = "list tools not on PATH" },
+]

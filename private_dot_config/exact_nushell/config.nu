@@ -231,6 +231,7 @@ if (which carapace | is-not-empty) {
 source ./lib/platform.nu
 source ./lib/files.nu
 source ./lib/completions/claude.nu
+source ./lib/completions/chezmoi.nu
 source ./lib/aliases.nu
 source ./lib/media.nu
 source ./lib/dev.nu
