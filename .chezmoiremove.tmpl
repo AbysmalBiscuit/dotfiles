@@ -1,0 +1,9 @@
+{{ if .is_windows -}}
+{{/* uv installs python.exe/python3.exe, so the hand-rolled shims are dead weight */ -}}
+.local/bin/python
+.local/bin/python.bat
+.local/bin/python.cmd
+.local/bin/python3
+.local/bin/python3.bat
+.local/bin/python3.cmd
+{{ end -}}

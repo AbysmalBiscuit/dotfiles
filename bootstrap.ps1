@@ -13,15 +13,19 @@ Get-Content "$SourceDir\.chezmoiscripts\windows\run_once_decrypt-private-key.ps1
 # 4. Decrypt secrets
 age -d -i "$CHEZMOI_KEY" -o "$HOME/.config/chezmoi/secrets.toml" "$SourceDir/secrets.toml.age"
 
-# 5. Run scripts for the firs time to build has cache
-chezmoi apply --include=scripts
+# 5. Install python, the .py scripts have no interpreter without it
+powershell -ExecutionPolicy Bypass -File "$SourceDir\.chezmoiscripts\windows\run_once_before_00-install-python.ps1"
 
+# 6. Build the has cache and re-init, so the py interpreter is set before any .py script runs
 pwsh -File build_tool_cache.ps1
+
+# 7. Run scripts for the firs time
+chezmoi apply --include=scripts
 
 Get-Content "$SourceDir\.chezmoiscripts\windows\run_once_set-environment-variables.ps1.tmpl" -Raw | chezmoi execute-template | powershell -Command -
 
-# 6. Run second init, chezmoi.toml will now be complete
+# 8. Run second init, chezmoi.toml will now be complete
 chezmoi init
 
-# 7. Run regular apply
+# 9. Run regular apply
 chezmoi apply

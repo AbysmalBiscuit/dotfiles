@@ -20,11 +20,14 @@ chezmoi apply --include=externals
 # 4. Decrypt secrets
 age -d -i "$CHEZMOI_KEY" -o "$HOME/.config/chezmoi/secrets.toml" "$SOURCE_DIR/secrets.toml.age"
 
-# 5. Run scripts for the firs time to build has cache
+# 5. Install python, the .py scripts have no interpreter without it
+sh "$SOURCE_DIR/.chezmoiscripts/run_once_before_00-install-python.sh"
+
+# 6. Run scripts for the firs time to build has cache
 chezmoi apply --include=scripts
 
-# 6. Run second init, chezmoi.toml will now be complete
+# 7. Run second init, chezmoi.toml will now be complete
 chezmoi init
 
-# 7. Run regular apply
+# 8. Run regular apply
 chezmoi apply
