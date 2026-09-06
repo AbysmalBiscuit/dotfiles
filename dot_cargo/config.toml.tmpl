@@ -7,9 +7,17 @@ fixnags = "clippy --fix -- -W clippy::pedantic -W clippy::nursery -W clippy::unw
 
 [build]
 jobs = # {{ .system.build_jobs }}
+# {{- if index .has "sccache" }}
+rustc-wrapper = "sccache"
+# {{- end }}
 
 [profile.dev]
 debug = "line-tables-only"
+# {{- if index .has "sccache" }}
+# sccache cannot cache incrementally compiled crates, so leaving
+# incremental on costs a cache miss on every local crate.
+incremental = false
+# {{- end }}
 
 [profile.dev.package."*"]
 debug = false
