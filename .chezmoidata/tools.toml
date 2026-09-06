@@ -1069,6 +1069,7 @@ lang = "rust"
 name = "rustup"
 desc = "Install, manage, and update Rust toolchains."
 url = "https://rust-lang.github.io/rustup/"
+install_command = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 
 [[tools]]
 lang = "rust"
