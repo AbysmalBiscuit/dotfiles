@@ -11,8 +11,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "tools.toml"
-WSL_TOOLS_TOML = Path.home() / ".local" / "share" / "chezmoi" / ".chezmoidata" / "wsl_tools.toml"
+SOURCE_DIR = Path("# {{ .chezmoi.sourceDir | replaceAllRegex "\\\\" "/" }}")
+TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "tools.toml"
+WSL_TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "wsl_tools.toml"
 HEADER = (
     "#:schema .tools.schema.json\n"
 )
