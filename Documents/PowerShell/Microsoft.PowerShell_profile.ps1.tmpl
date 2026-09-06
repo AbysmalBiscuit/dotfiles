@@ -403,7 +403,9 @@ $env:PATH += ';# {{ joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.h
 
 $completions_cache = '# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}'
 if (Test-Path "$completions_cache")  {
-    foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1') {
+    # Recurse: generated completions sit at the top level, downloaded ones in
+    # a subdirectory the generator does not clear.
+    foreach ($f in Get-ChildItem -Path $completions_cache -Filter '*.ps1' -File -Recurse) {
         . $f.FullName
     }
 }

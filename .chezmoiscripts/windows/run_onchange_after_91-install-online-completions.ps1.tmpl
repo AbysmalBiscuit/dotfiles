@@ -1,0 +1,72 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# {{- if false -}}
+# vim:filetype=ps1.chezmoitmpl:shiftwidth=4
+# {{- end -}}
+# {{- $ps_dir := joinPath .chezmoi.homeDir ".cache" "shell-completions" "downloaded" -}}
+# {{- $xdg := env "XDG_CONFIG_HOME" -}}
+# {{- $nu_home := "" -}}
+# {{- if $xdg -}}
+# {{-   $nu_home = joinPath $xdg "nushell" -}}
+# {{- else -}}
+# {{-   $nu_home = joinPath (env "APPDATA" | default (joinPath .chezmoi.homeDir "AppData" "Roaming")) "nushell" -}}
+# {{- end -}}
+# {{- $nu_dir := joinPath $nu_home "autoload" -}}
+# {{- if .tool.bottom }}
+# bottom ships completions only in its release archive: the binary cannot
+# generate them, so script 90 has no way to reach them, and carapace has no btm
+# spec either. bun, the other tool the POSIX version of this script covers, is a
+# carapace completer and needs nothing here.
+#
+# Both files are named after the command and live where script 90 does not
+# write: 90 rewrites its own output whenever any tool binary changes, while this
+# script only re-runs when btm does.
+# btm: # {{ (stat (lookPath "btm")).modTime }}
+
+$ErrorActionPreference = 'Stop'
+
+$downloadDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
+try {
+    $archive = Join-Path $downloadDir 'completion.tar.gz'
+    # Invoke-WebRequest renders a progress bar per chunk in Windows PowerShell,
+    # which costs more than the download itself.
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' -OutFile $archive
+    # Full path, not `tar`: Git for Windows puts GNU tar on PATH ahead of the
+    # system one, and GNU tar reads a `C:\...` argument as a remote host.
+    & "$env:SystemRoot\System32\tar.exe" -xzf $archive -C $downloadDir --strip-components=1
+
+# {{- if .tool.nushell }}
+
+    $nuSource = Join-Path $downloadDir 'btm.nu'
+    if (Test-Path $nuSource) {
+        $nuDir = '# {{ $nu_dir }}'
+        New-Item -ItemType Directory -Path $nuDir -Force | Out-Null
+        # No BOM: nushell's parser takes the mark as part of the first token.
+        [System.IO.File]::WriteAllText(
+            (Join-Path $nuDir 'btm.nu'),
+            [System.IO.File]::ReadAllText($nuSource),
+            [System.Text.UTF8Encoding]::new($false)
+        )
+    } else {
+        Write-Warning "btm.nu missing from the bottom completion archive"
+    }
+# {{- end }}
+
+    $psSource = Join-Path $downloadDir '_btm.ps1'
+    if (Test-Path $psSource) {
+        $psDir = '# {{ $ps_dir }}'
+        New-Item -ItemType Directory -Path $psDir -Force | Out-Null
+        # BOM: Windows PowerShell reads a BOM-less file as ANSI.
+        [System.IO.File]::WriteAllText(
+            (Join-Path $psDir 'btm.ps1'),
+            [System.IO.File]::ReadAllText($psSource),
+            [System.Text.UTF8Encoding]::new($true)
+        )
+    } else {
+        Write-Warning "_btm.ps1 missing from the bottom completion archive"
+    }
+} finally {
+    Remove-Item $downloadDir -Recurse -Force
+}
+# {{- end }}

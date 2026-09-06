@@ -96,10 +96,10 @@
 $ErrorActionPreference = 'Stop'
 
 $outDir = "# {{ $out_dir }}"
-if (Test-Path $outDir) {
-    Remove-Item $outDir -Force -Recurse
-}
 New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+# Only the files generated here, never the whole tree: script 91 owns the
+# downloaded subdirectory, and the profile loads both.
+Get-ChildItem -Path $outDir -Filter '*.ps1' -File | Remove-Item -Force
 
 # {{- if has "nu" $shells }}
 
