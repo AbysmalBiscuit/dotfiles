@@ -20,7 +20,7 @@
 
 [cache.disk]
 # dir = "/tmp/.cache/sccache"
-size = 7516192768 # 7 GiBytes
+size = 26843545600 # 25 GiBytes
 
 # See the local docs on more explanations about this mode
 [cache.disk.preprocessor_cache_mode]
