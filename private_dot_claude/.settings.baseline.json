@@ -72,7 +72,7 @@
     }
   },
   "fileSuggestion": {
-    "command": "~/.claude/scripts/file-suggestion.ts",
+    "command": "bun ~/.agents/scripts/file-suggestion.ts",
     "type": "command"
   },
   "hooks": {
