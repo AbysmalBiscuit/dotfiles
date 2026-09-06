@@ -29,11 +29,10 @@ fallback = [
   "Noto Sans Bamum",
 ]
 
-# confirm close only while a process is running; closing the last session
-# navigates to the project main / home instead of respawning in place
 [ui]
 confirm_session_close = "busy"
-last_session_close = "navigate"
+confirm_session_detach = false
+last_session_close = "ring_project"
 # a removal moves the terminal to the neighbouring row rather than the first
 sidebar_focus = "follow"
 # PR status badges on worktree rows (polls gh)
@@ -73,6 +72,9 @@ bold = true
 # list session rows even for single-session workspaces
 [ui.session_display]
 sidebar_always = true
+
+[ui.session_reorder]
+drag = true
 
 # sidebar/chrome text: the unset default is 80% of the 12pt terminal font
 # (9.6pt); this key sets the size directly, so +1pt = 10.6
