@@ -910,7 +910,7 @@ name = "just"
 desc = "just is a handy way to save and run project-specific commands."
 url = "https://just.systems/"
 git = "https://github.com/casey/just"
-completions_command = "just --completions SHELL"
+completions_command = "JUST_COMPLETE=SHELL just"
 
 [[tools]]
 lang = "rust"
