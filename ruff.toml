@@ -2,6 +2,14 @@
 # without a project config, files here resolve to ~/.config/ruff/ruff.toml.
 extend = "~/.config/ruff/ruff.toml"
 
+# chezmoi finds a plugin by exact name, so the scripts backing `chezmoi <name>`
+# carry no extension for ruff's default globs to match. Listed one by one rather
+# than globbed, because a wildcard also catches the .cmd launchers beside them.
+extend-include = [
+    "dot_local/bin/executable_chezmoi-agents",
+    "dot_local/bin/executable_chezmoi-tools",
+]
+
 extend-exclude = [
     ".agentcfg/vendor",
     "private_dot_config/exact_nvim/syntax_examples",

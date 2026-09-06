@@ -8,6 +8,9 @@ project-includes = [
     ".agentcfg/engine/**",
     ".agentcfg/promote.py",
     ".agentcfg/tests/**",
+    # chezmoi finds a plugin by exact name, so these carry no extension.
+    "dot_local/bin/executable_chezmoi-agents",
+    "dot_local/bin/executable_chezmoi-tools",
 ]
 
 # Pyrefly always appends its default excludes, one of which drops every
