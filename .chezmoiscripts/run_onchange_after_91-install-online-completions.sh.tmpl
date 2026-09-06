@@ -1,76 +1,71 @@
 #!/bin/sh
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
-# {{- $comp_file := dict "bash" (joinPath .chezmoi.homeDir ".bash_completion") "fish" (joinPath .chezmoi.homeDir ".cache" "fish" "completions" "_generated.fish") "zsh" (joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" "_generated") "nu" (joinPath .chezmoi.homeDir ".config" "nushell" "_generated.nu") -}}
+# {{ if false -}}
+# vim:filetype=sh.chezmoitmpl
+# {{- end }}
+# {{- $bash_dir := joinPath .chezmoi.homeDir ".local" "share" "bash-completion" "completions" -}}
+# {{- $fish_dir := joinPath .chezmoi.homeDir ".cache" "fish" "completions" -}}
+# {{- $zsh_dir := joinPath .chezmoi.homeDir ".oh-my-zsh" "completions" -}}
+# {{- $nu_dir := joinPath .chezmoi.homeDir ".config" "nushell" "autoload" -}}
 # {{- /* TODO: add yazi, ya, pacman */ -}}
-# {{- if .tool.bottom -}}
-# {{ "" }}
-# btm:# {{ (stat (lookPath "btm")).modTime }}
-archive_dir="$(mktemp -d)"
-archive_file="$archive_dir/completion.tar.gz"
-curl -sL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' --output "$archive_file"
-tar -xzf "$archive_file" -C "$archive_dir" --strip-components=1
+# Completions for tools that cannot emit their own, downloaded from the project
+# instead.
+#
+# Each file is named after the command it completes, so every shell finds it by
+# its own autoload rules. Appending to the batched files script 90 writes would
+# not survive: 90 rewrites those from scratch whenever any tool binary changes,
+# while this script only re-runs when the tools below change. Separate files
+# also keep two tools from both defining nushell's `completions` module.
+#
+# Downloads land in a temporary directory and are copied into place only once
+# complete, so a failed fetch cannot leave a half-written completion behind.
 
+set -eu
+
+# {{- if or .tool.bottom .tool.bun }}
+
+download_dir=$(mktemp -d)
+trap 'rm -rf "$download_dir"' EXIT
+# {{- end }}
+
+# {{- if .tool.bottom }}
+# btm: # {{ (stat (lookPath "btm")).modTime }}
+curl -fsSL 'https://github.com/ClementTsang/bottom/releases/latest/download/completion.tar.gz' -o "$download_dir/completion.tar.gz"
+tar -xzf "$download_dir/completion.tar.gz" -C "$download_dir" --strip-components=1
 # {{- if .tool.bash }}
-{
-    echo
-    cat "$archive_dir/btm.bash"
-    echo
-} >>'# {{ $comp_file.bash }}'
+mkdir -p '# {{ $bash_dir }}'
+cp "$download_dir/btm.bash" '# {{ joinPath $bash_dir "btm" }}'
 # {{- end }}
-
 # {{- if .tool.fish }}
-{
-    echo
-    cat "$archive_dir/btm.fish"
-    echo
-} >>'# {{ $comp_file.fish }}'
-
+mkdir -p '# {{ $fish_dir }}'
+cp "$download_dir/btm.fish" '# {{ joinPath $fish_dir "btm.fish" }}'
 # {{- end }}
-
-# {{- if and .tool.zsh }}
-{
-    echo
-    cat "$archive_dir/_btm"
-    echo
-} >>'# {{ $comp_file.zsh }}'
+# {{- if .tool.zsh }}
+mkdir -p '# {{ $zsh_dir }}'
+cp "$download_dir/_btm" '# {{ joinPath $zsh_dir "_btm" }}'
 # {{- end }}
-
-# {{- if and .tool.nushell }}
-{
-    echo
-    cat "$archive_dir/btm.nu"
-    echo
-} >>'# {{ $comp_file.nu }}'
+# {{- if .tool.nushell }}
+mkdir -p '# {{ $nu_dir }}'
+cp "$download_dir/btm.nu" '# {{ joinPath $nu_dir "btm.nu" }}'
 # {{- end }}
-if [ -d "$archive_dir" ]; then
-    rm -rf "$archive_dir"
-fi
 # {{- end }}
 
 # {{- if .tool.bun }}
-# bun:# {{ (stat (lookPath "bun")).modTime }}
+# bun ships no nushell completion; carapace covers it there.
+# bun: # {{ (stat (lookPath "bun")).modTime }}
 # {{- if .tool.bash }}
-{
-    echo
-    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.bash'
-    echo
-} >>'# {{ $comp_file.bash }}'
+curl -fsSL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.bash' -o "$download_dir/bun.bash"
+mkdir -p '# {{ $bash_dir }}'
+cp "$download_dir/bun.bash" '# {{ joinPath $bash_dir "bun" }}'
 # {{- end }}
-
 # {{- if .tool.fish }}
-{
-    echo
-    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.fish'
-    echo
-} >>'# {{ $comp_file.fish }}'
-
+curl -fsSL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.fish' -o "$download_dir/bun.fish"
+mkdir -p '# {{ $fish_dir }}'
+cp "$download_dir/bun.fish" '# {{ joinPath $fish_dir "bun.fish" }}'
 # {{- end }}
-
-# {{- if and .tool.zsh }}
-{
-    echo
-    curl -sL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.zsh'
-    echo
-} >>'# {{ $comp_file.zsh }}'
+# {{- if .tool.zsh }}
+curl -fsSL 'https://raw.githubusercontent.com/oven-sh/bun/refs/heads/main/completions/bun.zsh' -o "$download_dir/bun.zsh"
+mkdir -p '# {{ $zsh_dir }}'
+cp "$download_dir/bun.zsh" '# {{ joinPath $zsh_dir "_bun" }}'
 # {{- end }}
 # {{- end }}
