@@ -1,2 +1,3 @@
 [tools]
 carapace = "latest"
+zig = "0.15.2"
