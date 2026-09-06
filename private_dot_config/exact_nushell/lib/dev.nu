@@ -26,7 +26,7 @@ def --wrapped neovide [...args] {
 }
 def update-nvim-plugins [] { let exe = (nvim-exe); ^$exe --headless "+Lazy! sync" "+qa!" }
 
-def cmsecrets [] { ^bash ([(^chezmoi source-path | str trim) edit_secrets.sh] | path join) }
+def cmsecrets [] { ^chezmoi edit-secrets }
 
 def superpowers-flow [] {
     if (which claude | is-not-empty) { ^$env.PYTHON3_HOST_PROG ~/.claude/superpowers_flow.py }
