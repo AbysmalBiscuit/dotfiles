@@ -22,6 +22,8 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
+from chezmoi_plugin import PluginError, run, source_dir
+
 # Package managers whose install invocation follows from the lang alone. go is
 # absent because its install path needs a module URL that the name doesn't carry,
 # and every other lang installs through a system package manager.
@@ -45,10 +47,6 @@ SHELL_OPERATORS: frozenset[str] = frozenset("|&;<>()$`\n")
 NAME_COLUMN_MAX = 28
 
 
-class ToolsError(Exception):
-    """A failure worth reporting as a message rather than a traceback."""
-
-
 @dataclass(frozen=True)
 class Tool:
     name: str
@@ -62,21 +60,6 @@ class Tool:
             if shutil.which(cmd):
                 return cmd
         return None
-
-
-def source_dir() -> Path:
-    if env := os.environ.get("CHEZMOI_SOURCE_DIR"):
-        return Path(env)
-    try:
-        result = subprocess.run(
-            ["chezmoi", "source-path"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-    except (OSError, subprocess.CalledProcessError) as err:
-        raise ToolsError("cannot locate the chezmoi source directory") from err
-    return Path(result.stdout.strip())
 
 
 def load_tools(source: Path) -> list[Tool]:
@@ -103,7 +86,7 @@ def load_tools(source: Path) -> list[Tool]:
                 )
             )
     if not tools:
-        raise ToolsError(f"no tool inventory under {source / '.chezmoidata'}")
+        raise PluginError(f"no tool inventory under {source / '.chezmoidata'}")
     return sorted(tools, key=lambda tool: (tool.lang, tool.name.lower()))
 
 
@@ -114,7 +97,7 @@ def find_tool(tools: list[Tool], name: str) -> Tool:
             return tool
     close = difflib.get_close_matches(name, [tool.name for tool in tools], n=3)
     hint = f", did you mean {' or '.join(close)}?" if close else ""
-    raise ToolsError(f"{name}: not in the inventory{hint}")
+    raise PluginError(f"{name}: not in the inventory{hint}")
 
 
 def install_command_for(tool: Tool) -> str:
@@ -122,13 +105,13 @@ def install_command_for(tool: Tool) -> str:
     if command is None:
         prefix = DERIVED_INSTALL.get(tool.lang)
         if prefix is None:
-            raise ToolsError(
+            raise PluginError(
                 f"{tool.name}: no install_command, and none follows from lang {tool.lang!r}"
             )
         command = shlex.join([*prefix, tool.name])
     elif command.startswith(UNINSTALLABLE_PREFIX):
         reason = command.removeprefix(UNINSTALLABLE_PREFIX).strip()
-        raise ToolsError(f"{tool.name}: not installable on its own ({reason})")
+        raise PluginError(f"{tool.name}: not installable on its own ({reason})")
 
     head, separator, tail = command.partition(" ")
     if head == "cargo":
@@ -143,7 +126,7 @@ def spawn_argv(command: str) -> list[str]:
     argv = shlex.split(command)
     exe = shutil.which(argv[0])
     if exe is None:
-        raise ToolsError(f"{argv[0]}: not on PATH")
+        raise PluginError(f"{argv[0]}: not on PATH")
     # CreateProcess cannot start a batch file, and the ~/.local/bin wrappers are
     # .cmd files on Windows.
     if os.name == "nt" and Path(exe).suffix.lower() in {".bat", ".cmd"}:
@@ -202,7 +185,7 @@ def cmd_install(tools: list[Tool], args: argparse.Namespace) -> int:
         try:
             tool = find_tool(tools, name)
             command = install_command_for(tool)
-        except ToolsError as err:
+        except PluginError as err:
             print(err, file=sys.stderr)
             worst = max(worst, 1)
             continue
@@ -214,7 +197,7 @@ def cmd_install(tools: list[Tool], args: argparse.Namespace) -> int:
         print(f"\n$ {command}", flush=True)
         try:
             argv = spawn_argv(command)
-        except ToolsError as err:
+        except PluginError as err:
             print(err, file=sys.stderr)
             worst = max(worst, 1)
             continue
@@ -255,13 +238,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    try:
-        tools = load_tools(source_dir())
-    except ToolsError as err:
-        print(err, file=sys.stderr)
-        return 1
-    return args.func(tools, args)
+    return args.func(load_tools(source_dir()), args)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run(main))
