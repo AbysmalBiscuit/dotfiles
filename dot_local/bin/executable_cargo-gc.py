@@ -74,7 +74,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="report what would be removed without removing it",
     )
-    return parser.parse_args()
+
+    # cargo hands the subcommand name to its dispatch target, so `cargo gc`
+    # arrives with a leading gc that would otherwise be read as a project root.
+    argv = sys.argv[1:]
+    if argv[:1] == ["gc"]:
+        argv = argv[1:]
+    return parser.parse_args(argv)
 
 
 def load_config(path: Path) -> dict[str, object]:
