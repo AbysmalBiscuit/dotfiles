@@ -281,8 +281,11 @@ Documents
 .claude-code-router
 {{- end }}
 
+{{- if not (index .has "rustup") }}
+.cargo/
+{{- end }}
+
 {{- range $tool := list
-    "cargo"
     "claude"
     "codex"
     "jq"
