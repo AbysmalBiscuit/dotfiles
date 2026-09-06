@@ -9,6 +9,8 @@ $vars = @{
     XDG_CACHE_HOME  = "$HOME\.cache"
     XDG_STATE_HOME  = "$HOME\.local\state"
     # tool variables
+    # bat ignores XDG_CONFIG_HOME on Windows and reads %APPDATA%\bat instead
+    BAT_CONFIG_DIR = "$HOME\.config\bat"
     # {{- if .has.yazi }}
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
     # {{- end}}
