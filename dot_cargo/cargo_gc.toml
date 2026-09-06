@@ -1,0 +1,18 @@
+# Settings for the cargo-gc script in ~/.local/bin.
+# Command line arguments override everything here.
+
+# Directories searched recursively for cargo projects. Tilde and environment
+# variables expand, and roots that do not exist are skipped with a warning.
+roots = [
+    "~/Git",
+]
+
+# Artifacts untouched for longer than this are removed.
+days = 30
+
+# Cap each target dir at this many MB regardless of timestamps. Useful on
+# Windows, where NTFS last-access updates are off by default.
+# maxsize = 4096
+
+# Leave the unpacked sources under ~/.cargo/registry alone.
+# keep_registry = true
