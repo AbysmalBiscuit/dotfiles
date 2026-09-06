@@ -10,6 +10,7 @@ jobs = # {{ .system.build_jobs }}
 
 [profile.dev]
 debug = "line-tables-only"
+
 [target.'cfg(target_os = "linux")']
 rustflags = [
   # {{- if index .has "mold" }}
