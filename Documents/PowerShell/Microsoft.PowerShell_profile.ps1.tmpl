@@ -481,13 +481,15 @@ function agentcfg {
     python3 '# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py' @args
 }
 # {{- end }}
+
 # Windows still defaults Python to the ANSI code page, so anything a script
 # writes outside cp1252 dies on a UnicodeEncodeError.
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 
-# {{- if stat (joinPath .chezmoi.homeDir ".local" "bin" "python3.bat" ) }}
-$env:PYTHON3_HOST_PROG = "$HOME\.local\bin\python3"
+# {{- if .path.python }}
+
+$env:PYTHON3_HOST_PROG = "# {{ .path.python }}"
 # {{- end }}
 # {{- if .tool.neovim }}
 $env:EDITOR = "nvim"

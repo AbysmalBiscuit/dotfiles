@@ -452,13 +452,8 @@ EOF
 # {{- $man_path := concat $man_prepend $man_dirs $man_append | compact | uniq | join ":" }}
 
 # Configure python paths
-# {{- if .tool.python }}
-export PYTHON3_HOST_PROG='# {{ lookPath .tool.python }}'
-# {{- else if .has.python -}}
-# {{- $python3_host_prog := output "python" "--version" | trim | replaceAllRegex ".*\\b(3)\\.\\d+\\.\\d+" "$1" -}}
-# {{- if eq $python3_host_prog "3" }}
-export PYTHON3_HOST_PROG='# {{ $python3_host_prog }}'
-# {{- end }}
+# {{- if .path.python }}
+export PYTHON3_HOST_PROG='# {{ .path.python }}'
 # {{- end }}
 
 # {{- if .is_wsl }}
