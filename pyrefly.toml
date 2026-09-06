@@ -10,6 +10,8 @@ project-includes = [
     ".agentcfg/tests/**",
     # chezmoi finds a plugin by exact name, so these carry no extension.
     "dot_local/bin/executable_chezmoi-agents",
+    "dot_local/bin/executable_chezmoi-cache",
+    "dot_local/bin/executable_chezmoi-edit-secrets",
     "dot_local/bin/executable_chezmoi-tools",
 ]
 
@@ -36,6 +38,9 @@ project-excludes = [
 search-path = [
     ".agentcfg",
     ".agentcfg/vendor",
+    # The chezmoi-* plugins import chezmoi_plugin from beside themselves, which
+    # at run time is sys.path[0] for whichever one was invoked.
+    "dot_local/bin",
     "private_dot_agents/skills/history",
 ]
 

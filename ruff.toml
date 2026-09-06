@@ -7,6 +7,8 @@ extend = "~/.config/ruff/ruff.toml"
 # than globbed, because a wildcard also catches the .cmd launchers beside them.
 extend-include = [
     "dot_local/bin/executable_chezmoi-agents",
+    "dot_local/bin/executable_chezmoi-cache",
+    "dot_local/bin/executable_chezmoi-edit-secrets",
     "dot_local/bin/executable_chezmoi-tools",
 ]
 
