@@ -58,6 +58,17 @@
 {{- else if .is_macos }}
   helper = /usr/share/git/credential/libsecret/git-credential-libsecret
 {{- end }}
+{{ if not .is_windows }}
+[credential "https://github.com"]
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = !/usr/bin/gh auth git-credential
+{{ else }}
+[credential "https://github.com"]
+	helper = "!'C:/Program Files/GitHub CLI/gh.exe' auth git-credential"
+[credential "https://gist.github.com"]
+	helper = "!'C:/Program Files/GitHub CLI/gh.exe' auth git-credential"
+{{ end }}
 [credential "https://git.overleaf.com"]
   provider = generic
 [filter "lfs"]
@@ -108,14 +119,3 @@
   cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d $LOCAL $MERGED $REMOTE
   ff=false
   conflictStyle=diff3
-{{ if not .is_windows }}
-[credential "https://github.com"]
-	helper = !/usr/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper = !/usr/bin/gh auth git-credential
-{{ else }}
-[credential "https://github.com"]
-	helper = "C:/Program Files/GitHub CLI/gh.exe" auth git-credential
-[credential "https://gist.github.com"]
-	helper = "C:/Program Files/GitHub CLI/gh.exe" auth git-credential
-{{ end }}
