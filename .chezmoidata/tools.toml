@@ -1076,6 +1076,7 @@ lang = "rust"
 name = "sccache"
 desc = "Sccache is a ccache-like tool. It is used as a compiler wrapper and avoids compilation when possible. Sccache has the capability to utilize caching in remote storage environments, including various cloud storage options, or alternatively, in local storage."
 git = "https://github.com/mozilla/sccache"
+install_command = "cargo install sccache --locked"
 
 [[tools]]
 lang = "rust"
