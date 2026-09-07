@@ -1,5 +1,6 @@
 # Maps config.toml keys to a merge strategy (enforce, seed, union, or
-# ignore); see engine/merge.py for what each strategy does.
+# ignore); see engine/merge.py for what each strategy does. The order block
+# below is not a strategy: it only moves keys within the written file.
 
 enforce = [
   ["features", "*"],
@@ -39,4 +40,11 @@ remove = [
   ["plugins", "claude-custom@personal", "enabled"],
   ["plugins", "superpowers@openai-curated", "enabled"],
   ["plugins", "superpowers@personal", "enabled"],
+]
+
+# Codex writes hooks.state wherever it lands, which drops a wall of cache
+# entries between the hook definitions. Trailing the table keeps the six
+# hook events readable as a block.
+order = [
+  ["hooks", "state"],
 ]
