@@ -14,7 +14,7 @@ enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
 Running before the file apply is what makes that ordering hold.
 """
 
-# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" }}# {{ end }}
+# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" | sha256sum }}# {{ end }}
 
 from __future__ import annotations
 
