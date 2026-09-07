@@ -674,8 +674,13 @@ def check_tool(payload, roots, settings, cwd):
 
 _FINDING_LINE = re.compile(r":(\d+)  \[")
 _INFO_FINDING = re.compile(r"  \[info:")
+_FINDING_RULE = re.compile(r"  \[([^\]]+)\]")
 _PATCH_FILE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
 _PATCH_MOVE = re.compile(r"^\*\*\* Move to: (.+)$", re.MULTILINE)
+
+
+def _rules(findings):
+    return {match.group(1) for line in findings if (match := _FINDING_RULE.search(line))}
 
 
 def edited_paths(payload, cwd):
@@ -768,6 +773,18 @@ def check_file(payload, roots, settings, cwd, layers):
     alerts = [line for line in findings if not _INFO_FINDING.search(line)]
     alerts = alerts[: settings.max_findings]
     notes = notes[: max(settings.max_findings - len(alerts), 0)]
+    # Which rules fire and how often is the only way to tell a rule earning its
+    # noise from one agents have learned to skim. Rule ids and suffixes carry no
+    # file content, so this sits at the level a session can leave on.
+    log(
+        1,
+        "findings",
+        tool=payload.get("tool_name"),
+        suffix=",".join(sorted({os.path.splitext(p)[1] for p in paths})) or None,
+        violations=len(alerts),
+        notes=len(notes),
+        rules=",".join(sorted(_rules(alerts + notes))) or None,
+    )
     if not alerts and not notes:
         emit_silent()
 
