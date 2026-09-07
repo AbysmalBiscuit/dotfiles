@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# vim:filetype=python.chezmoitmpl
+"""Put the herdr agent-state hook scripts in place for Claude Code and Codex.
+
+Herdr ships those scripts and revises them between releases, so they stay out
+of the chezmoi source and `herdr integration install` writes whichever one the
+installed herdr carries.
+
+Install writes wiring of its own as well. For Codex that wiring lands in
+~/.codex/hooks.json, which nothing else touches, so herdr keeps it. For Claude
+Code it lands in settings.json under hooks, which the agentcfg baseline
+enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
+Running before the file apply is what makes that ordering hold.
+"""
+
+# Reruns whenever herdr reports a different hook asset version, or an
+# integration stops being installed:
+# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" }}# {{ end }}
+
+from __future__ import annotations
+
+import subprocess
+import sys
+
+HAS_HERDR = # {{ if .has.herdr }}True# {{ else }}False# {{ end }}
+
+INTEGRATIONS = ("claude", "codex")
+
+
+def main() -> int:
+    if not HAS_HERDR:
+        return 0
+    for name in INTEGRATIONS:
+        try:
+            result = subprocess.run(
+                ["herdr", "integration", "install", name],
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            print("herdr is not on PATH; skipping integrations", file=sys.stderr)
+            return 0
+        if result.returncode != 0:
+            # A missing agent config directory is the usual cause, and it is
+            # not a reason to fail the apply.
+            print(
+                f"herdr integration install {name}: "
+                f"{result.stderr.strip() or result.stdout.strip()}",
+                file=sys.stderr,
+            )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
