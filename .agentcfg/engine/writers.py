@@ -135,3 +135,42 @@ def append_rules(path: Path, assignments) -> None:
         close = next(i for i in range(start + 1, len(lines)) if lines[i].strip() == "]")
         lines.insert(close, _entry(pattern))
     path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+
+def _drop(data: MutableMapping, path: tuple[str, ...]) -> bool:
+    """Delete one path, then drop every container the deletion left empty.
+
+    An emptied container is a leaf to lint and to the drift check, and it
+    matches no pattern written for its members, so leaving one behind turns a
+    deletion into a lint failure or a phantom candidate on the next run.
+    """
+    parents = []
+    cursor = data
+    for segment in path[:-1]:
+        if not isinstance(cursor, MutableMapping) or segment not in cursor:
+            return False
+        parents.append((cursor, segment))
+        cursor = cursor[segment]
+    if not isinstance(cursor, MutableMapping) or path[-1] not in cursor:
+        return False
+    del cursor[path[-1]]
+    for parent, segment in reversed(parents):
+        if parent[segment]:
+            break
+        del parent[segment]
+    return True
+
+
+def delete_paths(path: Path, codec, targets) -> list[tuple[str, ...]]:
+    """Remove targets from a config file, leaving everything else byte-identical.
+
+    Returns the paths that were actually there. The write goes back through
+    the codec's patch, so a TOML file keeps its comments and key order and an
+    unchanged file dumps unchanged.
+    """
+    doc = codec.load(path.read_bytes())
+    data = codec.plain(doc)
+    gone = [target for target in targets if _drop(data, target)]
+    if gone:
+        path.write_bytes(codec.dump(codec.patch(doc, data)))
+    return gone
