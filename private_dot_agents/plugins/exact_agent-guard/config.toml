@@ -79,10 +79,13 @@ scope = "diff"
 # language widens this in its own config.toml. Single quotes are a TOML literal
 # string, so the backslashes reach the regex engine as written.
 #
-# Markdown is here for checks/markdown_hard_wrap.py; the ast-grep rules are
-# language-scoped and stay quiet on it. Dropping md from this list is the off
-# switch for that check.
-extensions = '\.(ts|tsx|mts|cts|md|mdx|markdown)$'
+# Wider than the ast-grep rules, which are language-scoped and stay quiet on
+# everything they were not written for. The rest is here for checks/: markdown
+# for markdown_hard_wrap.py, and every other language for comment_length.py,
+# whose conventions are the ones an agent breaks in a config file as readily as
+# in a source file. Dropping a language from this list is the off switch for
+# checking it.
+extensions = '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|rs|go|sh|bash|sql|toml|ya?ml|md|mdx|markdown)$'
 
 # Paths the hook skips entirely: code that is generated rather than written, and
 # vendored code the tree does not own. This holds only the shapes every
