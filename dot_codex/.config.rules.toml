@@ -11,6 +11,8 @@ enforce = [
   ["hooks", "SessionEnd"],
   ["tui", "status_line"],
   ["tui", "status_line_use_colors"],
+  ["tui", "keymap", "editor", "delete_backward_word"],
+  ["tui", "keymap", "editor", "delete_forward_word"],
   ["hooks", "PostToolUse"],
   ["hooks", "PreToolUse"],
   ["hooks", "Stop"],

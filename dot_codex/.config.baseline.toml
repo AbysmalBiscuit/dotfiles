@@ -109,3 +109,7 @@ status_line = [
 ]
 status_line_use_colors = true
 vim_mode_default = true
+
+[tui.keymap.editor]
+delete_backward_word = "ctrl-backspace"
+delete_forward_word = "ctrl-delete"
