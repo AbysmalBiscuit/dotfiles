@@ -95,3 +95,60 @@ def test_reorder_ignores_a_missing_path():
     raw = b'[hooks]\nx = 1\n'
     doc = TomlCodec.load(raw)
     assert TomlCodec.dump(TomlCodec.reorder(doc, [("hooks", "state"), ("nope",)])) == raw
+
+
+def test_carry_preamble_prepends_the_baseline_header():
+    baseline = b'#:schema https://example.com/s.json\n# vim: sw=4\nmodel = "x"\n'
+    out = b'model = "y"\n'
+    assert TomlCodec.carry_preamble(out, baseline) == (
+        b'#:schema https://example.com/s.json\n# vim: sw=4\nmodel = "y"\n'
+    )
+
+
+def test_carry_preamble_leaves_an_already_headed_file_alone():
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = b'#:schema https://example.com/s.json\nmodel = "y"\n'
+    assert TomlCodec.carry_preamble(out, baseline) == out
+
+
+def test_carry_preamble_keeps_a_comment_only_the_target_has():
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = b'# written by codex\nmodel = "y"\n'
+    assert TomlCodec.carry_preamble(out, baseline) == (
+        b'#:schema https://example.com/s.json\n# written by codex\nmodel = "y"\n'
+    )
+
+
+def test_carry_preamble_does_not_duplicate_a_displaced_header():
+    """The header is re-seated at the top rather than written a second time."""
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = b'# written by codex\n#:schema https://example.com/s.json\nmodel = "y"\n'
+    assert TomlCodec.carry_preamble(out, baseline) == (
+        b'#:schema https://example.com/s.json\n# written by codex\nmodel = "y"\n'
+    )
+
+
+def test_carry_preamble_output_still_parses():
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = TomlCodec.carry_preamble(b'model = "y"\n', baseline)
+    assert TomlCodec.plain(TomlCodec.load(out)) == {"model": "y"}
+
+
+def test_carry_preamble_is_a_no_op_without_a_baseline_header():
+    out = b'model = "y"\n'
+    assert TomlCodec.carry_preamble(out, b'model = "x"\n') == out
+
+
+def test_carry_preamble_keeps_crlf_endings():
+    """Mixed endings would make chezmoi diff permanently non-empty on Windows."""
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = b'# written by codex\r\nmodel = "y"\r\n'
+    assert TomlCodec.carry_preamble(out, baseline) == (
+        b'#:schema https://example.com/s.json\r\n# written by codex\r\nmodel = "y"\r\n'
+    )
+
+
+def test_carry_preamble_matches_a_crlf_header_already_there():
+    baseline = b'#:schema https://example.com/s.json\nmodel = "x"\n'
+    out = b'#:schema https://example.com/s.json\r\nmodel = "y"\r\n'
+    assert TomlCodec.carry_preamble(out, baseline) == out

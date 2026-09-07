@@ -51,3 +51,8 @@ def test_reorder_floats_a_key_past_its_siblings():
 def test_reorder_ignores_a_missing_path():
     doc = {"hooks": {"Stop": []}}
     assert JsonCodec.reorder(doc, [("hooks", "state"), ("nope",)]) == doc
+
+
+def test_carry_preamble_is_a_no_op():
+    out = b'{"model": "x"}\n'
+    assert JsonCodec.carry_preamble(out, b"# header\n") == out

@@ -31,6 +31,21 @@ def _float_to_end(container: Mapping, path: tuple[str, ...]) -> None:
     container[key] = value
 
 
+def _leading_comments(raw: bytes) -> list[str]:
+    """The comment lines at the top of a file, up to the first line that is not one.
+
+    Split on "\n" rather than splitlines() so a line keeps the "\r" a CRLF
+    file gives it. The caller slices the same split to find the body, and the
+    two have to agree on where a line ends or the result is mixed endings.
+    """
+    lines = []
+    for line in raw.decode("utf-8").split("\n"):
+        if not line.rstrip("\r").lstrip().startswith("#"):
+            break
+        lines.append(line)
+    return lines
+
+
 class JsonCodec:
     @staticmethod
     def load(raw: bytes) -> dict:
@@ -59,6 +74,11 @@ class JsonCodec:
         for path in paths:
             _float_to_end(doc, path)
         return doc
+
+    @staticmethod
+    def carry_preamble(out: bytes, baseline_raw: bytes) -> bytes:
+        """JSON has no comment syntax, so there is no preamble to carry."""
+        return out
 
     @staticmethod
     def empty() -> dict:
@@ -127,6 +147,29 @@ class TomlCodec:
         for path in paths:
             _float_to_end(doc, path)
         return doc
+
+    @staticmethod
+    def carry_preamble(out: bytes, baseline_raw: bytes) -> bytes:
+        """Put the baseline's own header comments back on top of the output.
+
+        The merge runs on plain mappings, so every comment in the baseline is
+        gone by the time the document is dumped. Anything the target already
+        carries and the baseline does not is kept, below the baseline's block.
+        The header takes the target's line ending, not the baseline's, so a
+        CRLF file stays CRLF.
+        """
+        preamble = [line.rstrip("\r") for line in _leading_comments(baseline_raw)]
+        if not preamble:
+            return out
+        existing = _leading_comments(out)
+        bare = [line.rstrip("\r") for line in existing]
+        if bare[: len(preamble)] == preamble:
+            return out
+        eol = "\r" if b"\r\n" in out else ""
+        rest = out.decode("utf-8").split("\n")[len(existing) :]
+        kept = [line for line, plain in zip(existing, bare) if plain not in preamble]
+        headed = [line + eol for line in preamble]
+        return "\n".join([*headed, *kept, *rest]).encode("utf-8")
 
     @staticmethod
     def empty():

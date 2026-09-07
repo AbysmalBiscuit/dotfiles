@@ -161,3 +161,37 @@ def test_order_does_not_touch_the_values_it_moves(toml_config):
     live = b'[hooks]\n[hooks.state]\ncached = 1\n\n[[hooks.Stop]]\nrun = "x"\n'
     _, out, _ = invoke_toml(toml_config, live)
     assert TomlCodec.plain(TomlCodec.load(out))["hooks"]["state"] == {"cached": 1}
+
+
+def test_baseline_header_reaches_the_target(toml_config):
+    live = b'[hooks]\n[[hooks.Stop]]\nrun = "x"\n'
+    _, out, _ = invoke_toml(toml_config, live)
+    assert out.startswith(b"#:schema https://example.com/s.json\n")
+
+
+def test_second_pass_over_its_own_output_is_byte_identical(toml_config):
+    """The apply is idempotent: chezmoi diff has to settle after one run."""
+    live = b'[hooks]\n[hooks.state]\ncached = 1\n\n[[hooks.Stop]]\nrun = "x"\n'
+    _, once, _ = invoke_toml(toml_config, live)
+    _, twice, _ = invoke_toml(toml_config, once)
+    assert once == twice
+
+
+def test_empty_merge_output_is_still_refused(tmp_path, monkeypatch):
+    """The preamble must not dress an empty document up as a writable file."""
+    source = tmp_path / "src"
+    script_dir = source / "dot_codex"
+    script_dir.mkdir(parents=True)
+    (source / ".agentcfg").mkdir()
+    (script_dir / ".config.baseline.toml").write_text(
+        "#:schema https://example.com/s.json\n", encoding="utf-8"
+    )
+    (script_dir / ".config.rules.toml").write_text("enforce = []\n", encoding="utf-8")
+    monkeypatch.setenv("CHEZMOI_SOURCE_DIR", str(source))
+    monkeypatch.setenv("CHEZMOI_SOURCE_FILE", "dot_codex/modify_private_config.toml.py")
+    monkeypatch.setenv("CHEZMOI_DEST_DIR", str(tmp_path / "home"))
+
+    code, out, err = invoke_toml(script_dir, b"")
+    assert code != 0
+    assert out == b""
+    assert "empty output" in err

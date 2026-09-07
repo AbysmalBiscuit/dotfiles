@@ -40,7 +40,8 @@ def run(
     target_name = baseline_name.lstrip(".").replace(".baseline", "")
 
     try:
-        baseline = codec.plain(codec.load(baseline_path.read_bytes()))
+        baseline_raw = baseline_path.read_bytes()
+        baseline = codec.plain(codec.load(baseline_raw))
         rules = RuleSet.load(rules_path)
         if lint_enabled:
             lint(baseline, rules)
@@ -73,15 +74,20 @@ def run(
 
     # Patch back into the parsed document rather than dumping the plain
     # mapping. tomlkit regenerates layout when handed a plain dict, which
-    # would make every apply rewrite the whole file. The order block then
-    # goes on afterwards: placement is layout the merge cannot express.
+    # would make every apply rewrite the whole file. Layout the merge cannot
+    # express then goes on afterwards: the order block, and the baseline's
+    # header comments, which the plain mapping dropped.
     result = merge(baseline, live, rules)
     merged_doc = codec.reorder(codec.patch(live_doc, result), rules.order)
-    out = codec.dump(merged_doc)
+    dumped = codec.dump(merged_doc)
 
-    if not out.strip():
+    # Guard the merge's own output. A preamble put on first would make an
+    # empty document look like a file with content and slip past this.
+    if not dumped.strip():
         print(f"{target_name}: merge produced empty output, refusing to write", file=stderr)
         return EXIT_ERROR
+
+    out = codec.carry_preamble(dumped, baseline_raw)
     try:
         codec.load(out)
     except CodecError as exc:
