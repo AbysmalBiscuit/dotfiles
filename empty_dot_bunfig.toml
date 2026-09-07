@@ -1,0 +1,5 @@
+#:schema https://www.schemastore.org/bunfig.json
+
+[install]
+linker = "isolated"
+globalStore = true

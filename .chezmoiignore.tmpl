@@ -68,6 +68,10 @@ localSettings.yaml
 .config/fish/conf.d/devkit.fish
 {{- end }}
 
+{{- if not (index .tool "bun") }}
+.bunfig.toml
+{{- end }}
+
 # os specific exclusions
 
 {{ if .is_wsl -}}
