@@ -11,22 +11,15 @@
   "effortLevel": "high",
   "enabledPlugins": {
     "ast-grep@ast-grep-marketplace": true,
-    "claude-md-management@claude-plugins-official": true,
     "devkit@devkit": true,
-    "elements-of-style@superpowers-marketplace": true,
     "linear@claude-plugins-official": true,
     "mattpocock-skills@claude-plugins-official": true,
-    "plugin-dev@claude-plugins-official": true,
     "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
     "sentry@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "superpowers@superpowers-marketplace": true,
-    "typescript-lsp@claude-plugins-official": true
+    "superpowers@superpowers-marketplace": true
   },
   "env": {
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
