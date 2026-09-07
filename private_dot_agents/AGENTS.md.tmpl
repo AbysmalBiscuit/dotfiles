@@ -117,7 +117,8 @@ Before committing:
 - Propose bold ideas when they can meaningfully benefit our work.
 - Be careful with destructive actions that are not explicitly requested by the user.
 - Tests are good! Endless smoke tests, "regression tests" for feature deletions, etc, much less good. Tests should be focused, not slop.
-- Comments follow the **Code Comments** section below. Keep them in sync when the code changes.
+- Comments are a great way to clarify functionality and how code is used. Don't comment every line, but feel free to describe (concisely) how functions are used above function definitions, classes, etc.
+- Keep comments up to date! When making changes, it's important to keep things in sync.
 
 ### Typescript
 
@@ -140,7 +141,7 @@ When doing TDD, write the test first and watch it fail before writing the fix (R
 
 ### Code Comments
 
-**One line.** A comment is one line. A second line earns its place only by carrying a fact the first does not. Past two, the code is wrong: fix the code. This bounds every comment, including the ones that pass every other rule here.
+If you need a paragraph-long comment to justify why the workaround is OK, the code is wrong. Fix the code.
 
 **Default to no comment.** Write code that explains itself: clear names and obvious structure. A comment earns its place only when the code cannot be made clear on its own: a non-obvious *why* (a platform quirk, an ordering constraint, a workaround, a subtle invariant), never a restatement of the *what* the line already says. If a comment only re-describes the code next to it, delete it. In *new* code, prefer a clearer name over a comment that explains a confusing one; in *existing* code, just delete the redundant comment. Do not rename variables or extract expressions to avoid a comment. Working code isn't restructured for cosmetics. This governs inline narration; structured API/doc comments (JSDoc/TSDoc, docstrings) on public members are still encouraged.
 
