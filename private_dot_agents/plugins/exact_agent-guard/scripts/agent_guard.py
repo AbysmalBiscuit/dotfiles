@@ -674,6 +674,7 @@ def check_tool(payload, roots, settings, cwd):
 
 _FINDING_LINE = re.compile(r":(\d+)  \[")
 _INFO_FINDING = re.compile(r"  \[info:")
+_ERROR_FINDING = re.compile(r"  \[error:")
 _FINDING_RULE = re.compile(r"  \[([^\]]+)\]")
 _PATCH_FILE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
 _PATCH_MOVE = re.compile(r"^\*\*\* Move to: (.+)$", re.MULTILINE)
@@ -681,6 +682,14 @@ _PATCH_MOVE = re.compile(r"^\*\*\* Move to: (.+)$", re.MULTILINE)
 
 def _rules(findings):
     return {match.group(1) for line in findings if (match := _FINDING_RULE.search(line))}
+
+
+def _severity(finding):
+    """0 for the loudest tier. A check grades its own findings through a prefix on
+    the rule id, so the runner ranks them without knowing which check spoke."""
+    if _ERROR_FINDING.search(finding):
+        return 0
+    return 2 if _INFO_FINDING.search(finding) else 1
 
 
 def edited_paths(payload, cwd):
@@ -766,13 +775,16 @@ def check_file(payload, roots, settings, cwd, layers):
                 ]
         findings.extend(path_findings)
 
-    # A rule id prefixed "info:" is something to weigh rather than a violation,
-    # and it is shown under its own heading so it cannot dilute the ones that
-    # are. Everything else, the ast-grep rules included, is a violation.
-    notes = [line for line in findings if _INFO_FINDING.search(line)]
-    alerts = [line for line in findings if not _INFO_FINDING.search(line)]
-    alerts = alerts[: settings.max_findings]
-    notes = notes[: max(settings.max_findings - len(alerts), 0)]
+    # Each tier gets its own heading, so a note cannot dilute a violation and a
+    # violation well past the line does not read as one merely over it. The
+    # budget goes to the loudest tier first. Everything with no severity prefix,
+    # the ast-grep rules included, is an ordinary violation.
+    errors, warnings, notes = (
+        [line for line in findings if _severity(line) == rank] for rank in (0, 1, 2)
+    )
+    errors = errors[: settings.max_findings]
+    warnings = warnings[: max(settings.max_findings - len(errors), 0)]
+    notes = notes[: max(settings.max_findings - len(errors) - len(warnings), 0)]
     # Which rules fire and how often is the only way to tell a rule earning its
     # noise from one agents have learned to skim. Rule ids and suffixes carry no
     # file content, so this sits at the level a session can leave on.
@@ -781,26 +793,36 @@ def check_file(payload, roots, settings, cwd, layers):
         "findings",
         tool=payload.get("tool_name"),
         suffix=",".join(sorted({os.path.splitext(p)[1] for p in paths})) or None,
-        violations=len(alerts),
+        errors=len(errors),
+        warnings=len(warnings),
         notes=len(notes),
-        rules=",".join(sorted(_rules(alerts + notes))) or None,
+        rules=",".join(sorted(_rules(errors + warnings + notes))) or None,
     )
-    if not alerts and not notes:
+    if not (errors or warnings or notes):
         emit_silent()
 
     context = ""
-    if alerts:
-        context = (
-            "agent-guard found convention violations in the file you just wrote. "
-            "Fix them now rather than leaving them for review:\n\n"
-            + "\n".join(alerts)
-            + "\n\nThese come from this project's documented conventions. If a finding "
+    if errors or warnings:
+        context = "agent-guard found convention violations in the file you just wrote. "
+        if errors:
+            context += "Start with these, which are well past the line:\n\n" + "\n".join(
+                errors
+            )
+            if warnings:
+                context += "\n\nThen these:\n\n" + "\n".join(warnings)
+        else:
+            context += (
+                "Fix them now rather than leaving them for review:\n\n"
+                + "\n".join(warnings)
+            )
+        context += (
+            "\n\nThese come from this project's documented conventions. If a finding "
             "is genuinely wrong, say why instead of silently ignoring it."
         )
     if notes:
         context += (
             "\n\nWorth a second look, though none of these is a violation:\n\n"
-            if alerts
+            if errors or warnings
             else "agent-guard noticed something in the file you just wrote. Improve it "
             "if you agree; it is not a violation:\n\n"
         ) + "\n".join(notes)
