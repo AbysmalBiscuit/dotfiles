@@ -858,6 +858,9 @@ supported_shells = [
 [[tools]]
 lang = "rust"
 name = "fish"
+git = "https://github.com/fish-shell/fish-shell"
+comment = "Not on crates.io; the registry's 'fish' crate is an unrelated webhook library. sphinx-build is a hard build requirement for the embedded man pages, which back 'fish --help' and 'help'."
+install_command = "uv tool install sphinx && cargo-install-latest https://github.com/fish-shell/fish-shell --locked fish"
 
 [[tools]]
 lang = "rust"
