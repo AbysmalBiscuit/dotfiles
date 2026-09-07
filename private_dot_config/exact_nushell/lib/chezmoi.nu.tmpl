@@ -7,6 +7,6 @@ def --wrapped cm [...args: string@"nu-complete chezmoi"] {
 alias cmexe = cm execute-template
 
 # Pick a merge strategy for live agent-config keys no rule owns.
-def --wrapped agentcfg [...args] {
+def --wrapped agentcfg [...args: string@"nu-complete agentcfg"] {
     ^python3 "# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py" ...$args
 }

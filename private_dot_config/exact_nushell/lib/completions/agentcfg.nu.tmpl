@@ -1,0 +1,49 @@
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# Completions for the `agentcfg` wrapper defined in lib/chezmoi.nu.
+#
+# The candidates come from `agentcfg complete`, which reads the same baseline
+# and live files `remove` writes to, so a tab never offers a key that is gone.
+#
+# It runs promote.py rather than the wrapper beside it: `source` is a parse-time
+# include, and the file defining `agentcfg` hangs its rest argument on the
+# completer below, so this one has to parse first and cannot call it.
+
+const AGENTCFG_PROMOTE = "# {{ .chezmoi.sourceDir }}/.agentcfg/promote.py"
+
+const AGENTCFG_COMMANDS = [
+    { value: "remove", description: "Clear a key from the baseline, the live file and the app" }
+    { value: "--list", description: "Print the drift candidates and exit" }
+]
+
+const AGENTCFG_REMOVE_FLAGS = [
+    { value: "--dry-run", description: "Print the plan and write nothing" }
+    { value: "--keep-installed", description: "Edit the configs, leave the app's own files alone" }
+]
+
+# Shared with lib/completions/chezmoi.nu. Every custom command in ~/.local/bin
+# parses its arguments with argparse or checks for these by hand, so they answer
+# at every depth and belong beside the flags each command declares for itself.
+const HELP_FLAGS = [
+    { value: "-h", description: "Show usage and exit" }
+    { value: "--help", description: "Show usage and exit" }
+]
+
+# Shared with lib/completions/chezmoi.nu, which answers `chezmoi agents remove`
+# with the same list. Sourced first so that file can call this one.
+def "nu-complete agentcfg paths" [] {
+    do --ignore-errors { ^python3 $AGENTCFG_PROMOTE complete }
+    | default ""
+    | lines
+    | each {|line|
+        let cell = ($line | split row (char tab))
+        { value: ($cell | first), description: ($cell | get --optional 1 | default "") }
+    }
+}
+
+def "nu-complete agentcfg" [context: string] {
+    let words = ($context | str trim --left | split row --regex '\s+')
+    if ($words | get --optional 1) != "remove" {
+        return ($AGENTCFG_COMMANDS ++ $HELP_FLAGS)
+    }
+    (nu-complete agentcfg paths) ++ $AGENTCFG_REMOVE_FLAGS ++ $HELP_FLAGS
+}

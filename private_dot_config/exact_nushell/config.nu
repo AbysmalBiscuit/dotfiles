@@ -230,6 +230,7 @@ if (which carapace | is-not-empty) {
 # include, so a file may only call commands defined in an earlier one.
 source ./lib/platform.nu
 source ./lib/files.nu
+source ./lib/completions/agentcfg.nu
 source ./lib/completions/claude.nu
 source ./lib/completions/chezmoi.nu
 source ./lib/aliases.nu
