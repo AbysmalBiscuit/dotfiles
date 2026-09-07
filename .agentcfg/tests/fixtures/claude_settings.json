@@ -37,7 +37,8 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "CLAUDE_CODE_NO_FLICKER": "1",
     "DISABLE_ERROR_REPORTING": "1",
-    "DISABLE_FEEDBACK_COMMAND": "1"
+    "DISABLE_FEEDBACK_COMMAND": "1",
+    "AGENT_GUARD_LOG": "1"
   },
   "extraKnownMarketplaces": {
     "ast-grep-marketplace": {
@@ -72,7 +73,7 @@
     }
   },
   "fileSuggestion": {
-    "command": "~/.claude/scripts/file-suggestion.sh",
+    "command": "bun ~/.agents/scripts/file-suggestion.ts",
     "type": "command"
   },
   "hooks": {
@@ -83,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 10,
             "statusMessage": "Checking conventions"
           }
@@ -96,7 +97,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 8,
             "statusMessage": "Checking tool conventions"
           }
@@ -108,17 +109,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10
           },
           {
             "type": "command",
             "command": "~/.agents/skills/history/hist.py index",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/prune-temp.sh",
             "timeout": 30
           }
         ]
@@ -135,7 +131,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10,
             "async": true
           }
@@ -147,7 +143,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -159,7 +155,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent-guard.py",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 60,
             "statusMessage": "Auditing changeset"
           }
@@ -177,7 +173,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/.local/bin/alacritree-session.py record",
+            "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10,
             "async": true
           }
@@ -308,7 +304,7 @@
   "remoteControlAtStartup": false,
   "skipWorkflowUsageWarning": true,
   "statusLine": {
-    "command": "ccstatusline",
+    "command": "bunx --bun ccstatusline",
     "padding": 0,
     "refreshInterval": 10,
     "type": "command"
