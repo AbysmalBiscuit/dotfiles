@@ -9,26 +9,6 @@ experimental_use_rmcp_client = true
 hooks = true
 
 [hooks]
-[[hooks.SessionStart]]
-hooks = [
-    {
-        type = "command",
-        command = "bash '/home/lev/.codex/herdr-agent-state.sh' session",
-        command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
-        timeout = 10,
-    },
-]
-
-[[hooks.SessionEnd]]
-hooks = [
-    {
-        type = "command",
-        command = "python3 ~/.agents/skills/history/hist.py index",
-        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index',
-        timeout = 3,
-    },
-]
-
 [[hooks.PostToolUse]]
 matcher = "^apply_patch$"
 
@@ -49,6 +29,26 @@ command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\script
 timeout = 8
 statusMessage = "Checking tool conventions"
 
+[[hooks.SessionEnd]]
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/skills/history/hist.py index",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index',
+        timeout = 3,
+    },
+]
+
+[[hooks.SessionStart]]
+hooks = [
+    {
+        type = "command",
+        command = "bash '/home/lev/.codex/herdr-agent-state.sh' session",
+        command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
+        timeout = 10,
+    },
+]
+
 [[hooks.Stop]]
 [[hooks.Stop.hooks]]
 type = "command"
@@ -64,6 +64,7 @@ command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
 command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
 timeout = 60
 statusMessage = "Auditing changeset"
+
 [marketplaces.devkit]
 source = "https://github.com/AbysmalBiscuit/devkit.git"
 source_type = "git"
