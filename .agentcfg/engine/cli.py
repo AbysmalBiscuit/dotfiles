@@ -74,15 +74,11 @@ def run(
 
     # Patch back into the parsed document rather than dumping the plain
     # mapping. tomlkit regenerates layout when handed a plain dict, which
-    # would make every apply rewrite the whole file. Layout the merge cannot
-    # express then goes on afterwards: the order block, and the baseline's
-    # header comments, which the plain mapping dropped.
+    # would make every apply rewrite the whole file.
     result = merge(baseline, live, rules)
     merged_doc = codec.reorder(codec.patch(live_doc, result), rules.order)
     dumped = codec.dump(merged_doc)
 
-    # Guard the merge's own output. A preamble put on first would make an
-    # empty document look like a file with content and slip past this.
     if not dumped.strip():
         print(f"{target_name}: merge produced empty output, refusing to write", file=stderr)
         return EXIT_ERROR

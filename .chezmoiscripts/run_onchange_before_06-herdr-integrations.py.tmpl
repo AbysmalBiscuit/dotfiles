@@ -14,8 +14,6 @@ enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
 Running before the file apply is what makes that ordering hold.
 """
 
-# Reruns whenever herdr reports a different hook asset version, or an
-# integration stops being installed:
 # # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" }}# {{ end }}
 
 from __future__ import annotations
@@ -42,8 +40,6 @@ def main() -> int:
             print("herdr is not on PATH; skipping integrations", file=sys.stderr)
             return 0
         if result.returncode != 0:
-            # A missing agent config directory is the usual cause, and it is
-            # not a reason to fail the apply.
             print(
                 f"herdr integration install {name}: "
                 f"{result.stderr.strip() or result.stdout.strip()}",
