@@ -6,22 +6,6 @@ def update-claude-plugins [] {
     null
 }
 
-# Build and install fish from source with the release rustflags.
-def update-fish [] {
-    let repo = ([($env.XDG_CACHE_HOME? | default ([$env.HOME .cache] | path join)) fish_shell_repo] | path join)
-    mkdir $repo
-    if ([$repo .git] | path join | path exists) {
-        ^git -C $repo pull
-    } else {
-        ^git clone https://github.com/fish-shell/fish-shell $repo
-    }
-    for stale in [build target] {
-        let dir = ([$repo $stale] | path join)
-        if ($dir | path exists) { rm -rf $dir }
-    }
-    with-env { RUSTFLAGS: ($env.RUSTFLAGS_RELEASE? | default "") } { ^cargo install --path $repo }
-}
-
 # Replace ~/.local/bin/nvim with the current nightly appimage, extracted so the
 # appimage's own FUSE mount is never needed.
 def update-nvim [] {
