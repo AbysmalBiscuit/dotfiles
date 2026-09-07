@@ -11,9 +11,13 @@ $vars = @{
     # tool variables
     # bat ignores XDG_CONFIG_HOME on Windows and reads %APPDATA%\bat instead
     BAT_CONFIG_DIR = "$HOME\.config\bat"
-    # {{- if .has.yazi }}
+    # {{- if index .has "yazi" }}
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
     # {{- end}}
+    # {{- if index .has "sccache" }}
+    SCCACHE_CONF = "$HOME\.config\sccache\config.toml"
+    SCCACHE_SERVER_PORT = "4227"
+    # {{- end }}
 }
 # A User-scope write broadcasts WM_SETTINGCHANGE to every top-level window and
 # blocks on the slowest to answer, which costs seconds per variable. Only the

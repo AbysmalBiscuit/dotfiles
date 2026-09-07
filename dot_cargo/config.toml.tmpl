@@ -11,6 +11,16 @@ jobs = # {{ .system.build_jobs }}
 rustc-wrapper = "sccache"
 # {{- end }}
 
+
+[env]
+# {{- if index .has "sccache" }}
+# {{- $sccache_port := 4226 -}}
+# {{- if .is_windows -}}
+# {{- $sccache_port = 4227 -}}
+# {{- end }}
+SCCACHE_SERVER_PORT = "# {{ $sccache_port }}"
+# {{- end }}
+
 [profile.dev]
 debug = "line-tables-only"
 # {{- if index .has "sccache" }}

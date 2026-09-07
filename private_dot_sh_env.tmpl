@@ -171,6 +171,12 @@ export GTK_THEME="Adwaita:dark"
 # {{- if index .has "cargo" }}
 export CLIPPY_CONF_DIR="$HOME/.config/clippy"
 # {{- end }}
+# {{- if index .has "sccache" }}
+# WSL2 mirrors any port a Linux process listens on onto the Windows loopback,
+# so a Windows client sharing this port reaches the WSL server, which drops the
+# connection when handed a Windows compiler. Windows uses 4227 instead.
+export SCCACHE_SERVER_PORT=4226
+# {{- end }}
 # {{- if index .has "eza" }}
 export EZA_CONFIG_DIR="$HOME/.config/eza"
 # {{- end }}

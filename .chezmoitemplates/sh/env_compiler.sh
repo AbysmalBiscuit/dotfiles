@@ -75,9 +75,12 @@ export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/llvm/include"
 # export GOAMD64="# {{ include (joinPath .chezmoi.homeDir ".config" "chezmoi" "go_level.txt") | replaceAllRegex "\n" "" }}"
 # {{- end }}
 
+# {{- if index .has "sccache" }}
 # if [[ -f "$HOME/.cargo/bin/sccache" ]]; then
+export SCCACHE_SERVER_PORT="4226"
 # export RUSTC_WRAPPER="$HOME/.cargo/bin/sccache"
 # export SCCACHE_DIR="$HOME/.cache/sccache"
 # export SCCACHE_DIRECT=true
-# export SCCACHE_CONF="$HOME/.config/sccache/config.toml"
+export SCCACHE_CONF="$HOME/.config/sccache/config.toml"
 # fi
+# {{- end }}
