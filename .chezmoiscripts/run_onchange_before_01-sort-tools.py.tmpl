@@ -14,39 +14,52 @@ from typing import Any
 SOURCE_DIR = Path("# {{ .chezmoi.sourceDir | replaceAllRegex "\\\\" "/" }}")
 TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "tools.toml"
 WSL_TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "wsl_tools.toml"
+SCHEMA_JSON = SOURCE_DIR / ".chezmoidata" / ".tools.schema.json"
+SCHEMA_NAME = SCHEMA_JSON.name
 HEADER = (
-    "#:schema .tools.schema.json\n"
+    f"#:schema {SCHEMA_NAME}\n"
 )
 
-FIELD_DEFAULTS = {
-    "lang": "",
-    "name": "",
-    "cmds": [],
-    "desc": "",
-    "url": "",
-    "git": "",
-    "comment": "",
-    "install_command": "",
-    "update_command": {
-        "default": [],
-        "windows": [],
-        "linux": [],
-        "macos": [],
-    },
-    "completions_command": "",
-    "init_command": "",
-    "supported_shells": [],
-    "append_fish_completion": "",
-    "append_fish_init": "",
-    "command_bash_name": "",
-    "command_fish_name": "",
-    "command_nu_name": "",
-    "command_powershell_name": "",
-    "command_zsh_name": "",
-    "completions_command_only_if_no": [],
-    "completions_cmds": [],
-    "init_command_only_if_no": [],
-}
+
+def resolve(node: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
+    """Follow local $refs until the node carries its own definition."""
+    while "$ref" in node:
+        target = root
+        for step in node["$ref"].removeprefix("#/").split("/"):
+            target = target[step]
+        node = target
+    return node
+
+
+def field_default(node: dict[str, Any], root: dict[str, Any]) -> Any:
+    """The value the sorter reads as "unset", derived from a property's type."""
+    node = resolve(node, root)
+    if node.get("type") == "array":
+        return []
+    if node.get("type") == "object":
+        return {
+            name: field_default(sub, root)
+            for name, sub in node.get("properties", {}).items()
+        }
+    return ""
+
+
+def load_field_defaults() -> dict[str, Any]:
+    """Field order and unset values, taken from the schema the files declare.
+
+    Keeping this here as a literal would mean editing two files to add one
+    field, and a field missing from the copy here is dropped from the sorted
+    output without a word.
+    """
+    root = json.loads(SCHEMA_JSON.read_text(encoding="utf-8"))
+    tool = resolve(root["properties"]["tools"]["items"], root)
+    return {
+        name: field_default(node, root)
+        for name, node in tool["properties"].items()
+    }
+
+
+FIELD_DEFAULTS = load_field_defaults()
 
 
 def escape_toml_string(value: str) -> str:
