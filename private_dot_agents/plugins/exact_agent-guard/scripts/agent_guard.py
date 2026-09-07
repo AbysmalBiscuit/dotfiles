@@ -673,6 +673,7 @@ def check_tool(payload, roots, settings, cwd):
 
 
 _FINDING_LINE = re.compile(r":(\d+)  \[")
+_INFO_FINDING = re.compile(r"  \[info:")
 _PATCH_FILE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
 _PATCH_MOVE = re.compile(r"^\*\*\* Move to: (.+)$", re.MULTILINE)
 
@@ -760,18 +761,34 @@ def check_file(payload, roots, settings, cwd, layers):
                 ]
         findings.extend(path_findings)
 
-    findings = findings[: settings.max_findings]
-    if not findings:
+    # A rule id prefixed "info:" is something to weigh rather than a violation,
+    # and it is shown under its own heading so it cannot dilute the ones that
+    # are. Everything else, the ast-grep rules included, is a violation.
+    notes = [line for line in findings if _INFO_FINDING.search(line)]
+    alerts = [line for line in findings if not _INFO_FINDING.search(line)]
+    alerts = alerts[: settings.max_findings]
+    notes = notes[: max(settings.max_findings - len(alerts), 0)]
+    if not alerts and not notes:
         emit_silent()
 
-    emit(
-        "PostToolUse",
-        "agent-guard found convention violations in the file you just wrote. "
-        "Fix them now rather than leaving them for review:\n\n"
-        + "\n".join(findings)
-        + "\n\nThese come from this project's documented conventions. If a finding "
-        "is genuinely wrong, say why instead of silently ignoring it.",
-    )
+    context = ""
+    if alerts:
+        context = (
+            "agent-guard found convention violations in the file you just wrote. "
+            "Fix them now rather than leaving them for review:\n\n"
+            + "\n".join(alerts)
+            + "\n\nThese come from this project's documented conventions. If a finding "
+            "is genuinely wrong, say why instead of silently ignoring it."
+        )
+    if notes:
+        context += (
+            "\n\nWorth a second look, though none of these is a violation:\n\n"
+            if alerts
+            else "agent-guard noticed something in the file you just wrote. Improve it "
+            "if you agree; it is not a violation:\n\n"
+        ) + "\n".join(notes)
+
+    emit("PostToolUse", context)
 
 
 def find_duplication(base, seen_file, settings, cwd):
