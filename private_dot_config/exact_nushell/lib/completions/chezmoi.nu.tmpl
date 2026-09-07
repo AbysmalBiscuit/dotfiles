@@ -34,6 +34,29 @@ const CHEZMOI_PLUGIN_ARGS = {
 # {{- end }}
 }
 
+# Keyed by the subcommand words already typed, so a nested subcommand's flags
+# and its parent's stay apart without any position arithmetic.
+const CHEZMOI_PLUGIN_FLAGS = {
+# {{- range $plugin := .chezmoi_plugins }}
+# {{-   if index $plugin "flags" }}
+    "# {{ $plugin.name }}": [
+# {{-     range $flag := index $plugin "flags" }}
+        { value: "--# {{ $flag.name }}", description: "# {{ $flag.desc }}" }
+# {{-     end }}
+    ]
+# {{-   end }}
+# {{-   range $arg := (index $plugin "args" | default (list)) }}
+# {{-     if index $arg "flags" }}
+    "# {{ $plugin.name }} # {{ $arg.name }}": [
+# {{-       range $flag := index $arg "flags" }}
+        { value: "--# {{ $flag.name }}", description: "# {{ $flag.desc }}" }
+# {{-       end }}
+    ]
+# {{-     end }}
+# {{-   end }}
+# {{- end }}
+}
+
 let chezmoi_base_completer = $env.config.completions.external.completer
 
 $env.config.completions.external.completer = {|spans|
@@ -50,10 +73,24 @@ $env.config.completions.external.completer = {|spans|
     # The last span is the word being typed, so its index is the position being
     # completed: 1 is the subcommand, 2 that subcommand's own argument.
     let typed = ($spans | last)
-    let extra = match (($spans | length) - 1) {
-        1 => $CHEZMOI_PLUGINS,
-        2 => ($CHEZMOI_PLUGIN_ARGS | get --optional $spans.1 | default []),
-        _ => [],
+    let extra = if ($typed | str starts-with "-") {
+        # Every plugin answers -h at every depth, so help is added here rather
+        # than repeated for each one in .chezmoidata. Anything that is not a
+        # plugin is carapace's to answer.
+        if ($spans.1? in ($CHEZMOI_PLUGINS | get value)) {
+            ($CHEZMOI_PLUGIN_FLAGS | get --optional ($spans | skip 1 | drop 1 | str join " ") | default []) ++ $HELP_FLAGS
+        } else { [] }
+    } else {
+        match (($spans | length) - 1) {
+            1 => $CHEZMOI_PLUGINS,
+            2 => ($CHEZMOI_PLUGIN_ARGS | get --optional $spans.1 | default []),
+            # `agents remove` takes config paths, which no static table can hold,
+            # and it takes several, so every position past the second answers the
+            # same.
+            _ => (if ($spans.1? == "agents") and ($spans.2? == "remove") {
+                nu-complete agentcfg paths
+            } else { [] }),
+        }
     } | where ($it.value | str starts-with $typed)
 
     if ($extra | is-empty) { $base } else { ($base | default []) ++ $extra }

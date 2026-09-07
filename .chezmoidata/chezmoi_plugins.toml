@@ -4,18 +4,41 @@
 #
 # Descriptions are single-quoted by the fish, zsh and PowerShell completions and
 # split on ":" by zsh, so they carry neither an apostrophe nor a colon.
+#
+# flags sits beside args at either level and holds long options without their
+# leading dashes, since that is the form fish's -l and zsh's spec both want.
 
 [[chezmoi_plugins]]
 name = "agents"
 desc = "Assign a merge strategy to live agent-config keys"
 
+[[chezmoi_plugins.flags]]
+name = "list"
+desc = "print the drift candidates and exit"
+
+[[chezmoi_plugins.args]]
+name = "remove"
+desc = "clear a key from the baseline, the live file and the app"
+
+[[chezmoi_plugins.args.flags]]
+name = "dry-run"
+desc = "print the plan and write nothing"
+
+[[chezmoi_plugins.args.flags]]
+name = "keep-installed"
+desc = "edit the configs but leave the app own files alone"
+
 [[chezmoi_plugins]]
 name = "cache"
 desc = "Rebuild the caches that chezmoi templates read"
-args = [
-    { name = "completions", desc = "the generated shell completion files" },
-    { name = "tools", desc = "the has cache of installed tools" },
-]
+
+[[chezmoi_plugins.args]]
+name = "completions"
+desc = "the generated shell completion files"
+
+[[chezmoi_plugins.args]]
+name = "tools"
+desc = "the has cache of installed tools"
 
 [[chezmoi_plugins]]
 name = "edit-secrets"
@@ -24,8 +47,31 @@ desc = "Edit the encrypted secrets file"
 [[chezmoi_plugins]]
 name = "tools"
 desc = "Report and install the tools inventoried in .chezmoidata"
-args = [
-    { name = "install", desc = "run the install command for a tool" },
-    { name = "list", desc = "list every inventoried tool" },
-    { name = "missing", desc = "list tools not on PATH" },
-]
+
+[[chezmoi_plugins.args]]
+name = "install"
+desc = "run the install command for a tool"
+
+[[chezmoi_plugins.args]]
+name = "list"
+desc = "list every inventoried tool"
+
+[[chezmoi_plugins.args.flags]]
+name = "lang"
+desc = "only tools written in this lang"
+
+[[chezmoi_plugins.args.flags]]
+name = "missing"
+desc = "only tools not on PATH"
+
+[[chezmoi_plugins.args.flags]]
+name = "installed"
+desc = "only tools on PATH"
+
+[[chezmoi_plugins.args]]
+name = "missing"
+desc = "list tools not on PATH"
+
+[[chezmoi_plugins.args.flags]]
+name = "lang"
+desc = "only tools written in this lang"

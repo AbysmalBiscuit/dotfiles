@@ -5,14 +5,47 @@
 # {{- /* Everything down to the plugin block is cobra's own fish completion,
 #        emitted here rather than left to the batch file script 90 writes:
 #        fish autoloads a completion by filename, and that file is named for
-#        the generator, not for chezmoi. */ -}}
+#        the generator, not for chezmoi.
+#
+#        Nothing else may claim chezmoi at shell startup. `complete -c chezmoi -e`
+#        marks the command as explicitly managed and fish then never autoloads
+#        this file, so carapace lists chezmoi in completions_env
+#        CARAPACE_EXCLUDES and chezmoi itself omits fish from
+#        supported_shells, both in .chezmoidata/tools.toml. */ -}}
 # {{ completion "fish" }}
 
 # cobra builds the completion above from chezmoi's command tree, which the
-# chezmoi-* plugins on PATH are not part of.
+# chezmoi-* plugins on PATH are not part of. Its own rules carry -f, but they
+# stop matching at a subcommand it has never heard of, so every rule below has
+# to say so again or fish falls through to listing files.
 # {{- range $plugin := .chezmoi_plugins }}
+# {{- /* A plugin's own flags stop applying once one of its subcommands is on
+#        the line, since __fish_seen_subcommand_from keeps matching the parent
+#        all the way down. */ -}}
+# {{- $subnames := "" -}}
+# {{- range $arg := (index $plugin "args" | default (list)) -}}
+# {{-   $subnames = printf "%s %s" $subnames $arg.name -}}
+# {{- end }}
 complete -c chezmoi -n __fish_use_subcommand -a '# {{ $plugin.name }}' -d '# {{ $plugin.desc }}'
+# {{- /* Every plugin answers -h at every depth, so this is emitted rather than
+#        repeated for each one in .chezmoidata, and it carries no subcommand
+#        exclusion. */}}
+complete -c chezmoi -f -n '__fish_seen_subcommand_from # {{ $plugin.name }}' -s h -l help -d 'show usage and exit'
+# {{- range $flag := (index $plugin "flags" | default (list)) }}
+complete -c chezmoi -f -n '__fish_seen_subcommand_from # {{ $plugin.name }}# {{ if $subnames }}; and not __fish_seen_subcommand_from# {{ $subnames }}# {{ end }}' -l '# {{ $flag.name }}' -d '# {{ $flag.desc }}'
+# {{- end }}
 # {{- range $arg := (index $plugin "args" | default (list)) }}
-complete -c chezmoi -n '__fish_seen_subcommand_from # {{ $plugin.name }}' -a '# {{ $arg.name }}' -d '# {{ $arg.desc }}'
+complete -c chezmoi -f -n '__fish_seen_subcommand_from # {{ $plugin.name }}' -a '# {{ $arg.name }}' -d '# {{ $arg.desc }}'
+# {{- range $flag := (index $arg "flags" | default (list)) }}
+complete -c chezmoi -f -n '__fish_seen_subcommand_from # {{ $plugin.name }}; and __fish_seen_subcommand_from # {{ $arg.name }}' -l '# {{ $flag.name }}' -d '# {{ $flag.desc }}'
 # {{- end }}
 # {{- end }}
+# {{- end }}
+
+# `agents remove` takes config paths, which no static list in .chezmoidata can
+# hold. Same source as the agentcfg completion beside this file. The token test
+# keeps a half-typed flag out of the path list, which shares its prefix with
+# nothing and so would otherwise be offered in full.
+complete -c chezmoi -f \
+    -n '__fish_seen_subcommand_from agents; and __fish_seen_subcommand_from remove; and not string match -q -- "-*" (commandline --current-token)' \
+    -a '(chezmoi agents complete -- (commandline --current-token))'
