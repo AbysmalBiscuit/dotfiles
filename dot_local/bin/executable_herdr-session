@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""Open the checkout you are standing in as a Herdr workspace, then attach.
+
+Bare `herdr` restores whatever the session was showing when it last ran, so
+launching it from a worktree drops you wherever you happened to be before.
+This resolves the checkout from git, creates or focuses the workspace that
+belongs to it, and only then attaches.
+
+  herdr-session                create or focus this checkout's workspace
+  herdr-session new            ... plus a fresh tab at a shell prompt
+  herdr-session new claude     ... plus a fresh tab running an agent
+
+Inside a Herdr pane it focuses and returns rather than nesting a second TUI,
+which makes it a way to send the running UI to another checkout.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import NoReturn
+
+PROG = "herdr-session"
+SERVER_START_TIMEOUT = 15.0
+SERVER_POLL = 0.1
+AGENT_NAME_MAX = 32
+SUBCOMMANDS = ("open", "new", "close")
+DELETED_SUFFIX = " (deleted)"
+
+
+def die(message: str) -> NoReturn:
+    print(f"{PROG}: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def warn(message: str) -> None:
+    print(f"{PROG}: {message}", file=sys.stderr)
+
+
+def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kwargs
+    )
+
+
+def same_path(a: str | os.PathLike, b: str | os.PathLike) -> bool:
+    return os.path.normcase(os.path.normpath(a)) == os.path.normcase(os.path.normpath(b))
+
+
+def under(child: str, parent: str) -> bool:
+    child, parent = os.path.normpath(child), os.path.normpath(parent)
+    return child == parent or child.startswith(parent + os.sep)
+
+
+def pane_cwd(pane: dict) -> str:
+    """A pane's directory, with the marker the kernel adds once it is unlinked.
+
+    A worktree removal hook runs after the checkout is gone, and the shells
+    still sitting in it then report `/path/to/it (deleted)`.
+    """
+    cwd = pane.get("cwd") or ""
+    return cwd[: -len(DELETED_SUFFIX)] if cwd.endswith(DELETED_SUFFIX) else cwd
+
+
+def checkout_root(directory: Path) -> Path | None:
+    """The worktree root `directory` sits in, or None outside a repository."""
+    done = run(["git", "-C", str(directory), "rev-parse", "--show-toplevel"])
+    if done.returncode != 0:
+        return None
+    root = done.stdout.strip()
+    return Path(root).resolve() if root else None
+
+
+# --- talking to herdr --------------------------------------------------------
+
+
+class Herdr:
+    """One run's connection to a Herdr server; every reply is JSON on stdout."""
+
+    def __init__(self, session: str | None) -> None:
+        self.exe = shutil.which("herdr") or die("herdr is not on PATH")
+        self.session = session
+        self._started_server = False
+
+    def _argv(self, args: tuple[str, ...] = ()) -> list[str]:
+        # --session is stripped from anywhere in the command line before
+        # subcommand dispatch, so it is accepted in front of any command.
+        prefix = ["--session", self.session] if self.session else []
+        return [self.exe, *prefix, *args]
+
+    def call(self, *args: str) -> tuple[dict | None, str, str]:
+        """Returns (result, error_code, message); result is None on failure."""
+        done = run(self._argv(args))
+        # Results come back on stdout, but a refused request is JSON on stderr.
+        payload: dict = {}
+        for stream in (done.stdout, done.stderr):
+            try:
+                parsed = json.loads(stream or "")
+            except (json.JSONDecodeError, ValueError):
+                continue
+            if isinstance(parsed, dict):
+                payload = parsed
+                break
+        error = payload.get("error")
+        if isinstance(error, dict):
+            return None, str(error.get("code") or ""), str(error.get("message") or "").strip()
+        result = payload.get("result")
+        if done.returncode != 0 or not isinstance(result, dict):
+            text = ((done.stdout or "") + (done.stderr or "")).strip()
+            return None, "", text or f"herdr {' '.join(args)} failed"
+        return result, "", ""
+
+    def require(self, *args: str) -> dict:
+        """A call that must succeed, starting the server once if it is down."""
+        result, code, message = self.call(*args)
+        if result is None and code == "server_not_running" and not self._started_server:
+            self.start_server()
+            result, code, message = self.call(*args)
+        if result is None:
+            die(f"{' '.join(args)}: {message or code or 'failed'}")
+        return result
+
+    def start_server(self) -> None:
+        self._started_server = True
+        warn("no server running, starting one")
+        subprocess.Popen(
+            self._argv(("server",)),
+            start_new_session=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        deadline = time.monotonic() + SERVER_START_TIMEOUT
+        while time.monotonic() < deadline:
+            result, code, _ = self.call("workspace", "list")
+            if result is not None or code != "server_not_running":
+                return
+            time.sleep(SERVER_POLL)
+        die("the server did not come up in time")
+
+    def attach(self) -> NoReturn:
+        os.execv(self.exe, self._argv())
+
+
+# --- workspaces --------------------------------------------------------------
+
+
+def open_checkout(herdr: Herdr, root: Path, label: str | None) -> tuple[str, bool]:
+    """Create or focus the workspace for a git checkout. Returns (id, created)."""
+    listing = herdr.require("worktree", "list", "--cwd", str(root))
+    entry = next(
+        (w for w in listing.get("worktrees", []) if same_path(w.get("path", ""), root)),
+        None,
+    )
+    if entry is None:
+        # Herdr found a repository but not this checkout: a submodule, or a
+        # worktree registered since the repo was last read.
+        return open_directory(herdr, root, label)
+
+    # Worktree actions are refused from a linked checkout: they have to start
+    # from the repo the worktrees hang off, which the listing reports.
+    source = listing.get("source", {}).get("repo_root") or str(root)
+    args = ["worktree", "open", "--cwd", source, "--path", str(root), "--focus"]
+    # A label renames whichever workspace the call lands on, so send it only
+    # when the checkout is not already open under a name the user chose.
+    if label and not entry.get("open_workspace_id"):
+        args += ["--label", label]
+    result = herdr.require(*args)
+    return (
+        result.get("workspace", {}).get("workspace_id", "?"),
+        not result.get("already_open", False),
+    )
+
+
+def open_directory(herdr: Herdr, directory: Path, label: str | None) -> tuple[str, bool]:
+    """Create or focus a plain workspace, matched by the cwd of an open pane."""
+    panes = herdr.require("pane", "list").get("panes", [])
+    existing = next((p for p in panes if same_path(pane_cwd(p), directory)), None)
+    if existing:
+        workspace_id = existing["workspace_id"]
+        herdr.require("workspace", "focus", workspace_id)
+        return workspace_id, False
+
+    args = ["workspace", "create", "--cwd", str(directory), "--focus"]
+    if label:
+        args += ["--label", label]
+    result = herdr.require(*args)
+    return result.get("workspace", {}).get("workspace_id", "?"), True
+
+
+# --- agents ------------------------------------------------------------------
+
+
+def agent_name(herdr: Herdr, base: str) -> str:
+    """A name derived from the checkout that no live agent already answers to."""
+    slug = re.sub(r"[^a-z0-9_-]+", "-", base.lower()).strip("-") or "agent"
+    if not slug[0].isalpha():
+        slug = f"a-{slug}"
+    slug = slug[:AGENT_NAME_MAX]
+    taken = {a.get("name") for a in herdr.require("agent", "list").get("agents", [])}
+    if slug not in taken:
+        return slug
+    for n in range(2, 100):
+        suffix = f"-{n}"
+        candidate = slug[: AGENT_NAME_MAX - len(suffix)] + suffix
+        if candidate not in taken:
+            return candidate
+    die(f"no free agent name based on {slug!r}")
+
+
+def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> None:
+    result = herdr.require(
+        "tab", "create", "--workspace", workspace_id, "--cwd", str(cwd), "--focus"
+    )
+    tab_id = result.get("tab", {}).get("tab_id", "?")
+    if kind == "shell":
+        print(f"tab {tab_id}  shell  {cwd}")
+        return
+
+    pane_id = result.get("root_pane", {}).get("pane_id")
+    if not pane_id:
+        die("herdr created a tab without a root pane to start the agent in")
+    name = agent_name(herdr, cwd.name)
+    args = ["agent", "start", name, "--kind", kind, "--pane", pane_id]
+    if extra:
+        args += ["--", *extra]
+    started, code, message = herdr.call(*args)
+    if started is None:
+        # An unsupported kind or an agent that never came up leaves an empty
+        # tab behind, so take it back out before reporting the failure.
+        herdr.call("tab", "close", tab_id)
+        die(f"could not start {kind}: {message or code or 'failed'}")
+    print(f"tab {tab_id}  {kind} as {name}  {cwd}")
+
+
+# --- commands ----------------------------------------------------------------
+
+
+def workspace_for(herdr: Herdr, args: argparse.Namespace) -> tuple[Path, str]:
+    """Ensure this checkout has a focused workspace. Returns (directory, id)."""
+    directory = Path(args.path or Path.cwd()).expanduser().resolve()
+    if not directory.is_dir():
+        die(f"{directory}: not a directory")
+    root = checkout_root(directory)
+    label = args.label or (root or directory).name
+    if root:
+        workspace_id, created = open_checkout(herdr, root, label)
+    else:
+        root, (workspace_id, created) = directory, open_directory(herdr, directory, label)
+    print(f"workspace {workspace_id}  {'created' if created else 'focused'}  {root}")
+    return directory, workspace_id
+
+
+def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
+    """Close every workspace whose panes sit in a directory, gone or not.
+
+    Built for a worktree removal hook, so a Herdr that is not running is not
+    worth starting and an unopened checkout is not worth complaining about.
+    """
+    target = str(Path(args.path or Path.cwd()).expanduser().resolve())
+    panes, code, message = herdr.call("pane", "list")
+    if panes is None:
+        if code != "server_not_running":
+            warn(f"pane list: {message or code or 'failed'}")
+        return 0
+
+    workspace_ids = dict.fromkeys(
+        p["workspace_id"] for p in panes.get("panes", []) if under(pane_cwd(p), target)
+    )
+    for workspace_id in workspace_ids:
+        result, code, message = herdr.call("workspace", "close", workspace_id)
+        if result is None:
+            warn(f"could not close {workspace_id}: {message or code or 'failed'}")
+        else:
+            print(f"workspace {workspace_id}  closed  {target}")
+    return 0
+
+
+def finish(herdr: Herdr, args: argparse.Namespace) -> int:
+    """Attach, unless asked not to or already running inside a Herdr pane."""
+    if args.no_attach or os.environ.get("HERDR_ENV") == "1":
+        return 0
+    herdr.attach()
+
+
+def main() -> int:
+    shared = argparse.ArgumentParser(add_help=False)
+    shared.add_argument("--session", help="use this named session instead of the default")
+    shared.add_argument("--path", help="directory to open (default: the current one)")
+    shared.add_argument("--label", help="workspace name, used only when creating one")
+    shared.add_argument("--no-attach", action="store_true", help="skip launching the TUI")
+
+    # `shared` is a parent of the top-level parser only so that a bare
+    # `--help` documents the options; every run reaches a subparser, which
+    # parses them for real.
+    parser = argparse.ArgumentParser(
+        prog=PROG,
+        parents=[shared],
+        description="Open the current checkout as a Herdr workspace, then attach.",
+    )
+    sub = parser.add_subparsers(dest="command")
+    sub.add_parser("open", parents=[shared], help="create or focus the workspace (the default)")
+    sub.add_parser("close", parents=[shared], help="close the workspaces for a checkout")
+    p_new = sub.add_parser("new", parents=[shared], help="also open a tab with a shell or agent")
+    p_new.add_argument("kind", nargs="?", default="shell", help="shell, or a herdr agent kind")
+    p_new.add_argument(
+        "agent_args", nargs="*", help="after --, passed through to the agent"
+    )
+
+    # Options live on the subparsers, so a bare run needs the default
+    # subcommand spliced in before argparse sees the rest.
+    argv = sys.argv[1:]
+    if not argv or (argv[0] not in SUBCOMMANDS and argv[0] not in ("-h", "--help")):
+        argv = ["open", *argv]
+
+    args = parser.parse_args(argv)
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
+
+    herdr = Herdr(args.session)
+    if args.command == "close":
+        return close_workspaces(herdr, args)
+
+    directory, workspace_id = workspace_for(herdr, args)
+    if args.command == "new":
+        new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
+    return finish(herdr, args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
