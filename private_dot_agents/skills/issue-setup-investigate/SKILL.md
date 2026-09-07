@@ -92,32 +92,37 @@ take ownership of it and wire it into the paper trail.
   issue id; the templates already compose `<issue>-<slug>`.
 - `APPS` = the comma-separated devkit app ids in scope for this issue. These are the apps
   that get prep files and `setup`/installs. Inspect the catalog with
-  `devrun config apps` if you're unsure which ids exist.
+  `devkit config apps` if you're unsure which ids exist.
 
 ### 4. Create the worktree with `issue setup`
 
 ```bash
-issue setup --issue "ENG-1234" --slug "fix-bli-export" --apps api,lab-os
+issue setup --issue "$ISSUE" --slug "$SLUG" --apps "$APPS"
 ```
 
 This single command: fetches `origin`, creates the worktree at
-`<worktree_root>/<issue>-<slug>` on a new `lev/<issue>-<slug>` branch off the configured
-baseline (`origin/staging`), writes each app's `prep_files`, runs each app's `setup`
-commands (e.g. `bun install` / `uv sync`), and prints JSON `{issue, worktree, branch}`.
-Read the worktree path and branch out of that JSON for the summary — don't hardcode them.
+`<worktree_root>/<issue>-<slug>` on a new branch off the configured baseline, writes each
+app's `prep_files`, runs each app's `setup` commands, and prints JSON
+`{issue, worktree, branch}`. Read the worktree path and branch out of that JSON for the
+summary — don't hardcode them.
 
 - Preview first with `--dry-run`: it prints the would-be branch and worktree without
   creating anything.
 - If it bails with **"branch already exists"**, ask the user whether to reuse it or pick a
   new slug, then re-run. Never force.
 - Nothing project-specific is hardcoded here — worktree root, baseline ref, installs, and
-  prep files all come from `~/.config/devkit/config.toml`.
+  prep files all come from the merged devkit config. `devkit config show` prints it.
 
 ### 5. Write the session summary
 
-Write to `~/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` (the worktree's parent dir,
-**outside** both monorepo and worktree — the same dir `issue end` later cleans). This is
-the cold-start handoff for the next session.
+Write to `$WORKTREE_ROOT/ISSUE_SUMMARY_${ISSUE_ID}.md` — the worktree's parent dir,
+**outside** both the clone and the worktree, and the same dir `issue end` later cleans.
+This is the cold-start handoff for the next session, and where `/issue-start` looks for
+it, so the name matters:
+
+```bash
+WORKTREE_ROOT="$(devkit config show --json | jq -r '.defaults.worktree_root')"
+```
 
 Include:
 
@@ -138,15 +143,15 @@ Include:
 
 ## Running servers
 
-Start the servers with **devrun** — it wraps each launch in doppler `dev_local`, pins
-the JWT secret, and wires the API URL into lab-os/foundry-portal automatically. Pass no
-doppler flags by hand:
+Start the servers with **devrun** — it allocates the ports, injects the project's dev
+secrets, and wires each app's URL into its consumers automatically. Pass no secrets
+flags by hand:
 
 ```bash
 devrun up                 # start every in-scope app for this worktree
-devrun up api             # one app   (apps in scope: {APPS})
+devrun up <app>           # one app   (apps in scope: {APPS})
 devrun status             # running servers + pids
-devrun logs api           # tail output
+devrun logs <app>         # tail output
 devrun down               # stop this worktree's servers
 ```
 
@@ -193,8 +198,8 @@ Do **not** cd or open an editor — the user starts the new session themselves.
 
 ## Notes
 
-- Dev servers run through `devrun`, which uses doppler `dev_local` from the devkit
-  config. Never run against the prod (`prd`) doppler config — devkit rejects it.
+- Dev servers run through `devrun`, which injects the project's dev secrets from the
+  devkit config. Never point it at a production config — devkit rejects it.
 - Write-lock enforcement is on globally (`[harness] enforce_writes = true` in
   `~/.config/devkit/config.toml`) — concurrent agents and parallel subagents in the
   same worktree are blocked from clobbering each other's structured edits. This

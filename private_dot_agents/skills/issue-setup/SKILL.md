@@ -25,12 +25,12 @@ ask for it before doing anything.
   with Linear `get_issue` when you need it. Leave the issue id out — the templates
   compose `<issue>-<slug>`.
 - `APPS` — comma-separated devkit app ids in scope, which decide the prep files and
-  installs. `devrun config apps` lists the catalog.
+  installs. `devkit config apps` lists the catalog.
 
 ## 2. Run `issue setup`
 
 ```bash
-issue setup --issue "ENG-1234" --slug "fix-bli-export" --apps api,lab-os
+issue setup --issue "$ISSUE" --slug "$SLUG" --apps "$APPS"
 ```
 
 It prints JSON `{issue, worktree, branch}`. Read the worktree path and branch out of

@@ -14,9 +14,13 @@ clean — `issue` computes that verdict for you, so there's no separate scan scr
 manual Linear check. Your one added job is rescuing each finished worktree's artifacts
 **before** removal, since `issue end` deletes the worktree wholesale.
 
-Worktrees live under the configured `worktree_root` (`~/Git/adaptyv`), siblings of the
-`monorepo` clone, with handoff files `ISSUE_SUMMARY_<ID>.md` in that parent dir. Created
-by `/issue-setup`.
+Worktrees live under the configured `worktree_root`, siblings of the primary clone,
+with handoff files `ISSUE_SUMMARY_<ID>.md` in that same dir. Created by `/issue-setup`.
+Resolve the real path when you need it rather than assuming one:
+
+```bash
+WORKTREE_ROOT="$(devkit config show --json | jq -r '.defaults.worktree_root')"
+```
 
 ## Input
 
@@ -57,7 +61,7 @@ If none → step 3. If present:
 2. Interview the user with AskUserQuestion, one question per worktree: options like
    "Keep recommended set", "Keep all", "Discard all" — list the concrete filenames and
    the recommendation in the descriptions.
-3. Keepers → copy to `~/Git/adaptyv/issue-archive/<ISSUE_ID>/` (create the dir),
+3. Keepers → copy to `$WORKTREE_ROOT/issue-archive/<ISSUE_ID>/` (create the dir),
    preserving filenames. Confirm the copy succeeded before removal.
 
 ### 3. Remove
