@@ -164,6 +164,25 @@ $env.config = {
             mode: [emacs vi_normal vi_insert]
             event: { edit: cutselection }
         }
+        # Word kill on the delete keys. Alt is the window manager's prefix, so
+        # alt-d never reaches the shell. The defaults bind these to
+        # backspaceword/deleteword, which drop the text outright; the cut
+        # variants match ctrl-w and alt-d and leave it in the cut buffer for
+        # ctrl-y.
+        {
+            name: cut_word_left_backspace
+            modifier: control
+            keycode: backspace
+            mode: [emacs vi_normal vi_insert]
+            event: { edit: cutwordleft }
+        }
+        {
+            name: cut_word_right_delete
+            modifier: control
+            keycode: delete
+            mode: [emacs vi_normal vi_insert]
+            event: { edit: cutwordright }
+        }
     ]
 }
 

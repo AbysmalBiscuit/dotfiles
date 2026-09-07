@@ -19,3 +19,10 @@ set menu-complete-display-prefix On
 
 # This ensures that pasting into Readline inserts the clipboard as single string of characters, instead of inserting characters as if they were entered from the keyboard. This is a safety measure to prevent Readline from automatically modifying and running pasted commands.
 set enable-bracketed-paste on
+
+# Word kill on the delete keys. Alt is the window manager's prefix, so alt-d
+# never reaches the shell; these give the same two edits a ctrl chord.
+# Terminals send ^H for ctrl-backspace, which costs the stock ctrl-h
+# (backward-delete-char); the backspace key itself sends ^? and is unaffected.
+"\C-h": unix-word-rubout
+"\e[3;5~": kill-word
