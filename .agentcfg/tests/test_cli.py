@@ -2,7 +2,7 @@ import io
 import json
 import pytest
 from engine.cli import run
-from engine.codecs import JsonCodec
+from engine.codecs import JsonCodec, TomlCodec
 
 
 @pytest.fixture
@@ -112,3 +112,52 @@ def test_guard_empty_output_refuses_to_write(config):
     assert code == 2
     assert out_buf.getvalue() == b""
     assert "refusing to write" in err_buf.getvalue()
+
+
+@pytest.fixture
+def toml_config(tmp_path, monkeypatch):
+    source = tmp_path / "src"
+    script_dir = source / "dot_codex"
+    script_dir.mkdir(parents=True)
+    (source / ".agentcfg").mkdir()
+    (script_dir / ".config.baseline.toml").write_text(
+        '#:schema https://example.com/s.json\n[hooks]\n[[hooks.Stop]]\nrun = "x"\n',
+        encoding="utf-8",
+    )
+    (script_dir / ".config.rules.toml").write_text(
+        'enforce = [["hooks", "Stop"]]\norder = [["hooks", "state"]]\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CHEZMOI_SOURCE_DIR", str(source))
+    monkeypatch.setenv("CHEZMOI_SOURCE_FILE", "dot_codex/modify_private_config.toml.py")
+    monkeypatch.setenv("CHEZMOI_DEST_DIR", str(tmp_path / "home"))
+    return script_dir
+
+
+def invoke_toml(config, stdin: bytes, argv=()):
+    out, err = io.BytesIO(), io.StringIO()
+    code = run(
+        script_file=str(config / "modify_private_config.toml.py"),
+        baseline_name=".config.baseline.toml",
+        rules_name=".config.rules.toml",
+        codec=TomlCodec,
+        argv=list(argv),
+        stdin=io.BytesIO(stdin),
+        stdout=out,
+        stderr=err,
+    )
+    return code, out.getvalue(), err.getvalue()
+
+
+def test_order_moves_the_named_table_last(toml_config):
+    live = b'[hooks]\n[hooks.state]\ncached = 1\n\n[[hooks.Stop]]\nrun = "x"\n'
+    code, out, err = invoke_toml(toml_config, live)
+    assert code == 0
+    text = out.decode()
+    assert text.index("[[hooks.Stop]]") < text.index("[hooks.state]")
+
+
+def test_order_does_not_touch_the_values_it_moves(toml_config):
+    live = b'[hooks]\n[hooks.state]\ncached = 1\n\n[[hooks.Stop]]\nrun = "x"\n'
+    _, out, _ = invoke_toml(toml_config, live)
+    assert TomlCodec.plain(TomlCodec.load(out))["hooks"]["state"] == {"cached": 1}

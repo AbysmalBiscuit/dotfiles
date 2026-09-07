@@ -112,3 +112,39 @@ def test_patterns_for_returns_all_matches_ordered_by_score(tmp_path):
         ((2, 2), Strategy.IGNORE, ("a", "b")),
         ((2, 1), Strategy.ENFORCE, ("a", "*")),
     ]
+
+
+def test_order_parses_into_paths(tmp_path):
+    rs = RuleSet.load(write_rules(tmp_path, 'order = [["hooks", "state"]]'))
+    assert rs.order == (("hooks", "state"),)
+
+
+def test_order_is_absent_by_default(tmp_path):
+    rs = RuleSet.load(write_rules(tmp_path, 'enforce = [["model"]]'))
+    assert rs.order == ()
+
+
+def test_order_does_not_resolve_as_a_strategy(tmp_path):
+    """order names a position, not a winner, so it must leave the merge alone."""
+    rs = RuleSet.load(write_rules(tmp_path, 'order = [["hooks", "state"]]'))
+    assert rs.resolve(("hooks", "state")) == Strategy.PASSTHROUGH
+
+
+def test_order_rejects_wildcard(tmp_path):
+    with pytest.raises(ValueError, match="must name one key"):
+        RuleSet.load(write_rules(tmp_path, 'order = [["hooks", "*"]]'))
+
+
+def test_order_rejects_empty_target(tmp_path):
+    with pytest.raises(ValueError, match="non-empty list"):
+        RuleSet.load(write_rules(tmp_path, "order = [[]]"))
+
+
+def test_order_rejects_non_string_segment(tmp_path):
+    with pytest.raises(ValueError, match="non-string segment"):
+        RuleSet.load(write_rules(tmp_path, "order = [[1]]"))
+
+
+def test_unknown_top_level_key_names_order_as_an_option(tmp_path):
+    with pytest.raises(ValueError, match="'order'"):
+        RuleSet.load(write_rules(tmp_path, 'orders = [["hooks", "state"]]'))

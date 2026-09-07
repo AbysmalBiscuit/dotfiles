@@ -75,3 +75,23 @@ def test_patch_replaces_a_scalar_and_keeps_everything_else():
     doc = TomlCodec.load(raw)
     TomlCodec.patch(doc, {"model": "b", "tui": {"notifications": True}})
     assert TomlCodec.dump(doc) == raw.replace(b'"a"', b'"b"')
+
+
+def test_reorder_floats_a_table_past_its_siblings():
+    raw = b'[hooks]\n[hooks.state]\na = 1\n\n[[hooks.Stop]]\nx = 1\n'
+    doc = TomlCodec.load(raw)
+    out = TomlCodec.dump(TomlCodec.reorder(doc, [("hooks", "state")])).decode()
+    assert out.index("[[hooks.Stop]]") < out.index("[hooks.state]")
+
+
+def test_reorder_is_idempotent():
+    raw = b'[hooks]\n[hooks.state]\na = 1\n\n[[hooks.Stop]]\nx = 1\n'
+    once = TomlCodec.dump(TomlCodec.reorder(TomlCodec.load(raw), [("hooks", "state")]))
+    twice = TomlCodec.dump(TomlCodec.reorder(TomlCodec.load(once), [("hooks", "state")]))
+    assert once == twice
+
+
+def test_reorder_ignores_a_missing_path():
+    raw = b'[hooks]\nx = 1\n'
+    doc = TomlCodec.load(raw)
+    assert TomlCodec.dump(TomlCodec.reorder(doc, [("hooks", "state"), ("nope",)])) == raw

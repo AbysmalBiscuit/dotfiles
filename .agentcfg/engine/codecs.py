@@ -14,6 +14,23 @@ class CodecError(Exception):
     pass
 
 
+def _float_to_end(container: Mapping, path: tuple[str, ...]) -> None:
+    """Move one key to the end of its table. Missing paths are left alone.
+
+    Reassigning after a pop is the whole trick: both a dict and a tomlkit
+    table append a key they do not already hold.
+    """
+    for segment in path[:-1]:
+        if not isinstance(container, Mapping) or segment not in container:
+            return
+        container = container[segment]
+    key = path[-1]
+    if not isinstance(container, Mapping) or key not in container:
+        return
+    value = container.pop(key)
+    container[key] = value
+
+
 class JsonCodec:
     @staticmethod
     def load(raw: bytes) -> dict:
@@ -36,6 +53,12 @@ class JsonCodec:
     @staticmethod
     def dump(data: Mapping) -> bytes:
         return json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8") + b"\n"
+
+    @staticmethod
+    def reorder(doc: dict, paths) -> dict:
+        for path in paths:
+            _float_to_end(doc, path)
+        return doc
 
     @staticmethod
     def empty() -> dict:
@@ -98,6 +121,12 @@ class TomlCodec:
     @staticmethod
     def dump(doc) -> bytes:
         return tomlkit.dumps(doc).encode("utf-8")
+
+    @staticmethod
+    def reorder(doc, paths):
+        for path in paths:
+            _float_to_end(doc, path)
+        return doc
 
     @staticmethod
     def empty():

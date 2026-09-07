@@ -1,4 +1,4 @@
-"""Path-segment patterns mapped to merge strategies."""
+"""Path-segment patterns mapped to merge strategies, and the order block."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 WILDCARD = "*"
+ORDER = "order"
 
 
 class Strategy(str, enum.Enum):
@@ -57,20 +58,59 @@ def _ties(a: tuple[str, ...], b: tuple[str, ...]) -> bool:
     return all(x == WILDCARD or y == WILDCARD or x == y for x, y in zip(a, b))
 
 
+def _load_order(path: Path, raw: object) -> tuple[tuple[str, ...], ...]:
+    """Parse the order block: full paths, no wildcards.
+
+    A wildcard would name several keys with no way to say which trails which,
+    so an order target has to be one key.
+    """
+    if not isinstance(raw, list):
+        raise ValueError(f"{path}: {ORDER!r} must be a list of paths, got {raw!r}")
+    loaded = []
+    for target in raw:
+        if not isinstance(target, list) or not target:
+            raise ValueError(
+                f"{path}: {ORDER!r} entry must be a non-empty list of strings, "
+                f"got {target!r}"
+            )
+        for segment in target:
+            if not isinstance(segment, str):
+                raise ValueError(
+                    f"{path}: {ORDER!r} entry contains a non-string segment, "
+                    f"got {segment!r}"
+                )
+            if segment == WILDCARD:
+                raise ValueError(
+                    f"{path}: {ORDER!r} entry {target!r} uses {WILDCARD!r}; "
+                    "an order target must name one key"
+                )
+        loaded.append(tuple(target))
+    return tuple(loaded)
+
+
 @dataclass(frozen=True)
 class RuleSet:
+    """Merge strategies, plus the layout directives that ride alongside them.
+
+    order holds paths to float to the end of their parent table when the
+    merged document is written. It is not a strategy: it never decides which
+    value wins, only where the key sits in the file.
+    """
+
     patterns: tuple[tuple[Strategy, tuple[str, ...]], ...]
+    order: tuple[tuple[str, ...], ...] = ()
 
     @classmethod
     def load(cls, path: Path) -> RuleSet:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
+        order = _load_order(path, raw.pop(ORDER, []))
         declarable = {s.value for s in DECLARABLE}
         collected: list[tuple[Strategy, tuple[str, ...]]] = []
         for key, value in raw.items():
             if key not in declarable:
                 raise ValueError(
                     f"unknown strategy {key!r} in {path}; "
-                    f"expected one of {sorted(declarable)}"
+                    f"expected one of {sorted(declarable)} or {ORDER!r}"
                 )
             for pattern in value:
                 if not isinstance(pattern, list):
@@ -94,7 +134,7 @@ class RuleSet:
                         f"{strategy_a.value} and {strategy_b.value}; make one "
                         "deeper or more literal"
                     )
-        return cls(patterns=tuple(collected))
+        return cls(patterns=tuple(collected), order=order)
 
     def patterns_for(
         self, path: tuple[str, ...]

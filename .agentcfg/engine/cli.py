@@ -73,9 +73,11 @@ def run(
 
     # Patch back into the parsed document rather than dumping the plain
     # mapping. tomlkit regenerates layout when handed a plain dict, which
-    # would make every apply rewrite the whole file.
+    # would make every apply rewrite the whole file. The order block then
+    # goes on afterwards: placement is layout the merge cannot express.
     result = merge(baseline, live, rules)
-    out = codec.dump(codec.patch(live_doc, result))
+    merged_doc = codec.reorder(codec.patch(live_doc, result), rules.order)
+    out = codec.dump(merged_doc)
 
     if not out.strip():
         print(f"{target_name}: merge produced empty output, refusing to write", file=stderr)

@@ -38,3 +38,16 @@ def test_patch_round_trips_through_dump():
     raw = FIXTURE.read_bytes()
     doc = JsonCodec.load(raw)
     assert JsonCodec.dump(JsonCodec.patch(doc, JsonCodec.plain(doc))) == raw
+
+
+def test_reorder_floats_a_key_past_its_siblings():
+    doc = {"hooks": {"state": {}, "Stop": []}}
+    assert list(JsonCodec.reorder(doc, [("hooks", "state")])["hooks"]) == [
+        "Stop",
+        "state",
+    ]
+
+
+def test_reorder_ignores_a_missing_path():
+    doc = {"hooks": {"Stop": []}}
+    assert JsonCodec.reorder(doc, [("hooks", "state"), ("nope",)]) == doc
