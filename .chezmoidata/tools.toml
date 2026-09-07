@@ -862,7 +862,7 @@ lang = "rust"
 name = "fish"
 git = "https://github.com/fish-shell/fish-shell"
 comment = "Not on crates.io; the registry's 'fish' crate is an unrelated webhook library. update_fish.py builds the newest release tag and lays down the share tree that __fish_data_dir points at, which a plain cargo install leaves empty."
-install_command = "uv tool install sphinx && python3 ~/.local/bin/update_fish.py"
+install_command = "uv tool install sphinx && python3 \"$(chezmoi source-path)\"/update_fish.py"
 
 [[tools]]
 lang = "rust"
