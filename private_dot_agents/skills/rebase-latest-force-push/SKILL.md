@@ -12,7 +12,7 @@ Takes an optional base branch argument. Without one, the base resolves in order:
 
 ## What already happened
 
-`~/.agents/skills/rebase-latest-force-push/scripts/rebase-latest-force-push.sh` has **already run** — fetch, rebase, and push with
+`~/.agents/skills/rebase-latest-force-push/scripts/rebase_latest_force_push.py` has **already run** — fetch, rebase, and push with
 `--force-with-lease --force-if-includes`. Its output is below. Invoking `/rebase-latest-force-push`
 authorizes that force-push; it is the point of the command, not something to
 second-guess or re-confirm.
@@ -23,12 +23,12 @@ in that output. Do not re-run `git status`, `git log`, `git branch -vv`, or
 reported.
 
 Formatting and linting are handled by the prek pre-push hook — don't run oxfmt or
-oxlint by hand. If the rebase moved `bun.lock`, the script has already re-run
-`bun install` — don't run it again.
+oxlint by hand. If the rebase moved a lockfile, the script has already re-run
+that package manager's install — don't run it again.
 
 ---
 
-!`bash ~/.agents/skills/rebase-latest-force-push/scripts/rebase-latest-force-push.sh "$ARGUMENTS" 2>&1 || true`
+!`python3 ~/.agents/skills/rebase-latest-force-push/scripts/rebase_latest_force_push.py "$ARGUMENTS" 2>&1 || true`
 
 ---
 
@@ -41,7 +41,7 @@ oxlint by hand. If the rebase moved `bun.lock`, the script has already re-run
 | `NO-COMMITS` | Done, branch has nothing of its own. Say so in one line. Stop. |
 | `CONFLICT` | The real work — see below. |
 | `STACKED` | The branch sits on unmerged branches that are still on the remote, so nothing was rebased. Report the parents the script listed and ask which they want: `/rebase-propagate` for the whole stack, or re-running this with the parent as the argument. Don't pick for them. |
-| `INSTALL-FAILED` | `bun.lock` moved in the rebase and `bun install` failed. The rebase is committed; only the install failed. Read the install output, fix the cause, re-run the script. |
+| `INSTALL-FAILED` | A lockfile moved in the rebase and its install failed. The rebase is committed; only the install failed. The header line names the command that ran. Read the install output, fix the cause, re-run the script. |
 | `HOOK-MODIFIED` | The hook reformatted files. Amend them into the commit that owns them if it's unambiguous (single-commit branch, or the hunks belong to one commit), otherwise ask. Then re-run the script. |
 | `DIRTY` | Uncommitted changes predate the command. Report what's uncommitted and ask whether to commit, stash, or drop. Don't decide for them. |
 | `IN-PROGRESS` | A rebase was already running before this command. Report the state and ask how to proceed. |
@@ -63,5 +63,5 @@ detached mid-replay. Resolve in place:
 3. `git add <files>` then `git rebase --continue`.
 4. More conflicts may follow (the script reported how many commits are still
    queued). Repeat until the rebase finishes.
-5. Re-run `bash ~/.agents/skills/rebase-latest-force-push/scripts/rebase-latest-force-push.sh` to push (pass the same base branch if
+5. Re-run `python3 ~/.agents/skills/rebase-latest-force-push/scripts/rebase_latest_force_push.py` to push (pass the same base branch if
    one was given). It is safe to re-run at any point.
