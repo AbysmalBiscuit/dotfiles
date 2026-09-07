@@ -718,6 +718,14 @@ def edited_paths(payload, cwd):
     return paths
 
 
+# ast-grep's own severity mapped onto the prefix a Python check would have
+# written, so a rule states its tier in the file that defines it. A rule that
+# declares nothing reports "hint", which is indistinguishable from asking for
+# one, so hint lands in the default tier; `severity: info` is how a rule asks
+# for the note tier.
+_SG_SEVERITY = {"error": "error:", "warning": "warn:", "info": "info:", "hint": "warn:"}
+
+
 def scan_file(path, roots, cwd, layers):
     findings = []
     if "rules" in layers and have("ast-grep"):
@@ -741,8 +749,12 @@ def scan_file(path, roots, cwd, layers):
                 rule = re.sub(r"-(typescript|tsx)$", "", hit.get("ruleId", ""))
                 line = hit.get("range", {}).get("start", {}).get("line", 0) + 1
                 findings.append(
-                    "  {}:{}  [{}] {}".format(
-                        hit.get("file", path), line, rule, hit.get("message", "")
+                    "  {}:{}  [{}{}] {}".format(
+                        hit.get("file", path),
+                        line,
+                        _SG_SEVERITY.get(hit.get("severity"), "warn:"),
+                        rule,
+                        hit.get("message", ""),
                     )
                 )
     extra = run_checks(path, roots, cwd) if "checks" in layers else ""
