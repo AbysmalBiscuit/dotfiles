@@ -271,11 +271,9 @@ git = "https://github.com/carapace-sh/carapace"
 comment = "winget install -e --id rsteube.Carapace"
 install_command = "curl termux.carapace.sh | sh"
 completions_command = "carapace _carapace SHELL"
-# carapace's bridge opens each command it knows with `complete -e <cmd>`, which
-# claims the command and stops the shell autoloading a per-command completion
-# file for it. chezmoi is excluded so its own completion keeps the plugin
-# subcommands that carapace's spec, built from the binary alone, cannot see.
-completions_env = ["CARAPACE_EXCLUDES=chezmoi"]
+completions_env = [
+    "CARAPACE_EXCLUDES=chezmoi"
+]
 supported_shells = [
     "bash",
     "cmd",
@@ -863,8 +861,8 @@ supported_shells = [
 lang = "rust"
 name = "fish"
 git = "https://github.com/fish-shell/fish-shell"
-comment = "Not on crates.io; the registry's 'fish' crate is an unrelated webhook library. sphinx-build is a hard build requirement for the embedded man pages, which back 'fish --help' and 'help'."
-install_command = "uv tool install sphinx && cargo-install-latest https://github.com/fish-shell/fish-shell --locked fish"
+comment = "Not on crates.io; the registry's 'fish' crate is an unrelated webhook library. update-fish builds the newest release tag and lays down the share tree that __fish_data_dir points at, which a plain cargo install leaves empty."
+install_command = "uv tool install sphinx && update-fish"
 
 [[tools]]
 lang = "rust"
