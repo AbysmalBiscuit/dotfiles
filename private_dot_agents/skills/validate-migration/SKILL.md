@@ -3,7 +3,7 @@ name: validate-migration-vm
 description: Run validation after migrating endpoint to kysely.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 # /validate-migration
 

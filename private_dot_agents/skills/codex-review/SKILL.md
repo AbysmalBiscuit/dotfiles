@@ -1,6 +1,7 @@
 ---
 name: codex-review
 description: Use after superpowers:writing-plans — or whenever a written implementation plan or spec exists and no code has been written yet — to gate the plan with a cross-model adversarial review BEFORE superpowers:executing-plans or superpowers:subagent-driven-development. Claude is the builder; OpenAI Codex is a read-only critic that stress-tests the plan (VERDICT:APPROVED/REVISE) over bounded rounds until it converges, and the human signs off before any code. Especially for non-trivial or high-stakes work — auth, schema, concurrency, migrations, payments. Also triggers on "/codex-review", "codex review my plan", "have Codex review my plan", "argue/stress-test this plan with Codex", "adversarial plan review", "second-model sanity check on the plan". Requires the codex MCP server connected. For a requirements interview BEFORE the review use /grill-me-codex; NOT for reviewing already-written CODE, NOT for trivial changes.
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Skill, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
 # Codex-Review — Adversarial Plan-Review Loop

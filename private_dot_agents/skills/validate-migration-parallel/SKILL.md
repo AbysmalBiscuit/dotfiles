@@ -3,7 +3,7 @@ name: validate-migration-parallel-vmp
 description: Run kysely-migration validation, fanning the independent checks out to parallel subagents.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue, mcp__linear__get_user, mcp__linear__save_issue
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 # /validate-migration-parallel
 
