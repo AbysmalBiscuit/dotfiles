@@ -1,39 +1,29 @@
 #!/usr/bin/env python3
 """Install a crate from its newest release tag rather than from crates.io.
 
-For projects that publish real releases but no crate, such as fish, the closest
-thing to `cargo install NAME` is a `--git` install pinned to the newest tag.
-This resolves that tag against the remote and hands the rest to cargo:
-
     cargo-install-latest REPO_URL [CARGO_ARGS...]
     cargo install-latest REPO_URL [CARGO_ARGS...]
 
-Every argument after the URL is forwarded untouched, so the caller keeps
-control of --locked, --features, and which package in the workspace to build.
+Everything after the URL is forwarded to cargo untouched.
 """
 
 from __future__ import annotations
 
-import os
 import re
-import shutil
 import subprocess
+import shutil
 import sys
+
+from ocargo import run_cargo
 
 PROG = "cargo-install-latest"
 
-# The name cargo passes as the first argument when a custom subcommand runs as
-# `cargo install-latest`. Absent when the command is spelled out in full.
+# cargo passes the subcommand name through as the first argument.
 SUBCOMMAND = "install-latest"
 
-# A release tag and nothing else. Anchoring both ends drops the prereleases
-# (4.0b1), the release candidates, and the prose tags (last_autotools) that
-# accumulate in a long-lived repository.
+# Anchored at both ends, so prereleases (4.0b1) and prose tags (last_autotools)
+# don't outrank a real release.
 RELEASE_TAG = re.compile(r"v?(\d+(?:\.\d+)*)\Z")
-
-# ocargo applies this machine's optimization flags and forwards everything else
-# to cargo, so it stands in wherever it is installed.
-CARGO_WRAPPERS = ("ocargo", "cargo")
 
 USAGE = f"""\
 Install a crate from its newest release tag
@@ -68,8 +58,8 @@ def release_tags(repo: str) -> list[tuple[tuple[int, ...], str]]:
         match = RELEASE_TAG.fullmatch(ref.strip())
         if match:
             tags.append((tuple(int(part) for part in match.group(1).split(".")), ref.strip()))
-    # Sorted here rather than with git's --sort=-v:refname so the ordering does
-    # not change with the git version, and so a 'v' prefix doesn't reorder tags.
+    # Sorted here rather than by git, whose --sort=-v:refname orders a 'v' prefix
+    # ahead of the numbers.
     return sorted(tags, reverse=True)
 
 
@@ -93,17 +83,8 @@ def main() -> int:
         return 1
     tag = tags[0][1]
 
-    cargo = next((path for name in CARGO_WRAPPERS if (path := shutil.which(name))), None)
-    if cargo is None:
-        print(f"{PROG}: cargo not found on PATH", file=sys.stderr)
-        return 127
-
-    command = [cargo, "install", "--git", repo, "--tag", tag, *cargo_args]
-    print(f"{PROG}: {os.path.basename(cargo)} installing {tag} from {repo}", flush=True)
-    try:
-        return subprocess.run(command).returncode
-    except KeyboardInterrupt:
-        return 130
+    print(f"{PROG}: installing {tag} from {repo}", flush=True)
+    return run_cargo(["install", "--git", repo, "--tag", tag, *cargo_args])
 
 
 if __name__ == "__main__":
