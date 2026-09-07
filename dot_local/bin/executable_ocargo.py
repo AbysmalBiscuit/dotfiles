@@ -159,6 +159,56 @@ def has_nightly() -> bool:
     return any(line.startswith("nightly") for line in result.stdout.splitlines())
 
 
+def no_flags() -> dict[str, bool]:
+    return dict.fromkeys(set(SHORT.values()) | set(LONG.values()), False)
+
+
+def rustflags_for(flags: dict[str, bool]) -> str:
+    # Stripped unconditionally so an inherited flag can't survive --no-mold, a
+    # non-Linux host, or double up with the one appended below.
+    rustflags = strip_mold(base_rustflags())
+
+    if (flags["mold"] or os.environ.get("MOLD")) and not flags["no_mold"]:
+        link_arg = mold_flag(flags["mold"])
+        if link_arg:
+            rustflags += f" {link_arg}"
+
+    if flags["lto"]:
+        rustflags += " -C lto=thin -C embed-bitcode=yes"
+    if flags["fat"]:
+        rustflags += " -C lto=fat -C embed-bitcode=yes"
+    if flags["nightly"] and flags["dylib"]:
+        rustflags += " -Zdylib-lto"
+    return rustflags
+
+
+def run_cargo(
+    args: list[str],
+    rustflags: str | None = None,
+    extra_env: dict[str, str] | None = None,
+) -> int:
+    """Runs cargo with this machine's optimization flags applied.
+
+    Importable by the other scripts in this directory, so they get the same
+    flags as `ocargo` without spawning it.
+    """
+    cargo = shutil.which("cargo")
+    if not cargo:
+        print("ocargo: cargo not found on PATH", file=sys.stderr)
+        return 127
+
+    if rustflags is None:
+        rustflags = rustflags_for(no_flags())
+    env = dict(os.environ, RUSTFLAGS=rustflags, **(extra_env or {}))
+    # cargo reads CARGO_ENCODED_RUSTFLAGS in preference to RUSTFLAGS, so an
+    # inherited one would silently discard everything assembled above.
+    env.pop("CARGO_ENCODED_RUSTFLAGS", None)
+    try:
+        return subprocess.run([cargo, *args], env=env).returncode
+    except KeyboardInterrupt:
+        return 130
+
+
 def main() -> int:
     flags, cargo_args = parse_flags(sys.argv[1:])
 
@@ -173,19 +223,7 @@ def main() -> int:
         print(HELP)
         return 0
 
-    # Stripped unconditionally so an inherited flag can't survive --no-mold, a
-    # non-Linux host, or double up with the one appended below.
-    rustflags = strip_mold(base_rustflags())
-
-    if (flags["mold"] or os.environ.get("MOLD")) and not flags["no_mold"]:
-        link_arg = mold_flag(flags["mold"])
-        if link_arg:
-            rustflags += f" {link_arg}"
-
-    if flags["lto"]:
-        rustflags += " -C lto=thin -C embed-bitcode=yes"
-    if flags["fat"]:
-        rustflags += " -C lto=fat -C embed-bitcode=yes"
+    rustflags = rustflags_for(flags)
 
     if flags["nightly"]:
         if not has_nightly():
@@ -193,8 +231,6 @@ def main() -> int:
             print("rustup toolchain install nightly")
             return 1
         cargo_args = ["+nightly"] + cargo_args
-        if flags["dylib"]:
-            rustflags += " -Zdylib-lto"
 
     if flags["debug"]:
         print("ocargo debug information:")
@@ -202,19 +238,7 @@ def main() -> int:
         print("cargo " + " ".join(cargo_args))
         return 0
 
-    cargo = shutil.which("cargo")
-    if not cargo:
-        print("ocargo: cargo not found on PATH", file=sys.stderr)
-        return 127
-
-    env = dict(os.environ, RUSTFLAGS=rustflags)
-    # cargo reads CARGO_ENCODED_RUSTFLAGS in preference to RUSTFLAGS, so an
-    # inherited one would silently discard everything assembled above.
-    env.pop("CARGO_ENCODED_RUSTFLAGS", None)
-    try:
-        return subprocess.run([cargo, *cargo_args], env=env).returncode
-    except KeyboardInterrupt:
-        return 130
+    return run_cargo(cargo_args, rustflags=rustflags)
 
 
 if __name__ == "__main__":
