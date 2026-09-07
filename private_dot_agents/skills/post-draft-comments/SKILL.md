@@ -45,17 +45,35 @@ ambiguous — never publish, never submit, never force anything.
 
 ### 1. Resolve the PR
 
-- Target PR = `$ARGUMENTS` if it's a number/URL, else infer from the current branch:
-  `gh pr view --json number,headRefOid,url,baseRefName`.
-- Capture `owner/repo` (`gh repo view --json nameWithOwner`) and the head SHA
-  (`headRefOid`) — the pending review must be pinned to that commit.
-- If no PR exists for the branch, stop and tell me.
+```bash
+# PR number, head SHA and URL. With no selector it infers the PR from the branch.
+gh pr view --json number,headRefOid,url,baseRefName
+
+# ...or name the PR from $ARGUMENTS, as a number or a URL:
+gh pr view <pr> --json number,headRefOid,url,baseRefName
+
+# your GitHub login — step 6 needs it to find your own pending review
+gh api user --jq .login
+```
+
+- `headRefOid` is the head SHA the pending review must be pinned to. Keep it.
+- Every `gh api` path below uses the literal `{owner}/{repo}` placeholders, which `gh`
+  expands from the checkout. There is no need to look the repo name up.
+- If no PR exists for the branch, `gh pr view` exits non-zero. Stop and tell me.
 
 ### 2. Gather the draft comments
 
 - Pull them from session context (or the `$ARGUMENTS` file).
-- For each, confirm `path` + `line` map to a line in the PR diff. Use
-  `gh pr diff <pr>` to verify. Park any that don't map onto an out-of-diff list.
+- Confirm each `path` + `line` maps to a line in the PR diff:
+
+```bash
+gh pr diff <pr> --name-only    # fast check: is the file in the diff at all?
+gh pr diff <pr>                # full patch, for the hunk ranges
+```
+
+  A comment is postable only when its `line` falls inside one of that file's
+  `@@ -old,n +new,m @@` hunks, counted on the `+new,m` side. Park anything else on the
+  out-of-diff list rather than trying to post it.
 
 ### 3. Learn my voice
 
@@ -90,9 +108,12 @@ This is the gate. Wait for my go-ahead. If I edit any wording, take it.
 First check whether I already have a **pending** review on this PR:
 
 ```bash
-gh api "repos/<owner>/<repo>/pulls/<n>/reviews" \
-  --jq '.[] | select(.state=="PENDING" and .user.login=="<me>") | .node_id'
+gh api "repos/{owner}/{repo}/pulls/<n>/reviews" \
+  --jq '.[] | select(.state=="PENDING" and .user.login=="<your login>") | .node_id'
 ```
+
+Empty output means no pending review of yours exists. `<your login>` is what
+`gh api user --jq .login` printed in step 1.
 
 **If a pending review exists**, append the new comments to it — don't start a second
 review. Add each as a thread on its line via GraphQL, using the existing review's id:
@@ -106,7 +127,9 @@ gh api graphql -f query='
   }' -f reviewId="<node_id>" -f path="src/foo.ts" -F line=42 -f body="..."
 ```
 
-(Add `startLine` to the input for a multi-line range.)
+One mutation per comment. `-f` sends a string and `-F` sends a typed value, so `line`
+takes `-F` and everything else takes `-f`; swapping them fails the Int coercion. Add
+`startLine:$startLine` to the input, with another `-F`, for a multi-line range.
 
 **If no pending review exists**, create one with the whole batch — **omit the `event`
 field** so GitHub leaves it PENDING (a draft) rather than publishing/submitting:
@@ -122,7 +145,7 @@ cat > /tmp/review-payload.json <<'JSON'
 }
 JSON
 
-gh api "repos/<owner>/<repo>/pulls/<n>/reviews" --method POST --input /tmp/review-payload.json
+gh api "repos/{owner}/{repo}/pulls/<n>/reviews" --method POST --input /tmp/review-payload.json
 ```
 
 - If a comment is rejected for an unmatched line, drop that one, retry, and report it in
