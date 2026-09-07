@@ -122,8 +122,8 @@ def main() -> int:
     for name, target in wanted.items():
         write(BIN / name, launcher_body(target))
 
-    for path, target in generated.items():
-        if wanted.get(path.name) == target:
+    for path in generated:
+        if path.name in wanted:
             continue
         # A launcher for another platform, or one whose command was removed.
         path.unlink()
