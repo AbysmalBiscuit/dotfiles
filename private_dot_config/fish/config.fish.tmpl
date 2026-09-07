@@ -32,8 +32,11 @@ end
 # Source local completions cache
 set -l _FISH_CACHE_COMPLETIONS_DIR $__fish_cache_dir/completions
 mkdir -p $_FISH_CACHE_COMPLETIONS_DIR
+# A generated completion opens with `complete -c <cmd> -e` to claim the command,
+# so sourcing one whose name a hand-maintained completion already owns erases
+# that file's rules before the autoloader has even reached it.
 for f in $_FISH_CACHE_COMPLETIONS_DIR/*.fish
-    source $f
+    test -f $__fish_config_dir/completions/(path basename $f); or source $f
 end
 
 for f in $__fish_config_dir/completions_extra/*.fish
