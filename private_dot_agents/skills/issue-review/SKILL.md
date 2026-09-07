@@ -16,9 +16,7 @@ added on GitHub and nobody is notified — the PR just gets opened or updated.
 
 ## What already happened
 
-`~/.claude/scripts/issue-review-recon.sh` has **already run**, read-only. It resolved
-the reviewer alias if one was given, detected the PR state, picked the branch of the
-workflow that applies, and gathered the diff you need. Its output is below.
+`~/.agents/skills/issue-review/scripts/issue_review_recon.py` has **already run**, read-only. It resolved the reviewer alias if one was given, detected the PR state, picked the branch of the workflow that applies, and gathered the diff you need. Its output is below.
 
 It ends with `IR-BRANCH: A | B | STOP` and `IR-RESULT: <STATUS>`. Everything you need
 about worktree, PR, and diff state is in that output. Do not re-run `issue info`,
@@ -29,7 +27,7 @@ can write. That is the work left for you.
 
 ---
 
-!`bash ~/.claude/scripts/issue-review-recon.sh "$ARGUMENTS" 2>&1 || true`
+!`python3 ~/.agents/skills/issue-review/scripts/issue_review_recon.py "$ARGUMENTS" 2>&1 || true`
 
 ---
 
@@ -66,10 +64,11 @@ a summary the diff doesn't support.
 3. **Draft the PR title + body** with the **`/write` skill**. Leave the Linear id out
    of both, and don't open the body with a heading — read *Linear ids and magic words*
    below before drafting.
-4. **Ship it** with the `issue review request` printed under `== next ==`, filling in
-   the placeholders. With no alias it runs `--no-notify` instead of `--to`, with no
-   trailing positional — the PR opens unreviewed and nothing is delivered. Decide the
-   magic word first (same section).
+4. **Ship it** with the `issue pr create` printed under `== next ==`, filling in the
+   placeholders. Decide the magic word first (same section). It pushes, renders the
+   title and body, opens the PR ready for review, and prints the URL. With an alias,
+   follow it with the `issue review request` the script prints; with none, stop there —
+   the PR opens unreviewed and nothing is delivered.
 
 ### Branch B — PR already open
 
@@ -81,11 +80,12 @@ a summary the diff doesn't support.
    this is the ask that goes out with the review request; with none it is just what you
    report back.
 4. **Ship it** with the `issue review request` printed under `== next ==`. No
-   `--pr-title`/`--pr-body` either way — the PR body was fixed at creation.
+   `--pr-title`/`--pr-body` either way: they live on `issue pr create` and the PR body
+   was fixed when the PR was opened.
 
-With no alias the command carries `--no-notify`, which leaves the PR's existing
-reviewers exactly as they are: nobody is added, re-requested, or delivered to. Without
-that flag a missing `--to` on an *existing* PR falls back to its current human
+On Branch B with no alias the command carries `--no-notify`, which leaves the PR's
+existing reviewers exactly as they are: nobody is added, re-requested, or delivered to.
+Without that flag a missing `--to` on an *existing* PR falls back to its current human
 reviewers and pings them, so never drop it to "just push".
 
 ## Linear ids and magic words
@@ -94,8 +94,8 @@ The PR is the only thing that links this work to Linear. Linear reads magic word
 the **PR title and description only** — never in commit messages or PR comments — and
 the word must sit directly before the id with nothing running into it.
 
-`issue review request` renders both from the worktree's issue record, so you write
-neither by hand — that holds with or without a reviewer.
+`issue pr create` renders both from the worktree's issue record, so you write neither
+by hand — that holds with or without a reviewer.
 
 **Title.** `pr_title` appends ` [<ISSUE>]` to your title unless the id is already in
 it. Write a plain conventional-commit subject with no id — the suffix costs title
@@ -139,27 +139,32 @@ the list gets the same word, so add the odd one out to the description by hand.
 `--arg` only accepts keys declared under `[templates.variables]` — `linear_magic_word`
 and `also_closes` — so a mistyped key is rejected rather than silently ignored.
 
-**There is no second chance.** `pr_title` / `pr_body` render only when the PR is
-created; on an existing PR `issue review request` ignores `--pr-title` / `--pr-body`.
-To change the magic word or add an id afterwards, edit the description with
-`gh pr edit`.
+**There is no second chance.** `pr_title` / `pr_body` render only when `issue pr create`
+opens the PR, and `issue review request` has no `--pr-title` / `--pr-body` at all. To
+change the magic word or add an id afterwards, edit the description with `gh pr edit`.
 
 ## Notes
 
+- Opening the PR is `issue pr create`. `issue review request` requires a PR that
+  already exists and refuses to run without one, so Branch A opens the PR first and only
+  then requests the review.
 - The subcommand is `issue review request`, not `issue review` — the latter is a
-  command group and exits non-zero.
+  command group and exits non-zero. Same for `issue pr`.
 - `--no-notify` pins the notify targets to whatever `--to` gave, so it never falls back
-  to a PR's current reviewers. With no `--to` that is nobody: it pushes, opens or reuses
-  the PR, prints the URL, and stops. Combined with `--to` it still adds the GitHub
+  to a PR's current reviewers. With no `--to` that is nobody: it pushes, leaves the draft
+  state alone, prints the URL, and stops. Combined with `--to` it still adds the GitHub
   reviewer while staying off Slack.
-- Opening a PR with no `--to` is allowed because `defaults.require_pr_reviewer` is off,
-  and `--no-notify` does not bypass that gate. If it is ever turned on, creating a PR
-  needs a real `--to` — and the push happens *before* that check. Passing `--to ""` is
-  never a workaround; the empty alias fails to resolve, also after the push.
+- `--ready` on `issue pr create` opens a real PR rather than a draft, whatever
+  `defaults.pr_create_state` says. Drafts do not get review-bot coverage, so pass it.
+- Opening a ready PR with no `--to` is allowed because `defaults.require_pr_reviewer` is
+  off. That gate covers `issue pr create --ready`, `issue pr ready`, and the draft-to-ready
+  flip in `issue review request`; `--no-notify` does not bypass it. If it is ever turned
+  on, those runs need a real `--to` — and the push happens *before* the check. Passing
+  `--to ""` is never a workaround; the empty alias fails to resolve, also after the push.
 - Never force-push. Both paths run a plain `git push -u`; if the branch has diverged it
   fails — surface the error and ask, don't retry blindly.
-- Override the GitHub handle or base only when needed: `--reviewer <gh-handle>`,
-  `--base <branch>`. Skip the push with `--no-push`.
+- `--base <branch>` overrides the PR base and lives on `issue pr create`, not on
+  `issue review request`. Skip the push with `--no-push` on either.
 - The trailing positional on `issue review request` is the one-line ask sent with the
   request. The `review_request` template appends the PR URL, so don't paste the link
   into it. Keep it short and in the user's voice — no AI throat-clearing.
