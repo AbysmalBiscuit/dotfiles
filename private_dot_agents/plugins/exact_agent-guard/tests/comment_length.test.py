@@ -91,23 +91,23 @@ def test_a_fourth_line_is_a_violation():
 
 
 def test_an_eighth_line_grades_harder_than_a_fourth():
-    assert "[comment-oversized]" in report("a.ts", "// narration\n" * 7)[0]
+    assert "[warn:comment-length]" in report("a.ts", "// narration\n" * 7)[0]
     found = report("a.ts", "// narration\n" * 8)
-    assert len(found) == 1 and "[error:comment-oversized]" in found[0], found
+    assert len(found) == 1 and "[error:comment-length]" in found[0], found
     assert "8 lines" in found[0], found
 
 
 def test_a_fifth_sentence_grades_harder_than_a_third():
     source = "// One fact. Two fact. Three fact. Four fact. Five fact.\nconst a = 1;\n"
     found = report("a.ts", source)
-    assert len(found) == 1 and "[error:comment-oversized]" in found[0], found
+    assert len(found) == 1 and "[error:comment-length]" in found[0], found
     assert "5 sentences" in found[0], found
 
 
 def test_one_long_sentence_inside_the_bounds_is_a_note():
     found = report("a.ts", LONG_SENTENCE + "const a = 1;\n")
     assert len(found) == 1, found
-    assert "[info:comment-verbose]" in found[0], found
+    assert "[info:comment-length]" in found[0], found
 
 
 def test_a_drawn_banner_is_decoration_rather_than_prose():
@@ -138,7 +138,7 @@ def test_a_python_string_holds_no_comments():
     """The docstring itself is long enough to be a note; what it must never be
     is a run of the four comments written inside it."""
     source = '"""Doc.\n\n# no\n# still no\n# no\n# nor this\n"""\nx = 1\n'
-    assert [f for f in report("a.py", source) if "[comment-oversized]" in f] == []
+    assert [f for f in report("a.py", source) if "[warn:comment-length]" in f] == []
 
 
 def test_a_yaml_block_scalar_holds_no_comments():
@@ -157,11 +157,11 @@ def test_a_doc_comment_is_a_note_at_five_lines_and_a_violation_at_ten():
 
     assert doc(2) == []
     note = doc(3)
-    assert len(note) == 1 and "[info:doc-comment-long]" in note[0], note
+    assert len(note) == 1 and "[info:doc-comment-length]" in note[0], note
     assert "5 lines" in note[0], note
-    assert "[info:doc-comment-long]" in doc(7)[0], doc(7)
+    assert "[info:doc-comment-length]" in doc(7)[0], doc(7)
     breach = doc(8)
-    assert len(breach) == 1 and "[doc-comment-oversized]" in breach[0], breach
+    assert len(breach) == 1 and "[warn:doc-comment-length]" in breach[0], breach
     assert "10 lines" in breach[0], breach
 
 
@@ -169,16 +169,16 @@ def test_a_doc_comment_past_twenty_five_lines_grades_harder():
     def doc(body):
         return report("a.ts", "/**\n" + " * doc\n" * body + " */\nexport const a = 1;\n")
 
-    assert "[doc-comment-oversized]" in doc(20)[0], doc(20)
+    assert "[warn:doc-comment-length]" in doc(20)[0], doc(20)
     breach = doc(23)
-    assert len(breach) == 1 and "[error:doc-comment-oversized]" in breach[0], breach
+    assert len(breach) == 1 and "[error:doc-comment-length]" in breach[0], breach
     assert "25 lines" in breach[0], breach
 
 
 def test_a_rust_doc_run_answers_to_the_doc_budget():
     assert report("a.rs", "/// doc\n" * 4 + "pub fn f() {}\n") == []
     note = report("a.rs", "/// doc\n" * 5 + "pub fn f() {}\n")
-    assert len(note) == 1 and "[info:doc-comment-long]" in note[0], note
+    assert len(note) == 1 and "[info:doc-comment-length]" in note[0], note
 
 
 def test_a_python_docstring_answers_to_the_doc_budget():
@@ -186,7 +186,7 @@ def test_a_python_docstring_answers_to_the_doc_budget():
     assert report("a.py", short) == []
     long = 'def f():\n    """Doc.\n' + "    line\n" * 10 + '    """\n    return 1\n'
     found = report("a.py", long)
-    assert len(found) == 1 and "[doc-comment-oversized]" in found[0], found
+    assert len(found) == 1 and "[warn:doc-comment-length]" in found[0], found
 
 
 def test_a_python_docstring_is_not_read_as_a_comment_run():
@@ -223,7 +223,7 @@ def test_the_hook_reports_the_run_it_used_to_miss():
         target = pathlib.Path(base, "stacked.ts")
         target.write_text("const a = 1;\n" + "// narration\n" * 15, encoding="utf-8")
         out = hook(target, base)
-        assert "error:comment-oversized" in out, out
+        assert "error:comment-length" in out, out
         assert "stacked.ts:16" in out, out
         assert "well past the line" in out, out
 
@@ -233,7 +233,7 @@ def test_the_hook_asks_for_a_fix_at_the_lower_tier():
         target = pathlib.Path(base, "short.ts")
         target.write_text("// narration\n" * 4 + "const a = 1;\n", encoding="utf-8")
         out = hook(target, base)
-        assert "[comment-oversized]" in out, out
+        assert "[warn:comment-length]" in out, out
         assert "Fix them now" in out, out
         assert "well past the line" not in out, out
 
@@ -243,7 +243,7 @@ def test_the_hook_shows_a_note_without_calling_it_a_violation():
         target = pathlib.Path(base, "verbose.ts")
         target.write_text(LONG_SENTENCE + "const a = 1;\n", encoding="utf-8")
         out = hook(target, base)
-        assert "info:comment-verbose" in out, out
+        assert "info:comment-length" in out, out
         assert "it is not a violation" in out, out
         assert "convention violations" not in out, out
 

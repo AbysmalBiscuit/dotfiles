@@ -29,14 +29,18 @@ import sys
 import tokenize
 from collections import namedtuple
 
-# A severity prefix on the rule id is how a check grades its own finding: the
-# runner heads each tier separately and spends its budget on the loudest first.
-RULE = "comment-oversized"
-HARD_RULE = "error:comment-oversized"
-INFO_RULE = "info:comment-verbose"
-DOC_INFO_RULE = "info:doc-comment-long"
-DOC_RULE = "doc-comment-oversized"
-HARD_DOC_RULE = "error:doc-comment-oversized"
+# One id per thing measured, and a severity prefix for how far past the line it
+# went. The runner heads each tier separately and spends its budget on the
+# loudest first; the message carries the count that tripped it, so the id has no
+# business also grading the finding. Every tier says its severity, including the
+# middle one: an unprefixed `comment-length` would read as a finding that
+# asserts nothing, since every comment has a length.
+RULE = "warn:comment-length"
+HARD_RULE = "error:comment-length"
+INFO_RULE = "info:comment-length"
+DOC_INFO_RULE = "info:doc-comment-length"
+DOC_RULE = "warn:doc-comment-length"
+HARD_DOC_RULE = "error:doc-comment-length"
 
 SENTENCES_MESSAGE = (
     "comment runs {sentences} sentences over {lines} lines; if the code needs a "
