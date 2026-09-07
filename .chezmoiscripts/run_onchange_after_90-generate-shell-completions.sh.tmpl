@@ -15,6 +15,9 @@
 # {{- /* supported_shells is the argument it gets (see $shell_names). */ -}}
 # {{- /* command_SHELL_name overrides that when a CLI wants a name    */ -}}
 # {{- /* it does not advertise.                                      */ -}}
+# {{- /*                                                              */ -}}
+# {{- /* completions_env is a list of KEY=VALUE read by the generator */ -}}
+# {{- /* CLI itself, for knobs it exposes only through the env.       */ -}}
 # {{- /* ========================================================== */ -}}
 
 # {{- /* ---- Output file per shell ---- */ -}}
@@ -155,10 +158,16 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-             $base_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
     # {{- /* ---- Append pipe ---- */ -}}
     # {{-             $append := index $tool $append_key | default "" -}}
+    # {{- /* ---- Env prefix, for knobs the generator CLI reads only from the env ---- */ -}}
+    # {{-             $env_prefix := "" -}}
+    # {{-             $env_vars := index $tool "completions_env" | default (list) -}}
+    # {{-             if $env_vars -}}
+    # {{-               $env_prefix = printf "env %s " ($env_vars | join " ") -}}
+    # {{-             end -}}
     # {{- /* ---- One line per installed cmd; CMD is a no-op for single-exe tools ---- */ -}}
     # {{-             range $e := $live -}}
     # {{-               $gen_cmd := $base_cmd | replace "CMD" $e -}}
-    # {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" }} || true
+    # {{ $env_prefix }}# {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" }} || true
     echo
     # {{ "" }}
     # {{-             end -}}
