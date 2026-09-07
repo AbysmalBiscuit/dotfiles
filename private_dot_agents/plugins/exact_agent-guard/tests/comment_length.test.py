@@ -90,6 +90,20 @@ def test_a_fourth_line_is_a_violation():
     assert len(found) == 1 and "4 lines" in found[0], found
 
 
+def test_an_eighth_line_grades_harder_than_a_fourth():
+    assert "[comment-oversized]" in report("a.ts", "// narration\n" * 7)[0]
+    found = report("a.ts", "// narration\n" * 8)
+    assert len(found) == 1 and "[error:comment-oversized]" in found[0], found
+    assert "8 lines" in found[0], found
+
+
+def test_a_fifth_sentence_grades_harder_than_a_third():
+    source = "// One fact. Two fact. Three fact. Four fact. Five fact.\nconst a = 1;\n"
+    found = report("a.ts", source)
+    assert len(found) == 1 and "[error:comment-oversized]" in found[0], found
+    assert "5 sentences" in found[0], found
+
+
 def test_one_long_sentence_inside_the_bounds_is_a_note():
     found = report("a.ts", LONG_SENTENCE + "const a = 1;\n")
     assert len(found) == 1, found
@@ -151,6 +165,16 @@ def test_a_doc_comment_is_a_note_at_five_lines_and_a_violation_at_ten():
     assert "10 lines" in breach[0], breach
 
 
+def test_a_doc_comment_past_twenty_five_lines_grades_harder():
+    def doc(body):
+        return report("a.ts", "/**\n" + " * doc\n" * body + " */\nexport const a = 1;\n")
+
+    assert "[doc-comment-oversized]" in doc(20)[0], doc(20)
+    breach = doc(23)
+    assert len(breach) == 1 and "[error:doc-comment-oversized]" in breach[0], breach
+    assert "25 lines" in breach[0], breach
+
+
 def test_a_rust_doc_run_answers_to_the_doc_budget():
     assert report("a.rs", "/// doc\n" * 4 + "pub fn f() {}\n") == []
     note = report("a.rs", "/// doc\n" * 5 + "pub fn f() {}\n")
@@ -199,9 +223,19 @@ def test_the_hook_reports_the_run_it_used_to_miss():
         target = pathlib.Path(base, "stacked.ts")
         target.write_text("const a = 1;\n" + "// narration\n" * 15, encoding="utf-8")
         out = hook(target, base)
-        assert "comment-oversized" in out, out
+        assert "error:comment-oversized" in out, out
         assert "stacked.ts:16" in out, out
+        assert "well past the line" in out, out
+
+
+def test_the_hook_asks_for_a_fix_at_the_lower_tier():
+    with tempfile.TemporaryDirectory() as base:
+        target = pathlib.Path(base, "short.ts")
+        target.write_text("// narration\n" * 4 + "const a = 1;\n", encoding="utf-8")
+        out = hook(target, base)
+        assert "[comment-oversized]" in out, out
         assert "Fix them now" in out, out
+        assert "well past the line" not in out, out
 
 
 def test_the_hook_shows_a_note_without_calling_it_a_violation():

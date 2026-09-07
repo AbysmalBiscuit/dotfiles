@@ -29,10 +29,14 @@ import sys
 import tokenize
 from collections import namedtuple
 
+# A severity prefix on the rule id is how a check grades its own finding: the
+# runner heads each tier separately and spends its budget on the loudest first.
 RULE = "comment-oversized"
+HARD_RULE = "error:comment-oversized"
 INFO_RULE = "info:comment-verbose"
 DOC_INFO_RULE = "info:doc-comment-long"
 DOC_RULE = "doc-comment-oversized"
+HARD_DOC_RULE = "error:doc-comment-oversized"
 
 SENTENCES_MESSAGE = (
     "comment runs {sentences} sentences over {lines} lines; if the code needs a "
@@ -46,12 +50,29 @@ CHARS_MESSAGE = (
 )
 DOC_MESSAGE = "doc comment runs {lines} lines; trim it to what a caller needs"
 DOC_INFO_MESSAGE = "doc comment runs {lines} lines; a caller reads the first line and stops"
+HARD_SENTENCES_MESSAGE = (
+    "comment runs {sentences} sentences over {lines} lines; keep the one that says "
+    "why and delete the rest"
+)
+HARD_LINES_MESSAGE = (
+    "comment runs {lines} lines; keep the line that says why and delete the rest"
+)
+HARD_DOC_MESSAGE = (
+    "doc comment runs {lines} lines; keep the summary and the parameters, and move "
+    "the prose into a document"
+)
 
 # Each is the count that trips the rule, so a span firing at four lines says 4.
+# A HARD_ threshold is where a comment stopped being a note on the code and
+# became a document living inside it, which is a different thing to tell an
+# agent than that its comment ran long.
 FLAG_SENTENCES = 3
+HARD_SENTENCES = 5
 FLAG_LINES = 4
+HARD_LINES = 8
 FLAG_CHARS = 200
 FLAG_DOC_LINES = 10
+HARD_DOC_LINES = 25
 FLAG_DOC_INFO_LINES = 5
 
 # `spanning` is the quotes that survive a newline; the rest end at one, so an
@@ -295,9 +316,12 @@ def findings(path, source):
     # sits directly above the header comment it would otherwise lengthen.
     found = [c for c in found if not (c.start == 1 and c.text.startswith("#!"))]
     flag_sentences = limit("AGENT_GUARD_COMMENT_SENTENCES", FLAG_SENTENCES)
+    hard_sentences = limit("AGENT_GUARD_COMMENT_HARD_SENTENCES", HARD_SENTENCES)
     flag_lines = limit("AGENT_GUARD_COMMENT_LINES", FLAG_LINES)
+    hard_lines = limit("AGENT_GUARD_COMMENT_HARD_LINES", HARD_LINES)
     flag_chars = limit("AGENT_GUARD_COMMENT_CHARS", FLAG_CHARS)
     flag_doc = limit("AGENT_GUARD_DOC_LINES", FLAG_DOC_LINES)
+    hard_doc = limit("AGENT_GUARD_DOC_HARD_LINES", HARD_DOC_LINES)
     flag_doc_info = limit("AGENT_GUARD_DOC_INFO_LINES", FLAG_DOC_INFO_LINES)
     lines = source.splitlines()
     docs = python_docstrings(source) if lower.endswith(PYTHON_SUFFIXES) else []
@@ -307,12 +331,19 @@ def findings(path, source):
         if not count:
             continue
         if doc:
-            if count >= flag_doc:
+            if count >= hard_doc:
+                out.append(report(path, end, HARD_DOC_RULE, HARD_DOC_MESSAGE, lines=count))
+            elif count >= flag_doc:
                 out.append(report(path, end, DOC_RULE, DOC_MESSAGE, lines=count))
             elif count >= flag_doc_info:
                 out.append(report(path, end, DOC_INFO_RULE, DOC_INFO_MESSAGE, lines=count))
             continue
-        if sentences >= flag_sentences:
+        if sentences >= hard_sentences:
+            message = HARD_SENTENCES_MESSAGE.format(sentences=sentences, lines=count)
+            out.append(report(path, end, HARD_RULE, message))
+        elif count >= hard_lines:
+            out.append(report(path, end, HARD_RULE, HARD_LINES_MESSAGE, lines=count))
+        elif sentences >= flag_sentences:
             message = SENTENCES_MESSAGE.format(sentences=sentences, lines=count)
             out.append(report(path, end, RULE, message))
         elif count >= flag_lines:
