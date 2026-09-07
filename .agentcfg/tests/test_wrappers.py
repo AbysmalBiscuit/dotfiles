@@ -3,10 +3,10 @@ import os
 import shutil
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 import pytest
+from engine.codecs import TomlCodec
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -176,7 +176,10 @@ def test_codex_baseline_is_sorted():
     apart.
     """
     path = REPO / "dot_codex" / ".config.baseline.toml"
-    baseline = tomllib.loads(path.read_text(encoding="utf-8"))
+    # tomlkit, not tomllib: the baseline writes multi-line inline tables, which
+    # tomllib rejects as TOML 1.1. Reading it the way the engine does also
+    # means this test cannot pass on a file the merge would refuse.
+    baseline = TomlCodec.plain(TomlCodec.load(path.read_bytes()))
 
     for table_path, table in _iter_toml_tables(baseline):
         actual = list(table.keys())
