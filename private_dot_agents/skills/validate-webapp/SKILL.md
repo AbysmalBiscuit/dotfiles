@@ -10,74 +10,79 @@ allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 Start the dev services this issue/worktree needs via **devrun**, then drive the
 running app with chrome-devtools to confirm the bug is fixed / the feature works.
 
-Run from **inside the issue worktree** (e.g. `/home/lev/Git/adaptyv/eng-1234-...`).
-devrun keys everything off the current worktree, so `cd` into it first (or pass
-`-C <worktree>` to every devrun call).
+Run from **inside the issue worktree**. devrun keys everything off the current
+worktree, so `cd` into it first (or pass `-C <worktree>` to every devrun call).
 
 ## Input
 
-`$ARGUMENTS` = optional: what to validate (e.g. "the BLI export button no longer 500s")
-and/or which apps to start (e.g. `api lab-os`). If empty, derive both from the
-issue context (step 1) and let devrun auto-detect the apps from the diff (step 2).
+`$ARGUMENTS` = optional: what to validate (e.g. "the export button no longer 500s")
+and/or which apps to start. If empty, derive both from the recon output below.
+
+## What already happened
+
+`~/.agents/skills/validate-webapp/scripts/validate_webapp_context.py` has **already
+run**, read-only. It resolved the worktree, the issue id, the session summary, the tree
+state, the base branch and what this branch changed, then reported which dev servers are
+already tracked and what `devrun up` would start. Its output is below. It started
+nothing.
+
+It ends with `IC-SERVERS: <STATE>` and `IC-RESULT: <STATUS>`. Do not re-run `pwd`,
+`git status`, `git log`, `git diff`, `devkit config show`, or `devrun status` to
+orient yourself.
+
+---
+
+!`python3 ~/.agents/skills/validate-webapp/scripts/validate_webapp_context.py "$ARGUMENTS" 2>&1 || true`
+
+---
+
+## Act on the result
+
+| `IC-RESULT` | What to do |
+|---|---|
+| `READY` | Summary and diff are above. Work the steps below. |
+| `NO-SUMMARY` | No handoff file. Derive what to validate from `$ARGUMENTS` and the diff above. If both are thin, ask before starting anything. |
+| `NOT-ISSUE-WORKTREE` | No issue id resolved. Ask which issue this is, then re-run with it as the argument. Stop. |
+| `PROTECTED` | You're on a base branch. Report it and ask which worktree they meant. Stop. |
+| `ERROR` | Report the message and stop. |
+
+`IC-SERVERS` decides whether step 2 has anything to do:
+
+| `IC-SERVERS` | Meaning |
+|---|---|
+| `UP` | Servers are already running for this worktree. Skip step 2 and read the ports from the table above. |
+| `PARTIAL` | Fewer servers than apps in scope. Bring up the missing ones. |
+| `DOWN` | Nothing running. Step 2 in full. The dry-run block above shows what `devrun up` will start. |
+| `UNKNOWN` | `devrun status` failed. Read its error above, fix the cause, and don't validate until servers are confirmed up. |
 
 ## Steps
 
-### 1. Identify the issue + what to validate
+### 1. Decide what to validate
 
-- Detect the worktree and issue:
+From `$ARGUMENTS` if given, else from the summary and the diff in the recon output.
+If it's still unclear what behavior should be different, ask the user before starting
+anything. Never invent an acceptance criterion the issue doesn't state.
 
-```bash
-pwd && git rev-parse --abbrev-ref HEAD && git rev-parse --show-toplevel
-```
+### 2. Start the services
 
-- Extract `ISSUE_ID` from the branch name (`abc-123` pattern, uppercase it).
-- Read `/home/lev/Git/adaptyv/ISSUE_SUMMARY_${ISSUE_ID}.md` if it exists — it has the
-  apps in scope and the issue summary.
-- Determine **what behavior to validate**: from `$ARGUMENTS` if given, else from the
-  summary file + `git log`/`git diff origin/staging...HEAD --stat` (what did this
-  branch change?). If still unclear, ask the user before starting anything.
-
-### 2. Resolve apps in scope
-
-Decide which app names to hand to devrun:
-
-- From `$ARGUMENTS` (e.g. `api lab-os`), or the summary's "Apps in scope".
-- Otherwise, **let devrun auto-detect** — `devrun up` with no app args infers the
-  apps from the diff vs `origin/staging`.
-
-You don't need to know ports, launch commands, or the API-URL wiring — devrun reads
-all of that from the devkit config. To preview what it will run without starting
-anything:
-
-```bash
-devrun up --dry-run [apps...]   # prints resolved [role] app :port, cwd, argv, env, log
-```
-
-`devrun up --help` lists the flags; an `unknown app` error means the name isn't in
-the devkit catalog (check the dry-run output for valid names).
-
-### 3. Start the services
-
-First check whether servers for this worktree are already up — devrun tracks them,
-and re-running `up` reuses the ports already reserved for the worktree:
-
-```bash
-devrun status            # tracked servers for THIS worktree (PORT/APP/ROLE/PID/LISTENING)
-```
-
-If nothing relevant is running, bring the apps up:
+Only when `IC-SERVERS` is `DOWN` or `PARTIAL`:
 
 ```bash
 devrun up [apps...]      # omit apps to auto-detect from the diff
 ```
 
+Apps come from `$ARGUMENTS`, the summary's "Apps in scope", or the record's app list in
+the recon output. Omit them entirely to let devrun infer from the diff.
+`devkit config apps` lists the ids the project defines.
+
 devrun handles what the steps used to do by hand:
 
 - allocates a collision-free port per app (slot-based per worktree),
-- wraps each launch in `doppler run -c dev_local` (local Supabase stack — never prd),
+- injects the project's dev secrets and env exactly as the devkit config declares,
+  never a production config,
 - wires the API base URL into every consumer app (so a non-default API port is no
   longer a false-negative trap),
-- pulls in the dependent provider (e.g. `api`) automatically when a webapp needs it,
+- pulls in a dependent provider app automatically when a webapp needs it,
 - **blocks until each app is ready** (~120s), printing a `[role] app :port` line with
   the readiness verdict.
 
@@ -88,13 +93,19 @@ If an app fails to become ready, devrun prints the tail of its log. Inspect it a
 devrun logs <app>        # add -f to follow
 ```
 
-### 4. Resolve the URLs to validate
+### 3. Resolve the URLs to validate
+
+Read the resolved ports from the `up` output or the recon's `== servers ==` table — the
+webapp URL is `http://localhost:<PORT>` for the app's row. Navigate directly to the
+route the issue concerns when known.
+
+
 
 Read the resolved ports from the `up` output or `devrun status` — the webapp URL is
 `http://localhost:<PORT>` for the app's row. Navigate directly to the route the
 issue concerns when known.
 
-### 5. Validate with chrome-devtools
+### 4. Validate with chrome-devtools
 
 - Open a new page (`new_page`) at the webapp URL (`http://localhost:<WEBAPP_PORT>/...`),
   navigating directly to the route the issue concerns when known.
@@ -108,7 +119,7 @@ issue concerns when known.
 - If the expected behavior is ambiguous, validate against the acceptance criteria in
   the ISSUE_SUMMARY / Linear description.
 
-### 6. Report
+### 5. Report
 
 Print a verdict the user can act on:
 
@@ -124,7 +135,7 @@ expected and stop.
 
 - Leave dev servers running after validation — devrun tracks them per worktree. Stop
   them with `devrun down` (releases the ports) when the user is done.
-- devrun wraps every launch in `doppler run -c dev_local` automatically (local stack,
-  never prd) — don't invoke `doppler` yourself.
+- devrun injects the project's dev secrets itself — don't invoke the secrets tool by
+  hand, and never point it at a production config.
 - If chrome-devtools MCP is unavailable, say so and stop — don't fake validation
   with curl alone.
