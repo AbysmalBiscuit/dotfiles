@@ -14,6 +14,7 @@ Always exits 0 and speaks through the hookSpecificOutput JSON contract, so a
 broken check degrades to silence rather than wedging the session.
 """
 
+import atexit
 import contextlib
 import hashlib
 import io
@@ -32,34 +33,106 @@ from pathlib import Path
 _watchdog = None
 CODEX = "--codex" in sys.argv[1:]
 
-# AGENT_GUARD_LOG names how much to write to ~/agent-guard.log. Unset, empty or
-# "0" writes nothing, so the hook costs nothing when nobody is watching.
-_LEVELS = {"0": 0, "off": 0, "1": 1, "info": 1, "2": 2, "debug": 2, "3": 3, "trace": 3}
-LOG_LEVEL = _LEVELS.get((os.environ.get("AGENT_GUARD_LOG") or "").strip().lower(), 0)
+
+def _env_setting(key):
+    """What the environment says one setting is, empty when it says nothing."""
+    return (os.environ.get("AGENT_GUARD_" + key.upper()) or "").strip().lower()
+
+
+def _global_setting(key):
+    """What the install's own config.toml says, for a run that ends before a
+    checkout's can be read. Reading a checkout's this early would put a repo
+    file between the mandatory tier and the call it refuses."""
+    try:
+        with (CONFIG_DIR / CONFIG_NAME).open("rb") as handle:
+            return str(tomllib.load(handle).get(key, "")).strip().lower()
+    except (OSError, tomllib.TOMLDecodeError):
+        return ""
+
+
+# How much to write to ~/agent-guard.log. Nothing, "0" or "off" writes nothing,
+# so the hook costs nothing when nobody is watching.
+_LEVELS = {
+    "0": 0,
+    "off": 0,
+    "false": 0,
+    "1": 1,
+    "on": 1,
+    "true": 1,
+    "info": 1,
+    "2": 2,
+    "debug": 2,
+    "3": 3,
+    "trace": 3,
+}
 LOG_PATH = Path.home() / "agent-guard.log"
+_level = _LEVELS.get(_env_setting("log"), None)
+_held = []
+
+
+def set_log_level(cfg):
+    """Settle the level from the layered config, then release what was held.
+
+    The lines a run opens with come before any root has been read, because the
+    mandatory tier answers ahead of discovery so that no repo file stands
+    between it and the call it refuses. Holding them is what lets a checkout's
+    own config.toml still decide whether they are written.
+    """
+    global _level
+    if _level is None:
+        _level = _LEVELS.get(str(cfg.get("log", "")).strip().lower(), 0)
+    release_log()
+
+
+def release_log():
+    """Write the held lines the settled level allows, once.
+
+    A run that exits before discovery, a mandatory refusal above all, settles
+    for the global level instead: a checkout that never got read cannot be the
+    one to silence it.
+    """
+    global _held
+    held, _held = _held, []
+    level = _level if _level is not None else _LEVELS.get(_global_setting("log"), 0)
+    for line_level, line in held:
+        if line_level <= level:
+            write_log(line)
 
 
 def log(level, event, **fields):
-    """Append one line when AGENT_GUARD_LOG asks for this level or louder.
+    """Hold or append one line, by the level in force.
 
     Logging is a debugging aid and never a reason to fail, so a line that cannot
     be written is dropped rather than reported. Levels are 1 for the decision a
     call reached, 2 for each check's verdict, and 3 for the command text itself,
     which is held back until then because a command line can carry a secret.
     """
-    if level > LOG_LEVEL:
+    if _level is not None and level > _level:
         return
+    stamp = datetime.now().isoformat(timespec="milliseconds")
+    rest = " ".join(
+        f"{key}={value if isinstance(value, int) else json.dumps(str(value))}"
+        for key, value in fields.items()
+        if value is not None
+    )
+    line = f"{stamp} [{level}] {event} {rest}".rstrip() + "\n"
+    if _level is None:
+        _held.append((level, line))
+        return
+    write_log(line)
+
+
+def write_log(line):
     try:
-        stamp = datetime.now().isoformat(timespec="milliseconds")
-        rest = " ".join(
-            f"{key}={value if isinstance(value, int) else json.dumps(str(value))}"
-            for key, value in fields.items()
-            if value is not None
-        )
         with LOG_PATH.open("a", encoding="utf-8") as handle:
-            handle.write(f"{stamp} [{level}] {event} {rest}".rstrip() + "\n")
+            handle.write(line)
     except BaseException:
         pass
+
+
+# Every exit short of the watchdog's runs this, so a refusal that ends the run
+# before discovery still reaches the log.
+atexit.register(release_log)
 
 
 def arm_watchdog(seconds):
@@ -1120,7 +1193,9 @@ def doctor(cwd):
     """A hook that is silent when healthy is indistinguishable from one that is
     silently broken, so make the difference inspectable."""
     roots = discover_roots(cwd)
-    settings = Settings(load_config(roots))
+    cfg = load_config(roots)
+    set_log_level(cfg)
+    settings = Settings(cfg)
     print("agent-guard doctor")
     print(f"  cwd        : {cwd}")
     print(f"  config     : {CONFIG_NAME}")
@@ -1128,6 +1203,8 @@ def doctor(cwd):
     print(f"  extensions : {settings.ext_src}")
     print(f"  ignore     : {settings.ignore_src}")
     print(f"  always     : {', '.join(sorted(settings.always)) or 'nothing'}")
+    log_from = "AGENT_GUARD_LOG" if _env_setting("log") else "config.toml"
+    print(f"  log        : {_level} from {log_from}, writing {LOG_PATH}")
     print("  roots      :")
     for root in roots:
         config = sgconfig_for(root)
@@ -1211,7 +1288,9 @@ def main():
         run_mandatory(payload, cwd)
 
     roots = discover_roots(cwd)
-    settings = Settings(load_config(roots))
+    cfg = load_config(roots)
+    set_log_level(cfg)
+    settings = Settings(cfg)
 
     # Registered in user settings, so it is reachable from every project on the
     # machine. Carrying an agent-guard directory somewhere above the working
