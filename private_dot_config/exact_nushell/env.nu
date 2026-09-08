@@ -148,7 +148,7 @@ $env.PATH = (
 )
 
 
-if $nu.os-info.name != "windows" and (which zccache | is-not-empty) {
+if $nu.os-info.name == "windows" and (which zccache | is-not-empty) {
     # Limit cached artifacts to 25 GiB, excluding logs and metadata.
     $env.ZCCACHE_CACHE_SIZE_BYTES = "26843545600"
     # Remap embedded source paths so equivalent builds can share entries across worktrees.
