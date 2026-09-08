@@ -7,7 +7,9 @@ fixnags = "clippy --fix -- -W clippy::pedantic -W clippy::nursery -W clippy::unw
 
 [build]
 jobs = # {{ .system.build_jobs }}
-# {{- if index .has "sccache" }}
+# {{- if index .has "zccache" }}
+rustc-wrapper = "zccache"
+# {{- else if index .has "sccache" }}
 rustc-wrapper = "sccache"
 # {{- end }}
 
