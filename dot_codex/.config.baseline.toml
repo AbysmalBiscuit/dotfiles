@@ -116,3 +116,6 @@ vim_mode_default = true
 [tui.keymap.editor]
 delete_backward_word = ["ctrl-backspace", "ctrl-w"]
 delete_forward_word = "ctrl-delete"
+
+[tui.keymap.global]
+open_agents = "ctrl-\\"
