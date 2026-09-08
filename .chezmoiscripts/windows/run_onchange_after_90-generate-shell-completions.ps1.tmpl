@@ -175,7 +175,7 @@ $nuParts = [System.Collections.Generic.List[string]]::new()
 # {{-           else }}
 # {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }} | Out-String -Width 8192 | ForEach-Object {
     [System.IO.File]::WriteAllText(
-        "# {{ joinPath $out_dir (printf "%s.ps1" $tool.exe) }}",
+        "# {{ joinPath $out_dir (printf "%s.ps1" $tool.name) }}",
         $_,
         [System.Text.UTF8Encoding]::new($true)
     )

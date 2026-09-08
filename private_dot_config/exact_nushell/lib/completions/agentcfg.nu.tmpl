@@ -20,16 +20,11 @@ const AGENTCFG_REMOVE_FLAGS = [
     { value: "--keep-installed", description: "Edit the configs, leave the app's own files alone" }
 ]
 
-# Shared with lib/completions/chezmoi.nu. Every custom command in ~/.local/bin
-# parses its arguments with argparse or checks for these by hand, so they answer
-# at every depth and belong beside the flags each command declares for itself.
 const HELP_FLAGS = [
     { value: "-h", description: "Show usage and exit" }
     { value: "--help", description: "Show usage and exit" }
 ]
 
-# Shared with lib/completions/chezmoi.nu, which answers `chezmoi agents remove`
-# with the same list. Sourced first so that file can call this one.
 def "nu-complete agentcfg paths" [] {
     do --ignore-errors { ^python3 $AGENTCFG_PROMOTE complete }
     | default ""

@@ -179,6 +179,16 @@ def cmd_missing(tools: list[Tool], args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_complete(tools: list[Tool], _args: argparse.Namespace) -> int:
+    for tool in tools:
+        try:
+            install_command_for(tool)
+        except PluginError:
+            continue
+        print(f"{tool.name}\t{' '.join(tool.desc.split())}")
+    return 0
+
+
 def cmd_install(tools: list[Tool], args: argparse.Namespace) -> int:
     worst = 0
     for name in args.names:
@@ -232,6 +242,13 @@ def parse_args() -> argparse.Namespace:
         help="print the command that would run without running it",
     )
     install_parser.set_defaults(func=cmd_install)
+
+    complete_parser = subparsers.add_parser(
+        "complete", help="list installable names for shell completion"
+    )
+    # Carapace appends completed arguments when it runs macros through cmd.exe.
+    complete_parser.add_argument("names", nargs="*", help="names already on the command line")
+    complete_parser.set_defaults(func=cmd_complete)
 
     return parser.parse_args()
 

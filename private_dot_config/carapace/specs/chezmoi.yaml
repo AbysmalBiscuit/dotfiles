@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://carapace.sh/schemas/command.json
+name: chezmoi
+description: Manage dotfiles and local plugins
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Cobra([chezmoi])"]
+commands:
+  - name: agents
+    description: Assign a merge strategy to live agent-config keys
+    persistentflags:
+      -h, --help: Show usage and exit
+    flags:
+      --list: Print the drift candidates and exit
+    commands:
+      - name: remove
+        description: Clear a key from the baseline, live file and app
+        flags:
+          --dry-run: Print the plan without changing files
+          --keep-installed: Edit the configs but leave the app files alone
+        completion:
+          positionalany: ['$(chezmoi agents complete -- "")']
+          dashany: ['$(chezmoi agents complete -- "")']
+  - name: cache
+    description: Rebuild the caches that chezmoi templates read
+    persistentflags:
+      -h, --help: Show usage and exit
+    commands:
+      - name: completions
+        description: Rebuild generated shell completions
+      - name: tools
+        description: Rebuild the installed-tools cache
+  - name: edit-secrets
+    description: Edit the encrypted secrets file
+    flags:
+      -h, --help: Show usage and exit
+  - name: tools
+    description: Report and install inventoried tools
+    persistentflags:
+      -h, --help: Show usage and exit
+    commands:
+      - name: install
+        description: Run the install command for a tool
+        flags:
+          -n, --dry-run: Print the command without running it
+        completion:
+          positionalany: ["$(chezmoi tools complete --)"]
+          dashany: ["$(chezmoi tools complete --)"]
+      - name: list
+        description: List every inventoried tool
+        flags:
+          --lang=: Only tools written in this language
+          --missing: Only tools not on PATH
+          --installed: Only tools on PATH
+        exclusiveflags:
+          - [missing, installed]
+      - name: missing
+        description: List tools not on PATH
+        flags:
+          --lang=: Only tools written in this language

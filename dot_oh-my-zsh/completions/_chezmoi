@@ -1,0 +1,2 @@
+#compdef chezmoi
+(( $+commands[carapace] )) && eval "$(carapace chezmoi zsh)"

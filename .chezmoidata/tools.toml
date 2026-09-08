@@ -296,7 +296,7 @@ desc = "A multi-machine dotfile manager, written in Go."
 url = "https://www.chezmoi.io/reference/"
 git = "https://github.com/twpayne/chezmoi/tree/master"
 install_command = "sh -c \"$(curl -fsLS get.chezmoi.io)\""
-completions_command = "chezmoi completion SHELL"
+completions_command = "carapace chezmoi SHELL"
 supported_shells = [
     "bash",
     "powershell",

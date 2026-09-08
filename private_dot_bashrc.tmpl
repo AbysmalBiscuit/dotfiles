@@ -120,40 +120,6 @@ if ! shopt -oq posix; then
 fi
 
 
-# {{- $plugin_names := list }}
-# {{- range $plugin := .chezmoi_plugins }}
-# {{-   $plugin_names = append $plugin_names $plugin.name }}
-# {{- end }}
-# cobra builds chezmoi's completion from its own command tree, which the
-# chezmoi-* plugins on PATH are not part of. compgen carries no descriptions,
-# so this offers the names only, on top of whatever ~/.bash_completion
-# registered for chezmoi.
-if declare -F __start_chezmoi >/dev/null 2>&1; then
-    __chezmoi_plugin_completion() {
-        __start_chezmoi "$@"
-        local candidates=""
-        case $COMP_CWORD in
-        1) candidates='# {{ join " " $plugin_names }}' ;;
-        2)
-            case ${COMP_WORDS[1]} in
-# {{- range $plugin := .chezmoi_plugins }}
-# {{-   if index $plugin "args" }}
-# {{-     $arg_names := list }}
-# {{-     range $arg := index $plugin "args" }}
-# {{-       $arg_names = append $arg_names $arg.name }}
-# {{-     end }}
-            # {{ $plugin.name }}) candidates='# {{ join " " $arg_names }}' ;;
-# {{-   end }}
-# {{- end }}
-            esac
-            ;;
-        esac
-        [[ -n $candidates ]] && COMPREPLY+=($(compgen -W "$candidates" -- "${COMP_WORDS[COMP_CWORD]}"))
-        return 0
-    }
-    complete -o default -F __chezmoi_plugin_completion chezmoi
-fi
-
 [[ -f "$HOME/.sh_aliases" ]] && source "$HOME/.sh_aliases"
 
 # {{ template "sh/debug_startup_end.sh" }}
