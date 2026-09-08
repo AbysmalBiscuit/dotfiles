@@ -12,6 +12,8 @@ alias cl = claude
 alias ca = claude agents
 alias cr = claude -r
 
+alias "herdr sn" = herdr-session
+
 # listing. nushell's `ls` builtin is left alone: it returns a table that the
 # rest of the config pipes into `get modified.0`, which eza cannot do.
 alias l = eza --color=auto --icons=auto --classify=auto
