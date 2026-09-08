@@ -33,6 +33,7 @@ fallback = [
 attach = "session"
 enabled = true
 show_unmatched = true
+show_panes = true
 
 [ui]
 confirm_session_close = "busy"
@@ -61,6 +62,11 @@ gpu_grid = true
 focus_priority_boost = true
 reap_descendants_on_close = false
 async_session_spawn = true
+sessions_filter_counts_detached = true
+search_depth = "sessions"
+hold_exited_sessions = "never"
+sidebar_scroll_align = "center"
+sidebar_follow_active = true
 
 [ui.decorations]
 
@@ -77,6 +83,8 @@ bold = true
 # list session rows even for single-session workspaces
 [ui.session_display]
 sidebar_always = true
+palette_marks = true
+tabs_always = true
 
 [ui.session_reorder]
 drag = true
@@ -107,10 +115,6 @@ bindings = [
 {key = "Backspace", mods = "Control", chars = "\u0017"},
 ]
 
-# [[keyboard.bindings]]
-# key = "Backspace"
-# mods = "Control"
-# chars = "\u0017"
 
 [terminal.shell]
 # {{- if index .has "nu" }}
@@ -158,4 +162,6 @@ program = "nu# {{ if .is_windows }}.exe# {{ end }}"
 
 # [debug]
 # gpu_timing = true
+# frame_log = true
 # persistent_logging = true
+# log_dir = "~/Git/github/alacritree/logs/"
