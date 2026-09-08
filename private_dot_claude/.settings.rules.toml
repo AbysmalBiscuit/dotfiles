@@ -1,5 +1,6 @@
-# Maps settings.json keys to a merge strategy (enforce, seed, union, or
-# ignore); see engine/merge.py for what each strategy does.
+#:schema ../.agentcfg/schema/agentcfg-rules-claude.json
+# Maps settings.json keys to a merge strategy. The schema above documents each
+# strategy; see .agentcfg/engine/merge.py for the merge itself.
 
 enforce = [
   ["permissions", "deny"],

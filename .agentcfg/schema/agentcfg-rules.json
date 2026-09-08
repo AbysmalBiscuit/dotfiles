@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/AbysmalBiscuit/dotfiles/main/.agentcfg/schema/agentcfg-rules.json",
+  "title": "agentcfg rule set",
+  "description": "Merge rules for one agent config file. Each key is a strategy; its value is a list of path patterns, and a pattern is the list of key segments leading to the value it governs. `*` matches any single segment. A pattern shorter than the path it is tested against matches as a prefix, so [\"env\", \"*\"] governs every leaf under env.\n\nWhen several patterns match one path, the winner is the one that consumes the most segments; ties go to the one with the most literal (non-`*`) segments. Two patterns that always score equally on the paths they share must not declare different strategies — the loader rejects that at startup, so make one deeper or more literal.\n\nEvery leaf in the baseline must resolve to enforce, seed, or union. A baseline leaf landing on ignore, remove, or no pattern at all is a lint error: the value would sit in git looking authoritative while the merge discarded it on every apply.\n\nSee .agentcfg/engine/merge.py for the merge itself and .agentcfg/engine/check.py for what --check reports.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "enforce": {
+      "title": "enforce — the baseline wins",
+      "description": "The baseline value replaces whatever the app wrote, and is written even when the key is absent from the live file.\n\nWhere a pattern names a table at its exact depth and no other pattern reaches below it, the whole subtree is replaced, dropping live-only members: [\"statusLine\"] owns the entire statusLine object. A deeper rule anywhere below cancels that claim and the merge descends instead, so [\"mcp_servers\", \"*\"] enforce alongside [\"mcp_servers\", \"*\", \"enabled\"] seed still leaves each server's live toggle alone.\n\nUse it for anything that must be identical on every machine: hooks, deny lists, env vars, marketplace sources.",
+      "$ref": "#/$defs/patternList",
+      "default": [],
+      "examples": [
+        [
+          ["hooks", "*"],
+          ["permissions", "deny"],
+          ["statusLine"]
+        ]
+      ]
+    },
+    "seed": {
+      "title": "seed — the baseline supplies a starting value, the app keeps it",
+      "description": "The baseline value is written only when the key is missing from the live file. Once the app owns it, later edits survive every apply; false, 0, and \"\" count as values, so a seeded leaf is never rewritten because it looks empty.\n\nSeed always descends into tables rather than claiming them, so a live table missing a curated member gains that member without losing its own keys.\n\n`--check` reports seed drift for wildcard-free paths whose live value no longer matches the baseline, which is the only place that difference surfaces — the merge keeps chezmoi diff quiet.\n\nUse it for machine-local preferences with a sensible default: model, theme, editor mode, per-plugin enable toggles.",
+      "$ref": "#/$defs/patternList",
+      "default": [],
+      "examples": [
+        [
+          ["model"],
+          ["theme"],
+          ["plugins", "*", "enabled"]
+        ]
+      ]
+    },
+    "union": {
+      "title": "union — both lists survive",
+      "description": "Concatenates the two lists: every live item in its original order, then each baseline item not already present. Both sides must be lists, in the baseline (checked by the lint) and in the live file (a TypeError at merge time otherwise).\n\nUse it for additive lists where the app appends its own entries and the baseline must not throw them away, such as permissions.allow.",
+      "$ref": "#/$defs/patternList",
+      "default": [],
+      "examples": [
+        [
+          ["permissions", "allow"]
+        ]
+      ]
+    },
+    "ignore": {
+      "title": "ignore — the app owns this outright",
+      "description": "The live value passes through untouched and `--check` stays silent about it. The difference from leaving a path unmatched is only that: an unmatched path is reported as unclassified, an ignored one is not.\n\nThe baseline must carry no value on an ignore path; the lint rejects it.\n\nUse it for state the app rewrites on its own — caches, timestamps, per-project scratch, dismissed notices. Also use it to silence a path that a wildcard rule would otherwise claim, which needs a pattern at least as deep and as literal as the one it is overriding.",
+      "$ref": "#/$defs/patternList",
+      "default": [],
+      "examples": [
+        [
+          ["projects", "*"],
+          ["marketplaces", "*", "last_updated"]
+        ]
+      ]
+    },
+    "remove": {
+      "title": "remove — the key is deleted from the output",
+      "description": "The key is dropped from the merged file whichever side it came from, and stays dropped every apply, so it undoes something the app keeps re-adding.\n\nA remove on a container covers everything under it, even where a deeper pattern outscores it on the leaf. A table left empty by removal is pruned; an enforced empty table in the baseline is not, because that states the table exists and is empty.\n\nThe baseline must carry no value on a removed path; the lint rejects it.",
+      "$ref": "#/$defs/patternList",
+      "default": [],
+      "examples": [
+        [
+          ["env", "AGENT_GUARD_LOG"],
+          ["plugins", "stale-plugin@marketplace", "enabled"]
+        ]
+      ]
+    },
+    "order": {
+      "title": "order — where the key sits in the written file",
+      "description": "Layout only: each listed key is floated to the end of its parent table when the merged document is written. It never decides which value wins.\n\nAn entry is one full key path with no `*`, because a wildcard would name several keys with no way to say which trails which. Mostly useful in TOML, where a table declared before its siblings' scalar keys would swallow them.",
+      "type": "array",
+      "uniqueItems": true,
+      "default": [],
+      "items": {
+        "title": "key path",
+        "description": "Full path to one key, segment by segment. No wildcards.",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "const": "*"
+          },
+          "description": "One literal key name. `*` is rejected here: an order target has to name a single key."
+        }
+      },
+      "examples": [
+        [
+          ["hooks", "state"]
+        ]
+      ]
+    }
+  },
+  "$defs": {
+    "patternList": {
+      "title": "path patterns",
+      "description": "Patterns governed by this strategy. Order within the list is irrelevant; the match score decides which pattern wins.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/pattern"
+      }
+    },
+    "pattern": {
+      "title": "path pattern",
+      "description": "One config path, split into key segments: [\"tui\", \"keymap\", \"editor\"] matches tui.keymap.editor. A pattern that stops short of a leaf governs the whole subtree below it, and `*` stands in for any single segment.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/segment"
+      }
+    },
+    "segment": {
+      "title": "path segment",
+      "description": "One key name, or `*` to match any single key at this depth.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "x-taplo": {
+    "initKeys": ["enforce", "seed"],
+    "links": {
+      "key": "https://github.com/AbysmalBiscuit/dotfiles/tree/main/.agentcfg"
+    }
+  }
+}
