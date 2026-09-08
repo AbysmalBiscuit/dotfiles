@@ -7,9 +7,9 @@ Herdr ships those scripts and revises them between releases, so they stay out
 of the chezmoi source and `herdr integration install` writes whichever one the
 installed herdr carries.
 
-Install writes wiring of its own as well. For Codex that wiring lands in
-~/.codex/hooks.json, which nothing else touches, so herdr keeps it. For Claude
-Code it lands in settings.json under hooks, which the agentcfg baseline
+Install writes wiring of its own as well. Codex hooks are managed in config.toml,
+so the generated hooks.json is removed after installation. For Claude Code
+the wiring lands in settings.json under hooks, which the agentcfg baseline
 enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
 Running before the file apply is what makes that ordering hold.
 """
@@ -18,8 +18,10 @@ Running before the file apply is what makes that ordering hold.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+from pathlib import Path
 
 HAS_HERDR = # {{ if .has.herdr }}True# {{ else }}False# {{ end }}
 
@@ -45,6 +47,9 @@ def main() -> int:
                 f"{result.stderr.strip() or result.stdout.strip()}",
                 file=sys.stderr,
             )
+        elif name == "codex":
+            codex_dir = Path(os.environ.get("CODEX_HOME") or "~/.codex").expanduser()
+            (codex_dir / "hooks.json").unlink(missing_ok=True)
     return 0
 
 
