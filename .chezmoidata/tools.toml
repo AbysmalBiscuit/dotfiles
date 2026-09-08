@@ -1284,6 +1284,13 @@ install_command = "cargo install --force --git https://github.com/sxyazi/yazi.gi
 
 [[tools]]
 lang = "rust"
+name = "zccache"
+desc = "A local compiler cache for Rust and C/C++ with cache sharing across worktrees."
+git = "https://github.com/zackees/zccache"
+install_command = "cargo install --git https://github.com/zackees/zccache --locked --features zccache-bin --bin zccache zccache"
+
+[[tools]]
+lang = "rust"
 name = "zed"
 desc = "Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter."
 url = "https://zed.dev/"
