@@ -28,6 +28,8 @@ The patch is based on Herdr v0.9.0, commit `b99002ac99b09e00b4ca692436cb15a6b0d6
 
 ## Maintain
 
+Run `herdr-recover-after-upgrade.py` from an interactive terminal outside Herdr. It stops the server and its pane processes before launching Herdr again. Running it inside a pane would end the recovery process itself. Agent tool environments can also disable color in every new pane through inherited `NO_COLOR`.
+
 Stock Herdr updates do not update this client. When upgrading the client base, update the build helper's pinned commit, rebase the patch, and run the isolated terminal verification against the intended stock server version:
 
 ```fish

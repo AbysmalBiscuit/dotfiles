@@ -163,6 +163,8 @@ class Herdr:
         return result
 
     def start_server(self) -> None:
+        if os.environ.get("NO_COLOR") and os.environ.get("TERM") == "dumb":
+            die("start Herdr from an interactive terminal first; this environment disables pane colors")
         self._started_server = True
         warn("no server running, starting one")
         subprocess.Popen(
