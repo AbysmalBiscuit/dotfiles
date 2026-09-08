@@ -1,0 +1,11 @@
+[[rule]]
+keys = ["*"]
+
+[rule.formatting]
+array_auto_collapse = false
+
+[[rule]]
+keys = ["*.*"]
+
+[rule.formatting]
+array_auto_collapse = true
