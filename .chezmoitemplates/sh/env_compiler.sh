@@ -84,3 +84,53 @@ export SCCACHE_SERVER_PORT="4226"
 export SCCACHE_CONF="$HOME/.config/sccache/config.toml"
 # fi
 # {{- end }}
+
+# {{- if index .has "zccache" }}
+# Select zccache for Rust builds, overriding Cargo's configured rustc-wrapper.
+# export RUSTC_WRAPPER="zccache"
+
+# Limit cached artifacts to 25 GiB, excluding logs and metadata.
+export ZCCACHE_CACHE_SIZE_BYTES="26843545600"
+# Set the cache budget as a filesystem percentage instead of a byte limit; do not set both.
+# export ZCCACHE_CACHE_SIZE_PERCENT="5"
+# Override the cache and daemon-state root; share one location across worktrees.
+# export ZCCACHE_CACHE_DIR="$HOME/.cache/zccache"
+# Remap embedded source paths so equivalent builds can share entries across worktrees.
+export ZCCACHE_PATH_REMAP="auto"
+# Override the worktree normalization root when Git autodetection is unsuitable.
+# export ZCCACHE_WORKTREE_ROOT="$PWD"
+# Set compiler scheduling priority: auto, normal, low, idle, or high.
+export ZCCACHE_COMPILE_PRIORITY="normal"
+# Set link-like work priority separately; it does not inherit the compiler priority override.
+export ZCCACHE_COMPILE_PRIORITY_LINK="normal"
+# Stop the daemon after this many idle seconds; zero keeps it running.
+# export ZCCACHE_IDLE_TIMEOUT_SECS="3600"
+# Bypass zccache and run the compiler directly when enabled.
+# export ZCCACHE_DISABLE="1"
+# Opt into caching Rust test-harness links when enabled.
+# export ZCCACHE_CACHE_TEST_BINS="1"
+# Run cheap compiler probes directly without a daemon round trip when enabled.
+# export ZCCACHE_PROBE_BYPASS="1"
+# Select staged output handling: off, rust, c-cpp, exec, or all; unset keeps the default scope.
+# export ZCCACHE_STAGED_ARTIFACTS="off"
+# Relocate temporary compiler staging separately from durable cache storage.
+# export ZCCACHE_STAGING_DIR="$HOME/.cache/zccache-staging"
+# Skip C/C++ system-header tracking for speed, risking stale hits after SDK or header updates.
+# export ZCCACHE_FAST="1"
+# Track system headers for cache invalidation, overriding the fast preset when explicitly set.
+# export ZCCACHE_SCAN_SYSTEM_HEADERS="1"
+# Validate compiler path spelling: off, consistent, or absolute.
+# export ZCCACHE_STRICT_PATHS="off"
+# Select a separate daemon identity and mutable state within the shared cache root.
+# export ZCCACHE_DAEMON_NAMESPACE="dev"
+# Override the daemon IPC endpoint; all clients must use the same endpoint.
+# export ZCCACHE_ENDPOINT="$HOME/.cache/zccache/daemon.sock"
+# Write an additional size-capped daemon diagnostic log.
+# export ZCCACHE_LOG_FILE="$HOME/.cache/zccache/diagnostic.log"
+# Limit each diagnostic log file in bytes; one rotated archive is also retained.
+# export ZCCACHE_LOG_FILE_MAX_BYTES="16777216"
+# Set the compile/link response timeout before daemon recovery; zero disables wedge detection.
+# export ZCCACHE_WEDGE_RECV_TIMEOUT_SECS="180"
+# Disable the automatic retry after a compile/link transport failure when enabled.
+# export ZCCACHE_DISABLE_LINK_RETRY="1"
+# {{- end }}

@@ -401,6 +401,17 @@ function has_command {
 $env:PATH += ';# {{ joinPath (env "XDG_DATA_HOME" | default (joinPath .chezmoi.homeDir ".local" "share")) "mise" "shims" }}'
 # {{- end }}
 
+# {{- if index .has "zccache" }}
+# Limit cached artifacts to 25 GiB, excluding logs and metadata.
+$env:ZCCACHE_CACHE_SIZE_BYTES = "26843545600"
+# Remap embedded source paths so equivalent builds can share entries across worktrees.
+$env:ZCCACHE_PATH_REMAP = "auto"
+# Preserve normal compiler scheduling priority for build throughput.
+$env:ZCCACHE_COMPILE_PRIORITY = "normal"
+# Set link-like work priority separately from the compiler priority override.
+$env:ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
+# {{- end }}
+
 # Argument completers do nothing without a readline, and the generated init
 # files are worse than useless off a terminal: starship's spawns a starship
 # process on load to fetch the continuation prompt, which then fails to write
