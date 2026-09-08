@@ -1,2 +1,4 @@
+theme = "abc"
+transparent_background = false
 diff_view = "side-by-side"
 scroll_offset = 8
