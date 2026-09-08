@@ -25,6 +25,7 @@ seed = [
   ["plugins", "*", "enabled"],
   ["mcp_servers", "*", "enabled"],
   ["tui", "vim_mode_default"],
+  ["tui", "theme"],
 ]
 ignore = [
   ["projects", "*"],

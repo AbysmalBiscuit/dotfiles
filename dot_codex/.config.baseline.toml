@@ -96,6 +96,7 @@ enabled = true
 
 
 [tui]
+theme = "abc"
 status_line = [
     "model-with-reasoning",
     "project-name",

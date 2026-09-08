@@ -1,3 +1,19 @@
 onboarding = false
 [ui]
 show_agent_labels_on_pane_borders = true
+
+[theme]
+name = "catppuccin-mocha"
+
+# ABC colors from Neovim, layered over Catppuccin Mocha.
+[theme.custom]
+accent = "#308cc6"
+panel_bg = "#18181b"
+sidebar_bg = "#04070b"
+active_row_bg = "#131b26"
+selection_bg = "#343a48"
+surface_dim = "#131b25"
+overlay0 = "#6a6a6e"
+overlay1 = "#7f7f7f"
+text = "#e5e5e5"
+blue = "#558eff"

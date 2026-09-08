@@ -312,7 +312,7 @@
     "type": "command"
   },
   "teammateMode": "in-process",
-  "theme": "dark",
+  "theme": "custom:abc",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
