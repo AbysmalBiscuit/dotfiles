@@ -3,34 +3,44 @@
 # strategy; see .agentcfg/engine/merge.py for the merge itself.
 
 enforce = [
-  ["permissions", "deny"],
-  ["permissions", "defaultMode"],
-  ["hooks", "*"],
-  ["env", "*"],
-  ["statusLine"],
-  ["extraKnownMarketplaces", "*"],
-  ["$schema"],
-  ["attribution"],
-  ["fileSuggestion"],
-  ["cleanupPeriodDays"],
+    ["permissions", "deny"],
+    ["permissions", "defaultMode"],
+    ["hooks", "*"],
+    ["env", "*"],
+    ["statusLine"],
+    ["extraKnownMarketplaces", "*"],
+    ["$schema"],
+    ["attribution"],
+    ["fileSuggestion"],
+    ["cleanupPeriodDays"],
 ]
 union = [
-  ["permissions", "allow"],
+    ["permissions", "allow"],
 ]
 seed = [
-  ["model"], ["theme"], ["outputStyle"], ["editorMode"], ["effortLevel"],
-  ["enabledPlugins", "*"],
-  ["autoMemoryEnabled"], ["skipWorkflowUsageWarning"], ["teammateMode"],
-  ["agentPushNotifEnabled"], ["remoteControlAtStartup"],
-  ["tui"], ["voice"], ["prefersReducedMotion"],
+    ["model"],
+    ["theme"],
+    ["outputStyle"],
+    ["editorMode"],
+    ["effortLevel"],
+    ["enabledPlugins", "*"],
+    ["autoMemoryEnabled"],
+    ["skipWorkflowUsageWarning"],
+    ["teammateMode"],
+    ["agentPushNotifEnabled"],
+    ["remoteControlAtStartup"],
+    ["tui"],
+    ["voice"],
+    ["prefersReducedMotion"],
 ]
 ignore = [
-  ["feedbackSurveyRate"],
-  ["companyAnnouncements"],
-  ["env", "TEMP"], ["env", "TMP"],
+    ["feedbackSurveyRate"],
+    ["companyAnnouncements"],
+    ["env", "TEMP"],
+    ["env", "TMP"],
 ]
 # agent-guard takes its log level from its own config.toml. An env var here
 # would outrank that file on Claude alone, which is how the two drift apart.
 remove = [
-  ["env", "AGENT_GUARD_LOG"],
+    ["env", "AGENT_GUARD_LOG"],
 ]

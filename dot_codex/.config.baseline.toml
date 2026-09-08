@@ -1,8 +1,8 @@
 #:schema https://developers.openai.com/codex/config-schema.json
 # vim: shiftwidth=4 tabstop=4 expandtab
 approvals_reviewer = "auto_review"
-model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
+model = "gpt-5.6-astra"
+model_reasoning_effort = "medium"
 
 [features]
 experimental_use_rmcp_client = true
@@ -50,6 +50,7 @@ hooks = [
 ]
 
 [[hooks.Stop]]
+
 [[hooks.Stop.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
@@ -58,6 +59,7 @@ timeout = 60
 statusMessage = "Auditing changeset"
 
 [[hooks.SubagentStop]]
+
 [[hooks.SubagentStop.hooks]]
 type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
@@ -69,8 +71,8 @@ statusMessage = "Auditing changeset"
 source = "https://github.com/AbysmalBiscuit/devkit.git"
 source_type = "git"
 
-[marketplaces.superpowers]
-source = "https://github.com/obra/superpowers"
+[marketplaces.superpowers-marketplace]
+source = "https://github.com/obra/superpowers-marketplace.git"
 source_type = "git"
 
 [mcp_servers.adaptyv_bio_mcp]
@@ -80,20 +82,19 @@ url = "https://mcp.adaptyv.bio/mcp"
 enabled = true
 
 [plugins."linear@openai-curated"]
-enabled = true
+enabled = false
 
 [plugins."posthog@openai-curated"]
-enabled = true
+enabled = false
 
 [plugins."sentry@openai-curated"]
-enabled = true
+enabled = false
 
 [plugins."slack@openai-curated"]
-enabled = true
+enabled = false
 
-[plugins."superpowers@superpowers"]
+[plugins."superpowers@superpowers-marketplace"]
 enabled = true
-
 
 [tui]
 theme = "abc"
@@ -113,5 +114,5 @@ status_line_use_colors = true
 vim_mode_default = true
 
 [tui.keymap.editor]
-delete_backward_word = "ctrl-backspace"
+delete_backward_word = ["ctrl-backspace", "ctrl-w"]
 delete_forward_word = "ctrl-delete"

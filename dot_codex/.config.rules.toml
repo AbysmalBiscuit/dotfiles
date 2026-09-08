@@ -3,48 +3,49 @@
 # strategy; see .agentcfg/engine/merge.py for the merge itself.
 
 enforce = [
-  ["features", "*"],
-  ["marketplaces", "*", "source"],
-  ["marketplaces", "*", "source_type"],
-  ["mcp_servers", "*"],
-  ["hooks", "SessionStart"],
-  ["hooks", "SessionEnd"],
-  ["tui", "status_line"],
-  ["tui", "status_line_use_colors"],
-  ["tui", "keymap", "editor", "delete_backward_word"],
-  ["tui", "keymap", "editor", "delete_forward_word"],
-  ["hooks", "PostToolUse"],
-  ["hooks", "PreToolUse"],
-  ["hooks", "Stop"],
-  ["hooks", "SubagentStop"],
+    ["features", "*"],
+    ["marketplaces", "*", "source"],
+    ["marketplaces", "*", "source_type"],
+    ["mcp_servers", "*"],
+    ["hooks", "SessionStart"],
+    ["hooks", "SessionEnd"],
+    ["tui", "status_line"],
+    ["tui", "status_line_use_colors"],
+    ["tui", "keymap", "editor", "delete_backward_word"],
+    ["tui", "keymap", "editor", "delete_forward_word"],
+    ["hooks", "PostToolUse"],
+    ["hooks", "PreToolUse"],
+    ["hooks", "Stop"],
+    ["hooks", "SubagentStop"],
 ]
 seed = [
-  ["model"],
-  ["model_reasoning_effort"],
-  ["approvals_reviewer"],
-  ["plugins", "*", "enabled"],
-  ["mcp_servers", "*", "enabled"],
-  ["tui", "vim_mode_default"],
-  ["tui", "theme"],
+    ["model"],
+    ["model_reasoning_effort"],
+    ["approvals_reviewer"],
+    ["plugins", "*", "enabled"],
+    ["mcp_servers", "*", "enabled"],
+    ["tui", "vim_mode_default"],
+    ["tui", "theme"],
 ]
 ignore = [
-  ["projects", "*"],
-  ["hooks", "state", "*"],
-  ["marketplaces", "*", "last_updated"],
-  ["marketplaces", "*", "last_revision"],
-  ["tui", "model_availability_nux", "*"],
-  ["notice", "*"],
-  ["mcp_servers", "archi"],
-  # Outscores the mcp_servers.*.enabled seed rule, which would otherwise
-  # win at that depth and report archi live-only on every check.
-  ["mcp_servers", "archi", "enabled"],
+    ["projects", "*"],
+    ["hooks", "state", "*"],
+    ["marketplaces", "*", "last_updated"],
+    ["marketplaces", "*", "last_revision"],
+    ["tui", "model_availability_nux", "*"],
+    ["notice", "*"],
+    ["mcp_servers", "archi"],
+    # Outscores the mcp_servers.*.enabled seed rule, which would otherwise
+    # win at that depth and report archi live-only on every check.
+    ["mcp_servers", "archi", "enabled"],
 ]
 remove = [
-  ["plugins", "claude-custom@personal", "enabled"],
-  ["plugins", "superpowers@openai-curated", "enabled"],
-  ["plugins", "superpowers@personal", "enabled"],
+    ["plugins", "claude-custom@personal", "enabled"],
+    ["plugins", "superpowers@openai-curated", "enabled"],
+    ["plugins", "superpowers@personal", "enabled"],
+    ["marketplaces", "superpowers", "source"],
+    ["marketplaces", "superpowers", "source_type"],
+    ["plugins", "superpowers@superpowers", "enabled"],
 ]
 
-order = [
-  ["hooks", "state"],
-]
+order = [["hooks", "state"]]
