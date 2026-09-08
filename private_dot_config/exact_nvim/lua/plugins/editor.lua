@@ -177,7 +177,7 @@ return {
         function()
           require("Navigator").left()
         end,
-        desc = "Navigate to left window or tmux pane.",
+        desc = "Navigate to left window or multiplexer pane.",
         mode = { "n", "t" },
       },
       {
@@ -185,7 +185,7 @@ return {
         function()
           require("Navigator").down()
         end,
-        desc = "Navigate to down window or tmux pane.",
+        desc = "Navigate to down window or multiplexer pane.",
         mode = { "n", "t" },
       },
       {
@@ -193,7 +193,7 @@ return {
         function()
           require("Navigator").up()
         end,
-        desc = "Navigate to up window or tmux pane.",
+        desc = "Navigate to up window or multiplexer pane.",
         mode = { "n", "t" },
       },
       {
@@ -201,7 +201,7 @@ return {
         function()
           require("Navigator").right()
         end,
-        desc = "Navigate to right window or tmux pane.",
+        desc = "Navigate to right window or multiplexer pane.",
         mode = { "n", "t" },
       },
     },
@@ -255,7 +255,9 @@ return {
       local alacritree = alacritree_bin()
 
       local mux = "auto"
-      if vim.env.ALACRITREE_SOCKET and not vim.env.TMUX then
+      if vim.env.HERDR_ENV == "1" and not vim.env.TMUX then
+        mux = require("config.herdr_navigator")
+      elseif vim.env.ALACRITREE_SOCKET and not vim.env.TMUX then
         mux = {
           zoomed = function()
             return false

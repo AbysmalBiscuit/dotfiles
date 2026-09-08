@@ -17,3 +17,27 @@ overlay0 = "#6a6a6e"
 overlay1 = "#7f7f7f"
 text = "#e5e5e5"
 blue = "#558eff"
+
+[[keys.command]]
+key = "ctrl+left"
+type = "shell"
+command = "python3 ~/.config/herdr/navigate.py left"
+description = "Navigate left through Neovim and Herdr"
+
+[[keys.command]]
+key = "ctrl+down"
+type = "shell"
+command = "python3 ~/.config/herdr/navigate.py down"
+description = "Navigate down through Neovim and Herdr"
+
+[[keys.command]]
+key = "ctrl+up"
+type = "shell"
+command = "python3 ~/.config/herdr/navigate.py up"
+description = "Navigate up through Neovim and Herdr"
+
+[[keys.command]]
+key = "ctrl+right"
+type = "shell"
+command = "python3 ~/.config/herdr/navigate.py right"
+description = "Navigate right through Neovim and Herdr"
