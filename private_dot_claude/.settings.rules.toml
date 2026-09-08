@@ -43,4 +43,11 @@ ignore = [
 # would outrank that file on Claude alone, which is how the two drift apart.
 remove = [
     ["env", "AGENT_GUARD_LOG"],
+    ["enabledPlugins", "claude-md-management@claude-plugins-official"],
+    ["enabledPlugins", "elements-of-style@superpowers-marketplace"],
+    ["enabledPlugins", "plugin-dev@claude-plugins-official"],
+    ["enabledPlugins", "pyright-lsp@claude-plugins-official"],
+    ["enabledPlugins", "rust-analyzer-lsp@claude-plugins-official"],
+    ["enabledPlugins", "skill-creator@claude-plugins-official"],
+    ["enabledPlugins", "typescript-lsp@claude-plugins-official"],
 ]
