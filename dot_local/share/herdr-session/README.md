@@ -26,6 +26,12 @@ The build helper fetches the pinned Herdr commit, applies `startup-target.patch`
 
 The patch is based on Herdr v0.9.0, commit `b99002ac99b09e00b4ca692436cb15a6b0d676f1`. It adds `client --workspace ID` and `client --tab ID` using the existing endpoint navigation request. No server protocol changes are required.
 
+### Windows cursor settling
+
+`windows-cursor-settle.patch` is a separate server fix against the same pinned commit. It retires the previous cursor candidate after an idle interval before processing a new repaint burst. This prevents a transient repaint position above the Codex prompt from becoming the visible cursor. Linux and macOS bypass this settling path.
+
+The client build helper does not apply this patch: replacing only the client cannot repair server cursor state. Check it with `git -C /absolute/path/to/herdr apply --check /absolute/path/to/windows-cursor-settle.patch`, apply it to an isolated checkout, and build the server using that checkout's build instructions. Keep the matching app-local ConPTY runtime beside a Windows build. Verify it in a separate named session before replacing the installed server; restarting the active server ends its pane processes.
+
 ## Maintain
 
 Run `herdr-recover-after-upgrade.py` from an interactive terminal outside Herdr. It stops the server and its pane processes before launching Herdr again. Running it inside a pane would end the recovery process itself. Agent tool environments can also disable color in every new pane through inherited `NO_COLOR`.
