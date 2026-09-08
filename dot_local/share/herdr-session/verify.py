@@ -41,6 +41,20 @@ env.update(
 if args.client:
     env["HERDR_SESSION_CLIENT"] = args.client
 exe = str(Path.home() / ".local/bin/herdr")
+(base / "bin").mkdir()
+fake_claude = base / "bin/claude"
+fake_claude.write_text(
+    "#!/bin/sh\n"
+    "export HERDR_AGENT=claude\n"
+    f'"{exe}" pane report-agent "$HERDR_PANE_ID" --source custom:startup-test '
+    "--agent claude --state blocked >/dev/null\n"
+    'printf "Startup question: type an answer\\n"\n'
+    "while IFS= read -r answer; do\n"
+    f'  printf "%s\\n" "$answer" >> "{base}/answer-$HERDR_PANE_ID"\n'
+    "done\n"
+)
+fake_claude.chmod(0o755)
+env["PATH"] = str(base / "bin") + os.pathsep + env["PATH"]
 log = (base / "server-output").open("w")
 server = subprocess.Popen(
     [exe, "server"], env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=log
@@ -97,10 +111,10 @@ def drain(seconds):
                 pass
 
 
-def attach(folder, command="open", pick=False):
+def attach(folder, command="open", pick=False, agent="shell"):
     pid, fd = pty.fork()
     if pid == 0:
-        kind = ["shell"] if command == "new" and not pick else []
+        kind = [agent] if command == "new" and not pick else []
         os.execve(
             args.launcher, ["herdr-session", command, *kind, "--path", str(base / folder)], env
         )
@@ -112,6 +126,11 @@ def attach(folder, command="open", pick=False):
         os.write(fd, b"shell")
         drain(0.5)
         os.write(fd, b"\r")
+        deadline = time.monotonic() + 10
+        while b"tab " not in outputs[fd] and time.monotonic() < deadline:
+            drain(0.1)
+        drain(2)
+    elif command == "new" and agent != "shell":
         deadline = time.monotonic() + 10
         while b"tab " not in outputs[fd] and time.monotonic() < deadline:
             drain(0.1)
@@ -204,6 +223,32 @@ try:
     assert tab(picked, "picked-tab") != tab(b, "b-tab-after-picker")
     assert tab(a, "a-tab-after-picker") == a_tab
     print("PASS: interactive picker opened the selected shell without moving other clients")
+    for number in (1, 2):
+        blocked = attach("a", "new", agent="claude")
+        listed = subprocess.run(
+            [exe, "agent", "list"], env=env, capture_output=True, text=True, check=True
+        )
+        agents = [
+            item
+            for item in json.loads(listed.stdout)["result"]["agents"]
+            if item.get("agent") == "claude"
+        ]
+        assert len(agents) == number, (
+            "startup question closed the agent tab",
+            bytes(outputs[blocked])[-1000:],
+        )
+        assert len({item["name"] for item in agents}) == number, agents
+        agent = next(item for item in agents if item["name"] == ("a" if number == 1 else "a-2"))
+        answer_file = base / f"answer-{agent['pane_id']}"
+        assert not answer_file.exists(), "startup question was answered automatically"
+        os.write(blocked, f"answer-{number}\r".encode())
+        drain(1)
+        assert answer_file.read_text().strip() == f"answer-{number}"
+        assert tab(a, f"a-tab-after-blocked-{number}") == a_tab
+        assert cwd(b, f"b-after-blocked-{number}") == str(base / "b")
+    print(
+        "PASS: repeated agent launches preserve startup questions, unique names, and client focus"
+    )
 finally:
     for pid, fd in clients:
         try:

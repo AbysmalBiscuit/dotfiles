@@ -316,11 +316,11 @@ def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[s
     if extra:
         args += ["--", *extra]
     started, code, message = herdr.call(*args)
-    if started is None:
-        # An unsupported kind or an agent that never came up leaves an empty
-        # tab behind, so take it back out before reporting the failure.
+    if started is None and code != "agent_not_ready":
         herdr.call("tab", "close", tab_id)
         die(f"could not start {kind}: {message or code or 'failed'}")
+    if code == "agent_not_ready":
+        warn(f"{kind} as {name} is waiting for startup input in tab {tab_id}")
     print(f"tab {tab_id}  {kind} as {name}  {cwd}")
     return tab_id
 

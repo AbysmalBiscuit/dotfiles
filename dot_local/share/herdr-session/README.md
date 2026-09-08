@@ -8,6 +8,8 @@ Agent choices use `~/.config/chezmoi/has.toml` and executables on `PATH`. An age
 
 Fish and Nushell completions suggest subcommands, options, directories, and detected agents. Fish loads its completion file automatically; Nushell loads it from `config.nu` when a shell starts.
 
+If an agent starts with a question or approval screen, its tab stays open and the launcher attaches so you can respond. With `--no-attach` or inside Herdr, select the reported tab yourself. Repeated launches create separate tabs with unique agent names.
+
 The launcher creates workspaces and tabs with `--no-focus`. A separate `herdr-session-client` binary selects its initial workspace or tab through its own client connection. Stock `herdr` handles server and CLI operations. Alacritree's `attach = "session"` setting is independent of this launcher.
 
 Inside a Herdr pane, the launcher prepares the workspace or tab and returns. Use Herdr's navigation to select it. `--no-attach` also prepares without moving any client. `close` closes matching workspaces and their processes.
@@ -33,4 +35,4 @@ python3 ~/.local/share/herdr-session/verify.py
 python3 ~/.local/share/herdr-session/verify.py --git
 ```
 
-Verification starts a disposable server with separate config and socket paths. It types into real attached clients to check their working directories and tab identities after opening, joining, and creating tabs. Failure logs remain in the printed test directory. Remove the patch and client build once stock Herdr offers equivalent attachment targeting, after verifying the launcher against that API.
+Verification starts a disposable server with separate config and socket paths. It types into real attached clients to check their working directories and tab identities after opening, joining, and creating tabs. A local Claude stand-in presents startup questions to verify repeated launches without starting a real coding agent. Failure logs remain in the printed test directory. Remove the patch and client build once stock Herdr offers equivalent attachment targeting, after verifying the launcher against that API.
