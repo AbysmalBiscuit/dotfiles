@@ -94,6 +94,16 @@
             "statusMessage": "Checking tool conventions"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "SessionEnd": [
