@@ -1,3 +1,6 @@
+# Compile with the caller's permissions rather than the cache daemon's.
+client_side_mode = true
+
 # If specified, wait this long for the server to start up.
 # server_startup_timeout_ms = 10000
 #
