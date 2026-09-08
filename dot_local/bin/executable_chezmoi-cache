@@ -59,14 +59,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    names = args.caches or list(BUILDERS)
+    names: list[str] = args.caches or list(BUILDERS)
     if unknown := [name for name in names if name not in BUILDERS]:
-        raise PluginError(
-            f"no such cache: {', '.join(unknown)} (known: {', '.join(BUILDERS)})"
-        )
-    source = source_dir()
+        raise PluginError(f"no such cache: {', '.join(unknown)} (known: {', '.join(BUILDERS)})")
+    source: Path = source_dir()
 
-    worst = 0
+    worst: int = 0
     for name in names:
         template = builder_path(source, name)
         print(f"rebuilding the {name} cache from {template.name}", flush=True)

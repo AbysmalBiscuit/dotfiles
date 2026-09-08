@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -26,7 +26,7 @@ INTERPRETERS: dict[str, list[str]] = {
     ".sh": ["sh"],
 }
 
-SCRIPT_SUFFIX = ".ps1" if os.name == "nt" else ".sh"
+SCRIPT_SUFFIX: Literal[".ps1", ".sh"] = ".ps1" if os.name == "nt" else ".sh"
 
 
 class PluginError(Exception):
