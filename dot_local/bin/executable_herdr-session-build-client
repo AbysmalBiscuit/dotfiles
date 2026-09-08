@@ -13,12 +13,15 @@ COMMIT = "b99002ac99b09e00b4ca692436cb15a6b0d676f1"
 
 
 def main():
+    executable_suffix = ".exe" if os.name == "nt" else ""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--source", type=Path, help="local, unmodified herdr checkout at the pinned commit"
     )
     parser.add_argument(
-        "--output", type=Path, default=Path.home() / ".local/bin/herdr-session-client"
+        "--output",
+        type=Path,
+        default=Path.home() / ".local/bin" / f"herdr-session-client{executable_suffix}",
     )
     args = parser.parse_args()
     patch = Path(__file__).resolve().parent.parent / "share/herdr-session/startup-target.patch"
@@ -86,8 +89,16 @@ def main():
             prefix=f".{output.name}-", dir=output.parent, delete=False
         ) as temporary_binary:
             staging = Path(temporary_binary.name)
+
+        release_dir = cache / "target" / "release"
+        binary = release_dir / f"herdr{executable_suffix}"
+
+        if not binary.is_file():
+            msg = f"Cannot find built binary in: {release_dir}"
+            raise ValueError(msg)
+
         try:
-            shutil.copyfile(cache / "target/release/herdr", staging)
+            shutil.copyfile(binary, staging)
             staging.chmod(0o755)
             staging.replace(output)
         finally:

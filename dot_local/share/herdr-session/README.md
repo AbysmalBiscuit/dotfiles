@@ -22,7 +22,7 @@ Install Git, stable Rust, and Zig 0.15.2, then run:
 herdr-session-build-client
 ```
 
-The build helper fetches the pinned Herdr commit, applies `startup-target.patch`, and installs `~/.local/bin/herdr-session-client`. It leaves the stock binary and running servers in place. `--source /absolute/path/to/herdr` uses an unmodified local checkout at the pinned commit. `--output /absolute/path/to/binary` chooses another output; `HERDR_SESSION_CLIENT` selects it in the launcher.
+The build helper fetches the pinned Herdr commit, applies `startup-target.patch`, and installs `~/.local/bin/herdr-session-client`. On Windows, the filename ends in `.exe`. It leaves the stock binary and running servers in place. `--source /absolute/path/to/herdr` uses an unmodified local checkout at the pinned commit. `--output /absolute/path/to/binary` chooses another output; `HERDR_SESSION_CLIENT` selects it in the launcher.
 
 The patch is based on Herdr v0.9.0, commit `b99002ac99b09e00b4ca692436cb15a6b0d676f1`. It adds `client --workspace ID` and `client --tab ID` using the existing endpoint navigation request. No server protocol changes are required.
 
