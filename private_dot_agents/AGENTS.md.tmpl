@@ -85,6 +85,19 @@ Before committing:
 - Stage selectively, don't sweep unrelated edits, generated files, or secrets into the commit.
 - Review `git diff --staged` and describe what the diff *actually* does, not what you intended.
 
+## Worktrees
+
+{{- if index .has "devkit" }}
+
+Create worktrees using devkit's `issue setup` command.
+When working on a tracked issue, you can do `issue setup --summary ISSUE_ID`.
+Otherwise, create them with `issue setup --slug BRANCH_NAME`.
+{{- else }}
+
+Create worktrees relative to the main checkout, following this pattern: `../{project_name}_worktrees/`.
+{{- end }}
+Only create worktrees in temporary directories (like `/tmp`) for short-lived work that is not risky to lose, since as there is a risk of losing those worktrees if the computer reboots or crashes.
+
 ## Pull Requests
 
 - Description is BLUF: lead with what changed and why; link the issue; keep it tight, no filler.
