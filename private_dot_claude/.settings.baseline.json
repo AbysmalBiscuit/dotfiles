@@ -22,7 +22,6 @@
     "superpowers@superpowers-marketplace": true
   },
   "env": {
-    "AGENT_GUARD_LOG": "1",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL": "0",

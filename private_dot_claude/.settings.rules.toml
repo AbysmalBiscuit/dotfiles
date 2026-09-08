@@ -28,3 +28,8 @@ ignore = [
   ["companyAnnouncements"],
   ["env", "TEMP"], ["env", "TMP"],
 ]
+# agent-guard takes its log level from its own config.toml. An env var here
+# would outrank that file on Claude alone, which is how the two drift apart.
+remove = [
+  ["env", "AGENT_GUARD_LOG"],
+]
