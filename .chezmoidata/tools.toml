@@ -1183,6 +1183,18 @@ git = "https://github.com/tree-sitter/tree-sitter"
 
 [[tools]]
 lang = "rust"
+name = "tuicr"
+desc = "A terminal UI for code review with Vim keybindings, inline comments, and review export to remote forges, clipboard, or stdout."
+url = "https://tuicr.dev/"
+git = "https://github.com/agavra/tuicr"
+install_command = "cargo install tuicr"
+update_command.default = [
+    "tuicr",
+    "update"
+]
+
+[[tools]]
+lang = "rust"
 name = "unf"
 desc = "Efficiently create an identifiable hash for a dataset that is independent of column or row ordering."
 git = "https://github.com/lissahyacinth/unf"
