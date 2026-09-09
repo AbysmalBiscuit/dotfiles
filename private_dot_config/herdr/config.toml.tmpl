@@ -1,4 +1,9 @@
 onboarding = false
+{{ if .is_windows }}
+[terminal]
+default_shell = "nu"
+{{ end }}
+
 [ui]
 show_agent_labels_on_pane_borders = true
 host_cursor = "native"
