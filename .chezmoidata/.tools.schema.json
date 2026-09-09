@@ -94,6 +94,15 @@
           "type": "string",
           "description": "Command used to generate shell initialization code."
         },
+        "init_command_exclude_shells": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Canonical shell names (such as nu) that use completions_command instead of init_command."
+        },
         "completions_env": {
           "type": "array",
           "uniqueItems": true,

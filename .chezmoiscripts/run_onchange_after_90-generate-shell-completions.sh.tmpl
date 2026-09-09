@@ -8,7 +8,7 @@
 # {{- /*                                                            */ -}}
 # {{- /* Loop 1: stat mtime comments for run_onchange triggering.   */ -}}
 # {{- /* Loop 2: grouped by shell, batch-writes to single file.     */ -}}
-# {{- /* If init_command is set, it takes priority over completions. */ -}}
+# {{- /* Init takes priority except for init_command_exclude_shells. */ -}}
 # {{- /* No forks at template eval — stat/lookPath are internal.    */ -}}
 # {{- /*                                                            */ -}}
 # {{- /* Shell naming: the spelling a tool declares in                */ -}}
@@ -126,7 +126,7 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-           $append_key := "" -}}
     # {{-           $append := "" -}}
     # {{-           $skip := false -}}
-    # {{-           if $has_init -}}
+    # {{-           if and $has_init (not (has $shell (index $tool "init_command_exclude_shells" | default (list)))) -}}
     # {{-             $use_cmd = $init_command -}}
     # {{-             $append_key = printf "append_%s_init" $shell -}}
     # {{-             range $blocker := index $tool "init_command_only_if_no" | default (list) -}}
@@ -169,7 +169,7 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-               $gen_cmd := $base_cmd | replace "CMD" $e -}}
     # {{ $env_prefix }}# {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" }} || true
     echo
-    # {{ "" }}
+# {{ "" }}
     # {{-             end -}}
     # {{-           end -}}
     # {{-         end -}}
@@ -177,4 +177,4 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{-     end -}}
     # {{-   end }}
 } >'# {{ $file }}'
-# {{ end }}
+# {{ end -}}

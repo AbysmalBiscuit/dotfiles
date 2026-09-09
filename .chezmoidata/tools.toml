@@ -1132,6 +1132,9 @@ git = "https://github.com/starship/starship"
 install_command = "cargo install starship --locked"
 completions_command = "starship completions SHELL"
 init_command = "starship init SHELL --print-full-init"
+init_command_exclude_shells = [
+    "nu"
+]
 supported_shells = [
     "bash",
     "cmd",
