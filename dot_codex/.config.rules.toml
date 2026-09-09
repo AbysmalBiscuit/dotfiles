@@ -17,6 +17,7 @@ enforce = [
     ["hooks", "PreToolUse"],
     ["hooks", "Stop"],
     ["hooks", "SubagentStop"],
+    ["hooks", "UserPromptSubmit"],
   ["tui", "keymap", "global", "open_agents"],
 ]
 seed = [

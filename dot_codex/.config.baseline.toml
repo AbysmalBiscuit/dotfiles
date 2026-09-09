@@ -11,29 +11,33 @@ hooks = true
 [hooks]
 [[hooks.PostToolUse]]
 matcher = "^apply_patch$"
-
-[[hooks.PostToolUse.hooks]]
-type = "command"
-command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
-timeout = 10
-statusMessage = "Checking conventions"
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 10,
+        statusMessage = "Checking conventions",
+    },
+]
 
 [[hooks.PreToolUse]]
 matcher = "^(Bash|exec_command|shell_command|shell)$"
-
-[[hooks.PreToolUse.hooks]]
-type = "command"
-command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
-timeout = 8
-statusMessage = "Checking tool conventions"
-
-[[hooks.PreToolUse.hooks]]
-type = "command"
-command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex"
-command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\shell_calls.py --harness codex'
-timeout = 3
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 8,
+        statusMessage = "Checking tool conventions",
+    },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\shell_calls.py --harness codex',
+        timeout = 3,
+    },
+]
 
 [[hooks.SessionEnd]]
 hooks = [
@@ -53,25 +57,45 @@ hooks = [
         command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
         timeout = 10,
     },
+    {
+        type = "command",
+        command = "python3 ~/.agents/scripts/alacritree-follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        timeout = 30,
+    },
 ]
 
 [[hooks.Stop]]
-
-[[hooks.Stop.hooks]]
-type = "command"
-command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
-timeout = 60
-statusMessage = "Auditing changeset"
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 60,
+        statusMessage = "Auditing changeset",
+    },
+]
 
 [[hooks.SubagentStop]]
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 60,
+        statusMessage = "Auditing changeset",
+    },
+]
 
-[[hooks.SubagentStop.hooks]]
-type = "command"
-command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex"
-command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex'
-timeout = 60
-statusMessage = "Auditing changeset"
+[[hooks.UserPromptSubmit]]
+hooks = [
+    {
+        type = "command",
+        command = "python3 ~/.agents/scripts/alacritree-follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        timeout = 30,
+    },
+]
 
 [marketplaces.devkit]
 source = "https://github.com/AbysmalBiscuit/devkit.git"
