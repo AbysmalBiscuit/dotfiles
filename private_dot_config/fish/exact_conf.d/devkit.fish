@@ -9,26 +9,26 @@
 # Requires: jq.
 
 function __devkit_tasks
-    devrun config tasks --json 2>/dev/null |
+    devkit config tasks --json 2>/dev/null |
         jq -r '.[] | "\(.name)\t\(.kind): \(.description)"'
 end
 
 function __devkit_task_names
-    devrun config tasks --json 2>/dev/null | jq -r '.[].name'
+    devkit config tasks --json 2>/dev/null | jq -r '.[].name'
 end
 
 function __devkit_apps
-    devrun config apps --json 2>/dev/null |
+    devkit config apps --json 2>/dev/null |
         jq -r '.[] | "\(.name)\t\(.path)"'
 end
 
 function __devkit_app_names
-    devrun config apps --json 2>/dev/null | jq -r '.[].name'
+    devkit config apps --json 2>/dev/null | jq -r '.[].name'
 end
 
 function __devkit_docs_libs
     docm list --json 2>/dev/null |
-        jq -r '.[] | "\(.name)\t\(.ecosystem): \(.synced | join(", "))"'
+        jq -r '.[] | "\(.name)\t\(.ecosystem): \(.checkouts | map(.worktree) | join(", "))"'
 end
 
 function __devkit_docs_names
@@ -84,9 +84,9 @@ complete -c devrun -f -n '__fish_seen_subcommand_from down' -l holder -r -a '(__
 
 ### portm
 
-complete -c portm -f -n '__fish_seen_subcommand_from alloc reserve release' \
+complete -c portm -f -n '__fish_seen_subcommand_from alloc release' \
     -a '(__devkit_apps | __devkit_unused)'
-complete -c portm -f -n '__fish_seen_subcommand_from alloc reserve release' \
+complete -c portm -f -n '__fish_seen_subcommand_from alloc release' \
     -l holder -r -a '(__devkit_worktrees)'
 
 ### docm
@@ -100,5 +100,5 @@ complete -c docm -f -n '__fish_seen_subcommand_from sync' -a '(__devkit_docs_lib
 
 complete -c lockm -f -n '__fish_seen_subcommand_from release' \
     -a '(__devkit_locked_paths | __devkit_unused)'
-complete -c lockm -f -n '__fish_seen_subcommand_from acquire check release status' \
+complete -c lockm -f -n '__fish_seen_subcommand_from acquire check release' \
     -l as -r -a '(__devkit_lock_holders)'
