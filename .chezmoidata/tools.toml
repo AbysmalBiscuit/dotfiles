@@ -350,6 +350,7 @@ name = "go"
 desc = "The Go programming language"
 url = "https://go.dev/"
 git = "https://github.com/golang/go"
+install_command = "winget install --id GoLang.Go --exact --source winget"
 
 [[tools]]
 lang = "go"
