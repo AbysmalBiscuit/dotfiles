@@ -408,6 +408,8 @@ name = "yq"
 desc = "yq is a portable command-line YAML, JSON, XML, CSV, TOML, HCL and properties processor."
 url = "https://mikefarah.gitbook.io/yq/"
 git = "https://github.com/mikefarah/yq"
+comment = "winget install -e --id MikeFarah.yq"
+install_command = "go install github.com/mikefarah/yq/v4@latest"
 completions_command = "yq shell-completion SHELL"
 
 [[tools]]
