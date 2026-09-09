@@ -124,15 +124,99 @@ class ShellCallsTests(unittest.TestCase):
             self.invoke(payload)
         assert len({str(p.parent).lower() for p in self.logs.rglob("*.json")}) == 2
 
-    def test_non_shell_post_events_and_disabled_capture_do_not_log(self):
+    def test_non_shell_unrelated_events_and_disabled_capture_do_not_log(self):
         edit = self.payload()
         edit["tool_name"] = "Write"
         self.invoke(edit)
         post = self.payload()
-        post["hook_event_name"] = "PostToolUse"
+        post["hook_event_name"] = "SessionStart"
         self.invoke(post)
         self.invoke(self.payload(), env={**self.env, "AGENT_GUARD_SHELL_LOG": "0"})
         assert self.records() == []
+
+    def test_codex_pre_and_post_pair_across_turns_without_inventing_success(self):
+        pre = self.payload("Write-Output 'ü 漢'")
+        pre.update(turn_id="turn-before", model="test-model", permission_mode="default")
+        self.invoke(pre, "codex")
+        post = {**pre, "hook_event_name": "PostToolUse", "turn_id": "turn-after"}
+        post["tool_response"] = "ü 漢\n" * 20000
+        self.invoke(post, "codex")
+        rows = {row.get("hook_event_name"): row for row in self.records()}
+        assert len(rows) == 2
+        before, after = rows["PreToolUse"], rows["PostToolUse"]
+        assert before["schema_version"] == after["schema_version"] == 2
+        assert before["capture_stage"] == "attempted"
+        assert after["capture_stage"] == "result"
+        assert before["event_id"] != after["event_id"]
+        assert before["call_key"] == after["call_key"]
+        assert len(before["call_key"]) == 64
+        assert before["turn_id"] == "turn-before"
+        assert after["turn_id"] == "turn-after"
+        assert after["model"] == "test-model"
+        assert after["permission_mode"] == "default"
+        assert after["payload"] == post
+        assert after["result"]["response_kind"] == "text"
+        assert after["result"]["exit_code"] is None
+        assert after["result"]["is_error"] is None
+        assert after["result"]["duration_ms"] is None
+
+    def test_claude_powershell_failure_keeps_error_and_interrupt_metadata(self):
+        payload = self.payload("Get-Content missing.txt")
+        payload.update(
+            hook_event_name="PostToolUseFailure",
+            tool_name="PowerShell",
+            error="Exit code 1\nfile not found",
+            is_interrupt=False,
+            duration_ms=42,
+        )
+        self.invoke(payload)
+        assert len(self.records()) == 1
+        row = self.records()[0]
+        assert row["capture_stage"] == "failure"
+        assert row["result"]["error"] == payload["error"]
+        assert row["result"]["is_error"] is True
+        assert row["result"]["is_interrupt"] is False
+        assert row["result"]["duration_ms"] == 42
+        assert row["result"]["exit_code"] is None
+        assert row["payload"] == payload
+        assert row["shell"] is None
+
+    def test_context_fields_preserve_provenance_and_explicit_result_values(self):
+        payload = self.payload()
+        payload.update(
+            hook_event_name="PostToolUse",
+            transcript_path="/transcript.jsonl",
+            prompt_id="prompt-1",
+            tool_input={"cmd": "echo hi", "workdir": "../other", "shell": "pwsh", "login": False},
+            tool_response={"stdout": "hi", "stderr": "", "exit_code": 0, "interrupted": False},
+        )
+        self.invoke(payload, "codex")
+        assert len(self.records()) == 1
+        row = self.records()[0]
+        assert row["hook_cwd"] == "/repo"
+        assert row["cwd"] == "../other"
+        assert row["cwd_source"] == "tool_input.workdir"
+        assert row["requested_workdir"] == "../other"
+        assert row["shell"] == row["requested_shell"] == "pwsh"
+        assert row["shell_source"] == "tool_input.shell"
+        assert row["transcript_path"] == "/transcript.jsonl"
+        assert row["prompt_id"] == "prompt-1"
+        assert row["result"]["exit_code"] == 0
+        assert row["result"]["is_interrupt"] is False
+        assert row["result"]["response_kind"] == "object"
+
+    def test_call_key_distinguishes_agents_and_requires_session_and_call_id(self):
+        for agent in ("child-1", "child-2"):
+            payload = self.payload()
+            payload["agent_id"] = agent
+            self.invoke(payload)
+        assert len({row.get("call_key") for row in self.records()}) == 2
+        payload = self.payload()
+        del payload["tool_use_id"]
+        self.invoke(payload)
+        row = next(row for row in self.records() if row["tool_use_id"] is None)
+        assert row["call_key"] is None
+        assert "missing_tool_use_id" in row["capture_notes"]
 
     def test_unsafe_ids_cannot_escape_the_log_directory(self):
         payload = self.payload()

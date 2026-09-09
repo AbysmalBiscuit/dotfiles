@@ -81,6 +81,16 @@
             "statusMessage": "Checking conventions"
           }
         ]
+      },
+      {
+        "matcher": "^(Bash|PowerShell)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -96,7 +106,7 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "^(Bash|PowerShell)$",
         "hooks": [
           {
             "type": "command",
@@ -208,6 +218,18 @@
           {
             "type": "command",
             "command": "bash ~/.claude/scripts/worktree-remove.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "^(Bash|PowerShell)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
+            "timeout": 3
           }
         ]
       }

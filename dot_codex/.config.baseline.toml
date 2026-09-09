@@ -21,6 +21,14 @@ hooks = [
     },
 ]
 
+[[hooks.PostToolUse]]
+matcher = "^(Bash|exec_command|shell_command|shell)$"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\shell_calls.py --harness codex"
+timeout = 3
 [[hooks.PreToolUse]]
 matcher = "^(Bash|exec_command|shell_command|shell)$"
 hooks = [
@@ -31,14 +39,16 @@ hooks = [
         timeout = 8,
         statusMessage = "Checking tool conventions",
     },
-    {
-        type = "command",
-        command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex",
-        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\shell_calls.py --harness codex',
-        timeout = 3,
-    },
 ]
 
+[[hooks.PreToolUse]]
+matcher = "^(Bash|exec_command|shell_command|shell)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex"
+command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\shell_calls.py --harness codex"
+timeout = 3
 [[hooks.SessionEnd]]
 hooks = [
     {
