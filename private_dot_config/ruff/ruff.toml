@@ -138,6 +138,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "**/{tests,docs,tools}/*" = ["E402"]
 "**/scripts/*" = ["INP001", "T201"]
 "**/tests/**/*" = ["PLC1901", "PLR2004", "PLR6301", "S", "TID252"]
+"**/{tests/**,test_*.py,*_test.py,*.test.py}" = ["D100", "D101", "D102", "D103"]
 
 [lint.flake8-tidy-imports]
 ban-relative-imports = "all"
