@@ -419,6 +419,9 @@ $env:ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
 $interactive = -not ([Console]::IsOutputRedirected -or [Console]::IsInputRedirected)
 
 $completions_cache = '# {{ joinPath .chezmoi.homeDir ".cache" "shell-completions" }}'
+# {{- if index .has "starship" }}
+Remove-Item Env:STARSHIP_CONFIG -ErrorAction SilentlyContinue
+# {{- end }}
 if ($interactive -and (Test-Path "$completions_cache"))  {
     # Recurse: generated completions sit at the top level, downloaded ones in
     # a subdirectory the generator does not clear.
