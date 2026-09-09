@@ -100,16 +100,6 @@ sidebar = true
 
 # {{- if .is_windows }}
 
-[env]
-# Config WSLENV replaces Alacritree's IPC forwarding entries.
-# {{- $wslenv := list }}
-# {{- range splitList ":" (env "WSLENV") }}
-# {{- if and . (not (has (first (splitList "/" .)) (list "ALACRITREE_SOCKET" "ALACRITREE_SESSION_ID" "ALACRITREE_EXE" "COLORTERM"))) }}
-# {{- $wslenv = append $wslenv . }}
-# {{- end }}
-# {{- end }}
-WSLENV = # {{ concat $wslenv (list "ALACRITREE_SOCKET" "ALACRITREE_SESSION_ID" "ALACRITREE_EXE/p" "COLORTERM/u") | join ":" | toJson }}
-
 [keyboard]
 bindings = [
 {key = "Backspace", mods = "Control", chars = "\u0017"},
