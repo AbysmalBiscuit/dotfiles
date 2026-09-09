@@ -1,4 +1,1 @@
-# file: $HOME/.taplo.toml
-#:schema https://json.schemastore.org/taplo.json
-
 include = ["**/*.toml", "**/*.toml.tmpl"]
