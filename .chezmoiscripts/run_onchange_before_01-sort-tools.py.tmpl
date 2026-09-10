@@ -62,8 +62,12 @@ def load_field_defaults() -> dict[str, Any]:
 FIELD_DEFAULTS = load_field_defaults()
 
 
-def escape_toml_string(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
+def format_toml_string(value: str) -> str:
+    """Render a TOML string, as a multi-line literal when it contains newlines."""
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    if "\n" in escaped:
+        return f'"""\n{escaped}\n"""'
+    return f'"{escaped}"'
 
 
 def append_value(
@@ -80,7 +84,7 @@ def append_value(
         return
 
     if type(value) is str:
-        lines.append(f'{field} = "{escape_toml_string(value)}"')
+        lines.append(f"{field} = {format_toml_string(value)}")
     elif type(value) is list:
         if sort_list:
             value.sort()
