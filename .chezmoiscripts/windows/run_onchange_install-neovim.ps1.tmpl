@@ -41,8 +41,18 @@ $Url = "https://github.com/neovim/neovim/releases/download/nightly/# {{ $asset }
 
 New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 
-# Fetch checksum from GitHub API
-$Release = Invoke-RestMethod -Uri 'https://api.github.com/repos/neovim/neovim/releases/tags/nightly'
+# Unauthenticated calls share one rate limit per public IP and routinely
+# exhaust it. chezmoi reads these four variables, so honour the same order.
+$Headers = @{ 'X-GitHub-Api-Version' = '2022-11-28' }
+$Token = @(
+    $env:CHEZMOI_GITHUB_ACCESS_TOKEN
+    $env:CHEZMOI_GITHUB_TOKEN
+    $env:GITHUB_ACCESS_TOKEN
+    $env:GITHUB_TOKEN
+) | Where-Object { $_ } | Select-Object -First 1
+if ($Token) { $Headers['Authorization'] = "Bearer $Token" }
+
+$Release = Invoke-RestMethod -Headers $Headers -Uri 'https://api.github.com/repos/neovim/neovim/releases/tags/nightly'
 $AssetInfo = $Release.assets | Where-Object { $_.name -eq $Asset } | Select-Object -First 1
 $Checksum = if ($AssetInfo) { $AssetInfo.digest -replace '^sha256:', '' } else { $null }
 

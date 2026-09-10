@@ -30,8 +30,16 @@ URL="https://github.com/neovim/neovim/releases/download/nightly/${ASSET}"
 
 mkdir -p "$BIN_DIR"
 
-# Fetch checksum from GitHub API
-CHECKSUM=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/tags/nightly" |
+# Unauthenticated calls share one rate limit per public IP and routinely
+# exhaust it. chezmoi reads these four variables, so honour the same order.
+API_URL="https://api.github.com/repos/neovim/neovim/releases/tags/nightly"
+GH_API_TOKEN="${CHEZMOI_GITHUB_ACCESS_TOKEN:-${CHEZMOI_GITHUB_TOKEN:-${GITHUB_ACCESS_TOKEN:-${GITHUB_TOKEN:-}}}}"
+if [ -n "$GH_API_TOKEN" ]; then
+    RELEASE=$(curl -s -H "Authorization: Bearer $GH_API_TOKEN" "$API_URL")
+else
+    RELEASE=$(curl -s "$API_URL")
+fi
+CHECKSUM=$(printf '%s' "$RELEASE" |
     jq -r ".assets[] | select(.name == \"${ASSET}\") | .digest" |
     sed 's/sha256://')
 
