@@ -28,7 +28,6 @@ complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -s h -l hel
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l session -r -d 'Use a named Herdr server session'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l path -r -a '(__fish_complete_directories)' -d 'Workspace directory'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l label -r -d 'Name for a new workspace'
-complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l no-attach -d 'Prepare without attaching a client'
 complete -c herdr-session -n '__fish_seen_subcommand_from list' -l json -d 'Print session rows as JSON'
 complete -c herdr-session -n '__fish_seen_subcommand_from new; and not contains -- -- (commandline -opc)' -l list-agents -d 'Print installed agent choices'
 complete -c herdr-session -n '__fish_seen_subcommand_from new; and __fish_herdr_session_needs_agent' -a '(herdr-session new --list-agents)' -d 'Start this coding agent'

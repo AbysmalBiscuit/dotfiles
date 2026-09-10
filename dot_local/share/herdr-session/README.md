@@ -1,6 +1,6 @@
-# Herdr session attachment
+# Herdr session launcher
 
-`herdr-session` opens the current checkout in a full Herdr UI. `herdr-session new` offers an installed-agent picker; `herdr-session new claude` starts that agent directly and `herdr-session new shell` opens a shell tab. Existing clients keep their selected workspace and tab.
+`herdr-session` opens the current checkout as a Herdr workspace and returns to the shell it ran in. `herdr-session new` offers an installed-agent picker; `herdr-session new claude` starts that agent directly and `herdr-session new shell` opens a shell tab. Existing clients keep their selected workspace and tab.
 
 `herdr-session list` shows the current workspace's tabs, panes, agents, names, status, and directories. `list --json` returns the same rows as JSON. Outside Herdr, the workspace is matched to the current checkout or directory; inside a Herdr pane, it uses that pane's workspace. `--path /absolute/path` selects another checkout or directory. Listing does not start a server or change focus.
 
@@ -8,13 +8,13 @@ Agent choices use `~/.config/chezmoi/has.toml` and executables on `PATH`. An age
 
 Fish and Nushell completions suggest subcommands, options, directories, and detected agents. Fish loads its completion file automatically; Nushell loads it from `config.nu` when a shell starts.
 
-If an agent starts with a question or approval screen, its tab stays open and the launcher attaches so you can respond. With `--no-attach` or inside Herdr, select the reported tab yourself. Repeated launches create separate tabs with unique agent names.
+If an agent starts with a question or approval screen, its tab stays open and the launcher says which tab holds it. Select that tab to answer. Repeated launches create separate tabs with unique agent names.
 
-The launcher creates workspaces and tabs with `--no-focus`. A separate `herdr-session-client` binary selects its initial workspace or tab through its own client connection. Stock `herdr` handles server and CLI operations. Alacritree's `attach = "session"` setting is independent of this launcher.
-
-Inside a Herdr pane, the launcher prepares the workspace or tab and returns. Use Herdr's navigation to select it. `--no-attach` also prepares without moving any client. `close` closes matching workspaces and their processes.
+The launcher creates workspaces and tabs with `--no-focus` and attaches nothing, inside a Herdr pane and outside one alike: the calling terminal keeps its own session and every attached client keeps the workspace and tab it was showing. Stock `herdr` serves every call. Select the reported target through Herdr's navigation, or from a terminal that lists a Herdr server's panes itself, such as Alacritree's sidebar. `close` closes matching workspaces and their processes.
 
 ## Build
+
+The launcher attaches nothing, so none of this is needed to run it. `herdr-session-build-client`, `startup-target.patch`, and the attachment checks in `verify.py` describe a launcher that took over its terminal, and are kept only until they are removed.
 
 Install Git, stable Rust, and Zig 0.15.2, then run:
 
@@ -43,4 +43,4 @@ python3 ~/.local/share/herdr-session/verify.py
 python3 ~/.local/share/herdr-session/verify.py --git
 ```
 
-Verification starts a disposable server with separate config and socket paths. It types into real attached clients to check their working directories and tab identities after opening, joining, and creating tabs. A local Claude stand-in presents startup questions to verify repeated launches without starting a real coding agent. Failure logs remain in the printed test directory. Remove the patch and client build once stock Herdr offers equivalent attachment targeting, after verifying the launcher against that API.
+Verification starts a disposable server with separate config and socket paths. It types into real attached clients to check their working directories and tab identities after opening, joining, and creating tabs, so it exercises the retired attachment path rather than the current launcher. A local Claude stand-in presents startup questions to verify repeated launches without starting a real coding agent. Failure logs remain in the printed test directory.

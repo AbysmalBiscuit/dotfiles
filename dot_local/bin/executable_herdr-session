@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Open the checkout you are standing in as a Herdr workspace, then attach.
+"""Open the checkout you are standing in as a Herdr workspace.
 
 Bare `herdr` restores whatever the session was showing when it last ran, so
 launching it from a worktree drops you wherever you happened to be before.
-This resolves the checkout from git and opens its workspace in a new client.
-Other attached clients keep their selected workspace and tab.
+This resolves the checkout from git and opens its workspace.
 
   herdr-session                create or join this checkout's workspace
   herdr-session list           show this workspace's tabs and agents
@@ -12,11 +11,10 @@ Other attached clients keep their selected workspace and tab.
   herdr-session new shell      ... plus a fresh tab at a shell prompt
   herdr-session new claude     ... plus a fresh tab running an agent
 
-Inside a Herdr pane it creates the requested workspace or tab and returns.
-Select it using Herdr's navigation to avoid nesting a second TUI.
-
-Full-UI attachment requires herdr-session-client, built with the accompanying
-startup-target patch. HERDR_SESSION_CLIENT can select a different build.
+The workspace or tab is prepared, reported, and left alone: the calling
+terminal keeps its own session and every attached client keeps the workspace
+and tab it was already showing. Select the reported target in Herdr's
+navigation, or in a terminal that lists Herdr's panes itself.
 """
 
 from __future__ import annotations
@@ -182,10 +180,6 @@ class Herdr:
             time.sleep(SERVER_POLL)
         die("the server did not come up in time")
 
-    def attach(self, client: str, workspace_id: str, tab_id: str | None) -> NoReturn:
-        target = ("--tab", tab_id) if tab_id else ("--workspace", workspace_id)
-        os.execv(client, [client, *self._argv()[1:], "client", *target])
-
 
 # --- workspaces --------------------------------------------------------------
 
@@ -301,14 +295,14 @@ def agent_name(herdr: Herdr, base: str) -> str:
     die(f"no free agent name based on {slug!r}")
 
 
-def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> str:
+def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> None:
     result = herdr.require(
         "tab", "create", "--workspace", workspace_id, "--cwd", str(cwd), "--no-focus"
     )
     tab_id = result.get("tab", {}).get("tab_id", "?")
     if kind == "shell":
         print(f"tab {tab_id}  shell  {cwd}")
-        return tab_id
+        return
 
     pane_id = result.get("root_pane", {}).get("pane_id")
     if not pane_id:
@@ -324,7 +318,6 @@ def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[s
     if code == "agent_not_ready":
         warn(f"{kind} as {name} is waiting for startup input in tab {tab_id}")
     print(f"tab {tab_id}  {kind} as {name}  {cwd}")
-    return tab_id
 
 
 # --- commands ----------------------------------------------------------------
@@ -438,7 +431,6 @@ def main() -> int:
     shared.add_argument("--session", help="use this named session instead of the default")
     shared.add_argument("--path", help="directory to open (default: the current one)")
     shared.add_argument("--label", help="workspace name, used only when creating one")
-    shared.add_argument("--no-attach", action="store_true", help="skip launching the TUI")
 
     # `shared` is a parent of the top-level parser only so that a bare
     # `--help` documents the options; every run reaches a subparser, which
@@ -446,14 +438,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         prog=PROG,
         parents=[shared],
-        description="Open the current checkout as a Herdr workspace, then attach.",
+        description="Open the current checkout as a Herdr workspace.",
     )
     sub = parser.add_subparsers(dest="command")
     sub.add_parser(
         "open",
         parents=[shared],
         help="create or join the workspace (the default)",
-        description="Create or join the current checkout's workspace, then attach without moving other clients.",
+        description="Create or join the current checkout's workspace without moving any client.",
     )
     sub.add_parser(
         "close",
@@ -516,19 +508,9 @@ def main() -> int:
     if args.command == "list":
         return list_sessions(herdr, args)
 
-    client = None
-    if not args.no_attach and os.environ.get("HERDR_ENV") != "1":
-        client_name = os.environ.get("HERDR_SESSION_CLIENT", "herdr-session-client")
-        client = shutil.which(client_name)
-        if not client:
-            die(f"{client_name} is not installed; run herdr-session-build-client first")
-
     directory, workspace_id = workspace_for(herdr, args)
-    tab_id = None
     if args.command == "new":
-        tab_id = new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
-    if client:
-        herdr.attach(client, workspace_id, tab_id)
+        new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
     return 0
 
 
