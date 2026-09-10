@@ -11,14 +11,12 @@ enforce = [
     ["hooks", "SessionEnd"],
     ["tui", "status_line"],
     ["tui", "status_line_use_colors"],
-    ["tui", "keymap", "editor", "delete_backward_word"],
-    ["tui", "keymap", "editor", "delete_forward_word"],
+    ["tui", "keymap", "*", "*"],
     ["hooks", "PostToolUse"],
     ["hooks", "PreToolUse"],
     ["hooks", "Stop"],
     ["hooks", "SubagentStop"],
     ["hooks", "UserPromptSubmit"],
-  ["tui", "keymap", "global", "open_agents"],
 ]
 seed = [
     ["model"],
