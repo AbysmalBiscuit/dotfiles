@@ -95,7 +95,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|ToolSearch",
+        "matcher": "Bash|PowerShell|ToolSearch|Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
