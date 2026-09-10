@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """Cases for tool_checks/typographic_punctuation.py and the ask tier it uses.
 
-Two things are worth pinning down. The first is which half of a call is read:
-the text a call adds is checked and the text it removes is not, or the rule
-would refuse the very edit that takes an em dash back out. The second is that
-exit 2 survives the trip through the hook and reaches the harness as an ask
-rather than as a refusal.
-
-Every character under test is written as an escape, so this file is ASCII and
-the check it exercises has nothing to say about it.
+Which half of a call is read matters most: the text a call adds is checked and
+the text it removes is not, or the rule would refuse the very edit that takes
+an em dash back out. After that, exit 2 has to survive the trip through the
+hook and reach the harness as an ask rather than as a refusal. Every character
+under test is written as an escape, so this file is ASCII.
 """
 
+import importlib.util
 import json
 import pathlib
 import subprocess
@@ -112,6 +110,36 @@ class InterpunctAsks(unittest.TestCase):
 
         self.assertEqual(code, 1)
         self.assertIn("em dash", out)
+
+
+class TheRoster(unittest.TestCase):
+    """Appending a codepoint to REFUSED is the whole cost of banning it."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location("check_under_test", CHECK)
+        self.check_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.check_module)
+
+    def test_every_refused_codepoint_is_denied_by_name(self):
+        for code in self.check_module.REFUSED:
+            with self.subTest(code=code):
+                out, exit_code = check("Write", {"content": "a %s b" % chr(code)})
+
+                self.assertEqual(exit_code, 1)
+                self.assertIn("U+%04X" % code, out)
+
+    def test_every_asked_codepoint_reaches_the_human(self):
+        for code in self.check_module.ASKED:
+            with self.subTest(code=code):
+                out, exit_code = check("Write", {"content": "a %s b" % chr(code)})
+
+                self.assertEqual(exit_code, ASK_EXIT)
+                self.assertIn("U+%04X" % code, out)
+
+    def test_every_fix_names_a_codepoint_on_a_roster(self):
+        rosters = set(self.check_module.REFUSED) | set(self.check_module.ASKED)
+
+        self.assertEqual(set(self.check_module.FIXES) - rosters, set())
 
 
 class ThroughTheHook(unittest.TestCase):
