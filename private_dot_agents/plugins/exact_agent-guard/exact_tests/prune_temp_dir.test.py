@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Cases for tool-checks/prune_temp_dir.py. Run directly: python3 <this file>.
+"""Cases for tool_checks/prune_temp_dir.py. Run directly: python3 <this file>.
 
-Held here rather than beside the check, because tool-checks/ globs every *.py
+Held here rather than beside the check, because tool_checks/ globs every *.py
 in it and would run this file as a check on each Bash call.
 
 The check deletes files, so the cases that matter are the ones saying what it
@@ -19,7 +19,7 @@ import tempfile
 import time
 import types
 
-CHECK = pathlib.Path(__file__).parent.parent / "tool-checks" / "prune_temp_dir.py"
+CHECK = pathlib.Path(__file__).parent.parent / "tool_checks" / "prune_temp_dir.py"
 DAY = 86400
 
 

@@ -92,7 +92,7 @@ class CodexCompatibilityTests(unittest.TestCase):
             )
 
             guard = root / ".agents" / "plugins" / "agent-guard"
-            checks = guard / "changeset-checks"
+            checks = guard / "changeset_checks"
             checks.mkdir(parents=True)
             (guard / "config.toml").write_text(
                 f"block = {str(block).lower()}\nfallow = false\n",

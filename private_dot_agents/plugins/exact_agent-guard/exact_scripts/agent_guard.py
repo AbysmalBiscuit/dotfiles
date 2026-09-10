@@ -3,7 +3,7 @@
 to the model. Dispatches on the hook event name in the payload on stdin, so a
 single entry point works for every hook it is registered under.
 
-  PreToolUse                          tool-checks/ scripts on the call about to
+  PreToolUse                          tool_checks/ scripts on the call about to
                                       run, advisory or denying
   PostToolUse (edits or apply_patch)  fast per-file ast-grep rules and checks/
                                       scripts, advisory, on the lines the branch
@@ -346,8 +346,8 @@ def is_root(path):
     return path.is_dir() and (
         (path / "rules").is_dir()
         or (path / "checks").is_dir()
-        or (path / "tool-checks").is_dir()
-        or (path / "changeset-checks").is_dir()
+        or (path / "tool_checks").is_dir()
+        or (path / "changeset_checks").is_dir()
         or (path / "sgconfig.yml").is_file()
         or (path / CONFIG_NAME).is_file()
     )
@@ -413,7 +413,7 @@ class Settings:
         # There is no built-in loop protection on Stop hooks, so cap how often
         # one session may be refused before this downgrades itself to advisory.
         self.max_blocks = _int(g("max_blocks"), 2)
-        # tool-checks/ can refuse a call outright, so it needs a kill switch a
+        # tool_checks/ can refuse a call outright, so it needs a kill switch a
         # denied agent's operator can reach without editing a script:
         # AGENT_GUARD_TOOL_CHECKS=0 for one run.
         self.tool_checks = _bool(g("tool_checks"), True)
@@ -459,7 +459,7 @@ class Settings:
         self.base_override = _str(g("base"), "")
         # Layers that still run where no tree has opted in. rules/ and checks/
         # describe a project's conventions and wait to be asked for; a global
-        # tool-checks/ describes the machine, which is the same one in every
+        # tool_checks/ describes the machine, which is the same one in every
         # directory. Empty by default, so behaviour changes only for a config
         # that asks for it.
         self.always = _layers(g("always"))
@@ -491,7 +491,7 @@ def _str(value, fallback):
     return fallback if value is None else str(value)
 
 
-LAYERS = ("rules", "checks", "tool-checks", "changeset")
+LAYERS = ("rules", "checks", "tool_checks", "changeset")
 
 
 def _layers(value):
@@ -624,7 +624,7 @@ def run_checks(path, roots, cwd):
 
 
 def run_changeset_checks(base, roots, cwd):
-    """Conventions only a diff can show. A root's changeset-checks/ holds Python
+    """Conventions only a diff can show. A root's changeset_checks/ holds Python
     scripts, each given the base revision as its argument and printing a finished
     section on stdout when it has something to say; silence means nothing found.
 
@@ -636,7 +636,7 @@ def run_changeset_checks(base, roots, cwd):
     run_checks gives."""
     out = []
     for root in roots:
-        directory = root / "changeset-checks"
+        directory = root / "changeset_checks"
         if not directory.is_dir():
             continue
         for script in sorted(directory.glob("*.py")):
@@ -648,7 +648,7 @@ def run_changeset_checks(base, roots, cwd):
 
 def run_mandatory(payload, cwd):
     """PreToolUse scripts no config can switch off, for rules whose whole value
-    is that an agent cannot negotiate past them. Same contract as tool-checks/,
+    is that an agent cannot negotiate past them. Same contract as tool_checks/,
     so a script changes tier by changing directory.
 
     A script that exits non-zero without saying why has crashed rather than
@@ -695,7 +695,7 @@ def run_mandatory(payload, cwd):
 
 def check_tool(payload, roots, settings, cwd):
     """The call the agent is about to make, before it makes it. A root's
-    tool-checks/ holds Python scripts, each given the tool name as its argument
+    tool_checks/ holds Python scripts, each given the tool name as its argument
     and the whole hook payload on stdin, and answering in three ways:
 
       empty stdout            the call is fine, say nothing
@@ -713,7 +713,7 @@ def check_tool(payload, roots, settings, cwd):
 
     advice, denials = [], []
     for root in roots:
-        checks = root / "tool-checks"
+        checks = root / "tool_checks"
         if not checks.is_dir():
             continue
         for script in sorted(checks.glob("*.py")):
@@ -1211,21 +1211,21 @@ def doctor(cwd):
         rules = len(list((root / "rules").glob("*.yml"))) if (root / "rules").is_dir() else 0
         checks = len(list((root / "checks").glob("*.py"))) if (root / "checks").is_dir() else 0
         tool_checks = (
-            len(list((root / "tool-checks").glob("*.py")))
-            if (root / "tool-checks").is_dir()
+            len(list((root / "tool_checks").glob("*.py")))
+            if (root / "tool_checks").is_dir()
             else 0
         )
         diff_checks = (
-            len(list((root / "changeset-checks").glob("*.py")))
-            if (root / "changeset-checks").is_dir()
+            len(list((root / "changeset_checks").glob("*.py")))
+            if (root / "changeset_checks").is_dir()
             else 0
         )
         print(f"    {root}")
         print(f"      config     : {config if config else 'NONE'}")
         print(f"      rules(own) : {rules}")
         print(f"      checks     : {checks}")
-        print(f"      tool-checks: {tool_checks}")
-        print(f"      changeset-checks: {diff_checks}")
+        print(f"      tool_checks: {tool_checks}")
+        print(f"      changeset_checks: {diff_checks}")
     mandatory = (
         len(list(MANDATORY_DIR.glob("*.py"))) if MANDATORY_DIR.is_dir() else 0
     )
@@ -1306,7 +1306,7 @@ def main():
     if event == "PreToolUse":
         # The watchdog is already armed by the mandatory tier above. A check that
         # has not answered by then has nothing worth waiting for.
-        if "tool-checks" not in allowed:
+        if "tool_checks" not in allowed:
             sys.exit(0)
         check_tool(payload, roots, settings, cwd)
     elif event == "PostToolUse":

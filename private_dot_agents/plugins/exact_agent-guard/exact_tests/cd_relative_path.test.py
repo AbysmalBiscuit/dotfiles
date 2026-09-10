@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Cases for tool-checks/cd_relative_path.py. Run directly: python3 <this file>.
+"""Cases for tool_checks/cd_relative_path.py. Run directly: python3 <this file>.
 
-Held here rather than beside the check, because tool-checks/ globs every *.py
+Held here rather than beside the check, because tool_checks/ globs every *.py
 in it and would run this file as a check on each Bash call.
 
 Four layers, each answering a question the layer above cannot:
@@ -24,7 +24,7 @@ import random
 import sys
 import types
 
-CHECK = pathlib.Path(__file__).parent.parent / "tool-checks" / "cd_relative_path.py"
+CHECK = pathlib.Path(__file__).parent.parent / "tool_checks" / "cd_relative_path.py"
 SOURCE = CHECK.read_text(encoding="utf-8")
 
 POSIX_DIR = "/home/lev/Git/lev/devkit"

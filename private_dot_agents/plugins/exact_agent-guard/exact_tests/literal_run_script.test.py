@@ -32,7 +32,7 @@ import tempfile
 import types
 
 SCRIPT = pathlib.Path(__file__).parent.parent / "scripts" / "agent_guard.py"
-CHECKS = pathlib.Path(__file__).parent.parent / "tool-checks"
+CHECKS = pathlib.Path(__file__).parent.parent / "tool_checks"
 SOURCE = SCRIPT.read_text(encoding="utf-8")
 
 # Long enough that a check cannot finish inside it, short enough to pay per mutant.
