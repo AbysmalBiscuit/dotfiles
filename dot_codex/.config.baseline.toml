@@ -49,6 +49,7 @@ type = "command"
 command = "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness codex"
 command_windows = "~\\.local\\bin\\python3.exe ~\\.agents\\plugins\\agent-guard\\scripts\\shell_calls.py --harness codex"
 timeout = 3
+
 [[hooks.PreToolUse]]
 matcher = "^apply_patch$"
 hooks = [
@@ -152,14 +153,15 @@ enabled = true
 theme = "abc"
 status_line = [
     "model-with-reasoning",
-    "project-name",
-    "git-branch",
-    "pull-request-number",
     "run-state",
-    "approval-mode",
+    "task-progress",
     "context-used",
     "five-hour-limit",
     "weekly-limit",
+    "project-name",
+    "pull-request-number",
+    "approval-mode",
+    "git-branch",
     "current-dir",
 ]
 status_line_use_colors = true
@@ -167,7 +169,14 @@ vim_mode_default = true
 
 [tui.keymap.editor]
 delete_backward_word = ["ctrl-backspace", "ctrl-w"]
-delete_forward_word = "ctrl-delete"
+delete_forward_word = ["ctrl-delete"]
+move_right = ["right"]
 
 [tui.keymap.global]
-open_agents = "ctrl-\\"
+open_agents = ["ctrl-\\"]
+
+[tui.keymap.list]
+accept = ["enter", "ctrl-f"]
+
+[tui.keymap.chat]
+edit_queued_message = ["ctrl-up"]
