@@ -524,11 +524,29 @@ def sgconfig_for(root):
     return generated
 
 
+# A tool-check's exit code for the ask tier: stdout with this hands the call to
+# the human, where any other non-zero refuses it outright.
+ASK_EXIT = 2
+
+
+# Tools that run a shell command, across the harnesses this hook is registered
+# under. The mandatory tier is scoped to these.
+SHELL_TOOLS = frozenset(
+    {"Bash", "PowerShell", "exec_command", "shell_command", "shell"}
+)
+
+
 def emit_silent():
     sys.exit(0)
 
 
-def emit(event, context, deny=""):
+def emit(event, context, deny="", ask=""):
+    """`deny` refuses the call, `ask` hands it to the human, and a call carrying
+    both is refused: a check that says no outranks one that says maybe.
+
+    The reason is repeated in `additionalContext` by the caller, so a harness
+    that does not implement the ask decision still tells the model why the call
+    was questioned rather than dropping the finding on the floor."""
     if CODEX and event in ("Stop", "SubagentStop"):
         out = (
             {"decision": "block", "reason": context}
@@ -543,6 +561,9 @@ def emit(event, context, deny=""):
     if deny:
         out["permissionDecision"] = "deny"
         out["permissionDecisionReason"] = deny
+    elif ask:
+        out["permissionDecision"] = "ask"
+        out["permissionDecisionReason"] = ask
     out["additionalContext"] = context
     sys.stdout.write(json.dumps({"hookSpecificOutput": out}, separators=(",", ":")) + "\n")
     sys.stdout.flush()
@@ -654,9 +675,16 @@ def run_mandatory(payload, cwd):
     A script that exits non-zero without saying why has crashed rather than
     denied, and that is reported as a denial naming the file. The alternative is
     silence, and a security check that vanishes when it breaks is worse than one
-    that is loudly in the way; this hook does not match Edit or Write, so a
-    broken script can still be fixed."""
+    that is loudly in the way.
+
+    Shell tools only, which is what keeps that trade survivable: the tier exists
+    because a shell command reaches secrets that the Read and Edit permission
+    rules already gate, and leaving the file tools out of it means a broken
+    script can still be edited back into shape. Scope by tool, not a setting:
+    nothing here is negotiable for the calls it does cover."""
     if not MANDATORY_DIR.is_dir():
+        return
+    if (payload.get("tool_name") or "") not in SHELL_TOOLS:
         return
     raw = json.dumps(payload, separators=(",", ":"))
     tool = payload.get("tool_name") or ""
@@ -700,7 +728,13 @@ def check_tool(payload, roots, settings, cwd):
 
       empty stdout            the call is fine, say nothing
       stdout, exit 0          advisory: the call proceeds, the text is context
-      stdout, exit non-zero   deny: the call never runs, the text is the reason
+      stdout, exit 2          ask: the human decides, the text is the question
+      stdout, other non-zero  deny: the call never runs, the text is the reason
+
+    The ask tier is for a convention that holds until a human says otherwise.
+    Advice an agent may talk itself past is not the same rule, and a refusal a
+    human cannot lift is a different one; asking is how a check says the call is
+    theirs to allow. A crashing check exits 1, so it can only ever deny.
 
     A denial is read by the model, not by a person, so a script's text earns its
     keep by naming what to do instead. Scripts run through this interpreter
@@ -711,7 +745,7 @@ def check_tool(payload, roots, settings, cwd):
     raw = json.dumps(payload, separators=(",", ":"))
     tool = payload.get("tool_name") or ""
 
-    advice, denials = [], []
+    advice, asks, denials = [], [], []
     for root in roots:
         checks = root / "tool_checks"
         if not checks.is_dir():
@@ -724,20 +758,30 @@ def check_tool(payload, roots, settings, cwd):
                 stdin=raw,
             )
             out = out.strip()
+            verdict = "silent"
+            if out:
+                verdict = "ask" if code == ASK_EXIT else "deny" if code else "advise"
             log(
                 2,
                 "tool-check",
                 script=script.name,
-                verdict="deny" if (code and out) else "advise" if out else "silent",
+                verdict=verdict,
                 reason=out.splitlines()[0] if out else None,
             )
             if not out:
                 continue
-            (denials if code else advice).append(out)
+            {"ask": asks, "deny": denials, "advise": advice}[verdict].append(out)
 
     if denials:
         log(1, "decision", tool=tool, outcome="deny", checks=len(denials))
-        emit("PreToolUse", "\n\n".join(denials + advice), "\n\n".join(denials))
+        emit(
+            "PreToolUse",
+            "\n\n".join(denials + asks + advice),
+            deny="\n\n".join(denials),
+        )
+    if asks:
+        log(1, "decision", tool=tool, outcome="ask", checks=len(asks))
+        emit("PreToolUse", "\n\n".join(asks + advice), ask="\n\n".join(asks))
     if advice:
         log(1, "decision", tool=tool, outcome="advise", checks=len(advice))
         emit("PreToolUse", "\n\n".join(advice))

@@ -51,11 +51,16 @@ max_blocks = 2
 # silence it. A script changes tier by changing directory. Put a rule there only
 # when being non-negotiable is the whole point of it: secret decryption is, a
 # style convention is not.
+#
+# It runs on shell tools alone, so a script that breaks cannot also block the
+# edit that would fix it. A rule about what a file may contain belongs in
+# tool_checks/, which sees every write.
 
 # PreToolUse Python scripts under a root's tool_checks/, each given the tool name
-# as its argument and the hook payload on stdin. Empty stdout is silence; stdout with
-# exit 0 is advisory; stdout with a non-zero exit denies the call. false is the
-# kill switch when one of them misfires and starts refusing real work.
+# as its argument and the hook payload on stdin. Empty stdout is silence; stdout
+# with exit 0 is advisory; stdout with exit 2 hands the call to the human to
+# allow or refuse; any other non-zero exit denies it. false is the kill switch
+# when one of them misfires and starts refusing real work.
 tool_checks = true
 
 # Cross-file analysis via fallow on Stop/SubagentStop. false for per-file only.
