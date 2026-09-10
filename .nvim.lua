@@ -102,7 +102,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("chezmoi_group_custom3", { clear = false }),
   pattern = "*/.chezmoidata/*tools.toml",
   callback = function()
-    local sort_script = chezmoi_source .. "/.chezmoiscripts/run_onchange_before_00-sort-tools.sh.tmpl"
+    local sort_script = chezmoi_source .. "/.chezmoiscripts/run_onchange_before_01-sort-tools.py.tmpl"
     local python = vim.fn.executable("python3") == 1 and "python3" or vim.g.python3_host_prog
     local stderr_chunks = {}
     vim.fn.jobstart({ python, sort_script }, {

@@ -5,13 +5,14 @@
 # # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata" "tools.toml")).modTime }}
 # # {{ (stat (joinPath .chezmoi.sourceDir ".chezmoidata" "wsl_tools.toml")).modTime }}
 import json
+import os
 import tomllib
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-SOURCE_DIR = Path("# {{ .chezmoi.sourceDir | replaceAllRegex "\\\\" "/" }}")
+SOURCE_DIR = Path(os.environ.get("CHEZMOI_SOURCE_DIR") or Path(__file__).resolve().parent.parent)
 TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "tools.toml"
 WSL_TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "wsl_tools.toml"
 SCHEMA_JSON = SOURCE_DIR / ".chezmoidata" / ".tools.schema.json"
