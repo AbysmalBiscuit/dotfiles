@@ -1,23 +1,12 @@
 #!/usr/bin/env python3
 """PreToolUse guard: typographic punctuation in the text a call would write.
 
-Em dash and en dash are the loudest tell that a model wrote a line, and they
-reach a tree by three routes: a file written whole, an edit's replacement text,
-and a shell command carrying a heredoc, a commit message or a one-off script.
-All three are read from the call before it runs, so the character never lands
-and no later pass has to hunt it back out.
-
-Only the text a call adds is read. An edit's `old_string`, a patch's removed
-lines, and every search or read are where these characters legitimately appear:
-removing one means naming it first.
-
-An escape is ASCII describing the character rather than the character itself, so
-`\\u2014`, `\\x{2014}` and `&mdash;` all pass. That is what keeps a script that
-strips em dashes writable while the literal stays refused.
-
-The interpunct is the softer case. It is a real separator in a breadcrumb, a
-changelog line and a units string, so it asks rather than refuses: exit 2 puts
-the call in front of the human instead of turning it down on their behalf.
+Reads only what a call adds: a file written whole, an edit's replacement text,
+a shell command carrying a heredoc or a script. An edit's `old_string`, a
+patch's removed lines and every search pattern are where these characters
+legitimately appear, since removing one means naming it first. An escape is
+ASCII describing the character rather than being it, so `\\u2014` and `&mdash;`
+pass. The interpunct asks instead of refusing: exit 2 hands it to the human.
 """
 
 import json
@@ -103,26 +92,28 @@ def main():
 
     refused = report(text, REFUSED)
     if refused:
-        print("agent-guard: this call writes punctuation AGENTS.md rules out.\n")
+        print("agent-guard: this call writes punctuation the unslop rules refuse.\n")
         print("\n".join(refused))
         print(
-            "\nAn em or en dash never survives review, whatever it is separating. "
-            "End the sentence, or use a comma; a hyphen only where a hyphen is "
-            "meant, and a plain range as `3 to 5`. To write the character on "
-            "purpose, escape it: \\u2014 in Python, JSON or JS, \\x{2014} in an "
-            "rg pattern, &mdash; in HTML."
+            "\nUse periods or commas only (no parentheses, no en dashes, no "
+            "hyphen-as-dash substitutes). Em dashes are an AI tell, and reaching "
+            "for parentheses instead just trades one tell for another. If a "
+            "thought needs separation, end the sentence or use a comma. Write a "
+            "range as `3 to 5`, and a hyphen only where a hyphen is meant. To "
+            "write the character itself, escape it: \\u2014 in Python, JSON or "
+            "JS, \\x{2014} in an rg pattern, &mdash; in HTML."
         )
         return 1
 
     asked = report(text, ASKED)
     if asked:
-        print("agent-guard: this call writes punctuation that needs a human's say-so.\n")
+        print("agent-guard: this call writes punctuation only the human approves.\n")
         print("\n".join(asked))
         print(
-            "\nAn interpunct is fine only where the human has approved it, so this "
-            "call is theirs to allow. A comma, a slash or a hyphen separates just "
-            "as well and needs no approval; \\u00b7 writes the character without "
-            "being it."
+            "\nAn interpunct stands where the human asked for one, so this call is "
+            "theirs to allow. A comma, a slash or a hyphen separates just as well "
+            "and needs no approval. To write the character itself, escape it: "
+            "\\u00b7 in Python, JSON or JS, &middot; in HTML."
         )
         return ASK_EXIT
     return 0
