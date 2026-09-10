@@ -1,58 +1,22 @@
 #!/usr/bin/env python3
 """PreToolUse guard: characters the house style keeps out of written text.
 
-Reads only what a call adds: a file written whole, an edit's replacement text,
-a shell command carrying a heredoc or a script. An edit's `old_string`, a
-patch's removed lines and every search pattern are where these characters
-legitimately appear, since removing one means naming it first. An escaped
-codepoint describes the character without being it, so it passes, which is why
-the rosters below are codepoints too. Banning one more is one line in REFUSED.
+The roster is banned_characters.txt beside this file, one character per line,
+so adding one is pasting it. A character spelled in this source would refuse
+every later edit to this source, hence the separate file. Only what a call adds
+is read: a file written whole, an edit's replacement text, a shell command
+carrying a heredoc. An edit's `old_string` and a patch's removed lines are
+where these characters legitimately appear, since removing one names it first.
 """
 
 import json
+import pathlib
 import sys
 import unicodedata
 
-# Refused outright. Append a codepoint to ban it.
-REFUSED = (
-    0x2014,  # em dash
-    0x2013,  # en dash
-    0x2026,  # ellipsis
-    0x2192,  # rightwards arrow
-    0x2190,  # leftwards arrow
-    0x2194,  # left right arrow
-    0x21D2,  # rightwards double arrow
-    0x21D0,  # leftwards double arrow
-    0x21D4,  # left right double arrow
-    0x2191,  # upwards arrow
-    0x2193,  # downwards arrow
-)
-
-# Handed to the human rather than refused. Append a codepoint to ask about it.
-ASKED = (0x00B7,)  # interpunct
+ROSTER = pathlib.Path(__file__).with_name("banned_characters.txt")
 
 DEFAULT_FIX = "Write the ASCII word or symbol it stands in for."
-FIXES = {
-    0x2014: (
-        "Use periods or commas only (no parentheses, no en dashes, no "
-        "hyphen-as-dash substitutes). If a thought needs separation, end the "
-        "sentence or use a comma."
-    ),
-    0x2013: "Write a range as `3 to 5`, and a hyphen only where a hyphen is meant.",
-    0x2026: "Write the three periods, or end the sentence.",
-    0x2192: "Write `to` or `becomes`, or the ASCII `->`.",
-    0x2190: "Write the word, or the ASCII `<-`.",
-    0x2194: "Write the word, or the ASCII `<->`.",
-    0x21D2: "Write `implies` or `then`, or the ASCII `=>`.",
-    0x21D0: "Write the word, or the ASCII `<=`.",
-    0x21D4: "Write `if and only if`, or the ASCII `<=>`.",
-    0x2191: "Name the key or the direction: `up`.",
-    0x2193: "Name the key or the direction: `down`.",
-    0x00B7: (
-        "An interpunct is fine where the human asked for one. A comma, a slash "
-        "or a hyphen separates just as well and needs no approval."
-    ),
-}
 
 FINDING = "{name} (U+{code:04X}) in: {excerpt}\n  {fix}"
 REFUSE_MESSAGE = (
@@ -73,6 +37,35 @@ ASK_MESSAGE = (
 ASK_EXIT = 2
 
 SHELL_TOOLS = {"Bash", "PowerShell", "exec_command", "shell_command", "shell"}
+
+
+def load_roster(path=ROSTER):
+    """Characters to refuse, characters to ask about, and the advice for each.
+
+    A line is the character itself, then optional advice. `[ask]` opens the
+    tier that reaches the human; `[refuse]` opens the tier that denies, and is
+    where a file with no header starts. A missing roster bans nothing.
+    """
+    refused, asked, fixes, tier = [], [], {}, "refuse"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return (), (), {}
+    for line in lines:
+        entry = line.strip()
+        if not entry or entry.startswith("#"):
+            continue
+        if entry.startswith("[") and entry.endswith("]"):
+            tier = entry[1:-1].strip().lower()
+            continue
+        char, fix = entry[0], entry[1:].strip()
+        (asked if tier == "ask" else refused).append(char)
+        if fix:
+            fixes[char] = fix
+    return tuple(refused), tuple(asked), fixes
+
+
+REFUSED, ASKED, FIXES = load_roster()
 
 
 def added_lines(patch):
@@ -120,23 +113,23 @@ def excerpt(text, char, width=56):
     return ("..." if start else "") + body + ("..." if end < len(text) else "")
 
 
-def report(text, roster):
-    """The roster's codepoints present in `text`, and a line about each."""
-    found = [code for code in roster if chr(code) in text]
+def report(text, roster, fixes):
+    """The roster's characters present in `text`, and a line about each."""
+    found = [char for char in roster if char in text]
     listing = "\n".join(
         FINDING.format(
-            name=unicodedata.name(chr(code), "unnamed character").lower(),
-            code=code,
-            excerpt=excerpt(text, chr(code)),
-            fix=FIXES.get(code, DEFAULT_FIX),
+            name=unicodedata.name(char, "unnamed character").lower(),
+            code=ord(char),
+            excerpt=excerpt(text, char),
+            fix=fixes.get(char, DEFAULT_FIX),
         )
-        for code in found
+        for char in found
     )
     return found, listing
 
 
 def escapes(found):
-    return ", ".join("`\\u%04x`" % code for code in found)
+    return ", ".join("`\\u%04x`" % ord(char) for char in found)
 
 
 def main():
@@ -150,12 +143,12 @@ def main():
     if not text:
         return 0
 
-    found, listing = report(text, REFUSED)
+    found, listing = report(text, REFUSED, FIXES)
     if found:
         print(REFUSE_MESSAGE.format(findings=listing, escapes=escapes(found)))
         return 1
 
-    found, listing = report(text, ASKED)
+    found, listing = report(text, ASKED, FIXES)
     if found:
         print(ASK_MESSAGE.format(findings=listing, escapes=escapes(found)))
         return ASK_EXIT

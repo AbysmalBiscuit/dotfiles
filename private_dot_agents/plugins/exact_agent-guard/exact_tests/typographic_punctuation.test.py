@@ -27,6 +27,14 @@ INTERPUNCT = "\u00b7"
 ASK_EXIT = 2
 
 
+def load_check():
+    """The check as a module, for the roster it read at import."""
+    spec = importlib.util.spec_from_file_location("check_under_test", CHECK)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def check(tool, tool_input):
     payload = {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input}
     result = subprocess.run(
@@ -112,34 +120,54 @@ class InterpunctAsks(unittest.TestCase):
         self.assertIn("em dash", out)
 
 
-class TheRoster(unittest.TestCase):
-    """Appending a codepoint to REFUSED is the whole cost of banning it."""
+class TheShippedRoster(unittest.TestCase):
+    """Pasting a character into banned_characters.txt is all it takes to ban
+    it, so every line of that file is exercised rather than a chosen few."""
 
-    def setUp(self):
-        spec = importlib.util.spec_from_file_location("check_under_test", CHECK)
-        self.check_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(self.check_module)
+    def test_every_refused_character_is_denied_by_name(self):
+        for char in load_check().REFUSED:
+            with self.subTest(codepoint="U+%04X" % ord(char)):
+                out, code = check("Write", {"content": "a %s b" % char})
 
-    def test_every_refused_codepoint_is_denied_by_name(self):
-        for code in self.check_module.REFUSED:
-            with self.subTest(code=code):
-                out, exit_code = check("Write", {"content": "a %s b" % chr(code)})
+                self.assertEqual(code, 1)
+                self.assertIn("U+%04X" % ord(char), out)
 
-                self.assertEqual(exit_code, 1)
-                self.assertIn("U+%04X" % code, out)
+    def test_every_asked_character_reaches_the_human(self):
+        for char in load_check().ASKED:
+            with self.subTest(codepoint="U+%04X" % ord(char)):
+                out, code = check("Write", {"content": "a %s b" % char})
 
-    def test_every_asked_codepoint_reaches_the_human(self):
-        for code in self.check_module.ASKED:
-            with self.subTest(code=code):
-                out, exit_code = check("Write", {"content": "a %s b" % chr(code)})
+                self.assertEqual(code, ASK_EXIT)
+                self.assertIn("U+%04X" % ord(char), out)
 
-                self.assertEqual(exit_code, ASK_EXIT)
-                self.assertIn("U+%04X" % code, out)
+    def test_the_ellipsis_and_the_arrows_are_on_it(self):
+        refused = load_check().REFUSED
 
-    def test_every_fix_names_a_codepoint_on_a_roster(self):
-        rosters = set(self.check_module.REFUSED) | set(self.check_module.ASKED)
+        self.assertIn(chr(0x2026), refused)
+        self.assertIn(chr(0x2192), refused)
 
-        self.assertEqual(set(self.check_module.FIXES) - rosters, set())
+
+class RosterParsing(unittest.TestCase):
+    def load(self, text):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "roster.txt"
+            path.write_text(text, encoding="utf-8")
+            return load_check().load_roster(path)
+
+    def test_a_tier_header_moves_later_lines_to_the_other_tier(self):
+        refused, asked, _ = self.load("A\n[ask]\nC\n")
+
+        self.assertEqual((refused, asked), (("A",), ("C",)))
+
+    def test_advice_is_the_rest_of_the_line_and_optional(self):
+        _, _, fixes = self.load("# a note\n\nA\twrite B instead\nC\n")
+
+        self.assertEqual(fixes, {"A": "write B instead"})
+
+    def test_a_missing_roster_bans_nothing(self):
+        empty = load_check().load_roster(pathlib.Path("/nonexistent/roster.txt"))
+
+        self.assertEqual(empty, ((), (), {}))
 
 
 class ThroughTheHook(unittest.TestCase):

@@ -1,0 +1,21 @@
+# Characters agents may not write, one per line: the character itself, then
+# optional advice after it. To ban another, paste it on its own line.
+#
+# [refuse] denies the call outright. [ask] hands it to you instead.
+# Blank lines and lines starting with # are skipped.
+
+[refuse]
+—	Use periods or commas only (no parentheses, no en dashes, no hyphen-as-dash substitutes). If a thought needs separation, end the sentence or use a comma.
+–	Write a range as `3 to 5`, and a hyphen only where a hyphen is meant.
+…	Write the three periods, or end the sentence.
+→	Write `to` or `becomes`, or the ASCII `->`.
+←	Write the word, or the ASCII `<-`.
+↔	Write the word, or the ASCII `<->`.
+⇒	Write `implies` or `then`, or the ASCII `=>`.
+⇐	Write the word, or the ASCII `<=`.
+⇔	Write `if and only if`, or the ASCII `<=>`.
+↑	Name the key or the direction: `up`.
+↓	Name the key or the direction: `down`.
+
+[ask]
+·	An interpunct is fine where the human asked for one. A comma, a slash or a hyphen separates just as well and needs no approval.
