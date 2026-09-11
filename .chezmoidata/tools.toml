@@ -740,6 +740,14 @@ update_command.default = [
     "update"
 ]
 update_command.windows = []
+completions_command = "codex completion SHELL"
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "powershell",
+    "zsh"
+]
 
 [[tools]]
 lang = "rust"
