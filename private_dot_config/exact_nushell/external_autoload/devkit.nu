@@ -3,7 +3,7 @@
 # Layers on top of the `_generated.nu` in this directory, which
 # `devkit completions --all nushell` writes: that covers subcommands, flags and
 # enum values; these fill in the positional values clap can only know at runtime
-# (tasks, apps, registered docs libs, worktrees, held locks).
+# (tasks, apps, registered docs libs, worktrees, held locks, issue selectors).
 #
 # Nushell has no additive `complete` the way fish does, so every extern here is a
 # whole redeclaration and the last one parsed wins. Autoload sources this
@@ -89,6 +89,74 @@ module devkit_dynamic {
 
     def "nu-complete devkit port role" [] {
         [ "issue" "baseline" ]
+    }
+
+    # devkit's own precedence: the `issue setup` record holds whatever the
+    # tracker actually calls the issue, and the branch/directory scan is the
+    # fallback for a worktree made by a plain `git worktree add`.
+    def devkit-issue-id [worktree: string, branch: string] {
+        let record = ([$worktree ".devkit" "issue.toml"] | path join)
+        if ($record | path exists) {
+            let recorded = (try { open $record | get -o issue } catch { null })
+            if ($recorded | is-not-empty) { return $recorded }
+        }
+        # The leading class stands in for the lookbehind nushell's regex engine
+        # does not have: it is devkit's "this letter run does not start
+        # mid-word" test. A `pr-<number>` run is the PR-checkout marker rather
+        # than an id, so it is dropped and the scan carries on.
+        for source in [$branch ($worktree | path basename)] {
+            let found = (
+                $source
+                | parse -r '(?:^|[^a-zA-Z])(?<key>[a-zA-Z]+)-(?<num>[0-9]+)'
+                | where {|m| ($m.key | str lowercase) != "pr" }
+                | get -o 0
+            )
+            if ($found | is-not-empty) {
+                return ($"($found.key)-($found.num)" | str uppercase)
+            }
+        }
+        ""
+    }
+
+    # Everything `issue end` accepts as a selector: the issue ids, branch names
+    # and paths of this repository's issue worktrees. Offline on purpose, since
+    # this runs on a keypress: it reads git and the record files rather than
+    # calling `issue status`, which goes out to GitHub and the tracker.
+    def "nu-complete devkit issue selectors" [context: string] {
+        let used = ($context | split row -r '\s+')
+        let res = (^git worktree list --porcelain | complete)
+        if $res.exit_code != 0 { return [] }
+        $res.stdout
+        | split row "\n\n"
+        | where {|e| $e | str trim | is-not-empty }
+        # git lists the primary checkout first, and it is never an issue worktree.
+        | skip 1
+        | each {|entry|
+            let fields = ($entry | lines)
+            let worktree = (
+                $fields | where {|l| $l starts-with "worktree " } | get -o 0
+                | default "" | str replace "worktree " ""
+            )
+            let branch = (
+                $fields | where {|l| $l starts-with "branch " } | get -o 0
+                | default "" | str replace -r '^branch refs/heads/' ''
+            )
+            { worktree: $worktree, branch: $branch }
+        }
+        | where {|w| $w.worktree | is-not-empty }
+        # A baseline is not an issue worktree, and `end` never takes one.
+        | where {|w| not ([$w.worktree ".devkit" "baseline.toml"] | path join | path exists) }
+        | each {|w|
+            let label = (if ($w.branch | is-empty) { $w.worktree | path basename } else { $w.branch })
+            [
+                { value: (devkit-issue-id $w.worktree $w.branch), description: $label }
+                { value: $w.branch, description: ($w.worktree | path basename) }
+                { value: $w.worktree, description: $label }
+            ]
+        }
+        | flatten
+        | where {|c| $c.value | is-not-empty }
+        | where {|c| $c.value not-in $used }
     }
 
     def "nu-complete devkit timing" [] {
@@ -207,6 +275,20 @@ module devkit_dynamic {
         --json                    # Emit the result as JSON instead of a human-readable line
         --help(-h)                # Print help (see more with '--help')
         ...paths: string          # Files or directories to claim
+    ]
+
+    export extern "issue end" [
+        --yes(-y)                 # Remove without asking for confirmation
+        --force                   # Discard uncommitted changes instead of refusing to remove a dirty worktree
+        --pr-only                 # Count a merged PR plus a clean tree as finished, ignoring the tracker state and the issue-id gate
+        --clean-worktree          # Remove the selected worktrees whether or not they are finished. Requires at least one selector
+        --no-preserve             # Remove without copying out the `[preserve]` entries first
+        --dir(-C): string         # Run as if this command had started in DIR instead of the current directory
+        --config: string          # devkit.toml to load instead of the one discovered from the start directory
+        --timing: string@"nu-complete devkit timing" # Print IO timing to stderr. `--timing` = summary, `--timing=trace` = per-op
+        --timing-log: path        # Write one JSON record per timed IO op to FILE
+        --help(-h)                # Print help
+        ...ids: string@"nu-complete devkit issue selectors" # Issue ids, branches, or worktree paths to consider; omit to scan every issue worktree
     ]
 
     export extern "lockm check" [
