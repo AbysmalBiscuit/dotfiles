@@ -196,8 +196,11 @@ class Herdr:
 # --- workspaces --------------------------------------------------------------
 
 
-def open_checkout(herdr: Herdr, root: Path, label: str | None) -> tuple[str, bool]:
-    """Find or create a checkout's workspace without changing client focus."""
+def open_checkout(herdr: Herdr, root: Path, label: str | None) -> tuple[str, str | None]:
+    """Find or create a checkout's workspace without changing client focus.
+
+    Returns the workspace id and, when this call created it, the tab it starts with.
+    """
     listing = herdr.require("worktree", "list", "--cwd", str(root))
     entry = next(
         (w for w in listing.get("worktrees", []) if same_path(w.get("path", ""), root)),
@@ -217,25 +220,28 @@ def open_checkout(herdr: Herdr, root: Path, label: str | None) -> tuple[str, boo
     if label and not entry.get("open_workspace_id"):
         args += ["--label", label]
     result = herdr.require(*args)
-    return (
-        result.get("workspace", {}).get("workspace_id", "?"),
-        not result.get("already_open", False),
-    )
+    starter = None if result.get("already_open") else result.get("tab", {}).get("tab_id")
+    return result.get("workspace", {}).get("workspace_id", "?"), starter
 
 
-def open_directory(herdr: Herdr, directory: Path, label: str | None) -> tuple[str, bool]:
-    """Find or create a workspace, matched by the cwd of an open pane."""
+def open_directory(herdr: Herdr, directory: Path, label: str | None) -> tuple[str, str | None]:
+    """Find or create a workspace, matched by the cwd of an open pane.
+
+    Returns the workspace id and, when this call created it, the tab it starts with.
+    """
     panes = herdr.require("pane", "list").get("panes", [])
     existing = next((p for p in panes if same_path(pane_cwd(p), directory)), None)
     if existing:
-        workspace_id = existing["workspace_id"]
-        return workspace_id, False
+        return existing["workspace_id"], None
 
     args = ["workspace", "create", "--cwd", str(directory), "--no-focus"]
     if label:
         args += ["--label", label]
     result = herdr.require(*args)
-    return result.get("workspace", {}).get("workspace_id", "?"), True
+    return (
+        result.get("workspace", {}).get("workspace_id", "?"),
+        result.get("tab", {}).get("tab_id"),
+    )
 
 
 def active_tab(herdr: Herdr, workspace_id: str) -> str | None:
@@ -475,19 +481,23 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
     return 0
 
 
-def workspace_for(herdr: Herdr, args: argparse.Namespace) -> tuple[Path, str]:
-    """Ensure this checkout has a workspace. Returns (directory, id)."""
+def workspace_for(herdr: Herdr, args: argparse.Namespace) -> tuple[Path, str, str | None]:
+    """Ensure this checkout has a workspace.
+
+    Returns (directory, workspace id, starter tab); the starter tab is set only
+    when the workspace was created here.
+    """
     directory = Path(args.path or Path.cwd()).expanduser().resolve()
     if not directory.is_dir():
         die(f"{directory}: not a directory")
     root = checkout_root(directory)
     label = args.label or (root or directory).name
     if root:
-        workspace_id, created = open_checkout(herdr, root, label)
+        workspace_id, starter = open_checkout(herdr, root, label)
     else:
-        root, (workspace_id, created) = directory, open_directory(herdr, directory, label)
-    print(f"workspace {workspace_id}  {'created' if created else 'existing'}  {root}")
-    return directory, workspace_id
+        root, (workspace_id, starter) = directory, open_directory(herdr, directory, label)
+    print(f"workspace {workspace_id}  {'created' if starter else 'existing'}  {root}")
+    return directory, workspace_id, starter
 
 
 def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
@@ -610,12 +620,18 @@ def main() -> int:
     if args.command == "list":
         return list_sessions(herdr, args)
 
-    directory, workspace_id = workspace_for(herdr, args)
-    tab_id = (
-        new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
-        if args.command == "new"
-        else active_tab(herdr, workspace_id)
-    )
+    directory, workspace_id, starter = workspace_for(herdr, args)
+    if args.command == "new":
+        tab_id = new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
+        # A new workspace comes with a shell tab of its own. The new tab is
+        # opened in `directory`, which may sit below the checkout root that
+        # shell starts in, so the starter is closed rather than reused.
+        if starter:
+            closed, code, message = herdr.call("tab", "close", starter)
+            if closed is None:
+                warn(f"could not close starter tab {starter}: {message or code or 'failed'}")
+    else:
+        tab_id = starter or active_tab(herdr, workspace_id)
     if tab_id and not args.no_attach:
         attach_tab(herdr, tab_id)
     return 0
