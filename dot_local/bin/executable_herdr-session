@@ -11,10 +11,10 @@ This resolves the checkout from git and opens its workspace.
   herdr-session new shell      ... plus a fresh tab at a shell prompt
   herdr-session new claude     ... plus a fresh tab running an agent
 
-The workspace or tab is prepared, reported, and left alone: the calling
-terminal keeps its own session and every attached client keeps the workspace
-and tab it was already showing. Select the reported target in Herdr's
-navigation, or in a terminal that lists Herdr's panes itself.
+The calling terminal keeps its own session: Herdr's workspaces and tabs are
+made without focus, so no Herdr client moves. Alacritree, which lists Herdr's
+panes in its own sidebar, is then pointed at the reported tab, the same move
+as clicking that row. Pass --no-attach to leave it where it is.
 """
 
 from __future__ import annotations
@@ -34,6 +34,8 @@ from typing import NoReturn
 PROG = "herdr-session"
 SERVER_START_TIMEOUT = 15.0
 SERVER_POLL = 0.1
+PANE_DETECT_TIMEOUT = 3.0
+PANE_DETECT_POLL = 0.1
 AGENT_NAME_MAX = 32
 SUBCOMMANDS = ("open", "new", "list", "close")
 DELETED_SUFFIX = " (deleted)"
@@ -226,6 +228,77 @@ def open_directory(herdr: Herdr, directory: Path, label: str | None) -> tuple[st
     return result.get("workspace", {}).get("workspace_id", "?"), True
 
 
+def active_tab(herdr: Herdr, workspace_id: str) -> str | None:
+    """The tab a workspace was last showing, which a fresh one has too."""
+    workspaces = herdr.require("workspace", "list").get("workspaces", [])
+    entry = next((w for w in workspaces if w.get("workspace_id") == workspace_id), None)
+    return (entry or {}).get("active_tab_id")
+
+
+# --- alacritree --------------------------------------------------------------
+
+
+def alacritree(exe: str, *args: str) -> tuple[dict, str]:
+    """Returns (reply, message); the message is non-empty only on failure."""
+    done = run([exe, *args, "--json"])
+    try:
+        reply = json.loads(done.stdout or "")
+    except (json.JSONDecodeError, ValueError):
+        reply = None
+    if not isinstance(reply, dict):
+        text = ((done.stdout or "") + (done.stderr or "")).strip()
+        return {}, text or f"{' '.join(args)} failed"
+    if error := reply.get("error"):
+        return {}, str(error)
+    if done.returncode != 0:
+        return {}, f"{' '.join(args)} failed"
+    return reply, ""
+
+
+def detected_pane(panes: list[dict], session: str, tab_id: str) -> dict | None:
+    """The multiplexer record Alacritree holds for a Herdr tab."""
+    for pane in panes:
+        mux = pane.get("multiplexer") or {}
+        if (
+            mux.get("name") == "herdr"
+            and mux.get("session") == session
+            and mux.get("tab_id") == tab_id
+        ):
+            return mux
+    return None
+
+
+def attach_tab(herdr: Herdr, tab_id: str) -> None:
+    """Open the tab in Alacritree, as clicking its sidebar row does.
+
+    Alacritree discovers Herdr's panes on its own schedule, so a tab created a
+    moment ago is not in its list yet and the pane is waited for.
+    """
+    exe = os.environ.get("ALACRITREE_EXE") or shutil.which("alacritree")
+    if not exe:
+        return
+    session = herdr.session or "default"
+    deadline = time.monotonic() + PANE_DETECT_TIMEOUT
+    while True:
+        listing, message = alacritree(exe, "multiplexer", "list")
+        if message:
+            warn(f"could not open tab {tab_id} in alacritree: {message}")
+            return
+        mux = detected_pane(listing.get("panes", []), session, tab_id)
+        if mux:
+            break
+        if time.monotonic() >= deadline:
+            warn(f"could not open tab {tab_id} in alacritree: no pane for it")
+            return
+        time.sleep(PANE_DETECT_POLL)
+
+    reply, message = alacritree(exe, "multiplexer", "attach", mux["side"], mux["terminal_id"])
+    if message:
+        warn(f"could not open tab {tab_id} in alacritree: {message}")
+        return
+    print(f"alacritree session {reply.get('session_id', '?')}  attached  {tab_id}")
+
+
 # --- agents ------------------------------------------------------------------
 
 
@@ -295,14 +368,14 @@ def agent_name(herdr: Herdr, base: str) -> str:
     die(f"no free agent name based on {slug!r}")
 
 
-def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> None:
+def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> str:
     result = herdr.require(
         "tab", "create", "--workspace", workspace_id, "--cwd", str(cwd), "--no-focus"
     )
-    tab_id = result.get("tab", {}).get("tab_id", "?")
+    tab_id = result.get("tab", {}).get("tab_id") or die("herdr created a tab without an id")
     if kind == "shell":
         print(f"tab {tab_id}  shell  {cwd}")
-        return
+        return tab_id
 
     pane_id = result.get("root_pane", {}).get("pane_id")
     if not pane_id:
@@ -318,6 +391,7 @@ def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[s
     if code == "agent_not_ready":
         warn(f"{kind} as {name} is waiting for startup input in tab {tab_id}")
     print(f"tab {tab_id}  {kind} as {name}  {cwd}")
+    return tab_id
 
 
 # --- commands ----------------------------------------------------------------
@@ -431,6 +505,9 @@ def main() -> int:
     shared.add_argument("--session", help="use this named session instead of the default")
     shared.add_argument("--path", help="directory to open (default: the current one)")
     shared.add_argument("--label", help="workspace name, used only when creating one")
+    shared.add_argument(
+        "--no-attach", action="store_true", help="leave Alacritree on the session it is showing"
+    )
 
     # `shared` is a parent of the top-level parser only so that a bare
     # `--help` documents the options; every run reaches a subparser, which
@@ -445,7 +522,7 @@ def main() -> int:
         "open",
         parents=[shared],
         help="create or join the workspace (the default)",
-        description="Create or join the current checkout's workspace without moving any client.",
+        description="Create or join the current checkout's workspace and open it in Alacritree.",
     )
     sub.add_parser(
         "close",
@@ -509,8 +586,13 @@ def main() -> int:
         return list_sessions(herdr, args)
 
     directory, workspace_id = workspace_for(herdr, args)
-    if args.command == "new":
+    tab_id = (
         new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
+        if args.command == "new"
+        else active_tab(herdr, workspace_id)
+    )
+    if tab_id and not args.no_attach:
+        attach_tab(herdr, tab_id)
     return 0
 
 

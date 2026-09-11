@@ -12,6 +12,7 @@ export extern herdr-session [
     --session: string # Named Herdr server session
     --path: directory # Workspace directory
     --label: string # Name for a new workspace
+    --no-attach # Leave Alacritree on its current session
     --help(-h) # Show help
 ]
 
@@ -20,6 +21,7 @@ export extern "herdr-session open" [
     --session: string
     --path: directory
     --label: string
+    --no-attach
     --help(-h)
 ]
 
@@ -30,6 +32,7 @@ export extern "herdr-session new" [
     --session: string
     --path: directory
     --label: string
+    --no-attach
     --help(-h)
     ...agent_args: string # Agent arguments after --
 ]

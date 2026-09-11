@@ -1,6 +1,6 @@
 # Herdr session launcher
 
-`herdr-session` opens the current checkout as a Herdr workspace and returns to the shell it ran in. `herdr-session new` offers an installed-agent picker; `herdr-session new claude` starts that agent directly and `herdr-session new shell` opens a shell tab. Existing clients keep their selected workspace and tab.
+`herdr-session` opens the current checkout as a Herdr workspace, points Alacritree at it, and returns to the shell it ran in. `herdr-session new` offers an installed-agent picker; `herdr-session new claude` starts that agent directly and `herdr-session new shell` opens a shell tab. Existing Herdr clients keep their selected workspace and tab.
 
 `herdr-session list` shows the current workspace's tabs, panes, agents, names, status, and directories. `list --json` returns the same rows as JSON. Outside Herdr, the workspace is matched to the current checkout or directory; inside a Herdr pane, it uses that pane's workspace. `--path /absolute/path` selects another checkout or directory. Listing does not start a server or change focus.
 
@@ -8,13 +8,13 @@ Agent choices use `~/.config/chezmoi/has.toml` and executables on `PATH`. An age
 
 Fish and Nushell completions suggest subcommands, options, directories, and detected agents. Fish loads its completion file automatically; Nushell loads it from `config.nu` when a shell starts.
 
-If an agent starts with a question or approval screen, its tab stays open and the launcher says which tab holds it. Select that tab to answer. Repeated launches create separate tabs with unique agent names.
+If an agent starts with a question or approval screen, its tab stays open and the launcher names it and opens it in Alacritree, so the question is on screen. Repeated launches create separate tabs with unique agent names.
 
-The launcher creates workspaces and tabs with `--no-focus` and attaches nothing, inside a Herdr pane and outside one alike: the calling terminal keeps its own session and every attached client keeps the workspace and tab it was showing. Stock `herdr` serves every call. Select the reported target through Herdr's navigation, or from a terminal that lists a Herdr server's panes itself, such as Alacritree's sidebar. `close` closes matching workspaces and their processes.
+The launcher creates workspaces and tabs with `--no-focus`, inside a Herdr pane and outside one alike: the calling terminal keeps its own session and every attached Herdr client keeps the workspace and tab it was showing. Stock `herdr` serves every Herdr call. It then asks Alacritree, which lists a Herdr server's panes in its own sidebar, to open the reported tab, the same move as clicking that row. Alacritree notices new panes on its own schedule, so the launcher waits a moment for the pane and warns if it never appears. `--no-attach` leaves Alacritree alone, and an Alacritree that is absent or not running is not an error. `close` closes matching workspaces and their processes.
 
 ## Build
 
-The launcher attaches nothing, so none of this is needed to run it. `herdr-session-build-client`, `startup-target.patch`, and the attachment checks in `verify.py` describe a launcher that took over its terminal, and are kept only until they are removed.
+The launcher drives Alacritree over its CLI instead of shipping a client, so none of this is needed to run it. `herdr-session-build-client`, `startup-target.patch`, and the attachment checks in `verify.py` describe a launcher that took over its terminal, and are kept only until they are removed.
 
 Install Git, stable Rust, and Zig 0.15.2, then run:
 
