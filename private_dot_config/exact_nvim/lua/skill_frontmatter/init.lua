@@ -67,7 +67,9 @@ function M.sync(bufnr)
   local description = single_line(data.description, "description")
   local metadata = data.metadata and mapping(data.metadata, "metadata") or {}
   local short = single_line(metadata["short-description"] or description, "short-description")
-  short = vim.fn.strcharpart(short, 0, 64)
+
+  -- short = vim.fn.strcharpart(short, 0, 64)
+
   local disabled = data["disable-model-invocation"]
 
   if disabled == nil then
