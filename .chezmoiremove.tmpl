@@ -9,3 +9,10 @@
 {{ end -}}
 {{/* file-suggestion.ts is the @ autocomplete entry point, so the shell wrapper is dead weight */ -}}
 .agents/scripts/file-suggestion.sh
+{{/* herdr-session opens tabs through Alacritree, so the patched client, its builder, and its build cache are dead weight */ -}}
+.local/bin/herdr-session-build-client
+.local/bin/herdr-session-client
+.local/bin/herdr-session-client.exe
+.local/share/herdr-session/startup-target.patch
+.local/share/herdr-session/verify.py
+.cache/herdr-session
