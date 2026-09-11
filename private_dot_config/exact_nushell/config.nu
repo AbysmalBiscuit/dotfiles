@@ -227,10 +227,12 @@ if (which carapace | is-not-empty) {
 
     $env.config.completions.external.completer = {|spans|
         # An alias has to be resolved to its target first, or carapace looks up a
-        # command that does not exist.
+        # command that does not exist. The whole expansion goes in, not just its
+        # head: for `cor = codex resume` carapace needs the subcommand or it
+        # answers with the flags of bare `codex`.
         let expansion = (scope aliases | where name == $spans.0 | get --optional 0.expansion)
         let spans = if ($expansion | is-not-empty) {
-            $spans | skip 1 | prepend ($expansion | split row " " | first)
+            $spans | skip 1 | prepend ($expansion | split row --regex '\s+')
         } else {
             $spans
         }
