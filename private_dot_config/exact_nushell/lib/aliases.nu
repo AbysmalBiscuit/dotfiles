@@ -12,6 +12,14 @@ alias cl = claude
 alias ca = claude agents
 alias cr = claude -r
 
+# codex. com and cou pin the top reasoning effort each model accepts: luna tops
+# out at max, astra also offers ultra.
+alias co = codex
+alias coa = codex agents
+alias cor = codex resume
+alias com = codex --model gpt-5.6-luna --config model_reasoning_effort="max"
+alias cou = codex --model gpt-6-astra --config model_reasoning_effort="ultra"
+
 alias "herdr sn" = herdr-session
 
 # listing. nushell's `ls` builtin is left alone: it returns a table that the
