@@ -20,6 +20,7 @@ as clicking that row. Pass --no-attach to leave it where it is.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
@@ -81,7 +82,13 @@ def warn(message: str) -> None:
 
 def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kwargs
+        cmd,
+        capture_output=True,
+        check=False,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        **kwargs,
     )
 
 
@@ -164,7 +171,10 @@ class Herdr:
 
     def start_server(self) -> None:
         if os.environ.get("NO_COLOR") and os.environ.get("TERM") == "dumb":
-            die("start Herdr from an interactive terminal first; this environment disables pane colors")
+            die(
+                "start Herdr from an interactive terminal first;"
+                " this environment disables pane colors"
+            )
         self._started_server = True
         warn("no server running, starting one")
         subprocess.Popen(
@@ -329,6 +339,7 @@ def choose_agent() -> str | None:
             input="\n".join(choices),
             text=True,
             stdout=subprocess.PIPE,
+            check=False,
         )
         if picked.returncode in (1, 130):
             return None
@@ -454,7 +465,11 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
         table = [[key.upper() for key in columns], *cells]
         widths = [max(len(row[i]) for row in table) for i in range(len(columns))]
         for row in table:
-            print("  ".join(value.ljust(width) for value, width in zip(row, widths)).rstrip())
+            print(
+                "  ".join(
+                    value.ljust(width) for value, width in zip(row, widths, strict=True)
+                ).rstrip()
+            )
     else:
         print(f"No sessions in {root}")
     return 0
@@ -528,20 +543,29 @@ def main() -> int:
         "close",
         parents=[shared],
         help="close the workspaces for a checkout",
-        description="Close workspaces whose panes are in the current directory or its subdirectories, terminating their processes.",
+        description=(
+            "Close workspaces whose panes are in the current directory or its"
+            " subdirectories, terminating their processes."
+        ),
     )
     p_list = sub.add_parser(
         "list",
         parents=[shared],
         help="show this workspace's tabs and agents",
-        description="List the current workspace's tabs, panes, and agents with their status and working directories.",
+        description=(
+            "List the current workspace's tabs, panes, and agents with their status"
+            " and working directories."
+        ),
     )
     p_list.add_argument("--json", action="store_true", help="print structured session rows")
     p_new = sub.add_parser(
         "new",
         parents=[shared],
         help="also open a tab with a shell or agent",
-        description="Open a new tab in this workspace with a shell or coding agent. If no agent is specified, choose one from the installed agents.",
+        description=(
+            "Open a new tab in this workspace with a shell or coding agent."
+            " If no agent is specified, choose one from the installed agents."
+        ),
     )
     p_new.add_argument(
         "kind", nargs="?", help="installed agent or shell (default: interactive picker)"
@@ -564,7 +588,8 @@ def main() -> int:
             parser.error("agent arguments are only accepted by new")
         args.agent_args.extend(argv[separator + 1 :])
     for stream in (sys.stdout, sys.stderr):
-        stream.reconfigure(encoding="utf-8", errors="replace")
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors="replace")
 
     if args.command == "new":
         if args.list_agents:
