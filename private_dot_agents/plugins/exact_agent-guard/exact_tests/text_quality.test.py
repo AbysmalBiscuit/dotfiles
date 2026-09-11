@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cases for tool_checks/typographic_punctuation.py and the ask tier it uses.
+"""Cases for tool_checks/text_quality.py and the ask tier it uses.
 
 Which half of a call is read matters most: the text a call adds is checked and
 the text it removes is not, or the rule would refuse the very edit that takes
@@ -17,7 +17,7 @@ import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).parent.parent
-CHECK = ROOT / "tool_checks" / "typographic_punctuation.py"
+CHECK = ROOT / "tool_checks" / "text_quality.py"
 GUARD = ROOT / "scripts" / "agent_guard.py"
 
 EM_DASH = "\u2014"
@@ -28,8 +28,10 @@ ASK_EXIT = 2
 
 
 def load_check():
-    """The check as a module, for the roster it read at import."""
+    """The check as a module, for its rules and its judge."""
     spec = importlib.util.spec_from_file_location("check_under_test", CHECK)
+    assert spec is not None
+    assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -43,13 +45,16 @@ def check(tool, tool_input):
         capture_output=True,
         text=True,
         timeout=15,
+        check=False,
     )
     return result.stdout.strip(), result.returncode
 
 
 class RefusedCharacters(unittest.TestCase):
     def test_em_dash_in_a_shell_command_is_denied(self):
-        out, code = check("Bash", {"command": f'git commit -m "adds a thing {EM_DASH} and another"'})
+        out, code = check(
+            "Bash", {"command": f'git commit -m "adds a thing {EM_DASH} and another"'}
+        )
 
         self.assertEqual(code, 1)
         self.assertIn("em dash", out)
@@ -85,12 +90,17 @@ class RefusedCharacters(unittest.TestCase):
 
 class TextTheCallDoesNotAdd(unittest.TestCase):
     def test_removing_a_dash_through_an_edit_is_allowed(self):
-        out, code = check("Edit", {"old_string": f"before {EM_DASH} after", "new_string": "before, after"})
+        out, code = check(
+            "Edit", {"old_string": f"before {EM_DASH} after", "new_string": "before, after"}
+        )
 
         self.assertEqual((out, code), ("", 0))
 
     def test_removed_patch_lines_are_allowed(self):
-        patch = f"*** Begin Patch\n*** Update File: a.md\n-a line {EM_DASH} here\n+a line, here\n*** End Patch"
+        patch = (
+            f"*** Begin Patch\n*** Update File: a.md\n"
+            f"-a line {EM_DASH} here\n+a line, here\n*** End Patch"
+        )
         out, code = check("apply_patch", {"command": patch})
 
         self.assertEqual((out, code), ("", 0))
@@ -120,54 +130,66 @@ class InterpunctAsks(unittest.TestCase):
         self.assertIn("em dash", out)
 
 
-class TheShippedRoster(unittest.TestCase):
-    """Pasting a character into banned_characters.txt is all it takes to ban
-    it, so every line of that file is exercised rather than a chosen few."""
+class TheShippedRules(unittest.TestCase):
+    """Adding a line to REFUSE, ASK or WARN is all it takes to enforce it, so
+    every rule is exercised rather than a chosen few."""
 
-    def test_every_refused_character_is_denied_by_name(self):
-        for char in load_check().REFUSED:
-            with self.subTest(codepoint="U+%04X" % ord(char)):
-                out, code = check("Write", {"content": "a %s b" % char})
+    def assert_tier(self, rules, expected_code):
+        module = load_check()
+        for key in rules(module):
+            with self.subTest(rule=module.label(key)):
+                out, code = check("Write", {"content": f"a {key} b"})
 
-                self.assertEqual(code, 1)
-                self.assertIn("U+%04X" % ord(char), out)
+                self.assertEqual(code, expected_code)
+                self.assertIn(module.label(key), out)
 
-    def test_every_asked_character_reaches_the_human(self):
-        for char in load_check().ASKED:
-            with self.subTest(codepoint="U+%04X" % ord(char)):
-                out, code = check("Write", {"content": "a %s b" % char})
+    def test_every_refused_rule_is_denied_by_name(self):
+        self.assert_tier(lambda module: module.REFUSE, 1)
 
-                self.assertEqual(code, ASK_EXIT)
-                self.assertIn("U+%04X" % ord(char), out)
+    def test_every_asked_rule_reaches_the_human(self):
+        self.assert_tier(lambda module: module.ASK, ASK_EXIT)
 
-    def test_the_ellipsis_and_the_arrows_are_on_it(self):
-        refused = load_check().REFUSED
-
-        self.assertIn(chr(0x2026), refused)
-        self.assertIn(chr(0x2192), refused)
+    def test_every_warned_rule_runs_and_says_why(self):
+        self.assert_tier(lambda module: module.WARN, 0)
 
 
-class RosterParsing(unittest.TestCase):
-    def load(self, text):
-        with tempfile.TemporaryDirectory() as directory:
-            path = pathlib.Path(directory) / "roster.txt"
-            path.write_text(text, encoding="utf-8")
-            return load_check().load_roster(path)
+class RuleValues(unittest.TestCase):
+    def test_a_plain_value_is_the_swap_the_agent_is_told_to_make(self):
+        module = load_check()
+        module.WARN["utilize"] = "use"
 
-    def test_a_tier_header_moves_later_lines_to_the_other_tier(self):
-        refused, asked, _ = self.load("A\n[ask]\nC\n")
+        message, code = module.judge("we utilize it")
 
-        self.assertEqual((refused, asked), (("A",), ("C",)))
+        self.assertEqual(code, 0)
+        self.assertIn('"utilize"', message)
+        self.assertIn("Write `use` instead.", message)
 
-    def test_advice_is_the_rest_of_the_line_and_optional(self):
-        _, _, fixes = self.load("# a note\n\nA\twrite B instead\nC\n")
+    def test_matching_ignores_case(self):
+        module = load_check()
+        module.WARN["frobnicate"] = "poke"
 
-        self.assertEqual(fixes, {"A": "write B instead"})
+        message, code = module.judge("Frobnicate it first")
 
-    def test_a_missing_roster_bans_nothing(self):
-        empty = load_check().load_roster(pathlib.Path("/nonexistent/roster.txt"))
+        self.assertEqual(code, 0)
+        self.assertIn("Write `poke` instead.", message)
+        self.assertIn("Frobnicate it first", message)
 
-        self.assertEqual(empty, ((), (), {}))
+    def test_an_empty_value_says_to_delete(self):
+        module = load_check()
+        module.WARN["very"] = ""
+
+        message, _ = module.judge("a very big deal")
+
+        self.assertIn("Delete it.", message)
+
+    def test_an_explained_value_is_read_as_written(self):
+        module = load_check()
+        module.WARN["utilize"] = module.Explain("Say what it does instead.")
+
+        message, _ = module.judge("we utilize it")
+
+        self.assertIn("Say what it does instead.", message)
+        self.assertNotIn("Write `", message)
 
 
 class ThroughTheHook(unittest.TestCase):
@@ -190,6 +212,7 @@ class ThroughTheHook(unittest.TestCase):
                 text=True,
                 cwd=directory,
                 timeout=20,
+                check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(result.stdout.strip(), "hook returned no output")
@@ -208,6 +231,13 @@ class ThroughTheHook(unittest.TestCase):
         self.assertIn("interpunct", out["permissionDecisionReason"])
         self.assertIn("interpunct", out["additionalContext"])
 
+    def test_a_warning_lets_the_call_run_and_reaches_the_agent(self):
+        word = next(iter(load_check().WARN))
+        out = self.decision("Write", {"file_path": "a.md", "content": f"x {word} y\n"})
+
+        self.assertNotIn("permissionDecision", out)
+        self.assertIn(word, out["additionalContext"])
+
     def test_clean_content_is_not_questioned(self):
         with tempfile.TemporaryDirectory() as directory:
             payload = {
@@ -224,6 +254,7 @@ class ThroughTheHook(unittest.TestCase):
                 text=True,
                 cwd=directory,
                 timeout=20,
+                check=False,
             )
 
         self.assertEqual(result.returncode, 0, result.stderr)
