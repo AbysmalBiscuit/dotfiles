@@ -1,5 +1,6 @@
 -- Maintain against https://code.claude.com/docs/en/skills#frontmatter-reference
 -- and https://learn.chatgpt.com/docs/build-skills#optional-metadata.
+
 ---@class SkillFrontmatterField
 ---@field name string
 ---@field harnesses string[]

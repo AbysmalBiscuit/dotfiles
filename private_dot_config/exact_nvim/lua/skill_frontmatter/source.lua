@@ -14,12 +14,14 @@ function source:get_completions(ctx, callback)
   local lines = vim.api.nvim_buf_get_lines(ctx.bufnr, 0, -1, false)
   local row, col = unpack(ctx.cursor)
   local closing = require("skill_frontmatter").closing_line(lines)
+
   if vim.fs.basename(vim.api.nvim_buf_get_name(ctx.bufnr)) == "SKILL.md" and closing and row > 1 and row < closing then
     local line = lines[row]
     local prefix = line:sub(1, col)
     local indent, key = prefix:match("^( *)([%w_-]*)$")
     local value_key, value_prefix = prefix:match("^([%w_-]+):%s*([%w_-]*)$")
     local parent
+
     if indent and #indent > 0 then
       for i = row - 1, 2, -1 do
         if lines[i]:match("^%S") and not lines[i]:match("^#") then
@@ -28,8 +30,10 @@ function source:get_completions(ctx, callback)
         end
       end
     end
+
     for _, field in ipairs(fields) do
       local candidates, start_col, end_col
+
       if key and field.parent == parent and (#indent == 0 or parent) then
         local exists = false
         local section
@@ -44,6 +48,7 @@ function source:get_completions(ctx, callback)
             exists = true
           end
         end
+
         if not exists then
           end_col = #indent + #(line:sub(#indent + 1):match("^[%w_-]*"))
           candidates = { field.name .. (line:sub(end_col + 1):match("^%s*:") and "" or ": ") }
@@ -54,6 +59,7 @@ function source:get_completions(ctx, callback)
         start_col = col - #value_prefix
         end_col = col + #(line:sub(col + 1):match("^[%w_-]*"))
       end
+
       for _, text in ipairs(candidates or {}) do
         items[#items + 1] = {
           label = key and field.name or text,
