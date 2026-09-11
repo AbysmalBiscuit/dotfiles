@@ -617,6 +617,7 @@ vim.lsp.enable({ "gdscript" })
 vim.lsp.enable({ "gdshader_lsp_cpp" })
 -- vim.lsp.set_log_level("debug")
 vim.lsp.enable({ "taplo" })
+vim.lsp.enable({ "stylua" })
 -- vim.lsp.enable({ "starlark_rust" })
 -- vim.lsp.enable({ "bzl" })
 
