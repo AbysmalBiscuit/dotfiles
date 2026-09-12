@@ -133,4 +133,6 @@ export ZCCACHE_COMPILE_PRIORITY_LINK="normal"
 # export ZCCACHE_WEDGE_RECV_TIMEOUT_SECS="180"
 # Disable the automatic retry after a compile/link transport failure when enabled.
 # export ZCCACHE_DISABLE_LINK_RETRY="1"
+# Silences zccache info output
+export ZCCACHE_QUIET="1"
 # {{- end }}

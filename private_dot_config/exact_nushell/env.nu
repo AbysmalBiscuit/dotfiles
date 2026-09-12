@@ -157,6 +157,8 @@ if $nu.os-info.name == "windows" and (which zccache | is-not-empty) {
     $env.ZCCACHE_COMPILE_PRIORITY = "normal"
     # Set link-like work priority separately from the compiler priority override.
     $env.ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
+    # Silences zccache info output
+    $env.ZCCACHE_QUIET = "1"
 }
 
 mkdir $nu.cache-dir
