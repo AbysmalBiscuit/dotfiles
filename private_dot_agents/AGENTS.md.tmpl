@@ -242,6 +242,28 @@ When the user types `/graphify`, use the installed graphify skill or instruction
 
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
+### Scripts you write and run yourself
+
+{{- if (index .tool "bun") }}
+
+When you write a JavaScript or TypeScript script to perform a task, run it with `bun`.
+This includes inline commands and temporary script files for editing files, transforming data, or inspecting the workspace.
+
+| How you pass the JS/TS code | Command |
+|---|---|
+| Inline string | `bun -e 'CODE'` |
+| Standard input, including pipes and heredocs | `bun run -` |
+| Script file | `bun run /absolute/path/script.ts` |
+
+{{- if false }}
+
+Example: replace text in a file.
+```sh
+bun -e 'const path = "/path/to/file.txt"; await Bun.write(path, (await Bun.file(path).text()).replaceAll("old", "new"));'
+```
+{{- end }}
+{{- end }}
+
 {{- if or (index .tool "fd") (index .tool "rg") }}
 
 ### Preferred Command-Line Tools
