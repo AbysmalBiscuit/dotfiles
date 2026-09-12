@@ -67,7 +67,7 @@ def update-nvim [] {
 # each line is handed to a bare `nu` rather than to a separate math language.
 def math-prompt [] {
     loop {
-        let line = (input "[math]$ " | str trim)
+        let line = input "[math]$ " | str trim
         if $line in ["" "q" "quit" "exit"] { break }
         do --ignore-errors { ^nu -n -c $line }
     }
