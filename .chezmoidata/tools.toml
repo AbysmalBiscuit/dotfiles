@@ -1178,7 +1178,7 @@ desc = "A TOML toolkit: formatter, linter, and language server."
 url = "https://taplo.tamasfe.dev/"
 git = "https://github.com/AbysmalBiscuit/taplo"
 comment = "Fork carries the all-of completion stack overflow fix upstream lacks."
-install_command = "cargo install --git https://github.com/AbysmalBiscuit/taplo --branch main --locked taplo-cli"
+install_command = "cargo install --git https://github.com/AbysmalBiscuit/taplo --branch main --features lsp --locked taplo-cli"
 
 [[tools]]
 lang = "rust"
