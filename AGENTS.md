@@ -22,3 +22,8 @@ When you make commits, add only commit title.
 - No commit body.
 - No commit trailer.
 - No commit attribution.
+
+## Specs and plans
+
+Write plans/specs inside `.superpowers/specs` and `./superpowers/plans`.
+Don't commit specs/plans unless I ask.
