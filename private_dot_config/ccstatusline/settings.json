@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "lines": [
     [
       {
@@ -57,7 +57,7 @@
         "color": "brightBlue",
         "bold": true,
         "metadata": {
-          "hideNoGit": "true"
+          "hide": "no-git"
         }
       }
     ],
