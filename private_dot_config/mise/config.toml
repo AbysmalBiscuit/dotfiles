@@ -2,4 +2,4 @@
 carapace = "latest"
 "npm:oxfmt" = "latest"
 "npm:oxlint" = "latest"
-zig = "0.15.2"
+zig = "0.16.0"
