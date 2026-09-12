@@ -1,5 +1,11 @@
 # Update scripts and small interactive tools.
 
+if $nu.os-info.name == "windows" {
+    def --wrapped "codex update" [...args: string] {
+        ^pwsh -NoProfile -ExecutionPolicy Bypass -Command '$env:CODEX_NON_INTERACTIVE=1; irm https://chatgpt.com/codex/install.ps1 | iex'
+    }
+}
+
 def update-claude-plugins [] {
     ^claude plugin marketplace update
     ^claude plugin list --json | from json | get id | each {|id| ^claude plugin update $id }
