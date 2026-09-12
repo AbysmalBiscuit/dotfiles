@@ -3,7 +3,11 @@
 # version = "0.115.0"
 
 def create_left_prompt [] {
-    let dir = match (do --ignore-errors { $env.PWD | path relative-to $nu.home-dir }) {
+    let dir = match (
+        do --ignore-errors {
+            $env.PWD | path relative-to $nu.home-dir
+        }
+    ) {
         null => $env.PWD
         '' => '~'
         $relative_pwd => ([~ $relative_pwd] | path join)
@@ -17,6 +21,7 @@ def create_left_prompt [] {
 }
 
 def create_right_prompt [] {
+
     # create a right prompt in magenta with green separators and am/pm underlined
     let time_segment = ([
         (ansi reset)
@@ -25,13 +30,18 @@ def create_right_prompt [] {
     ] | str join | str replace --regex --all "([/:])" $"(ansi green)${1}(ansi magenta)" |
         str replace --regex --all "([AP]M)" $"(ansi magenta_underline)${1}")
 
-    let last_exit_code = if ($env.LAST_EXIT_CODE != 0) {([
+    let last_exit_code = if $env.LAST_EXIT_CODE != 0 {
+        ([
         (ansi rb)
         ($env.LAST_EXIT_CODE)
     ] | str join)
     } else { "" }
 
-    ([$last_exit_code, (char space), $time_segment] | str join)
+    ([
+        $last_exit_code
+        (char space)
+        $time_segment
+    ] | str join)
 }
 
 # starship's nu init owns PROMPT_COMMAND, PROMPT_COMMAND_RIGHT, PROMPT_INDICATOR
@@ -52,7 +62,7 @@ $env.STARSHIP_CONFIG = ($nu.home-dir | path join ".config" "starship-nu.toml")
 # this file quoted in it. The fallback mirrors [character] in starship-nu.toml
 # and survives one frame, until the next repaint calls starship again.
 def starship-character [keymap: string, fallback: string] {
-  with-env {STARSHIP_SHELL: "fish"} {
+    with-env {STARSHIP_SHELL: "fish"} {
     try {
       starship module character --keymap $keymap $"--status=($env.LAST_EXIT_CODE)"
     } catch { $fallback }
@@ -60,13 +70,11 @@ def starship-character [keymap: string, fallback: string] {
 }
 
 $env.PROMPT_INDICATOR_VI_INSERT = {||
-  let colour = if $env.LAST_EXIT_CODE == 0 { (ansi green_bold) } else { (ansi red_bold) }
-  $"\r\n(starship-character viins $'($colour)[I]❯(ansi reset)')"
+    let colour = if $env.LAST_EXIT_CODE == 0 { (ansi green_bold) } else { (ansi red_bold) }
+    $"\r\n(starship-character viins $'($colour)[I]❯(ansi reset)')"
 }
 
-$env.PROMPT_INDICATOR_VI_NORMAL = {||
-  $"\r\n(starship-character default $'(ansi blue_bold)[N]❯(ansi reset)')"
-}
+$env.PROMPT_INDICATOR_VI_NORMAL = {|| $"\r\n(starship-character default $'(ansi blue_bold)[N]❯(ansi reset)')" }
 
 # If you want previously entered commands to have a different prompt from the usual one,
 # you can uncomment one or more of the following lines.
@@ -86,9 +94,9 @@ $env.PROMPT_INDICATOR_VI_NORMAL = {||
 # ctrl-c can interrupt it mid-run and hand the external a truncated PATH.
 
 $env.NU_CONFIG_DIR = if $nu.os-info.name == "windows" {
-  $env.APPDATA | path join 'nushell' 'nupm'
+    $env.APPDATA | path join 'nushell' 'nupm'
 } else {
-  $env.HOME | path join '.config' 'nushell'
+    $env.HOME | path join '.config' 'nushell'
 }
 
 $env.NUPM_HOME = $env.NU_CONFIG_DIR | path join 'nupm'
@@ -104,7 +112,10 @@ if $nu.os-info.name == "windows" {
     $env.PYTHONIOENCODING = "utf-8"
 
     $env.NVIM_EXECUTABLE = ($env.NVIM_EXECUTABLE? | default (which nvim | get path.0? | default "nvim"))
-    $env.PYTHON3_HOST_PROG = ($env.PYTHON3_HOST_PROG? | default (which python | get path.0? | default "python"))
+    $env.PYTHON3_HOST_PROG = (
+        $env.PYTHON3_HOST_PROG?
+        | default (which python | get path.0? | default "python")
+    )
     $env.EDITOR = ($env.EDITOR? | default $env.NVIM_EXECUTABLE)
 }
 
@@ -147,16 +158,19 @@ $env.PATH = (
         | uniq
 )
 
-
 if $nu.os-info.name == "windows" and (which zccache | is-not-empty) {
     # Limit cached artifacts to 25 GiB, excluding logs and metadata.
     $env.ZCCACHE_CACHE_SIZE_BYTES = "26843545600"
+
     # Remap embedded source paths so equivalent builds can share entries across worktrees.
     $env.ZCCACHE_PATH_REMAP = "auto"
+
     # Preserve normal compiler scheduling priority for build throughput.
     $env.ZCCACHE_COMPILE_PRIORITY = "normal"
+
     # Set link-like work priority separately from the compiler priority override.
     $env.ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
+
     # Silences zccache info output
     $env.ZCCACHE_QUIET = "1"
 }
@@ -181,7 +195,7 @@ mkdir ($nu.user-autoload-dirs | first)
 # Shell integrations, as opposed to completions. Cheap to produce and they must
 # exist for the prompt to render at all, so these stay self-healing rather than
 # waiting on chezmoi.
-const AUTOLOAD = ($nu.data-dir | path join "vendor" "autoload")
+const AUTOLOAD = $nu.data-dir | path join "vendor" "autoload"
 mkdir $AUTOLOAD
 
 def regen [bin: string, out: path, gen: closure] {
@@ -191,7 +205,9 @@ def regen [bin: string, out: path, gen: closure] {
     # the pipeline opens, so a generator killed by a ctrl-c leaves an empty init
     # file that is newer than the binary and so never regenerated again.
     let generated = (try { do $gen } catch { "" })
-    if ($generated | is-not-empty) { $generated | save --force $out }
+    if ($generated | is-not-empty) {
+        $generated | save --force $out
+    }
 }
 
 regen starship ($AUTOLOAD | path join "starship.nu") {|| ^starship init nu }
