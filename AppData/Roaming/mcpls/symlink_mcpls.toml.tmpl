@@ -1,0 +1,3 @@
+{{- if index .has "mcpls" -}}
+{{ joinPath .chezmoi.homeDir ".config" "mcpls" "mcpls.toml" }}
+{{- end -}}
