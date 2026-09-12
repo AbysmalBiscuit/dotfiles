@@ -993,6 +993,13 @@ git = "https://github.com/hrkfdn/ncspot"
 
 [[tools]]
 lang = "rust"
+name = "nufmt"
+desc = "Formatter for Nushell scripts."
+git = "https://github.com/nushell/nufmt"
+install_command = "cargo install --git https://github.com/nushell/nufmt"
+
+[[tools]]
+lang = "rust"
 name = "nushell"
 cmds = [
     "nu"
