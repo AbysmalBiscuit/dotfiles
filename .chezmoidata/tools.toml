@@ -967,6 +967,11 @@ url = "https://github.com/lsd-rs/lsd/blob/main/doc/lsd.md"
 
 [[tools]]
 lang = "rust"
+name = "mcpls"
+git = "https://github.com/AbysmalBiscuit/mcpls"
+
+[[tools]]
+lang = "rust"
 name = "mise"
 desc = "dev tools, env vars, task runner"
 url = "https://mise.jdx.dev/"
