@@ -23,12 +23,27 @@ function M.setup()
     local function finish(result)
       running = false
       if result.code ~= 0 then
-        local message = result.code == 124 and "chezmoi apply timed out after 30 seconds"
-          or "chezmoi apply failed (exit " .. result.code .. ")"
+        local message = ""
+        if result.code == 124 then
+          message = "chezmoi apply timed out after 30 seconds"
+        else
+          message = "chezmoi apply failed (exit " .. result.code .. ")"
+        end
+
         if result.stderr and result.stderr ~= "" then
           message = message .. "\n" .. result.stderr
         end
-        vim.notify(message, vim.log.levels.ERROR)
+
+        if string.find(result.stderr, "not in source state", 1, true) then
+          local parts = vim.split(result.stderr, ":", { plain = true, trimempty = true })
+          if vim.g.is_windows then
+            parts[2] = parts[2] .. ":" .. parts[3]
+            parts[3] = parts[4]
+          end
+          vim.notify(parts[1] .. ": " .. parts[3] .. parts[2], vim.log.levels.INFO)
+        else
+          vim.notify(message, vim.log.levels.ERROR)
+        end
       elseif result.stderr and result.stderr ~= "" then
         vim.notify(result.stderr, vim.log.levels.WARN)
       end
