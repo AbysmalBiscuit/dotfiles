@@ -10,6 +10,17 @@
         "rawValue": true
       },
       {
+        "id": "d117789f-4212-49b1-b10c-ffe15f6f9bda",
+        "type": "separator",
+        "character": " "
+      },
+      {
+        "id": "d6625e21-5e97-42c3-9e33-37bdac63a709",
+        "type": "thinking-effort",
+        "rawValue": true,
+        "color": "ansi256:77"
+      },
+      {
         "id": "3",
         "type": "separator"
       },
