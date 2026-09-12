@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # vim:filetype=python.chezmoitmpl
-"""Put the herdr agent-state hook scripts in place for Claude Code and Codex.
+"""Put the herdr agent-state hooks and agent skill in place.
 
-Herdr ships those scripts and revises them between releases, so they stay out
-of the chezmoi source and `herdr integration install` writes whichever one the
-installed herdr carries.
+Herdr ships the hook scripts and the skill, and revises both between releases,
+so they stay out of the chezmoi source: `herdr integration install` writes
+whichever hook the installed herdr carries, and `herdr --skill` prints the
+matching skill.
 
 Install writes wiring of its own as well. Codex hooks are managed in config.toml,
 so the generated hooks.json is removed after installation. For Claude Code
@@ -14,40 +15,49 @@ enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
 Running before the file apply is what makes that ordering hold.
 """
 
-# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" | sha256sum }}# {{ end }}
+# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" | sha256sum }}
+# # {{ output "herdr" "--skill" | sha256sum }}# {{ end }}
 
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-HAS_HERDR = # {{ if .has.herdr }}True# {{ else }}False# {{ end }}
+HAS_HERDR = False  # {{ if .has.herdr }} or True# {{ end }}
 
 INTEGRATIONS = ("claude", "codex")
 
+SKILL_FILE = Path.home() / ".agents" / "skills" / "herdr" / "SKILL.md"
+
+
+def run_herdr(*args: str) -> str | None:
+    """Return the command's stdout, or None after reporting a failure."""
+    result = subprocess.run(["herdr", *args], capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        print(
+            f"herdr {' '.join(args)}: {result.stderr.strip() or result.stdout.strip()}",
+            file=sys.stderr,
+        )
+        return None
+    return result.stdout
+
 
 def main() -> int:
-    if not HAS_HERDR:
+    if not HAS_HERDR or shutil.which("herdr") is None:
         return 0
+
+    skill = run_herdr("--skill")
+    if skill is not None:
+        SKILL_FILE.parent.mkdir(parents=True, exist_ok=True)
+        SKILL_FILE.write_text(skill)
+
     for name in INTEGRATIONS:
-        try:
-            result = subprocess.run(
-                ["herdr", "integration", "install", name],
-                capture_output=True,
-                text=True,
-            )
-        except FileNotFoundError:
-            print("herdr is not on PATH; skipping integrations", file=sys.stderr)
-            return 0
-        if result.returncode != 0:
-            print(
-                f"herdr integration install {name}: "
-                f"{result.stderr.strip() or result.stdout.strip()}",
-                file=sys.stderr,
-            )
-        elif name == "codex":
+        if run_herdr("integration", "install", name) is None:
+            continue
+        if name == "codex":
             codex_dir = Path(os.environ.get("CODEX_HOME") or "~/.codex").expanduser()
             (codex_dir / "hooks.json").unlink(missing_ok=True)
     return 0
