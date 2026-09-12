@@ -1,3 +1,5 @@
+include = ["**/*.toml", "**/*.toml.tmpl"]
+
 [[rule]]
 keys = ["*"]
 
