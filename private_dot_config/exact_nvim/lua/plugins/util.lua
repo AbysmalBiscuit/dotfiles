@@ -216,6 +216,10 @@ return {
   },
   {
     "xvzc/chezmoi.nvim",
+    config = function(_, opts)
+      require("chezmoi").setup(opts)
+      require("config.chezmoi_apply").setup()
+    end,
     cmd = {
       "ChezmoiAdd",
     },
