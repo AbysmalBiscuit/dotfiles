@@ -9,14 +9,32 @@ $vars = @{
     XDG_CACHE_HOME  = "$HOME\.cache"
     XDG_STATE_HOME  = "$HOME\.local\state"
     # tool variables
+
+    # {{- if or (index .has "bat") (index .has "batcat") }}
     # bat ignores XDG_CONFIG_HOME on Windows and reads %APPDATA%\bat instead
     BAT_CONFIG_DIR = "$HOME\.config\bat"
+    # {{- end}}
+
     # {{- if index .has "yazi" }}
     YAZI_CONFIG_HOME = "$HOME\.config\yazi"
     # {{- end}}
+
     # {{- if index .has "sccache" }}
     SCCACHE_CONF = "$HOME\.config\sccache\config.toml"
     SCCACHE_SERVER_PORT = "4227"
+    # {{- end }}
+
+    # {{- if index .has "zccache" }}
+    # Limit cached artifacts to 25 GiB, excluding logs and metadata.
+    ZCCACHE_CACHE_SIZE_BYTES = "26843545600"
+    # Remap embedded source paths so equivalent builds can share entries across worktrees.
+    ZCCACHE_PATH_REMAP = "auto"
+    # Preserve normal compiler scheduling priority for build throughput.
+    ZCCACHE_COMPILE_PRIORITY = "normal"
+    # Set link-like work priority separately from the compiler priority override.
+    ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
+    # Silences zccache info output
+    ZCCACHE_QUIET = "1"
     # {{- end }}
 }
 # A User-scope write broadcasts WM_SETTINGCHANGE to every top-level window and

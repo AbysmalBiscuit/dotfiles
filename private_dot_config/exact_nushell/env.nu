@@ -158,23 +158,6 @@ $env.PATH = (
         | uniq
 )
 
-if $nu.os-info.name == "windows" and (which zccache | is-not-empty) {
-    # Limit cached artifacts to 25 GiB, excluding logs and metadata.
-    $env.ZCCACHE_CACHE_SIZE_BYTES = "26843545600"
-
-    # Remap embedded source paths so equivalent builds can share entries across worktrees.
-    $env.ZCCACHE_PATH_REMAP = "auto"
-
-    # Preserve normal compiler scheduling priority for build throughput.
-    $env.ZCCACHE_COMPILE_PRIORITY = "normal"
-
-    # Set link-like work priority separately from the compiler priority override.
-    $env.ZCCACHE_COMPILE_PRIORITY_LINK = "normal"
-
-    # Silences zccache info output
-    $env.ZCCACHE_QUIET = "1"
-}
-
 mkdir $nu.cache-dir
 
 # Completions load from the autoload directories, not from a `source` here.
