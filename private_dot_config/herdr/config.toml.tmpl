@@ -1,3 +1,4 @@
+{{ $navigate := joinPath .chezmoi.homeDir ".config" "herdr" "navigate.py" | replace "\\" "/" -}}
 onboarding = false
 {{ if .is_windows }}
 [terminal]
@@ -30,23 +31,23 @@ blue = "#558eff"
 [[keys.command]]
 key = "ctrl+left"
 type = "shell"
-command = "python3 ~/.config/herdr/navigate.py left"
+command = "python3 {{ $navigate }} left"
 description = "Navigate left through Neovim and Herdr"
 
 [[keys.command]]
 key = "ctrl+down"
 type = "shell"
-command = "python3 ~/.config/herdr/navigate.py down"
+command = "python3 {{ $navigate }} down"
 description = "Navigate down through Neovim and Herdr"
 
 [[keys.command]]
 key = "ctrl+up"
 type = "shell"
-command = "python3 ~/.config/herdr/navigate.py up"
+command = "python3 {{ $navigate }} up"
 description = "Navigate up through Neovim and Herdr"
 
 [[keys.command]]
 key = "ctrl+right"
 type = "shell"
-command = "python3 ~/.config/herdr/navigate.py right"
+command = "python3 {{ $navigate }} right"
 description = "Navigate right through Neovim and Herdr"

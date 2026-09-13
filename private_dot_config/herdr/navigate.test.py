@@ -38,7 +38,9 @@ config = Path(
     os.environ.get("HERDR_NAV_TEST_CONFIG", ROOT / "private_dot_config/herdr/config.toml")
 ).read_text()
 config = config.replace("onboarding = false", 'onboarding = false\ndefault_shell = "/bin/bash"')
-config = config.replace("~/.config/herdr/navigate.py", str(work / "config/herdr/navigate.py"))
+config = config.replace(
+    f"{Path.home()}/.config/herdr/navigate.py", str(work / "config/herdr/navigate.py")
+)
 config = "\n".join(
     line[:-1] + " >> " + str(work / "navigation.log") + ' 2>&1"'
     if line.startswith("command = ")
