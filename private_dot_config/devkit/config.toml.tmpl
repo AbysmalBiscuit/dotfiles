@@ -1,6 +1,9 @@
 #:schema https://github.com/AbysmalBiscuit/devkit/releases/latest/download/devkit-config.json
 # chezmoi:template:left-delimiter="# {[{" right-delimiter="}]}"
 
+# {[{ $alacritree := index .tool "alacritree_exe" | default (index .tool "alacritree") | default "" }]}
+# {[{ $herdr := index .tool "herdr" | default "" }]}
+
 [defaults]
 # worktree_root = "~/Git/example-worktrees"
 # branch_prefix = "you/"
@@ -23,25 +26,30 @@ reason = "Use devkit's issue binary to remove worktrees: issue end [branch-name]
 
 [hooks]
 after_worktree_create = [
+  # {[{ if $alacritree }]}
   [
     "{{ alacritree }}",
     "project",
     "refresh",
     "{{ '../' * ((slug | split('/') | length) + 1) }}alacritree",
   ],
+  # {[{ end }]}
   [
     "zoxide",
     "add",
     "{{ worktree }}",
   ],
+  # {[{ if $herdr }]}
   [
     "{{ herdr_session }}",
     "open",
     "--path",
     "{{ worktree }}",
   ],
+  # {[{ end }]}
 ]
 
+# {[{ if $herdr }]}
 after_worktree_remove = [
   [
     "{{ herdr_session }}",
@@ -50,8 +58,11 @@ after_worktree_remove = [
     "{{ worktree }}",
   ],
 ]
+# {[{ end }]}
 
+# {[{ if $alacritree }]}
 after_end = [["{{ alacritree }}", "project", "refresh", "."]]
+# {[{ end }]}
 
 [apps]
 
@@ -86,11 +97,7 @@ pr_body = '''## TL;DR (human written)
 # table, not against the template.
 [templates.variables]
 
-# Hooks are spawned without a shell, so `~` stays literal and a bare name is
-# resolved by appending `.exe` alone: the extensionless script is invisible to
-# PATH and its `.cmd` shim is what answers. A machine that names the shim
-# differently re-points this one line.
-alacritree = "alacritree# {[{ if .is_wsl }]}.cmd# {[{ end }]}"
+alacritree = "# {[{ $alacritree }]}"
 herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
 
 # The worktree's own issue is already in the render context as `issue`; this is
@@ -114,6 +121,7 @@ issue_magic_word = "Closes"
 also_closes = ""
 agent_model = ""
 agent_harness = ""
+
 # Pairs with agent_model in the commit trailer: `noreply@anthropic.com` for
 # Claude Code, `noreply@openai.com` for Codex.
 agent_email = ""
