@@ -113,6 +113,11 @@ Only create worktrees in temporary directories (like `/tmp`) for short-lived wor
 - When asked to monitor or babysit a PR: poll checks and comments newer than the last push; verify each bot finding against the source before acting on it; fix real ones and dismiss false positives with a written reason; fix CI failures, distinguishing real breaks from known infra flakes. If nothing is new, stay quiet - do not post filler comments. Stop when the repo's review bots are green on the latest commit.
 - Merge only per the disposition given in the request (merge when green, or stop and report). If none was given, report and ask.
 
+<critical>
+Leave the `## TL;DR (human written)` section empty when opening a PRs.
+Never write it on behalf of a human.
+</critical
+
 ## GitHub
 
 - Your primary method for interacting with GitHub should be the GitHub CLI `gh`.
