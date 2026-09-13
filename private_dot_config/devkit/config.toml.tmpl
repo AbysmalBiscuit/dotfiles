@@ -1,0 +1,119 @@
+#:schema https://github.com/AbysmalBiscuit/devkit/releases/latest/download/devkit-config.json
+# chezmoi:template:left-delimiter="# {[{" right-delimiter="}]}"
+
+[defaults]
+# worktree_root = "~/Git/example-worktrees"
+# branch_prefix = "you/"
+# baseline_ref = "origin/staging"
+# baseline_path = "~/Git/example/_baseline"
+
+[harness]
+enforce_writes = true
+enforce_commands = true
+
+[harness.commands.worktree-add]
+programs = ["git"]
+args = ["worktree", "add"]
+reason = "Use devkit's issue binary to create worktrees: issue setup --summary --slug [branch-name]"
+
+[harness.commands.worktree-remove]
+programs = ["git"]
+args = ["worktree", "remove"]
+reason = "Use devkit's issue binary to remove worktrees: issue end [branch-name]"
+
+[hooks]
+after_worktree_create = [
+  [
+    "{{ alacritree }}",
+    "project",
+    "refresh",
+    "{{ '../' * ((slug | split('/') | length) + 1) }}alacritree",
+  ],
+  [
+    "zoxide",
+    "add",
+    "{{ worktree }}",
+  ],
+  [
+    "{{ herdr_session }}",
+    "open",
+    "--path",
+    "{{ worktree }}",
+  ],
+]
+
+after_worktree_remove = [
+  [
+    "{{ herdr_session }}",
+    "close",
+    "--path",
+    "{{ worktree }}",
+  ],
+]
+
+after_end = [["{{ alacritree }}", "project", "refresh", "."]]
+
+[apps]
+
+[templates]
+# Conventional Commits message. `{{ input }}` is the subject, blank line, and
+# wrapped body; the template only appends the agent trailer, and skips it when
+# the message already carries one.
+commit = '''{{ input | trim }}
+{%- if agent_model and ("Co-authored-by: " ~ agent_model) not in input %}
+
+Co-Authored-By: {{ agent_model }}{% if agent_email %} <{{ agent_email }}>{% endif %}
+{%- endif %}
+'''
+
+pr_body = '''## TL;DR (human written)
+{% if issue is defined and issue and (issue_magic_word ~ " #" ~ issue) not in input %}
+---
+
+{{ issue_magic_word }} #{{ issue }}
+{%- for extra in also_closes | replace(",", " ") | split %}
+{{ issue_magic_word }} #{{ extra | trim("#") }}
+{%- endfor %}
+{% endif %}
+{{ input }}
+{%- if agent_model or agent_harness %}
+
+🤖 Generated with {{ agent_model }}{% if agent_model and agent_harness %} via {% endif %}{{ agent_harness }}
+{%- endif %}'''
+
+# Declared so the template above renders (an undefined name is a hard error)
+# and so `issue pr create --arg` accepts them: --arg is checked against this
+# table, not against the template.
+[templates.variables]
+
+# Hooks are spawned without a shell, so `~` stays literal and a bare name is
+# resolved by appending `.exe` alone: the extensionless script is invisible to
+# PATH and its `.cmd` shim is what answers. A machine that names the shim
+# differently re-points this one line.
+alacritree = "alacritree# {[{ if .is_wsl }]}.cmd# {[{ end }]}"
+herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
+
+# The worktree's own issue is already in the render context as `issue`; this is
+# for the extra ones a PR closes, whitespace separated: `--arg closes="12 41"`.
+closes = ""
+
+# PR number this branch is stacked on, which renders the review-order note.
+# Empty for a branch that really does sit on master.
+stacked_on = ""
+
+# Issues live on the fork, PRs go to Arnaud's repo, so a bare `#41` in the body
+# would resolve against the wrong one. Spelled out again here because the
+# template context does not carry `[github] issues_repo`; keep the two in sync.
+issues_repo = "AbysmalBiscuit/alacritree"
+
+# Attribution line. Override per PR when a different model did the work:
+# `--arg model="Claude Opus 5 (1M Context)"`.
+model = "Claude Opus 5"
+
+issue_magic_word = "Closes"
+also_closes = ""
+agent_model = ""
+agent_harness = ""
+# Pairs with agent_model in the commit trailer: `noreply@anthropic.com` for
+# Claude Code, `noreply@openai.com` for Codex.
+agent_email = ""
