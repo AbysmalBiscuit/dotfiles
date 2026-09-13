@@ -9,7 +9,6 @@ import subprocess
 import sys
 from typing import NoReturn
 
-
 PROG = "herdr-recover-after-upgrade.py"
 
 
@@ -30,8 +29,11 @@ def main() -> NoReturn:
     if stopped.returncode != 0:
         raise SystemExit(stopped.returncode)
 
+    # Herdr runs as a child rather than through os.exec*: on Windows exec
+    # spawns a new process and exits this one, leaving the launching shell and
+    # the Herdr TUI reading the same console.
     print(f"{PROG}: launching Herdr from this terminal", flush=True)
-    os.execv(herdr, [herdr])
+    raise SystemExit(subprocess.run([herdr], check=False).returncode)
 
 
 if __name__ == "__main__":
