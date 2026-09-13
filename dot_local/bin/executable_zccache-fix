@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""Recover zccache after builds fail with "daemon unavailable" (exit 125).
+
+  zccache-fix                 fix the daemon and the nearest cargo target dir
+  zccache-fix path/to/target  ... and these target dirs instead
+
+Each step clears one way a healthy-looking zccache still refuses a build:
+
+- a second daemon, started without XDG_RUNTIME_DIR, holds the cache root's
+  writer lock on a socket this shell never looks at, so every new daemon is
+  refused. `zccache stop` only reaches the daemon on this shell's socket, so
+  the rest are killed by process name.
+- the spawn breaker's `*.spawn-failed` marker fails every client for up to ten
+  minutes after a failed spawn, even once a daemon is up.
+- cargo caches rustc probe output in `target/.rustc_info.json`, failures
+  included, and replays a cached exit 125 without calling zccache again.
+
+Killing the daemons aborts compiles running in other checkouts.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import io
+import json
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+PROG = "zccache-fix"
+DAEMON_NAME = "zccache-daemon"
+IS_WINDOWS = sys.platform == "win32"
+
+
+def log(message: str) -> None:
+    print(f"{PROG}: {message}", flush=True)
+
+
+def daemon_pids() -> list[int]:
+    if IS_WINDOWS:
+        listing = subprocess.run(
+            ["tasklist", "/FO", "CSV", "/NH"], capture_output=True, text=True, check=False
+        ).stdout
+        # A daemon whose binary was replaced while running shows up as
+        # zccache-daemon.exe.old.<n>, so match on the prefix.
+        return [
+            int(row[1])
+            for row in csv.reader(io.StringIO(listing))
+            if len(row) > 1 and row[0].startswith(DAEMON_NAME)
+        ]
+    listing = subprocess.run(
+        ["pgrep", "-x", DAEMON_NAME], capture_output=True, text=True, check=False
+    ).stdout
+    return [int(pid) for pid in listing.split()]
+
+
+def kill(pid: int, *, force: bool) -> None:
+    if IS_WINDOWS:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), *(["/F"] if force else [])],
+            capture_output=True,
+            check=False,
+        )
+        return
+    try:
+        os.kill(pid, signal.SIGKILL if force else signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+
+
+def stop_daemons(zccache: str) -> None:
+    subprocess.run([zccache, "stop"], capture_output=True, check=False)
+    pids = daemon_pids()
+    if not pids:
+        log("no daemon left running")
+        return
+    for pid in pids:
+        log(f"stopping daemon {pid}")
+        kill(pid, force=False)
+    deadline = time.monotonic() + 5
+    while daemon_pids() and time.monotonic() < deadline:
+        time.sleep(0.25)
+    for pid in daemon_pids():
+        log(f"daemon {pid} ignored the stop, killing it")
+        kill(pid, force=True)
+
+
+def stale_daemon_files() -> list[Path]:
+    if IS_WINDOWS:
+        return sorted(Path.home().glob(".zccache/v*/*.spawn-failed"))
+    runtime = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
+    socket_dirs = [runtime / "zccache", *Path("/tmp").glob("zccache-*")]
+    return sorted(
+        path
+        for directory in socket_dirs
+        for pattern in ("*.spawn-failed", "sock-*")
+        for path in directory.glob(pattern)
+    )
+
+
+def nearest_target_dir() -> Path | None:
+    if configured := os.environ.get("CARGO_TARGET_DIR"):
+        return Path(configured)
+    for directory in (Path.cwd(), *Path.cwd().parents):
+        if (directory / "target").is_dir():
+            return directory / "target"
+    return None
+
+
+def has_cached_zccache_failure(rustc_info: Path) -> bool:
+    try:
+        outputs = json.loads(rustc_info.read_text(encoding="utf-8")).get("outputs", {})
+    except (OSError, ValueError):
+        return False
+    return any(
+        not output.get("success", True) and "zccache" in output.get("stderr", "")
+        for output in outputs.values()
+    )
+
+
+def clear_cached_probes(target_dirs: list[Path]) -> None:
+    for target_dir in target_dirs:
+        rustc_info = target_dir / ".rustc_info.json"
+        if has_cached_zccache_failure(rustc_info):
+            log(f"removing cached failed rustc probe {rustc_info}")
+            rustc_info.unlink()
+        else:
+            log(f"no cached zccache failure in {rustc_info}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog=PROG, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "target_dirs",
+        nargs="*",
+        type=Path,
+        help="cargo target dirs to clear (default: CARGO_TARGET_DIR or the nearest ./target)",
+    )
+    args = parser.parse_args()
+
+    zccache = shutil.which("zccache")
+    if zccache is None:
+        log("zccache is not on PATH")
+        return 1
+
+    stop_daemons(zccache)
+
+    for path in stale_daemon_files():
+        log(f"removing {path}")
+        path.unlink(missing_ok=True)
+
+    target_dirs = args.target_dirs or [d for d in [nearest_target_dir()] if d is not None]
+    clear_cached_probes(target_dirs)
+
+    log("starting a fresh daemon")
+    started = subprocess.run([zccache, "start"], check=False)
+    if started.returncode != 0:
+        return started.returncode
+    return subprocess.run([zccache, "status"], check=False).returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())
