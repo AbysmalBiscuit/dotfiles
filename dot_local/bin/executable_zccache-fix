@@ -14,6 +14,10 @@ Each step clears one way a healthy-looking zccache still refuses a build:
   minutes after a failed spawn, even once a daemon is up.
 - cargo caches rustc probe output in `target/.rustc_info.json`, failures
   included, and replays a cached exit 125 without calling zccache again.
+- on Windows zccache starts its daemon inside the caller's Job Object, so a
+  daemon started from an agent's shell dies when that shell's job closes. The
+  fresh daemon is started through WMI instead, which puts it in no job. On
+  Linux it goes into its own systemd scope for the same reason.
 
 Killing the daemons aborts compiles running in other checkouts.
 """
@@ -133,6 +137,92 @@ def clear_cached_probes(target_dirs: list[Path]) -> None:
             log(f"no cached zccache failure in {rustc_info}")
 
 
+def spawn_outside_job(argv: list[str]) -> int:
+    """Start `argv` through WMI so it inherits no Job Object; returns its pid."""
+    create = (
+        "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create"
+        " -Arguments @{CommandLine=$env:ZCCACHE_FIX_COMMAND_LINE};"
+        " if ($r.ReturnValue -ne 0) { exit $r.ReturnValue }; $r.ProcessId"
+    )
+    created = subprocess.run(
+        ["powershell", "-NoProfile", "-NonInteractive", "-Command", create],
+        env={**os.environ, "ZCCACHE_FIX_COMMAND_LINE": subprocess.list2cmdline(argv)},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return int(created.stdout.strip())
+
+
+def in_job(pid: int) -> bool | None:
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    process_query_limited_information = 0x1000
+    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+    if not handle:
+        return None
+    try:
+        result = wintypes.BOOL()
+        if not kernel32.IsProcessInJob(handle, None, ctypes.byref(result)):
+            return None
+        return bool(result.value)
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def start_daemon(zccache: str) -> int:
+    if sys.platform == "win32":
+        return start_daemon_windows(zccache)
+    if sys.platform == "linux":
+        return start_daemon_linux(zccache)
+    return start_daemon_macos(zccache)
+
+
+def start_daemon_linux(zccache: str) -> int:
+    # A transient scope gives the daemon its own cgroup, so tearing down the
+    # agent or terminal unit that ran this does not take the daemon with it.
+    systemd_run = shutil.which("systemd-run")
+    if systemd_run is not None:
+        scoped = subprocess.run(
+            [systemd_run, "--user", "--scope", "--quiet", "--collect", zccache, "start"],
+            check=False,
+        )
+        if scoped.returncode == 0:
+            return 0
+        log("systemd-run --user failed, starting the daemon directly")
+    return subprocess.run([zccache, "start"], check=False).returncode
+
+
+def start_daemon_macos(zccache: str) -> int:
+    # zccache already detaches the daemon with setsid, and macOS has no job or
+    # cgroup that would reap it with the caller.
+    return subprocess.run([zccache, "start"], check=False).returncode
+
+
+def start_daemon_windows(zccache: str) -> int:
+    spawn_outside_job([zccache, "start"])
+    deadline = time.monotonic() + 30
+    while True:
+        status = subprocess.run([zccache, "status"], capture_output=True, check=False)
+        if status.returncode == 0:
+            break
+        if time.monotonic() >= deadline:
+            log("daemon did not come up within 30s")
+            return status.returncode
+        time.sleep(0.5)
+
+    for pid in daemon_pids():
+        if in_job(pid):
+            log(
+                f"daemon {pid} is inside a Job Object, so a build started it first"
+                " and it dies with that build's shell; rerun once no build is running"
+            )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog=PROG, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -160,9 +250,9 @@ def main() -> int:
     clear_cached_probes(target_dirs)
 
     log("starting a fresh daemon")
-    started = subprocess.run([zccache, "start"], check=False)
-    if started.returncode != 0:
-        return started.returncode
+    started = start_daemon(zccache)
+    if started != 0:
+        return started
     return subprocess.run([zccache, "status"], check=False).returncode
 
 
