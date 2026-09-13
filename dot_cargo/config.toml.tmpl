@@ -22,13 +22,25 @@ rustc-wrapper = "sccache"
 # {{- end }}
 SCCACHE_SERVER_PORT = "# {{ $sccache_port }}"
 # {{- end }}
+# {{- if index .has "zccache" }}
+# {{-   $xdg_runtime_dir := env "XDG_RUNTIME_DIR" }}
+# {{-   if and (not $xdg_runtime_dir) .is_linux }}
+# {{-     $xdg_runtime_dir = printf "/run/user/%s" (output "id" "-u" | trim) }}
+# {{-   end }}
+# {{-   if $xdg_runtime_dir }}
+# Builds started without a login session still reach the same zccache socket.
+XDG_RUNTIME_DIR = # {{ $xdg_runtime_dir | quote }}
+# {{-   end }}
+# {{- end }}
 
 [profile.dev]
 debug = "line-tables-only"
-# {{- if index .has "sccache" }}
+# {{- if and (not (index .has "zccache")) (index .has "sccache") }}
 # sccache cannot cache incrementally compiled crates, so leaving
 # incremental on costs a cache miss on every local crate.
 incremental = false
+# {{- else }}
+incremental = true
 # {{- end }}
 
 [profile.dev.package."*"]
