@@ -21,6 +21,7 @@ alias com = codex --model gpt-5.6-luna --config model_reasoning_effort="max"
 alias cou = codex --model gpt-6-astra --config model_reasoning_effort="ultra"
 
 alias "herdr sn" = herdr-session
+alias "herdr restart" = herdr-restart
 
 # listing. nushell's `ls` builtin is left alone: it returns a table that the
 # rest of the config pipes into `get modified.0`, which eza cannot do.

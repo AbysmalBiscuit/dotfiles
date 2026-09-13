@@ -1,7 +1,10 @@
-function herdr --description 'Herdr with sn as a shortcut for herdr-session'
-    if test "$argv[1]" = sn
-        command herdr-session $argv[2..]
-    else
-        command herdr $argv
+function herdr --description 'Herdr with sn and restart as shortcuts for the helper commands'
+    switch "$argv[1]"
+        case sn
+            command herdr-session $argv[2..]
+        case restart
+            command herdr-restart $argv[2..]
+        case '*'
+            command herdr $argv
     end
 end
