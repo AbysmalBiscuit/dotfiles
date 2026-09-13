@@ -29,6 +29,12 @@ fallback = [
   "Noto Sans Bamum",
 ]
 
+# tuicr opens a review TUI whose comments agents read back, instead of delta's
+# read-only pager; the header buttons open a whole section in one review
+[integrations.diff_viewer]
+preset = "tuicr"
+section_buttons = true
+
 [integrations.herdr]
 attach = "session"
 enabled = true
