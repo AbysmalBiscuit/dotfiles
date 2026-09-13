@@ -1,110 +1,125 @@
 #!/usr/bin/env python3
-"""Stop the Herdr server and launch it again from the current terminal."""
+"""Stop the Herdr server and start a fresh one in its place.
+
+The replacement restores the saved session: workspaces, tabs, panes, cwd, and
+focus. Pane processes do not survive, because live handoff is the only path
+that keeps them and it is Unix-only. Attach afterwards with `herdr`.
+"""
 
 from __future__ import annotations
 
 import argparse
 import os
-import re
 import shutil
 import subprocess
 import sys
-from pathlib import Path
+import time
 from typing import NoReturn
 
 PROG = "herdr-restart"
-
-STATUS_LINE = re.compile(r"^(?P<name>[a-z0-9-]+):\s+(?P<state>.+?)\s+\(")
-
-
-def fail(message: str) -> NoReturn:
-    raise SystemExit(f"{PROG}: {message}")
+SERVER_START_TIMEOUT = 15.0
+SERVER_POLL = 0.1
 
 
-def herdr(exe: str, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([exe, *args], capture_output=True, text=True, check=False)
+def die(message: str) -> NoReturn:
+    print(f"{PROG}: {message}", file=sys.stderr)
+    raise SystemExit(1)
 
 
-def server_running(exe: str) -> bool:
-    result = herdr(exe, "status", "server")
-    return "status: running" in result.stdout
+def warn(message: str) -> None:
+    print(f"{PROG}: {message}", file=sys.stderr)
 
 
-def stop_server(exe: str) -> None:
-    if not server_running(exe):
-        print(f"{PROG}: no server running", flush=True)
-        return
-    print(f"{PROG}: stopping the running server", flush=True)
-    result = herdr(exe, "server", "stop")
-    if result.returncode != 0 and server_running(exe):
-        fail(f"server stop failed: {result.stderr.strip() or result.stdout.strip()}")
+def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        check=False,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
 
 
-def installed_integrations(exe: str) -> list[str]:
-    result = herdr(exe, "integration", "status")
-    if result.returncode != 0:
-        fail(f"integration status failed: {result.stderr.strip()}")
-    names = []
-    for line in result.stdout.splitlines():
-        match = STATUS_LINE.match(line.strip())
-        if match and not match["state"].startswith("not installed"):
-            names.append(match["name"])
-    return names
+class Herdr:
+    """One run's connection to a Herdr server, default or named."""
+
+    def __init__(self, session: str | None) -> None:
+        self.exe = shutil.which("herdr") or die("herdr is not on PATH")
+        self.session = session
+
+    def argv(self, *args: str) -> list[str]:
+        prefix = ["--session", self.session] if self.session else []
+        return [self.exe, *prefix, *args]
+
+    def call(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return run(self.argv(*args))
+
+    def running(self) -> bool:
+        return "status: running" in self.call("status", "server").stdout
+
+    def update_manifests(self) -> None:
+        """Refresh the agent detection manifests the next server will load."""
+        done = self.call("server", "update-agent-manifests")
+        sys.stdout.write(done.stdout)
+        if done.returncode != 0:
+            warn(f"manifest update failed: {done.stderr.strip() or 'unknown error'}")
+
+    def stop(self) -> None:
+        if not self.running():
+            print(f"{PROG}: no server running")
+            return
+        done = self.call("server", "stop")
+        if done.returncode != 0 and self.running():
+            die(f"server stop failed: {done.stderr.strip() or done.stdout.strip()}")
+        print(f"{PROG}: stopped")
+
+    def start(self) -> None:
+        # A restart outlives the terminal that asked for it, so the server is
+        # spawned without a console of its own on Windows and in its own
+        # session elsewhere.
+        creationflags = 0
+        if os.name == "nt":
+            creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen(
+            self.argv("server"),
+            start_new_session=True,
+            creationflags=creationflags,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        deadline = time.monotonic() + SERVER_START_TIMEOUT
+        while time.monotonic() < deadline:
+            if self.running():
+                workspaces = self.call("workspace", "list").stdout.count('"workspace_id"')
+                print(f"{PROG}: started, {workspaces} workspaces restored")
+                return
+            time.sleep(SERVER_POLL)
+        die("the server did not come up in time")
 
 
-def refresh_integrations(exe: str) -> None:
-    names = installed_integrations(exe)
-    if not names:
-        print(f"{PROG}: no agent manifests installed", flush=True)
-        return
-    print(f"{PROG}: refreshing agent manifests: {', '.join(names)}", flush=True)
-    for name in names:
-        result = herdr(exe, "integration", "install", name)
-        if result.returncode != 0:
-            print(
-                f"{PROG}: {name}: {result.stderr.strip() or result.stdout.strip()}",
-                file=sys.stderr,
-            )
-            continue
-        if name == "codex":
-            # Codex hooks are declared in config.toml, so the generated
-            # hooks.json would shadow them.
-            codex_home = Path(os.environ.get("CODEX_HOME") or "~/.codex").expanduser()
-            (codex_home / "hooks.json").unlink(missing_ok=True)
-
-    skill = herdr(exe, "--skill")
-    if skill.returncode == 0:
-        skill_file = Path.home() / ".agents" / "skills" / "herdr" / "SKILL.md"
-        skill_file.parent.mkdir(parents=True, exist_ok=True)
-        skill_file.write_text(skill.stdout, encoding="utf-8")
-
-
-def main() -> NoReturn:
+def main() -> int:
     parser = argparse.ArgumentParser(prog=PROG, description=__doc__)
+    parser.add_argument("--session", help="restart this named session instead of the default")
     parser.add_argument(
-        "-i",
-        "--integrations",
+        "-m",
+        "--manifests",
         action="store_true",
-        help="reinstall the installed agent-state manifests and skill while stopped",
+        help="fetch the latest agent detection manifests before restarting",
     )
     args = parser.parse_args()
 
-    if os.environ.get("HERDR_ENV") == "1":
-        fail("run from a terminal outside Herdr; stopping the server ends its panes")
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
-        fail("an interactive terminal is required")
+    if os.environ.get("HERDR_ENV") == "1" and not args.session:
+        die("run from a terminal outside Herdr; stopping the server ends its panes")
 
-    exe = shutil.which("herdr")
-    if exe is None:
-        fail("herdr is not on PATH")
-
-    stop_server(exe)
-    if args.integrations:
-        refresh_integrations(exe)
-
-    print(f"{PROG}: launching Herdr from this terminal", flush=True)
-    os.execv(exe, [exe])
+    herdr = Herdr(args.session)
+    if args.manifests:
+        herdr.update_manifests()
+    herdr.stop()
+    herdr.start()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
