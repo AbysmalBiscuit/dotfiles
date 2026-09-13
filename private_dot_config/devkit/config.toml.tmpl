@@ -27,11 +27,13 @@ reason = "Use devkit's issue binary to remove worktrees: issue end [branch-name]
 [hooks]
 after_worktree_create = [
   # {[{ if $alacritree }]}
+  # A new worktree is not in alacritree's worktree list yet, so path resolution
+  # cannot find its project; rescan them all instead.
   [
     "{{ alacritree }}",
     "project",
     "refresh",
-    "{{ '../' * ((slug | split('/') | length) + 1) }}alacritree",
+    "--all",
   ],
   # {[{ end }]}
   [
@@ -61,7 +63,7 @@ after_worktree_remove = [
 # {[{ end }]}
 
 # {[{ if $alacritree }]}
-after_end = [["{{ alacritree }}", "project", "refresh", "."]]
+after_end = [["{{ alacritree }}", "project", "refresh"]]
 # {[{ end }]}
 
 [apps]
