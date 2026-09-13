@@ -1,0 +1,22 @@
+# A sandboxed zccache client cannot reach the daemon, treats it as stale,
+# kills it, and cannot start a replacement. Builds run outside the sandbox.
+prefix_rule(
+    pattern = ["devkit", "run", "task"],
+    decision = "allow",
+    justification = "Cargo builds must reach the shared zccache daemon.",
+    match = ["devkit run task test", "devkit run task check --config x.toml"],
+    not_match = ["devkit issue end"],
+)
+prefix_rule(
+    pattern = ["devrun", "task"],
+    decision = "allow",
+    justification = "Cargo builds must reach the shared zccache daemon.",
+    match = ["devrun task test"],
+)
+prefix_rule(
+    pattern = ["cargo", ["build", "check", "test", "nextest", "clippy", "run", "fmt"]],
+    decision = "allow",
+    justification = "Cargo builds must reach the shared zccache daemon.",
+    match = ["cargo nextest run -p alacritree", "cargo check"],
+    not_match = ["cargo install zccache"],
+)
