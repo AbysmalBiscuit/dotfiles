@@ -81,16 +81,6 @@
             "statusMessage": "Checking conventions"
           }
         ]
-      },
-      {
-        "matcher": "^(Bash|PowerShell)$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
-            "timeout": 3
-          }
-        ]
       }
     ],
     "PreToolUse": [
@@ -102,16 +92,6 @@
             "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
             "timeout": 8,
             "statusMessage": "Checking tool conventions"
-          }
-        ]
-      },
-      {
-        "matcher": "^(Bash|PowerShell)$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
-            "timeout": 3
           }
         ]
       }
@@ -222,18 +202,7 @@
         ]
       }
     ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "^(Bash|PowerShell)$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.agents/plugins/agent-guard/scripts/shell_calls.py --harness claude-code",
-            "timeout": 3
-          }
-        ]
-      }
-    ]
+    "PostToolUseFailure": []
   },
   "model": "opus",
   "outputStyle": "unslop",
