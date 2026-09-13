@@ -242,27 +242,39 @@ When the user types `/graphify`, use the installed graphify skill or instruction
 
 ## ALWAYS START WITH THESE COMMANDS FOR COMMON TASKS
 
-### Scripts you write and run yourself
+### Picking a tool
 
-{{- if (index .tool "bun") }}
+Take the first rung that does the job:
 
-When you write a JavaScript or TypeScript script to perform a task, run it with `bun`.
-This includes inline commands and temporary script files for editing files, transforming data, or inspecting the workspace.
-
-| How you pass the JS/TS code | Command |
-|---|---|
-| Inline string | `bun -e 'CODE'` |
-| Standard input, including pipes and heredocs | `bun run -` |
-| Script file | `bun run /absolute/path/script.ts` |
-
-{{- if false }}
-
-Example: replace text in a file.
-```sh
-bun -e 'const path = "/path/to/file.txt"; await Bun.write(path, (await Bun.file(path).text()).replaceAll("old", "new"));'
-```
+1. Your harness's file tools: reading and editing files start here. Every change to a file goes through the edit tool.
+2. One shell command:
+{{- if index .tool "rg" }}
+   - `rg` for finding file contents and files
 {{- end }}
+{{- if index .tool "fd" }}
+   - `fd` for finding files and directories
 {{- end }}
+{{- if index .tool "ast_grep" }}
+   - `ast-grep` for searching while respecting code structure
+{{- end }}
+{{- if index .tool "jq" }}
+   - `jq` for JSON
+{{- end }}
+{{- if index .tool "yq" }}
+   - `yq` for YAML
+{{- end }}
+3. A piped chain of shell commands.
+4. A script, when the job needs logic one command can't hold: state across a loop, parsing many files, calling an API.
+{{- if index .tool "bun" }}
+
+Run JavaScript and TypeScript with `bun`, never `node`, `npx`, `tsx`, or `ts-node`. Bun runs TypeScript files directly, with no build step:
+- Inline: `bun -e 'CODE'` instead of `node -e`
+- Standard input, including pipes and heredocs: `bun run -`
+- File: `bun run /absolute/path/script.ts` instead of `node script.js` or `tsx script.ts`
+- Package binaries: `bunx --bun PACKAGE` instead of `npx PACKAGE`
+{{- end }}
+
+A script that does a single read, replace, or filter belongs on rung 1 or 2.
 
 {{- if or (index .tool "fd") (index .tool "rg") }}
 
