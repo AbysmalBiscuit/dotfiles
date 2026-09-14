@@ -103,10 +103,12 @@ return {
 
       -- Bun's REPL transpiles TypeScript and re-runs a file on every `.load`, so js
       -- and ts get the same persistent terminal as python rather than a fresh process.
+      -- `.load` is a REPL dot-command taking the rest of the line, so the path goes in
+      -- unquoted: shell quotes would end up as part of the filename.
       if vim.fn.executable("bun") == 1 then
         for _, ft in ipairs({ "javascript", "javascriptreact", "typescript", "typescriptreact" }) do
           shell_commands[ft] = "bun repl"
-          commands[ft] = ".load '%s'"
+          commands[ft] = ".load %s"
         end
       end
 
