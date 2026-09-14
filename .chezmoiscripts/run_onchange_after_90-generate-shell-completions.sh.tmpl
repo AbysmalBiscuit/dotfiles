@@ -167,7 +167,7 @@ fish -c 'set -x fish_update_completions_detach true; fish_update_completions; se
     # {{- /* ---- One line per installed cmd; CMD is a no-op for single-exe tools ---- */ -}}
     # {{-             range $e := $live -}}
     # {{-               $gen_cmd := $base_cmd | replace "CMD" $e -}}
-    # {{ $env_prefix }}# {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" }} || true
+    # {{ $env_prefix }}# {{ $gen_cmd }} </dev/null# {{ $append | replaceAllRegex "\\\\n" "\n" | trimSuffix "\n" }} || true
     echo
 # {{ "" }}
     # {{-             end -}}

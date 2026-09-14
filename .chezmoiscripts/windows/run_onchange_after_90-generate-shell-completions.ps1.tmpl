@@ -169,11 +169,11 @@ $nuParts = [System.Collections.Generic.List[string]]::new()
 # {{-           $gen_cmd := $use_cmd | replace "SHELL" $shell_arg -}}
 # {{-           $append := index $tool $append_key | default "" -}}
 # {{-           if eq $shell "nu" }}
-# {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }} | Out-String -Width 8192 | ForEach-Object {
+# {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" | trimSuffix "\n" }} | Out-String -Width 8192 | ForEach-Object {
     $nuParts.Add($_)
 }
 # {{-           else }}
-# {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" }} | Out-String -Width 8192 | ForEach-Object {
+# {{ $gen_cmd }}# {{ $append | replaceAllRegex "\\\\n" "\n" | trimSuffix "\n" }} | Out-String -Width 8192 | ForEach-Object {
     [System.IO.File]::WriteAllText(
         "# {{ joinPath $out_dir (printf "%s.ps1" $tool.name) }}",
         $_,
