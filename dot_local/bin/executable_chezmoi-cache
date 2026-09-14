@@ -31,8 +31,8 @@ if TYPE_CHECKING:
 # Script that builds each cache, named without the extension because the POSIX
 # and Windows variants sit in different directories.
 BUILDERS: dict[str, str] = {
-    "completions": "run_onchange_after_90-generate-shell-completions",
     "tools": "run_onchange_before_02-generate-has-cache",
+    "completions": "run_onchange_after_90-generate-shell-completions",
 }
 
 
@@ -70,6 +70,7 @@ def main() -> int:
         print(f"rebuilding the {name} cache from {template.name}", flush=True)
         try:
             worst = max(worst, run_rendered(render(template)))
+            worst = max(worst, chezmoi_init())
         except PluginError as err:
             print(err, file=sys.stderr)
             worst = max(worst, 1)
