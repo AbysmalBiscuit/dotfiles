@@ -57,6 +57,8 @@ localSettings.yaml
 **/ext_*
 .agents/skills/graphify
 **/.graphify_version
+.agents/skills/*/agents/openai.yaml
+.agents/skills/*/agents
 
 {{- if not (index .tool "graphify") }}
 .agents/skills/graphify-query
