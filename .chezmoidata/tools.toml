@@ -793,18 +793,7 @@ supported_shells = [
     "powershell",
     "zsh"
 ]
-# clap_complete_nushell leaves a command group's extern with only flags, and
-# nushell falls back to filename completion at a position that takes a
-# subcommand: `devrun ta<TAB>` buries `task` under the whole working directory.
-# Give every extern that declares no positional a rest argument completed from
-# an empty list, which is how a nushell extern says "not a path".
-#
-# The filter is nushell, not awk, because the same string is spliced into the
-# PowerShell generator, where awk is absent and nushell is present by
-# construction. It quotes with backticks and assembles the two emitted lines
-# from `char dq`, so the argument carries no double quote for Windows
-# PowerShell to drop as it re-quotes the native command line.
-append_nu_completion = '''
+append_nu_completion = """
 | nu --stdin -c 'let src = ($in | lines)
 let nl = (char newline)
 let dq = (char dq)
@@ -825,7 +814,8 @@ $src | reduce --fold { out: [], blk: false, pos: false } {|line, acc|
   } else {
     { out: ($acc.out | append $line), blk: false, pos: false }
   }
-} | get out | each {|l| $l + $nl } | str join' '''
+} | get out | each {|l| $l + $nl } | str join'
+"""
 
 [[tools]]
 lang = "rust"
