@@ -38,6 +38,18 @@ reason = """Stage first, then commit through the task that renders the message:
 commit_body and coauthors are optional; coauthors is a `;`-separated list. \
 To rewrite the last commit use `devrun task commit-amend` with the same args."""
 
+[harness.commands.pr-create]
+programs = ["gh"]
+args = ["pr", "create"]
+reason = """Open the PR with devkit: `issue pr create --pr-title 'type(scope): subject' --pr-body '<markdown>'`.
+It opens ready for review; pass `--draft` when a draft was asked for. `issue pr create -h` lists the rest.
+`--pr-body` becomes the agent summary. This worktree's own issue comes from `.devkit/issue.toml` and the template writes its closing line, so mention only other issues, and leave the TL;DR section for a human to fill.
+Each template variable is passed as `--arg key=value`:
+  agent_model='Claude Opus 5' and agent_harness='[Claude Code](https://claude.com/claude-code)' render the attribution block; omitting both leaves the PR body with no agent credit
+  refs='Closes ADA-124; Refs #90' names every other issue, `;`-separated, each carrying its own keyword
+  issue_magic_word=Refs when this branch does not finish its own issue (default Closes)
+  implemented_by='<who did which part>' adds one prose line above the credit"""
+
 [hooks]
 after_worktree_create = [
   # {[{ if $alacritree }]}
