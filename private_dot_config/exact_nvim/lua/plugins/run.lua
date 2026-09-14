@@ -92,22 +92,23 @@ return {
         lua = "lua",
         fish = "fish",
         sh = "bash",
-        javascript = "node",
       }
 
       local commands = {
         python = python_cmd,
-        javascript = ".load '%s'",
-        -- javascript = "bun '%s'",
         lua = "os.execute('lua \"%s\"')",
         sh = "bash '%s'",
         fish = "fish '%s'",
       }
 
-      -- Node doesn't seem to work properly
-      local non_interactive = {
-        javascript = "bun run %s",
-      }
+      -- Bun's REPL transpiles TypeScript and re-runs a file on every `.load`, so js
+      -- and ts get the same persistent terminal as python rather than a fresh process.
+      if vim.fn.executable("bun") == 1 then
+        for _, ft in ipairs({ "javascript", "javascriptreact", "typescript", "typescriptreact" }) do
+          shell_commands[ft] = "bun repl"
+          commands[ft] = ".load '%s'"
+        end
+      end
 
       local last_run_filetype
       ---@type Terminal | nil
@@ -143,7 +144,6 @@ return {
         -- For non-Python file types, create or reuse a generic terminal
         local shell_cmd = shell_commands[filetype]
         local cmd = commands[filetype]
-        local non_interactive = non_interactive[filetype]
 
         if not shell_cmd then
           print("No shell command configured for filetype: " .. filetype)
@@ -155,9 +155,6 @@ return {
         end
 
         cmd = string.format(cmd, filepath)
-        if non_interactive ~= nil then
-          non_interactive = string.format(non_interactive, filepath)
-        end
 
         if filetype == "lua" then
           -- if running lua test files, use a different command
@@ -173,34 +170,14 @@ return {
         end
 
         -- If last command exited, close terminal so the file can be re-run
-        if
-          run_terminal
-          and (run_term_exited or (last_run_filetype and last_run_filetype ~= filetype) or non_interactive ~= nil)
-        then
+        if run_terminal and (run_term_exited or (last_run_filetype and last_run_filetype ~= filetype)) then
           run_term_exited = false
           run_terminal:shutdown()
           run_terminal = nil
         end
 
         -- Create or reuse a generic terminal
-        if non_interactive ~= nil then
-          run_terminal = Terminal:new({
-            cmd = non_interactive,
-            direction = "horizontal",
-            on_open = function(term)
-              restore_context()
-            end,
-            close_on_exit = false,
-            ---@type fun(t: Terminal, job: number, exit_code: number, name: string)
-            on_exit = function(_, _, _, _)
-              do
-                run_term_exited = true
-              end
-            end,
-          })
-          last_run_filetype = filetype
-          run_terminal:toggle()
-        elseif not run_terminal then
+        if not run_terminal then
           run_terminal = Terminal:new({
             cmd = shell_cmd,
             direction = "horizontal",
