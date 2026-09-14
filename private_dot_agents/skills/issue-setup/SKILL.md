@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, mcp__linear__get_issue
 ---
+
 # /issue-setup
 
 Create an isolated worktree and branch for a Linear issue. The devkit binary

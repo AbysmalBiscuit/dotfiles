@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 # /validate-migration
 
 Before starting, invoke the **`checklist` skill** and create one task per bullet/validation step.

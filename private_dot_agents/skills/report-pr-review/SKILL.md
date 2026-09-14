@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 # /pr-review-report
 
 Generate a single-finding or multi-finding PR-review report as a self-contained

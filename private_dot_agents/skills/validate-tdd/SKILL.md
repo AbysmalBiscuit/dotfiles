@@ -6,6 +6,7 @@ user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, Edit, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet
 argument-hint: "[base ref or branch] (optional — defaults to the merge-base with main/master)"
 ---
+
 # /validate-tdd
 
 Audit the tests added for the current feature/branch/bugfix and decide, with evidence,

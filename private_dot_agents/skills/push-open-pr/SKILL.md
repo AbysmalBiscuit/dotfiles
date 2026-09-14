@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 argument-hint: "[optional: extra context for the PR description]"
 ---
+
 Commit anything pending, draft a title and body with the **`/write` skill**, then:
 
 ```bash

@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 # /validate-migration-parallel
 
 This is the parallel form of `/validate-migration`. The validation criteria below are

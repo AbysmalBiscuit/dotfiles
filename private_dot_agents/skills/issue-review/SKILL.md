@@ -6,6 +6,7 @@ user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 argument-hint: "[reviewer-alias] (optional — omit to request nobody)"
 ---
+
 # /issue-review
 
 Ship a finished (or just-updated) issue worktree: commit, push, open **or** reuse the

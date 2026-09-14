@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash(~/.agents/skills/report/scripts/report.py:*), Read, Write, Edit, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 # /report
 
 Build a self-contained HTML report. `report.py` assembles the page

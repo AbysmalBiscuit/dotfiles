@@ -6,6 +6,7 @@ user-invocable: true
 allowed-tools: Bash, Read, Grep, Glob, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet
 argument-hint: "[PR number or URL] (optional — inferred from branch if omitted)"
 ---
+
 # /post-draft-comments
 
 Take the draft review comments you identified earlier in **this session** and post them

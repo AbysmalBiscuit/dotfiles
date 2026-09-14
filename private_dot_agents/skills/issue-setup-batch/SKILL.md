@@ -6,6 +6,7 @@ user-invocable: true
 allowed-tools: Bash, Read, Workflow, TaskOutput, AskUserQuestion
 argument-hint: "<ENG-1234 ENG-1235 https://linear.app/... — space/comma/newline separated> [--dry-run]"
 ---
+
 # /issue-setup-batch
 
 Batch front-end for the `batch-issue-setup` workflow (`~/.claude/workflows/batch-issue-setup.js`).

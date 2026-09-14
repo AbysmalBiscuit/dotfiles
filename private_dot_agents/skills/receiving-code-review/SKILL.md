@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 argument-hint: "Code review"
 ---
+
 1. Invoke `/superpowers:receiving-code-review` skill for the following code review:
 
 $ARGUMENTS

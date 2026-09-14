@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__linear__get_issue
 ---
+
 # /issue-end
 
 Clean up issue worktrees whose work is finished, using **`issue end`** (the devkit

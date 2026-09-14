@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 # /issue-review-kysely
 
 Ship a finished (or just-updated) issue worktree: commit, push, open **or** reuse the

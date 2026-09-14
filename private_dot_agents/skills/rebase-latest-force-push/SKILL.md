@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Glob, Grep, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 Rebase the current branch on the latest base branch and force-push it.
 
 Takes an optional base branch argument. Without one, the base resolves in order:

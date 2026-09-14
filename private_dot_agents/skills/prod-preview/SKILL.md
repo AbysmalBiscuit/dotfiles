@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
+
 Add these labels to PR to get live preview:
 - deploy:labos
 - prod-sync

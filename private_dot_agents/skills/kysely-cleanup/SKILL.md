@@ -5,6 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Agent, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__plugin_posthog_posthog__exec
 ---
+
 For all these tasks use the `/checklist` skill.
 
 ## Delegation policy
