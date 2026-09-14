@@ -35,6 +35,7 @@ hooks = [
 
 [[hooks.SessionEnd]]
 hooks = [
+  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 15 },
   { type = "command", command = "python3 ~/.agents/skills/history/scripts/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\scripts\hist.py index', timeout = 3 },
 ]
 

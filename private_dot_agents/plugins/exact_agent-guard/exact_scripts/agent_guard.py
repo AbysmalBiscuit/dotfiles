@@ -1324,6 +1324,15 @@ def main():
     )
     log(3, "input", command=tool_input.get("command"), path=tool_input.get("file_path"))
 
+    if event == "SessionEnd":
+        run(
+            [sys.executable, str(SELF.parent / "fallow_cleanup.py")],
+            stdin=json.dumps({**payload, "hook_event_name": event}),
+            cwd=cwd,
+            timeout=12,
+        )
+        sys.exit(0)
+
     # Ahead of discovery and the config, so no root and no setting is between
     # this tier and the call it refuses. A config.toml that will not even parse
     # cannot take it out either.

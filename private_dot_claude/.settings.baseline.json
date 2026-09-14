@@ -101,6 +101,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py",
+            "timeout": 15
+          },
+          {
+            "type": "command",
             "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10
           },
