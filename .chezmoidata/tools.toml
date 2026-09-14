@@ -798,7 +798,34 @@ supported_shells = [
 # subcommand: `devrun ta<TAB>` buries `task` under the whole working directory.
 # Give every extern that declares no positional a rest argument completed from
 # an empty list, which is how a nushell extern says "not a path".
-append_nu_completion = '''| awk '/^module completions \{$/ { print; print "  def \"nu-complete no-files\" [] { [] }"; next } /^  export extern .*\[$/ { blk = 1; n = 0; pos = 0; buf[n++] = $0; next } blk && /^  \]$/ { for (i = 0; i < n; i++) print buf[i]; if (!pos) print "    ...args: string@\"nu-complete no-files\""; print; blk = 0; next } blk { t = $0; sub(/^[ \t]+/, "", t); if (t != "" && t !~ /^--/ && t !~ /^#/) pos = 1; buf[n++] = $0; next } { print }' '''
+#
+# The filter is nushell, not awk, because the same string is spliced into the
+# PowerShell generator, where awk is absent and nushell is present by
+# construction. It quotes with backticks and assembles the two emitted lines
+# from `char dq`, so the argument carries no double quote for Windows
+# PowerShell to drop as it re-quotes the native command line.
+append_nu_completion = '''
+| nu --stdin -c 'let src = ($in | lines)
+let nl = (char newline)
+let dq = (char dq)
+let rest = ([`    ...args: string@`, $dq, `nu-complete no-files`, $dq] | str join)
+let helper = ([`  def `, $dq, `nu-complete no-files`, $dq, ` [] { [] }`] | str join)
+$src | reduce --fold { out: [], blk: false, pos: false } {|line, acc|
+  if $acc.blk and $line == `  ]` {
+    let out = (if $acc.pos { $acc.out } else { $acc.out | append $rest })
+    { out: ($out | append $line), blk: false, pos: false }
+  } else if $acc.blk {
+    let t = ($line | str trim --left)
+    let pos = ($acc.pos or ((not ($t | is-empty)) and (not ($t | str starts-with `--`)) and (not ($t | str starts-with `#`))))
+    { out: ($acc.out | append $line), blk: true, pos: $pos }
+  } else if (($line | str starts-with `  export extern `) and ($line | str ends-with `[`)) {
+    { out: ($acc.out | append $line), blk: true, pos: false }
+  } else if $line == `module completions {` {
+    { out: ($acc.out | append $line | append $helper), blk: false, pos: false }
+  } else {
+    { out: ($acc.out | append $line), blk: false, pos: false }
+  }
+} | get out | each {|l| $l + $nl } | str join' '''
 
 [[tools]]
 lang = "rust"
