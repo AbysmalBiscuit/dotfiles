@@ -793,6 +793,12 @@ supported_shells = [
     "powershell",
     "zsh"
 ]
+# clap_complete_nushell leaves a command group's extern with only flags, and
+# nushell falls back to filename completion at a position that takes a
+# subcommand: `devrun ta<TAB>` buries `task` under the whole working directory.
+# Give every extern that declares no positional a rest argument completed from
+# an empty list, which is how a nushell extern says "not a path".
+append_nu_completion = '''| awk '/^module completions \{$/ { print; print "  def \"nu-complete no-files\" [] { [] }"; next } /^  export extern .*\[$/ { blk = 1; n = 0; pos = 0; buf[n++] = $0; next } blk && /^  \]$/ { for (i = 0; i < n; i++) print buf[i]; if (!pos) print "    ...args: string@\"nu-complete no-files\""; print; blk = 0; next } blk { t = $0; sub(/^[ \t]+/, "", t); if (t != "" && t !~ /^--/ && t !~ /^#/) pos = 1; buf[n++] = $0; next } { print }' '''
 
 [[tools]]
 lang = "rust"

@@ -126,6 +126,10 @@
           "type": "string",
           "description": "Text appended to the Fish completion command."
         },
+        "append_nu_completion": {
+          "type": "string",
+          "description": "Text appended to the Nushell completion command."
+        },
         "append_fish_init": {
           "type": "string",
           "description": "Text appended to the Fish initialization command."
