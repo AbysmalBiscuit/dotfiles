@@ -74,6 +74,13 @@ localSettings.yaml
 .bunfig.toml
 {{- end }}
 
+# Only codex reads agents/openai.yaml, so without it there is nothing to
+# generate. Scripts are matched on their target name, with the run_ attributes
+# and the .tmpl suffix already stripped.
+{{- if not (index .tool "codex") }}
+.chezmoiscripts/86-generate-skill-openai-yaml.py
+{{- end }}
+
 # os specific exclusions
 
 {{ if .is_wsl -}}

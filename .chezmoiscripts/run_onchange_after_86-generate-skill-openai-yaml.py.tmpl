@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+# chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
+# vim:filetype=python.chezmoitmpl
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pyyaml>=6"]
+# ///
+"""Give every managed skill in ~/.agents/skills an agents/openai.yaml.
+
+Codex reads a skill's interface and policy from agents/openai.yaml, while
+Claude Code reads the same three facts out of the SKILL.md frontmatter. Rather
+than keep two copies of them in the source, this derives the Codex file from
+the installed SKILL.md after each apply.
+
+A skill that checks an agents/openai.yaml into the chezmoi source is left
+alone: chezmoi owns that file, and its hand-written display name or short
+description would otherwise be overwritten by the frontmatter every apply.
+
+Skills that live in ~/.agents/skills without a chezmoi source directory are
+installed by something else, so this never writes into them.
+"""
+
+# Every source SKILL.md by name and mtime, then the mtimes of the checked-in
+# overrides, so this re-runs whenever frontmatter changes or an override moves:
+# # {{ range (glob (joinPath .chezmoi.sourceDir "private_dot_agents" "skills" "*" "SKILL.md")) }}# {{ base (dir .) }} # {{ (stat .).modTime }} # {{ end }}
+# # {{ range (glob (joinPath .chezmoi.sourceDir "private_dot_agents" "skills" "*" "agents" "openai.yaml")) }}# {{ (stat .).modTime }} # {{ end }}
+
+from __future__ import annotations
+
+import importlib.util
+import os
+import shutil
+import sys
+from pathlib import Path
+
+SOURCE = Path("# {{ joinPath .chezmoi.sourceDir "private_dot_agents" "skills" | replaceAllRegex "\\\\" "/" }}")
+TARGET = Path("# {{ .chezmoi.homeDir | replaceAllRegex "\\\\" "/" }}") / ".agents" / "skills"
+
+FRONTMATTER_FENCE = "---"
+
+
+def warn(message: str) -> None:
+    print(f"generate-skill-openai-yaml: {message}", file=sys.stderr)
+
+
+def ensure_pyyaml() -> None:
+    """Re-exec under uv, which resolves the PEP 723 header above.
+
+    chezmoi runs .py scripts with the interpreter from [interpreters.py], a bare
+    CPython that has no third-party packages, so the header alone gets nothing.
+    uv accepts the temporary path chezmoi executes this from regardless of its
+    name.
+    """
+    if importlib.util.find_spec("yaml") is not None:
+        return
+    uv = shutil.which("uv")
+    if uv is None:
+        warn("neither pyyaml nor uv is available, skipping")
+        raise SystemExit(0)
+    os.execv(uv, [uv, "run", "--quiet", "--script", __file__, *sys.argv[1:]])
+
+
+def split_frontmatter(text: str) -> str | None:
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != FRONTMATTER_FENCE:
+        return None
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() == FRONTMATTER_FENCE:
+            return "\n".join(lines[1:index])
+    return None
+
+
+def read_frontmatter(skill_md: Path) -> dict[str, object] | None:
+    import yaml
+
+    try:
+        text = skill_md.read_text(encoding="utf-8")
+    except OSError as error:
+        warn(f"could not read {skill_md}: {error}")
+        return None
+
+    block = split_frontmatter(text)
+    if block is None:
+        warn(f"{skill_md} has no frontmatter")
+        return None
+
+    try:
+        parsed = yaml.safe_load(block)
+    except yaml.YAMLError as error:
+        warn(f"could not parse the frontmatter of {skill_md}: {error}")
+        return None
+
+    if not isinstance(parsed, dict):
+        warn(f"the frontmatter of {skill_md} is not a mapping")
+        return None
+    return parsed
+
+
+def build_config(frontmatter: dict[str, object], fallback_name: str) -> dict[str, object] | None:
+    description = frontmatter.get("description")
+    if not isinstance(description, str) or not description.strip():
+        return None
+
+    name = frontmatter.get("name")
+    display_name = name if isinstance(name, str) and name.strip() else fallback_name
+
+    return {
+        "interface": {
+            "display_name": display_name,
+            "short_description": description.strip(),
+        },
+        "policy": {
+            "allow_implicit_invocation": not frontmatter.get("disable-model-invocation", False),
+        },
+    }
+
+
+def render(config: dict[str, object]) -> str:
+    import yaml
+
+    # A width cap would fold long descriptions across lines, which reads worse
+    # than one long line in a file nobody edits by hand.
+    return yaml.safe_dump(
+        config,
+        sort_keys=False,
+        allow_unicode=True,
+        default_flow_style=False,
+        width=1 << 30,
+    )
+
+
+def write_if_changed(path: Path, content: str) -> bool:
+    try:
+        if path.read_text(encoding="utf-8") == content:
+            return False
+    except OSError:
+        pass
+
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    except OSError as error:
+        warn(f"could not write {path}: {error}")
+        return False
+    return True
+
+
+def managed_skill_names() -> list[str]:
+    if not SOURCE.is_dir():
+        return []
+    return sorted(entry.name for entry in SOURCE.iterdir() if entry.is_dir())
+
+
+def main() -> int:
+    ensure_pyyaml()
+
+    written: list[str] = []
+    for name in managed_skill_names():
+        if (SOURCE / name / "agents" / "openai.yaml").is_file():
+            continue
+
+        skill_md = TARGET / name / "SKILL.md"
+        if not skill_md.is_file():
+            continue
+
+        frontmatter = read_frontmatter(skill_md)
+        if frontmatter is None:
+            continue
+
+        config = build_config(frontmatter, name)
+        if config is None:
+            warn(f"{skill_md} has no description, skipping")
+            continue
+
+        destination = TARGET / name / "agents" / "openai.yaml"
+        if write_if_changed(destination, render(config)):
+            written.append(name)
+
+    if written:
+        print(f"openai.yaml regenerated for: {', '.join(written)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
