@@ -968,7 +968,18 @@ url = "https://github.com/lsd-rs/lsd/blob/main/doc/lsd.md"
 [[tools]]
 lang = "rust"
 name = "mcpls"
+desc = "Universal MCP to LSP bridge - expose Language Server Protocol capabilities as MCP tools"
 git = "https://github.com/AbysmalBiscuit/mcpls"
+install_command = "cargo install --locked --git https://github.com/AbysmalBiscuit/mcpls mcpls"
+completions_command = "mcpls completions SHELL"
+supported_shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "nushell",
+    "powershell",
+    "zsh"
+]
 
 [[tools]]
 lang = "rust"
