@@ -1,6 +1,6 @@
 ---
 name: graphify-query-gq
-description: "Query an existing graphify graph, and do it before searching files by hand: where something lives, what calls what, what a symbol is for, what breaks if it changes, how one symbol reaches another, which hubs hold the project together, the code behind an error message. Building or rebuilding a graph is the graphify skill's job."
+description: "Query an existing graphify graph before searching files for symbol locations, purpose, callers, change impact, execution paths, project hubs, or error origins."
 argument-hint: "Question, symbol, bug description"
 allowed-tools: Bash(graphify:*), Bash(bash:*), Bash(rg:*), Read
 ---

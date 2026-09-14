@@ -1,17 +1,10 @@
 ---
 name: git-stack-workflow
 description: >-
-  Drive the day-to-day stacked-branch authoring loop with the `git-stack` CLI:
-  syncing against upstream, viewing the stack, navigating between commits/branches,
-  editing earlier commits (amend/reword/fixup), running checks across the stack, and
-  restacking branches onto new bases. Use this WHENEVER the user is working with
-  stacked branches or stacked PRs, mentions `git-stack`/`git stack`/`git sync`/
-  `git next`/`git prev`/`git amend`/`git reword`, asks to "rebase my stack",
-  "sync my branches", "edit an earlier commit", "fix up a parent commit", "navigate
-  the stack", or "run tests across the stack" — even if they don't name git-stack
-  explicitly but the repo clearly uses a stacked-diff workflow. For pushing branches
-  as PRs use `git-stack-publish`; for undoing/repairing a broken stack use
-  `git-stack-recover`.
+  Use when working with stacked branches or PRs, using git-stack or its aliases,
+  syncing or rebasing a stack, viewing or navigating it, editing earlier commits,
+  or running checks across it. Applies whenever the repo uses stacked diffs,
+  even without an explicit git-stack mention.
 ---
 
 # git-stack daily workflow

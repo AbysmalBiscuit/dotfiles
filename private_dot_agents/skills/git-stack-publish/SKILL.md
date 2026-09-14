@@ -1,15 +1,9 @@
 ---
 name: git-stack-publish
 description: >-
-  Push stacked development branches to a remote and open them as PRs using
-  `git-stack --push` together with the `gh` CLI. Covers which branches `git-stack`
-  considers "ready", the WIP/fixup rules that hold a branch back, push-remote vs.
-  pull-remote (fork) configuration, and the practical strategy for stacking PRs on
-  GitHub (one PR at a time, correct base branches). Use this WHENEVER the user wants
-  to "push my stack", "push ready branches", "publish/open stacked PRs", "force-push
-  my branches", set up a fork's push/pull remotes, or asks why a branch in a stack
-  isn't being pushed. For editing/rebasing the stack first use `git-stack-workflow`;
-  for undoing a bad push or repairing the stack use `git-stack-recover`.
+  Use when pushing or force-pushing a stack or ready branches, publishing or
+  opening stacked PRs, configuring a fork's push/pull remotes, or investigating
+  why a stacked branch is not being pushed.
 ---
 
 # Publishing a stack as PRs

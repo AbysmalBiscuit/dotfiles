@@ -1,6 +1,6 @@
 ---
 name: checklist
-description: Use when a request involves 3+ distinct steps, sequential phases ("then", "after that", "finally"), a numbered or bulleted list of items, repeating an operation over several files/targets ("for each", "all of the"), or executing a plan — before taking the first action. Especially when rushed ("quickly", "just get it done") or when the steps seem obvious.
+description: Use before acting on requests with 3+ steps, sequential phases, numbered or bulleted items, repeated operations across files or targets, or a plan to execute. Applies even when rushed or steps seem obvious.
 allowed-tools: TaskCreate, TaskUpdate
 ---
 

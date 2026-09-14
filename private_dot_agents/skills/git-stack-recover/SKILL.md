@@ -1,16 +1,10 @@
 ---
 name: git-stack-recover
 description: >-
-  Recover and repair a stacked-branch setup when something goes wrong: undo a
-  `git-stack` history rewrite via `git branch-stash`, resolve the merge conflicts
-  `git-stack` refuses to handle, and fix a stack that diverged or split (`git-stack
-  --repair`) after a manual `git rebase` or a direct commit on a parent branch. Use
-  this WHENEVER the user says a git-stack/stacked-branch operation "broke" / "messed
-  up" / "lost my branches", wants to "undo a rebase or amend", hits a "conflict
-  during git-stack", needs to "restore branch positions", asks about "branch-stash"
-  / "git-stack --repair" / "diverged stack", or wants to inspect/fix protected-branch
-  config. For the normal authoring loop use `git-stack-workflow`; for pushing use
-  `git-stack-publish`.
+  Use when a git-stack operation breaks, branches are lost, a stack diverges or
+  splits, undoing a rebase or amend, restoring branch positions, resolving stack
+  conflicts, inspecting or fixing protected-branch config, or asking about
+  branch-stash or git-stack --repair.
 ---
 
 # Recovering and repairing a stack

@@ -1,6 +1,6 @@
 ---
 name: removing-ai-slop
-description: Use when editing prose that reads as AI- or ChatGPT-generated, polishing LLM-drafted text before publishing, or when writing has inflated significance, buzzwords (delve, pivotal, tapestry, underscore, vibrant), promotional tone, formulaic "challenges/nevertheless" structure, em-dash or boldface overuse, curly quotes, or someone asks to "make this sound human" / "remove the AI slop".
+description: Use when polishing LLM drafts, reviewing prose for AI tells in tone, structure, wording, or formatting, or asked to make writing sound human or remove AI slop.
 ---
 
 # Removing AI Slop
