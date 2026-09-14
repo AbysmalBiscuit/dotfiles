@@ -146,6 +146,7 @@ enabled = false
 enabled = true
 
 [tui]
+animations = false
 theme = "abc"
 status_line = [
     "model-with-reasoning",
