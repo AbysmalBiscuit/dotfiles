@@ -8,6 +8,13 @@
 # `roots` defaults to cwd, so launching a harness from $HOME scopes every
 # tool call over ~/.ssh and ~/.aws.
 
+# Tools that may write to the working tree. allow_file_deletion stays off, so
+# an edit destroying a file's contents is refused even through a permitted tool.
+[apply]
+rename = true
+format_document = true
+code_actions = true
+
 [workspace]
 heuristics_max_depth = 10
 max_documents = 100
