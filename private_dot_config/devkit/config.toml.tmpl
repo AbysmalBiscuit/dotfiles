@@ -91,10 +91,7 @@ after_end = [["{{ alacritree }}", "project", "refresh"]]
 # Git needs new paths in the index before a path-limited commit can name them.
 [tasks.commit]
 description = "Stage the given paths and commit them with a Conventional Commits message"
-steps = [
-  { task = "commit-stage" },
-  { task = "commit-write" },
-]
+steps = [{ task = "commit-stage" }, { task = "commit-write" }]
 
 [tasks.commit-stage]
 description = "Stage exactly the given paths, new files included"
@@ -127,7 +124,13 @@ Co-authored-by: {{ c }}
 [tasks.commit-patch]
 description = "Commit a patch against HEAD while preserving unrelated staging"
 guard = false
-run = ["{{ python }}", "{{ git_commit_patch }}", "--patch", "{{ patch }}", "--message", '''
+run = [
+  "{{ python }}",
+  "{{ git_commit_patch }}",
+  "--patch",
+  "{{ patch }}",
+  "--message",
+  '''
 {{- commit_subject | trim }}
 {%- if commit_body | trim %}
 
@@ -138,7 +141,8 @@ run = ["{{ python }}", "{{ git_commit_patch }}", "--patch", "{{ patch }}", "--me
 Co-authored-by: {{ c }}
 {%- endfor %}
 {%- endif %}
-''']
+''',
+]
 
 [tasks.commit-amend]
 description = "Rewrite the last commit message while preserving staged changes"
@@ -195,10 +199,11 @@ Implemented by {{ implemented_by | trim }}
 # Defaults for optional task arguments and shared template values.
 [templates.variables]
 
-alacritree = "# {[{ $alacritree }]}"
-herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
 python = # {[{ .path.python | default "python3" | toJson }]}
 git_commit_patch = # {[{ joinPath .chezmoi.homeDir ".local" "bin" "git-commit-patch.py" | toJson }]}
+
+alacritree = "# {[{ $alacritree }]}"
+herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
 
 # Subject line, body and `Co-Authored-By:` trailers of a `devrun task commit`
 # message. `coauthors` is `;`-separated, each entry a full `Name <email>`.
