@@ -44,14 +44,30 @@ args = ["lsp"]
 file_patterns = ["**/*.py", "**/*.pyi"]
 
 [lsp_servers.heuristics]
-project_markers = ["pyrefly.toml", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile"]
+project_markers = [
+    "pyrefly.toml",
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "requirements.txt",
+    "Pipfile",
+]
 
 # tsgo shells out to `npm` for type acquisition whatever the package manager.
 [[lsp_servers]]
 language_id = "typescript"
-command = "tsgo"
+command = "tsc"
 args = ["--lsp", "--stdio"]
-file_patterns = ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"]
+file_patterns = [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mts",
+    "**/*.cts",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mjs",
+    "**/*.cjs",
+]
 
 [lsp_servers.heuristics]
 project_markers = ["tsconfig.json", "jsconfig.json", "package.json"]
