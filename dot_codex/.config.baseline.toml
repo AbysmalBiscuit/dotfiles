@@ -1,4 +1,5 @@
 #:schema https://developers.openai.com/codex/config-schema.json
+#:toml-version 1.1
 # vim: shiftwidth=4 tabstop=4 expandtab
 approvals_reviewer = "auto_review"
 model = "gpt-5.6-astra"
@@ -12,7 +13,13 @@ hooks = true
 [[hooks.PostToolUse]]
 matcher = "^apply_patch$"
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 10, statusMessage = "Checking conventions" },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 10,
+        statusMessage = "Checking conventions",
+    },
 ]
 
 [[hooks.PostToolUse]]
@@ -21,7 +28,13 @@ matcher = "^(Bash|exec_command|shell_command|shell)$"
 [[hooks.PreToolUse]]
 matcher = "^(Bash|exec_command|shell_command|shell)$"
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 8, statusMessage = "Checking tool conventions" },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 8,
+        statusMessage = "Checking tool conventions",
+    },
 ]
 
 [[hooks.PreToolUse]]
@@ -30,34 +43,77 @@ matcher = "^(Bash|exec_command|shell_command|shell)$"
 [[hooks.PreToolUse]]
 matcher = "^apply_patch$"
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 8, statusMessage = "Checking tool conventions" },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 8,
+        statusMessage = "Checking tool conventions",
+    },
 ]
 
 [[hooks.SessionEnd]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 15 },
-  { type = "command", command = "python3 ~/.agents/skills/history/scripts/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\scripts\hist.py index', timeout = 3 },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 3,
+    },
+    {
+        type = "command",
+        command = "python3 ~/.agents/skills/history/scripts/hist.py index",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\scripts\hist.py index',
+        timeout = 3,
+    },
 ]
 
 [[hooks.SessionStart]]
 hooks = [
-  { type = "command", command = "bash '/home/lev/.codex/herdr-agent-state.sh' session", command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session', timeout = 10 },
-  { type = "command", command = "python3 ~/.agents/scripts/alacritree-follow.py", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py', timeout = 30 },
+    {
+        type = "command",
+        command = "bash '/home/lev/.codex/herdr-agent-state.sh' session",
+        command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
+        timeout = 10,
+    },
+    {
+        type = "command",
+        command = "python3 ~/.agents/scripts/alacritree-follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        timeout = 30,
+    },
 ]
 
 [[hooks.Stop]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 60, statusMessage = "Auditing changeset" },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 60,
+        statusMessage = "Auditing changeset",
+    },
 ]
 
 [[hooks.SubagentStop]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex", command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex', timeout = 60, statusMessage = "Auditing changeset" },
+    {
+        type = "command",
+        command = "python3 ~/.agents/plugins/agent-guard/scripts/agent_guard.py --codex",
+        command_windows = '~\.local\bin\python3.exe ~\.agents\plugins\agent-guard\scripts\agent_guard.py --codex',
+        timeout = 60,
+        statusMessage = "Auditing changeset",
+    },
 ]
 
 [[hooks.UserPromptSubmit]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/scripts/alacritree-follow.py", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py', timeout = 30 },
+    {
+        type = "command",
+        command = "python3 ~/.agents/scripts/alacritree-follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        timeout = 30,
+    },
 ]
 
 [marketplaces.devkit]
@@ -92,17 +148,17 @@ enabled = true
 [tui]
 theme = "abc"
 status_line = [
-  "model-with-reasoning",
-  "run-state",
-  "task-progress",
-  "context-used",
-  "five-hour-limit",
-  "weekly-limit",
-  "project-name",
-  "pull-request-number",
-  "approval-mode",
-  "git-branch",
-  "current-dir",
+    "model-with-reasoning",
+    "run-state",
+    "task-progress",
+    "context-used",
+    "five-hour-limit",
+    "weekly-limit",
+    "project-name",
+    "pull-request-number",
+    "approval-mode",
+    "git-branch",
+    "current-dir",
 ]
 status_line_use_colors = true
 vim_mode_default = true
