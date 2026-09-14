@@ -11,6 +11,10 @@ Before finishing script changes, run the language's supported syntax, lint, form
 - Zsh: `zsh -n` and a formatter that supports Zsh. ShellCheck does not support Zsh; verify the installed formatter's dialect support.
 - Fish: `fish --no-execute`, `fish_indent --check`, and `fish-lsp` diagnostics through an LSP client.
 
+## Tool inventory
+
+Never write comments in `.chezmoidata/tools.toml` or `.chezmoidata/wsl_tools.toml`. They are stripped automatically, so anything worth explaining belongs in the template or script that reads the value.
+
 ## Git commits
 
 Never commit unless I ask you to.
