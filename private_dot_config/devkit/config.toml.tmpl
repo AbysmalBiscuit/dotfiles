@@ -199,8 +199,8 @@ Implemented by {{ implemented_by | trim }}
 # Defaults for optional task arguments and shared template values.
 [templates.variables]
 
-python = # {[{ .path.python | default "python3" | toJson }]}
-git_commit_patch = # {[{ joinPath .chezmoi.homeDir ".local" "bin" "git-commit-patch.py" | toJson }]}
+python = '# {[{ .path.python }]}'
+git_commit_patch = '# {[{ joinPath .chezmoi.homeDir ".local" "bin" "git-commit-patch.py" }]}'
 
 alacritree = "# {[{ $alacritree }]}"
 herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
