@@ -18,7 +18,7 @@ object to that group's `hooks` array.
         "hooks": [
           {
             "type": "command",
-            "command": "~/.agents/skills/history/hist.py index",
+            "command": "~/.agents/skills/history/scripts/hist.py index",
             "timeout": 30
           }
         ]
@@ -48,7 +48,7 @@ before relying on it.
         "hooks": [
           {
             "type": "command",
-            "command": "~/.agents/skills/history/hist.py index",
+            "command": "~/.agents/skills/history/scripts/hist.py index",
             "async": true
           }
         ]
@@ -64,7 +64,7 @@ hook stays silent.
 ## Verify
 
 ```bash
-~/.agents/skills/history/hist.py --no-refresh stats
+~/.agents/skills/history/scripts/hist.py --no-refresh stats
 ```
 
 Run it before and after ending a session. The message count climbs when the hook fired.

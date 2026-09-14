@@ -74,7 +74,7 @@ def cmd_search(args, conn) -> int:
               f" {short_project(row['project'])}{side}")
         print("        " + one_line(row["snip"], args.width))
     print(f"\n{len(rows)} hits in {search.scope_label(scope)}."
-          f" Read one in context: ~/.agents/skills/history/hist.py show --around <id>")
+          f" Read one in context: ~/.agents/skills/history/scripts/hist.py show --around <id>")
     return 0
 
 
@@ -97,7 +97,7 @@ def cmd_sessions(args, conn) -> int:
         if row["title"]:
             print("         " + one_line(row["title"], args.width))
     print(f"\n{len(rows)} sessions in {search.scope_label(scope)}."
-          f" Replay one: ~/.agents/skills/history/hist.py show <session-id>")
+          f" Replay one: ~/.agents/skills/history/scripts/hist.py show <session-id>")
     return 0
 
 
@@ -138,7 +138,7 @@ When one call is not enough:
   {exe} show <session-id>                replay one conversation
 """
 
-EXE = "~/.agents/skills/history/hist.py"
+EXE = "~/.agents/skills/history/scripts/hist.py"
 
 
 def cmd_brief(args, conn) -> int:
@@ -253,7 +253,7 @@ def cmd_ask(args, conn) -> int:
             print(f"{marker}[{row['id']}] {label:<14} {text}")
 
     print(f"\n{len(threads)} of {len(hits)} hits shown."
-          f" Replay one: ~/.agents/skills/history/hist.py show <session-id>")
+          f" Replay one: ~/.agents/skills/history/scripts/hist.py show <session-id>")
     return 0
 
 
@@ -512,7 +512,7 @@ def add_filters(parser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="~/.agents/skills/history/hist.py",
+        prog="~/.agents/skills/history/scripts/hist.py",
         description="Full-text search over local Claude Code and Codex chat history.",
     )
     parser.add_argument("--db", help="index location (default: ~/.cache/history/index.db)")

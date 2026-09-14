@@ -106,7 +106,7 @@
           },
           {
             "type": "command",
-            "command": "~/.agents/skills/history/hist.py index",
+            "command": "~/.agents/skills/history/scripts/hist.py index",
             "timeout": 30
           }
         ]

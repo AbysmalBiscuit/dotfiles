@@ -35,7 +35,7 @@ hooks = [
 
 [[hooks.SessionEnd]]
 hooks = [
-  { type = "command", command = "python3 ~/.agents/skills/history/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\hist.py index', timeout = 3 },
+  { type = "command", command = "python3 ~/.agents/skills/history/scripts/hist.py index", command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\skills\history\scripts\hist.py index', timeout = 3 },
 ]
 
 [[hooks.SessionStart]]

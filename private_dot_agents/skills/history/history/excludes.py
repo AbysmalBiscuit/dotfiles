@@ -12,7 +12,7 @@ MARKERS = (".history_exclude", ".history_exclude.local")
 
 HEADER = """# One project directory per line. A directory covers everything beneath it.
 # Transcripts whose working directory falls under a rule are never indexed.
-# Manage with: ~/.agents/skills/history/hist.py exclude add|rm <path> --yes
+# Manage with: ~/.agents/skills/history/scripts/hist.py exclude add|rm <path> --yes
 #
 # A .history_exclude file in a project, or above it, excludes it too, and is not
 # listed here. Prefer one for anything that must stay out even if this file is lost.
