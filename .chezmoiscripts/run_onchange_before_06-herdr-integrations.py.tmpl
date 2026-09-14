@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # vim:filetype=python.chezmoitmpl
-"""Put the herdr agent-state hooks and agent skill in place.
+"""Put the herdr agent-state hooks, agent skill and Windows ConPTY in place.
 
 Herdr ships the hook scripts and the skill, and revises both between releases,
 so they stay out of the chezmoi source: `herdr integration install` writes
@@ -16,14 +16,20 @@ Running before the file apply is what makes that ordering hold.
 """
 
 # # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" | sha256sum }}
-# # {{ output "herdr" "--skill" | sha256sum }}# {{ end }}
+# # {{ output "herdr" "--skill" | sha256sum }}
+# # {{ output "herdr" "--version" | sha256sum }}# {{ end }}
 
 from __future__ import annotations
 
+import hashlib
 import os
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import urllib.request
+import zipfile
 from pathlib import Path
 
 HAS_HERDR = False  # {{ if .has.herdr }} or True# {{ end }}
@@ -31,6 +37,18 @@ HAS_HERDR = False  # {{ if .has.herdr }} or True# {{ end }}
 INTEGRATIONS = ("claude", "codex")
 
 SKILL_FILE = Path.home() / ".agents" / "skills" / "herdr" / "SKILL.md"
+
+CARGO_HERDR = Path.home() / ".cargo" / "bin" / "herdr.exe"
+
+RELEASE_ZIP = (
+    "https://github.com/herdrdev/herdr/releases/download/v{version}/herdr-windows-x86_64.zip"
+)
+DOWNLOAD_TIMEOUT_SECONDS = 120
+
+BUNDLE_DIRECTORIES = ("conpty", "THIRD-PARTY-NOTICES")
+CONPTY_BINARIES = ("conpty.dll", "x64/OpenConsole.exe", "arm64/OpenConsole.exe")
+
+VERSION_RE = re.compile(r"^herdr (\S+)")
 
 
 def run_herdr(*args: str) -> str | None:
@@ -45,9 +63,107 @@ def run_herdr(*args: str) -> str | None:
     return result.stdout
 
 
+def warn(message: str) -> None:
+    print(f"herdr-conpty: {message}", file=sys.stderr)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def bundle_accepted(bundle: Path, executable: bytes) -> bool:
+    """Whether herdr would load this ConPTY bundle instead of panicking.
+
+    herdr checks the bundle beside its executable against hashes compiled into
+    the binary and panics when one differs, so a bundle it would reject is
+    worse than none at all.
+    """
+    for relative in CONPTY_BINARIES:
+        path = bundle / relative
+        if not path.is_file() or sha256_file(path).encode() not in executable:
+            return False
+    return True
+
+
+def cargo_herdr_version() -> str | None:
+    result = subprocess.run(
+        [str(CARGO_HERDR), "--version"], capture_output=True, text=True, check=False
+    )
+    match = VERSION_RE.match(result.stdout.strip())
+    if match is None:
+        warn(f"could not parse a version out of `{CARGO_HERDR} --version`")
+        return None
+    return match.group(1)
+
+
+def extract_bundle(archive: Path, destination: Path) -> None:
+    with zipfile.ZipFile(archive) as zip_file:
+        members = [
+            name
+            for name in zip_file.namelist()
+            if name.startswith(tuple(f"{directory}/" for directory in BUNDLE_DIRECTORIES))
+        ]
+        zip_file.extractall(destination, members)
+
+
+def install_conpty_bundle() -> None:
+    """Give a cargo-installed herdr the app-local ConPTY its releases carry.
+
+    `cargo install` builds the executable alone, leaving herdr on the system
+    ConPTY, which drops the Kitty keyboard sequences agents send on older
+    Windows 10 builds. The release archive for the same version carries the
+    bundle herdr looks for in a `conpty` directory beside its own executable.
+    """
+    if sys.platform != "win32" or not CARGO_HERDR.is_file():
+        return
+
+    executable = CARGO_HERDR.read_bytes()
+    installed = CARGO_HERDR.parent / "conpty"
+    if bundle_accepted(installed, executable):
+        return
+
+    version = cargo_herdr_version()
+    if version is None:
+        return
+
+    url = RELEASE_ZIP.format(version=version)
+    with tempfile.TemporaryDirectory(prefix="herdr-conpty-") as temporary:
+        staging = Path(temporary)
+        archive = staging / "herdr-windows.zip"
+        try:
+            with urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+                archive.write_bytes(response.read())
+            extract_bundle(archive, staging)
+        except (OSError, zipfile.BadZipFile) as error:
+            warn(f"could not fetch the ConPTY bundle from {url}: {error}")
+            return
+
+        if not bundle_accepted(staging / "conpty", executable):
+            warn(f"the bundle in {url} is not the one herdr {version} verifies")
+            return
+
+        for directory in BUNDLE_DIRECTORIES:
+            target = CARGO_HERDR.parent / directory
+            try:
+                shutil.rmtree(target, ignore_errors=False)
+            except FileNotFoundError:
+                pass
+            except OSError as error:
+                warn(f"could not replace {target}: {error}; is herdr running?")
+                return
+            shutil.move(staging / directory, target)
+    print(f"herdr-conpty: installed the herdr {version} ConPTY bundle")
+
+
 def main() -> int:
     if not HAS_HERDR or shutil.which("herdr") is None:
         return 0
+
+    install_conpty_bundle()
 
     skill = run_herdr("--skill")
     if skill is not None:
