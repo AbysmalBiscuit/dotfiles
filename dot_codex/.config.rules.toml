@@ -12,6 +12,7 @@ enforce = [
     ["tui", "status_line"],
     ["tui", "status_line_use_colors"],
     ["tui", "keymap", "*", "*"],
+    ["tui", "*"],
     ["hooks", "PostToolUse"],
     ["hooks", "PreToolUse"],
     ["hooks", "Stop"],
@@ -24,8 +25,6 @@ seed = [
     ["approvals_reviewer"],
     ["plugins", "*", "enabled"],
     ["mcp_servers", "*", "enabled"],
-    ["tui", "vim_mode_default"],
-    ["tui", "theme"],
 ]
 ignore = [
     ["projects", "*"],
