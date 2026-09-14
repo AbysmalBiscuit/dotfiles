@@ -24,19 +24,26 @@ programs = ["git"]
 args = ["worktree", "remove"]
 reason = "Use devkit's issue binary to remove worktrees: issue end [branch-name]"
 
-# An explicit rule rather than the `commit` task's own `guard`, because the
-# derived redirect message talks about app directories and ports and says
-# nothing about the arguments the message is built from. Rules are consulted
-# before tasks, so this reason is the one the agent sees.
+# Explicit rules take priority over derived task guards and explain the
+# arguments needed to select commit contents.
 [harness.commands.git-commit]
 programs = ["git"]
 args = ["commit"]
-reason = """Stage first, then commit through the task that renders the message:
-  devrun task commit --arg commit_subject='fix(scope): imperative subject' \
---arg commit_body=$'first line\\nsecond line' \
---arg coauthors='Claude Opus 5 <noreply@anthropic.com>; Codex GPT-6-Astra <codex@openai.com>'
-commit_body and coauthors are optional; coauthors is a `;`-separated list. \
-To rewrite the last commit use `devrun task commit-amend` with the same args."""
+reason = """Name the paths and commit them in one step:
+  devrun task commit --arg files='src/a.rs,src/b.rs' --arg commit_subject='fix(scope): imperative subject'
+`files` is comma-separated, with whitespace preserved in each path. Unrelated staged paths stay staged. \
+Optional: `--arg commit_body='why this change is needed'` and `--arg coauthors='Name <email>; Other <email>'`, `;`-separated. \
+To commit part of a file, write a patch against HEAD and run `devrun task commit-patch --arg patch=<file>` with the same message args. \
+To rewrite the last commit, `devrun task commit-amend` with the message args and no files."""
+
+[harness.commands.git-add]
+programs = ["git"]
+args = ["add"]
+reason = """`devrun task commit` stages the paths it commits, so there is nothing to stage first:
+  devrun task commit --arg files='src/a.rs,src/b.rs' --arg commit_subject='fix(scope): imperative subject'
+To commit part of a file, write those hunks to a patch and pass it instead:
+  devrun task commit-patch --arg patch=/tmp/partial.diff --arg commit_subject='fix(scope): imperative subject'
+The patch must apply to HEAD. The task commits its hunks and preserves unrelated staged changes, including independent hunks in the same file."""
 
 [harness.commands.pr-create]
 programs = ["gh"]
@@ -80,12 +87,46 @@ after_end = [["{{ alacritree }}", "project", "refresh"]]
 
 [apps]
 
-# Conventional Commits message, built by `devrun task commit`. `git commit` is
-# refused by the rule above so the trailers cannot be forgotten.
+# Git needs new paths in the index before a path-limited commit can name them.
 [tasks.commit]
-description = "Commit staged changes with a Conventional Commits message and agent co-author trailers"
+description = "Stage the given paths and commit them with a Conventional Commits message"
+steps = [
+  { task = "commit-stage" },
+  { task = "commit-write" },
+]
+
+[tasks.commit-stage]
+description = "Stage exactly the given paths, new files included"
 guard = false
-run = ["git", "commit", "-m", '''
+run = [
+  "git",
+  "--literal-pathspecs",
+  "add",
+  "--",
+  { split = "{{ files }}", on = "," },
+]
+
+# The same pathspec at commit time excludes other sessions' staged changes.
+[tasks.commit-write]
+description = "Commit the selected paths while preserving unrelated staging"
+guard = false
+run = ["git", "--literal-pathspecs", "commit", "--only", "-m", '''
+{{- commit_subject | trim }}
+{%- if commit_body | trim %}
+
+{{ commit_body | trim }}
+{%- endif %}
+{%- if coauthors | trim(" ;") %}
+{% for c in coauthors | split(";") | map("trim") | reject("eq", "") %}
+Co-authored-by: {{ c }}
+{%- endfor %}
+{%- endif %}
+''', "--", { split = "{{ files }}", on = "," }]
+
+[tasks.commit-patch]
+description = "Commit a patch against HEAD while preserving unrelated staging"
+guard = false
+run = ["{{ python }}", "{{ git_commit_patch }}", "--patch", "{{ patch }}", "--message", '''
 {{- commit_subject | trim }}
 {%- if commit_body | trim %}
 
@@ -98,13 +139,10 @@ Co-authored-by: {{ c }}
 {%- endif %}
 ''']
 
-# Same message, rewriting the last commit instead of adding one. Separate task
-# because a task's argv is fixed: an empty `--amend` slot would reach git as an
-# empty argument rather than disappearing.
 [tasks.commit-amend]
-description = "Rewrite the last commit with a fresh message and agent co-author trailers"
+description = "Rewrite the last commit message while preserving staged changes"
 guard = false
-run = ["git", "commit", "--amend", "-m", '''
+run = ["git", "commit", "--amend", "--only", "-m", '''
 {{- commit_subject | trim }}
 {%- if commit_body | trim %}
 
@@ -119,10 +157,8 @@ Co-authored-by: {{ c }}
 
 [templates]
 
-# Body of a PR opened by `issue review request` / `issue pr create`.
-# `{{ input }}` is the `--pr-body` argument and lands under the agent-summary
-# heading; the TL;DR section above it stays empty unless a human passes
-# `human_tldr`.
+# PR body for `issue pr create`; `input` comes from `--pr-body`.
+# Only a human supplies `human_tldr`.
 pr_body = '''
 {%- set own = (issue_magic_word ~ " " ~ ("#" if issue and issue[0] in "0123456789" else "") ~ issue) if issue else "" -%}
 {%- set ref_lines = ((own ~ ";" ~ refs) if own else refs) | split(";") | map("trim") | reject("eq", "") | list -%}
@@ -155,13 +191,13 @@ Implemented by {{ implemented_by | trim }}
 {%- endif %}
 '''
 
-# Declared so the templates above render (an undefined name is a hard error
-# under strict minijinja) and so `--arg` accepts them: `--arg` is checked
-# against this table, not against the template.
+# Defaults for optional task arguments and shared template values.
 [templates.variables]
 
 alacritree = "# {[{ $alacritree }]}"
 herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
+python = # {[{ .path.python | default "python3" | toJson }]}
+git_commit_patch = # {[{ joinPath .chezmoi.homeDir ".local" "bin" "git-commit-patch.py" | toJson }]}
 
 # Subject line, body and `Co-Authored-By:` trailers of a `devrun task commit`
 # message. `coauthors` is `;`-separated, each entry a full `Name <email>`.
