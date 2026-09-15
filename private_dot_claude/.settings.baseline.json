@@ -12,13 +12,10 @@
   "enabledPlugins": {
     "ast-grep@ast-grep-marketplace": true,
     "devkit@devkit": true,
-    "linear@claude-plugins-official": true,
-    "mattpocock-skills@claude-plugins-official": true,
     "posthog@claude-plugins-official": true,
-    "pr-crucible@pr-crucible": true,
+    "pr-crucible@pr-crucible": false,
     "sentry@claude-plugins-official": true,
     "slack@claude-plugins-official": true,
-    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
     "superpowers@superpowers-marketplace": true
   },
   "env": {
