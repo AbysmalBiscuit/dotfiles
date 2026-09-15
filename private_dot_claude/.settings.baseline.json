@@ -12,6 +12,7 @@
   "enabledPlugins": {
     "ast-grep@ast-grep-marketplace": true,
     "devkit@devkit": true,
+    "linear@claude-plugins-official": false,
     "posthog@claude-plugins-official": true,
     "pr-crucible@pr-crucible": false,
     "sentry@claude-plugins-official": true,
