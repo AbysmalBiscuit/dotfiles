@@ -1,4 +1,5 @@
 {{ $navigate := joinPath .chezmoi.homeDir ".config" "herdr" "navigate.py" | replace "\\" "/" -}}
+{{ $restack := joinPath .chezmoi.homeDir ".config" "herdr" "restack.py" | replace "\\" "/" -}}
 onboarding = false
 {{ if .is_windows }}
 [terminal]
@@ -51,3 +52,27 @@ key = "ctrl+right"
 type = "shell"
 command = "python3 {{ $navigate }} right"
 description = "Navigate right through Neovim and Herdr"
+
+[[keys.command]]
+key = "prefix+ctrl+left"
+type = "shell"
+command = "python3 {{ $restack }} left"
+description = "Swap with the left pane, or restack to the left of a neighbour"
+
+[[keys.command]]
+key = "prefix+ctrl+down"
+type = "shell"
+command = "python3 {{ $restack }} down"
+description = "Swap with the pane below, or restack under a neighbour"
+
+[[keys.command]]
+key = "prefix+ctrl+up"
+type = "shell"
+command = "python3 {{ $restack }} up"
+description = "Swap with the pane above, or restack over a neighbour"
+
+[[keys.command]]
+key = "prefix+ctrl+right"
+type = "shell"
+command = "python3 {{ $restack }} right"
+description = "Swap with the right pane, or restack to the right of a neighbour"
