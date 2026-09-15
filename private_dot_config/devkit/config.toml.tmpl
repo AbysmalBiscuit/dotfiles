@@ -162,6 +162,15 @@ Co-authored-by: {{ c }}
 
 [templates]
 
+branch = '''
+{%- set id = (issue | lower ~ "-") if issue else "" -%}
+{{ id }}{{ (slug | trim | lower | replace(" ", "-"))[:46 - (id | length)] | trim("-") }}
+'''
+worktree_dir = '''
+{%- set id = (issue | lower ~ "-") if issue else "" -%}
+{{ id }}{{ (slug | trim | lower | replace(" ", "-"))[:46 - (id | length)] | trim("-") }}
+'''
+
 # PR body for `issue pr create`; `input` comes from `--pr-body`.
 # Only a human supplies `human_tldr`.
 pr_body = '''
