@@ -176,4 +176,4 @@ open_agents = ["ctrl-\\"]
 accept = ["enter", "ctrl-f"]
 
 [tui.keymap.chat]
-edit_queued_message = ["ctrl-up"]
+edit_queued_message = ["shift-left"]
