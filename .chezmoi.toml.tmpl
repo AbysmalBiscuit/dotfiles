@@ -255,6 +255,18 @@
 {{- end -}}
 {{- $python = $python | replaceAllRegex "\\\\" "/" -}}
 
+{{- /* Identify pwsh */ -}}
+{{- /* chezmoi stats every PATH candidate itself and silently falls back to
+       Windows PowerShell when that scan misses pwsh. 5.1 prefixes a UTF-8 BOM
+       to each native pipe, which corrupts the completions the generator script
+       builds by piping one CLI into another. The name rather than the resolved
+       path: a store-installed pwsh lives under a version-stamped WindowsApps
+       directory that moves on every upgrade. */ -}}
+{{- $pwsh := "" -}}
+{{- if index $has "pwsh" | default (lookPath "pwsh") -}}
+  {{- $pwsh = "pwsh" -}}
+{{- end -}}
+
 {{- if hasKey $secrets "system" -}}
   {{- range $name, $data := $secrets.system -}}
     {{- if or (hasPrefix $name $hostname) (hasPrefix $hostname $name) -}}
@@ -388,6 +400,11 @@ refreshPeriod = "12h"
 {{ if $python -}}
 [interpreters.py]
 command = {{ $python | quote }}
+{{ end }}
+{{- if $pwsh }}
+[interpreters.ps1]
+command = {{ $pwsh | quote }}
+args = ["-NoLogo", "-File"]
 {{ end }}
 
 [hooks]

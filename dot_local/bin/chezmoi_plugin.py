@@ -9,6 +9,7 @@ importable from all of them.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,8 +22,13 @@ if TYPE_CHECKING:
 # How to run a rendered chezmoi script, keyed by the extension its template
 # carries in .chezmoiscripts. -NonInteractive is deliberately absent: the secrets
 # template opens an editor.
+
+# Windows PowerShell 5.1 prefixes a UTF-8 BOM to every native pipe, which
+# corrupts a script that builds a file by piping one CLI into another.
+POWERSHELL: str = shutil.which("pwsh") or "powershell"
+
 INTERPRETERS: dict[str, list[str]] = {
-    ".ps1": ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"],
+    ".ps1": [POWERSHELL, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"],
     ".sh": ["sh"],
 }
 
