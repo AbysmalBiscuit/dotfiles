@@ -500,6 +500,24 @@ def workspace_for(herdr: Herdr, args: argparse.Namespace) -> tuple[Path, str, st
     return directory, workspace_id, starter
 
 
+def pane_is_idle_shell(herdr: Herdr, pane: dict) -> bool:
+    if pane.get("agent") or pane.get("agent_session"):
+        return False
+    result, _, _ = herdr.call("pane", "process-info", "--pane", pane["pane_id"])
+    if result is None:
+        return False
+    info = result.get("process_info", {})
+    shell_pid = info.get("shell_pid")
+    processes = info.get("foreground_processes", [])
+    return bool(
+        shell_pid
+        and info.get("foreground_process_group_id") == shell_pid
+        and len(processes) == 1
+        and processes[0].get("pid") == shell_pid
+        and processes[0].get("name") in {"bash", "fish", "zsh", "sh", "dash", "nu"}
+    )
+
+
 def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
     """Close every workspace whose panes sit in a directory, gone or not.
 
@@ -517,6 +535,13 @@ def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
         p["workspace_id"] for p in panes.get("panes", []) if under(pane_cwd(p), target)
     )
     for workspace_id in workspace_ids:
+        if args.if_idle:
+            members = [p for p in panes.get("panes", []) if p["workspace_id"] == workspace_id]
+            if not all(
+                under(pane_cwd(p), target) and pane_is_idle_shell(herdr, p) for p in members
+            ):
+                warn(f"keeping {workspace_id}: panes are busy, outside the worktree, or unknown")
+                continue
         result, code, message = herdr.call("workspace", "close", workspace_id)
         if result is None:
             warn(f"could not close {workspace_id}: {message or code or 'failed'}")
@@ -549,7 +574,7 @@ def main() -> int:
         help="create or join the workspace (the default)",
         description="Create or join the current checkout's workspace and open it in Alacritree.",
     )
-    sub.add_parser(
+    p_close = sub.add_parser(
         "close",
         parents=[shared],
         help="close the workspaces for a checkout",
@@ -557,6 +582,11 @@ def main() -> int:
             "Close workspaces whose panes are in the current directory or its"
             " subdirectories, terminating their processes."
         ),
+    )
+    p_close.add_argument(
+        "--if-idle",
+        action="store_true",
+        help="only close workspaces containing verified idle shells in the target directory",
     )
     p_list = sub.add_parser(
         "list",
