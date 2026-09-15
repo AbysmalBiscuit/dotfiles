@@ -17,6 +17,38 @@ def herdr(*args):
     return json.loads(result.stdout)["result"] if result.stdout.strip() else {}
 
 
+def alacritree(*args):
+    executable = (
+        os.environ.get("ALACRITREE_EXE")
+        or shutil.which("alacritree")
+        or shutil.which("alacritree.exe")
+    )
+    if not executable:
+        return None
+    done = subprocess.run(
+        [executable, *args], capture_output=True, text=True, timeout=5, check=False
+    )
+    return done.stdout if done.returncode == 0 else None
+
+
+def select(pane_id):
+    # alacritree points herdr back at the row it has selected, so the row has
+    # to move too. Attaching is the click: a pane holding a session activates it.
+    listing = alacritree("multiplexer", "list", "--json")
+    if not listing:
+        return
+    row = next(
+        (
+            pane["multiplexer"]
+            for pane in json.loads(listing).get("panes", [])
+            if pane.get("multiplexer", {}).get("pane_id") == pane_id
+        ),
+        None,
+    )
+    if row:
+        alacritree("multiplexer", "attach", row["side"], row["terminal_id"])
+
+
 def navigate(direction, edge=False):
     target = ["--current"] if edge else ["--pane", os.environ["HERDR_ACTIVE_PANE_ID"]]
     if not edge:
@@ -29,18 +61,16 @@ def navigate(direction, edge=False):
             return
 
     focus = herdr("focus", "--direction", direction, *target)["focus"]
-    if focus["changed"] or focus.get("reason") != "no_neighbor":
+    if focus["changed"]:
+        if focus.get("focused_pane_id"):
+            select(focus["focused_pane_id"])
+        return
+    if focus.get("reason") != "no_neighbor":
         return
 
     action = {"left": "FocusLeft", "right": "FocusRight"}.get(direction)
     if action and os.environ.get("ALACRITREE_SOCKET"):
-        executable = (
-            os.environ.get("ALACRITREE_EXE")
-            or shutil.which("alacritree")
-            or shutil.which("alacritree.exe")
-        )
-        if executable:
-            subprocess.run([executable, "action", action], check=True, timeout=5)
+        alacritree("action", action)
 
 
 if __name__ == "__main__":
