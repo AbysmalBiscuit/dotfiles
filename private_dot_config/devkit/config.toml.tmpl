@@ -53,7 +53,7 @@ reason = """Open the PR with devkit: `issue pr create --pr-title 'type(scope): s
 It opens ready for review; pass `--draft` when a draft was asked for. `issue pr create -h` lists the rest.
 `--pr-body` becomes the agent summary. This worktree's own issue comes from `.devkit/issue.toml` and the template writes its closing line, so mention only other issues, and leave the TL;DR section for a human to fill.
 Each template variable is passed as `--arg key=value`:
-  agent_model='Claude Opus 5' and agent_harness='[Claude Code](https://claude.com/claude-code)' render the attribution block; omitting both leaves the PR body with no agent credit
+  agent_model='Claude Opus 5' and agent_harness='[Claude Code](https://claude.com/claude-code)' render the attribution block; agents must pass both
   refs='Closes ADA-124; Refs #90' names every other issue, `;`-separated, each carrying its own keyword
   issue_magic_word=Refs when this branch does not finish its own issue (default Closes)
   implemented_by='<who did which part>' adds one prose line above the credit"""
@@ -240,6 +240,6 @@ refs = ""
 # Attribution for the agent summary. `agent_harness` carries the markdown link
 # a harness wants in its credit line; `implemented_by` is the free-prose
 # sentence naming who did which part of the work.
-agent_model = ""
-agent_harness = ""
+agent_model = { default = "", required = "agents" }
+agent_harness = { default = "", required = "agents" }
 implemented_by = ""
