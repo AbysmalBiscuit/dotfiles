@@ -67,7 +67,7 @@ after_worktree_create = [
   # {[{ end }]}
   ["zoxide", "add", "{{ worktree }}"],
   # {[{ if $herdr }]}
-  ["{{ herdr_session }}", "open", "--no-attach", "--path", "{{ worktree }}"],
+  ["{{ herdr_session }}", "open", "--no-focus", "--path", "{{ worktree }}"],
   # {[{ end }]}
 ]
 
