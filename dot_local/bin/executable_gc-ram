@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "RAM Before:"
+free -h
+sudo sync
+echo 3 | sudo tee /proc/sys/vm/drop_caches
+echo "RAM After:"
+free -h
