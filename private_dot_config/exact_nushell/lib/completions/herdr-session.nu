@@ -13,6 +13,7 @@ export extern herdr-session [
     --path: directory # Workspace directory
     --label: string # Name for a new workspace
     --no-attach # Leave Alacritree on its current session
+    --no-focus # Open in Alacritree without switching to it
     --help(-h) # Show help
 ]
 
@@ -22,6 +23,7 @@ export extern "herdr-session open" [
     --path: directory
     --label: string
     --no-attach
+    --no-focus
     --help(-h)
 ]
 
@@ -33,6 +35,7 @@ export extern "herdr-session new" [
     --path: directory
     --label: string
     --no-attach
+    --no-focus
     --help(-h)
     ...agent_args: string # Agent arguments after --
 ]

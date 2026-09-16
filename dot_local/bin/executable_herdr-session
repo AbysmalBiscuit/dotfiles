@@ -14,7 +14,8 @@ This resolves the checkout from git and opens its workspace.
 The calling terminal keeps its own session: Herdr's workspaces and tabs are
 made without focus, so no Herdr client moves. Alacritree, which lists Herdr's
 panes in its own sidebar, is then pointed at the reported tab, the same move
-as clicking that row. Pass --no-attach to leave it where it is.
+as clicking that row. Pass --no-attach to leave it where it is, or --no-focus
+to open the tab there without switching to it.
 """
 
 from __future__ import annotations
@@ -284,7 +285,7 @@ def detected_pane(panes: list[dict], session: str, tab_id: str) -> dict | None:
     return None
 
 
-def attach_tab(herdr: Herdr, tab_id: str) -> None:
+def attach_tab(herdr: Herdr, tab_id: str, *, focus: bool) -> None:
     """Open the tab in Alacritree, as clicking its sidebar row does.
 
     Alacritree discovers Herdr's panes on its own schedule, so a tab created a
@@ -308,7 +309,10 @@ def attach_tab(herdr: Herdr, tab_id: str) -> None:
             return
         time.sleep(PANE_DETECT_POLL)
 
-    reply, message = alacritree(exe, "multiplexer", "attach", mux["side"], mux["terminal_id"])
+    args = ["multiplexer", "attach", mux["side"], mux["terminal_id"]]
+    if not focus:
+        args.append("--no-focus")
+    reply, message = alacritree(exe, *args)
     if message:
         warn(f"could not open tab {tab_id} in alacritree: {message}")
         return
@@ -558,6 +562,11 @@ def main() -> int:
     shared.add_argument(
         "--no-attach", action="store_true", help="leave Alacritree on the session it is showing"
     )
+    shared.add_argument(
+        "--no-focus",
+        action="store_true",
+        help="open the tab in Alacritree without switching to it",
+    )
 
     # `shared` is a parent of the top-level parser only so that a bare
     # `--help` documents the options; every run reaches a subparser, which
@@ -663,7 +672,7 @@ def main() -> int:
     else:
         tab_id = starter or active_tab(herdr, workspace_id)
     if tab_id and not args.no_attach:
-        attach_tab(herdr, tab_id)
+        attach_tab(herdr, tab_id, focus=not args.no_focus)
     return 0
 
 
