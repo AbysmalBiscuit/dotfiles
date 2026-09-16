@@ -12,6 +12,11 @@ commands:
     flags:
       --list: Print the drift candidates and exit
     commands:
+      - name: plugins
+        description: Manage plugins installed into agent CLIs
+        commands:
+          - name: update
+            description: Refresh marketplaces and reinstall the pinned plugins
       - name: remove
         description: Clear a key from the baseline, live file and app
         flags:

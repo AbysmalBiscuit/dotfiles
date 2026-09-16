@@ -1,23 +1,84 @@
 #!/usr/bin/env python3
-"""Assign a merge strategy to every live agent-config key no rule covers.
+"""Manage agent configs and the plugins installed into agent CLIs.
 
-A launcher for .agentcfg/promote.py in the chezmoi source directory, which
-chezmoi also runs as its apply.pre hook. promote.py puts its own directory on
-sys.path, so running it in this interpreter needs no further setup.
+`chezmoi agents plugins update` refreshes the plugins in PLUGINS for every agent
+CLI on PATH. Every other argument goes to .agentcfg/promote.py in the chezmoi
+source directory, which assigns a merge strategy to every live agent-config key
+no rule covers, and which chezmoi also runs as its apply.pre hook. promote.py
+puts its own directory on sys.path, so running it in this interpreter needs no
+further setup.
 
 chezmoi dispatches `chezmoi agents ...` to whatever `chezmoi-agents` resolves to
-on PATH, so every argument here reaches promote.py unchanged.
+on PATH, so every subcommand here is reachable under either name.
 """
 
 from __future__ import annotations
 
+import argparse
 import runpy
+import shlex
+import shutil
+import subprocess
 import sys
 
 from chezmoi_plugin import PluginError, run, source_dir
 
+PLUGINS: tuple[str, ...] = (
+    "devkit@devkit",
+    "mcpls@mcpls",
+    "superpowers@superpowers-marketplace",
+)
+
+
+def step(*argv: str) -> int:
+    print(f"\n$ {shlex.join(argv)}", flush=True)
+    return subprocess.run(argv, check=False).returncode
+
+
+def update_claude(plugin: str, marketplace: str) -> int:
+    worst = step("claude", "plugin", "marketplace", "update", marketplace)
+    return max(worst, step("claude", "plugin", "update", plugin))
+
+
+def update_codex(plugin: str, marketplace: str) -> int:
+    # `codex plugin add` installs from the local marketplace snapshot, so the
+    # snapshot has to be current before the plugin is removed.
+    if worst := step("codex", "plugin", "marketplace", "upgrade", marketplace):
+        return worst
+    # Removal fails for a plugin that was never installed, which add then fixes.
+    step("codex", "plugin", "remove", plugin)
+    return step("codex", "plugin", "add", plugin)
+
+
+def update_plugins(_args: argparse.Namespace) -> int:
+    worst = 0
+    for cli, update in (("claude", update_claude), ("codex", update_codex)):
+        if shutil.which(cli) is None:
+            print(f"{cli}: not on PATH, skipping", file=sys.stderr)
+            continue
+        for plugin in PLUGINS:
+            worst = max(worst, update(plugin, plugin.partition("@")[2]))
+    return worst
+
+
+def plugins(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="chezmoi agents plugins",
+        description="Manage the plugins installed into agent CLIs.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    update_parser = subparsers.add_parser(
+        "update", help="refresh each plugin's marketplace and reinstall the plugin"
+    )
+    update_parser.set_defaults(func=update_plugins)
+    args = parser.parse_args(argv)
+    return args.func(args)
+
 
 def main() -> int:
+    if sys.argv[1:2] == ["plugins"]:
+        return plugins(sys.argv[2:])
+
     script = source_dir() / ".agentcfg" / "promote.py"
     if not script.is_file():
         raise PluginError(f"{script}: not found")
