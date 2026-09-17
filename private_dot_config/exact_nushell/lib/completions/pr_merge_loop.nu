@@ -5,9 +5,10 @@ const PR_MERGE_LOOP_WORDS = [
     [cancel "Drop this worktree's job" command]
     [claude "Resolve conflicts with Claude Code" agent]
     [codex "Resolve conflicts with Codex" agent]
-    [rebase "Rebase-merge the PR" method]
+    [rebase "Rebase-merge the PR (default)" method]
     [squash "Squash-merge the PR" method]
     [merge "Merge the PR with a merge commit" method]
+    [manual "Never merge; a person merges the PR" method]
 ]
 
 def "nu-complete pr_merge_loop words" [context: string] {

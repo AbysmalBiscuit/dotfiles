@@ -6,7 +6,7 @@
 """Keep a PR rebased on its base branch until it merges.
 
 Usage:
-  pr_merge_loop [claude|codex] [rebase|squash|merge] [-i SECONDS]
+  pr_merge_loop [claude|codex] [rebase|squash|merge|manual] [-i SECONDS]
   pr_merge_loop queue|list
   pr_merge_loop cancel [--all]
 
@@ -15,8 +15,9 @@ joins its repository's queue. Running it again for a queued worktree changes
 that job's options.
 
   claude | codex            agent that resolves rebase conflicts (default claude)
-  rebase | squash | merge   merge the PR with this method once GitHub allows it;
-                            without one, a person merges it
+  rebase | squash | merge   merge the PR with this method once GitHub allows it
+                            (default rebase)
+  manual                    never merge; a person merges the PR
   queue | list              show pending PRs and recent outcomes
   cancel                    drop the current worktree's job
   --all                     with cancel, drop every pending job in every repo
@@ -49,18 +50,33 @@ import sys
 import time
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
+from enum import StrEnum, auto
 from os import environ
 from pathlib import Path
-from typing import Literal, TextIO, get_args
+from typing import TextIO
 
 from tabulate import tabulate
 
-type Agent = Literal["claude", "codex"]
-type Method = Literal["rebase", "squash", "merge"]
 
-AGENTS: tuple[Agent, ...] = get_args(Agent.__value__)
-METHODS: tuple[Method, ...] = get_args(Method.__value__)
-LISTING = ("queue", "list")
+class Agent(StrEnum):
+    CLAUDE = auto()
+    CODEX = auto()
+
+
+class Method(StrEnum):
+    REBASE = auto()
+    SQUASH = auto()
+    MERGE = auto()
+    MANUAL = auto()
+
+
+class Command(StrEnum):
+    ENQUEUE = auto()
+    QUEUE = auto()
+    CANCEL = auto()
+
+
+COMMAND_WORDS = {"queue": Command.QUEUE, "list": Command.QUEUE, "cancel": Command.CANCEL}
 
 REBASE_SCRIPT = (
     Path.home() / ".agents/skills/rebase-latest-force-push/scripts/rebase_latest_force_push.py"
@@ -89,9 +105,14 @@ class Job:
     pr: int
     url: str
     queued_at: str
-    agent: Agent = "claude"
-    method: Method | None = None
+    agent: Agent = Agent.CLAUDE
+    method: Method = Method.REBASE
     interval: int = DEFAULT_INTERVAL
+
+    @classmethod
+    def read(cls, path: Path) -> Job:
+        data = json.loads(path.read_text())
+        return cls(**data | {"agent": Agent(data["agent"]), "method": Method(data["method"])})
 
 
 @dataclass(frozen=True)
@@ -112,7 +133,7 @@ class PullRequest:
 
 @dataclass(frozen=True)
 class Request:
-    command: Literal["enqueue", "queue", "cancel"]
+    command: Command
     agent: Agent | None = None
     method: Method | None = None
     interval: int | None = None
@@ -161,7 +182,7 @@ def jobs_of(repo_dir: Path) -> list[tuple[Path, Job]]:
     jobs = []
     for job_path in sorted((repo_dir / "jobs").glob("*.json")):
         try:
-            jobs.append((job_path, Job(**json.loads(job_path.read_text()))))
+            jobs.append((job_path, Job.read(job_path)))
         except FileNotFoundError:
             continue
     return jobs
@@ -232,8 +253,8 @@ def enqueue(request: Request) -> None:
         pr=pr["number"],
         url=pr["url"],
         queued_at=now(),
-        agent=request.agent or "claude",
-        method=request.method,
+        agent=request.agent or Agent.CLAUDE,
+        method=request.method or Method.REBASE,
         interval=request.interval or DEFAULT_INTERVAL,
     )
     job_path = repo_dir / "jobs" / f"{time.time_ns()}.json"
@@ -244,8 +265,7 @@ def enqueue(request: Request) -> None:
 
 
 def describe(job: Job) -> str:
-    merge = f"{job.method} merge" if job.method else "manual merge"
-    return f"{job.agent} resolves conflicts, {merge}, poll every {job.interval}s"
+    return f"{job.agent} resolves conflicts, {job.method} merge, poll every {job.interval}s"
 
 
 def all_repo_dirs() -> list[Path]:
@@ -301,7 +321,7 @@ def rebase(job: Job, base: str, log: TextIO) -> str:
 
 
 def agent_command(job: Job, base: str) -> list[str]:
-    if job.agent == "codex":
+    if job.agent == Agent.CODEX:
         # Commits and refs of a linked worktree live in the main checkout's .git.
         common = str(git_common_dir(job.worktree))
         return [*CODEX_CMD, "--add-dir", common, f"$rebase-latest-force-push {base}"]
@@ -325,8 +345,8 @@ def resolve_with_agent(job: Job, base: str, log: TextIO) -> str:
     return status if status in KEEP_GOING else f"{job.agent.upper()}-{status}"
 
 
-def merge(job: Job, method: Method, pr: PullRequest, log: TextIO) -> None:
-    cmd = ["gh", "pr", "merge", job.url, f"--{method}", "--match-head-commit", pr.head]
+def merge(job: Job, pr: PullRequest, log: TextIO) -> None:
+    cmd = ["gh", "pr", "merge", job.url, f"--{job.method}", "--match-head-commit", pr.head]
     if pr.merge_state != "CLEAN":
         if pr.auto_merge:
             return
@@ -344,7 +364,7 @@ def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
 
     while True:
         try:
-            job = Job(**json.loads(job_path.read_text()))
+            job = Job.read(job_path)
         except FileNotFoundError:
             return "CANCELLED"
         if not Path(job.worktree).is_dir():
@@ -372,9 +392,9 @@ def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
                 return status
             # After a push GitHub has not re-evaluated mergeability yet, so
             # merging waits for a loop where the branch did not move.
-            if status == "UP-TO-DATE" and job.method:
+            if status == "UP-TO-DATE" and job.method != Method.MANUAL:
                 report("merging")
-                merge(job, job.method, pr, log)
+                merge(job, pr, log)
 
         report("waiting", time.time() + job.interval)
         time.sleep(job.interval)
@@ -434,7 +454,7 @@ def show() -> None:
                     job.branch,
                     f"#{job.pr}",
                     job.agent,
-                    job.method or "manual",
+                    job.method,
                     progress.loops,
                     until_next_push(progress) if position == 1 else f"after #{jobs[0][1].pr}",
                 ]
@@ -488,12 +508,11 @@ def parse(argv: list[str]) -> Request:
     args = parser.parse_intermixed_args(argv)
     words: set[str] = set(args.words)
 
-    known = {*LISTING, "cancel", *AGENTS, *METHODS}
-    if unknown := sorted(words - known):
+    if unknown := sorted(words - {*COMMAND_WORDS, *Agent, *Method}):
         parser.error(f"unknown word(s): {', '.join(unknown)}")
-    agents = [a for a in AGENTS if a in words]
-    methods = [m for m in METHODS if m in words]
-    commands = (["queue"] if words & {*LISTING} else []) + (["cancel"] if "cancel" in words else [])
+    agents = [a for a in Agent if a in words]
+    methods = [m for m in Method if m in words]
+    commands = sorted({COMMAND_WORDS[w] for w in words if w in COMMAND_WORDS})
     for seen in (agents, methods, commands):
         if len(seen) > 1:
             parser.error(f"{' and '.join(seen)} are mutually exclusive")
@@ -502,10 +521,10 @@ def parse(argv: list[str]) -> Request:
 
     agent = agents[0] if agents else None
     method = methods[0] if methods else None
-    command = commands[0] if commands else "enqueue"
-    if command != "enqueue" and (agent or method or args.interval is not None):
+    command = commands[0] if commands else Command.ENQUEUE
+    if command != Command.ENQUEUE and (agent or method or args.interval is not None):
         parser.error(f"{command} takes no other words or options")
-    if args.all and command != "cancel":
+    if args.all and command != Command.CANCEL:
         parser.error("--all only applies to cancel")
     return Request(command, agent, method, args.interval, args.all)
 
@@ -517,13 +536,13 @@ def main() -> None:
 
     request = parse(sys.argv[1:])
     match request.command:
-        case "queue":
+        case Command.QUEUE:
             show()
-        case "cancel" if request.all:
+        case Command.CANCEL if request.all:
             cancel_all()
-        case "cancel":
+        case Command.CANCEL:
             cancel()
-        case "enqueue":
+        case Command.ENQUEUE:
             enqueue(request)
 
 
