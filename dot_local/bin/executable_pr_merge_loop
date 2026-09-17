@@ -360,15 +360,17 @@ def resolve_with_agent(job: Job, base: str, log: TextIO) -> str:
     return status if status in KEEP_GOING else f"{job.agent.upper()}-{status}"
 
 
-def merge(job: Job, pr: PullRequest, log: TextIO) -> None:
+def merge(job: Job, pr: PullRequest, log: TextIO) -> bool:
+    """Run gh pr merge, returning whether it succeeded."""
     cmd = ["gh", "pr", "merge", job.url, f"--{job.method}", "--match-head-commit", pr.head]
     if pr.merge_state != "CLEAN":
         if pr.auto_merge:
-            return
+            return False
         cmd.append("--auto")
     log.write(f"[{now()}] {' '.join(cmd)}\n")
     result = capture(*cmd, cwd=job.worktree)
     log.write(result.stdout + result.stderr)
+    return result.returncode == 0
 
 
 def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
@@ -409,7 +411,10 @@ def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
             # merging waits for a loop where the branch did not move.
             if status == "UP-TO-DATE" and job.method != Method.MANUAL:
                 report("merging")
-                merge(job, pr, log)
+                # Success can also mean auto-merge was enabled or the PR joined
+                # a merge queue, so ask GitHub whether it actually merged.
+                if merge(job, pr, log) and (pr := view_pr(job, log)) and pr.state != "OPEN":
+                    return pr.state
 
         report("waiting", time.time() + job.interval)
         time.sleep(job.interval)
