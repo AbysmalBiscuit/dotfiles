@@ -12,7 +12,7 @@ from pathlib import Path
 
 def run(args: list[str]) -> str | None:
     """Run a CLI with literal arguments and a bounded wait."""
-    done = subprocess.run(  # noqa: S603
+    done = subprocess.run(
         args, capture_output=True, text=True, encoding="utf-8", timeout=5, check=False
     )
     return done.stdout.strip() if done.returncode == 0 else None
@@ -61,8 +61,10 @@ def follow_herdr(cwd: str, pane_id: str) -> None:
     if not root:
         return
 
+    command = [executable]
+
     def call(*args: str) -> dict:
-        reply = run([executable, *args])
+        reply = run([*command, *args])
         if reply is None:
             return {}
         payload = json.loads(reply)

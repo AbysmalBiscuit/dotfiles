@@ -78,8 +78,8 @@ hooks = [
     },
     {
         type = "command",
-        command = "python3 ~/.agents/scripts/alacritree-follow.py",
-        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        command = "python3 ~/.agents/scripts/alacritree_follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree_follow.py',
         timeout = 30,
     },
 ]
@@ -110,8 +110,8 @@ hooks = [
 hooks = [
     {
         type = "command",
-        command = "python3 ~/.agents/scripts/alacritree-follow.py",
-        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree-follow.py',
+        command = "python3 ~/.agents/scripts/alacritree_follow.py",
+        command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree_follow.py',
         timeout = 30,
     },
 ]

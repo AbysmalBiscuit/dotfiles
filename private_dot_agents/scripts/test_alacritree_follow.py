@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SCRIPT = Path(__file__).with_name("executable_alacritree-follow.py")
+SCRIPT = Path(__file__).with_name("executable_alacritree_follow.py")
 ROOT = str(Path(__file__).parent)
 
 

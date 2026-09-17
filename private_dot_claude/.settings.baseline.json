@@ -109,7 +109,7 @@
           },
           {
             "type": "command",
-            "command": "~/.agents/skills/history/scripts/hist.py index",
+            "command": "python3 ~/.agents/skills/history/scripts/hist.py index",
             "timeout": 30
           }
         ]
@@ -120,7 +120,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
+            "command": "python3 ~/.agents/scripts/alacritree_follow.py",
             "timeout": 10,
             "async": true
           },
@@ -172,7 +172,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/scripts/alacritree-follow.sh",
+            "command": "python3 ~/.agents/scripts/alacritree_follow.py",
             "timeout": 10,
             "async": true
           },
@@ -185,26 +185,8 @@
         ]
       }
     ],
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/worktree-create.sh"
-          }
-        ]
-      }
-    ],
-    "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/worktree-remove.sh"
-          }
-        ]
-      }
-    ],
+    "WorktreeCreate": [],
+    "WorktreeRemove": [],
     "PostToolUseFailure": []
   },
   "model": "opus",
