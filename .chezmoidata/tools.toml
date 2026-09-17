@@ -793,6 +793,7 @@ cmds = [
 ]
 desc = "A rust devkit for running multiple parallel agents"
 git = "https://github.com/AbysmalBiscuit/devkit.git"
+install_command = "cargo install --locked --git https://github.com/AbysmalBiscuit/devkit"
 completions_command = "devkit completions --all SHELL"
 supported_shells = [
     "bash",
