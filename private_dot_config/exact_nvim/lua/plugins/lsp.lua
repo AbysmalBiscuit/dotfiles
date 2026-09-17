@@ -65,6 +65,18 @@ return {
       },
       ---@type table<string, lazyvim.lsp.Config|boolean>
       servers = {
+        jsonls = {
+          -- after/lsp/jsonls.lua cannot set this: LazyVim's explicit vim.lsp.config
+          -- call wins over after/lsp files. Codex hooks use the schema generated from
+          -- the Codex source by chezmoi, which SchemaStore's copy lags behind.
+          before_init = function(_, new_config)
+            new_config.settings.json.schemas = new_config.settings.json.schemas or {}
+            vim.list_extend(
+              new_config.settings.json.schemas,
+              require("schemastore").json.schemas({ ignore = { "Codex Hooks" } })
+            )
+          end,
+        },
         ["*"] = {
           capabilities = {
             semanticTokensProvider = false,
