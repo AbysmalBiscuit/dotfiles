@@ -256,6 +256,7 @@ source ./lib/completions/claude.nu
 source ./lib/completions/chezmoi.nu
 source ./lib/completions/herdr-session.nu
 source ./lib/completions/herdr-restart.nu
+source ./lib/completions/pr_merge_loop.nu
 source ./lib/aliases.nu
 source ./lib/media.nu
 source ./lib/dev.nu
