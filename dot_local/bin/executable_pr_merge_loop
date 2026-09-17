@@ -1,0 +1,531 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = ["tabulate>=0.9"]
+# ///
+"""Keep a PR rebased on its base branch until it merges.
+
+Usage:
+  pr_merge_loop [claude|codex] [rebase|squash|merge] [-i SECONDS]
+  pr_merge_loop queue|list
+  pr_merge_loop cancel [--all]
+
+Words go in any order. Without queue, list or cancel, the current worktree's PR
+joins its repository's queue. Running it again for a queued worktree changes
+that job's options.
+
+  claude | codex            agent that resolves rebase conflicts (default claude)
+  rebase | squash | merge   merge the PR with this method once GitHub allows it;
+                            without one, a person merges it
+  queue | list              show pending PRs and recent outcomes
+  cancel                    drop the current worktree's job
+  --all                     with cancel, drop every pending job in every repo
+  -i, --interval SECONDS    poll interval (default 60)
+
+Each repository gets one background worker that serves its queued worktrees in
+order. A job polls its PR with gh and runs rebase_latest_force_push against the
+PR's base branch until the PR merges or closes, or the rebase stops on
+something that needs a person (dirty tree, rejected push, ...). A rebase
+conflict goes to a headless agent session running the rebase-latest-force-push
+skill, which resolves it and pushes. Serving one PR at a time keeps rebases
+from restarting each other's CI.
+
+gh has no merge event a local process can subscribe to, so the worker polls.
+gh's `mergeable` flag tests a merge, not a replay of each commit, so the rebase
+itself is what detects conflicts. `queue` restarts workers for repos that still
+have queued jobs, which resumes the queue after a reboot.
+
+State and logs live under $XDG_STATE_HOME/pr_merge_loop/.
+"""
+
+from __future__ import annotations
+
+import argparse
+import fcntl
+import hashlib
+import json
+import subprocess
+import sys
+import time
+from dataclasses import asdict, dataclass, replace
+from datetime import UTC, datetime
+from os import environ
+from pathlib import Path
+from typing import Literal, TextIO, get_args
+
+from tabulate import tabulate
+
+type Agent = Literal["claude", "codex"]
+type Method = Literal["rebase", "squash", "merge"]
+
+AGENTS: tuple[Agent, ...] = get_args(Agent.__value__)
+METHODS: tuple[Method, ...] = get_args(Method.__value__)
+LISTING = ("queue", "list")
+
+REBASE_SCRIPT = (
+    Path.home() / ".agents/skills/rebase-latest-force-push/scripts/rebase_latest_force_push.py"
+)
+STATE_ROOT = Path(environ.get("XDG_STATE_HOME") or Path.home() / ".local/state") / "pr_merge_loop"
+KEEP_GOING = {"PUSHED", "UP-TO-DATE"}
+CLAUDE_CMD = ("claude", "-p", "--model", "opus", "--effort", "medium", "--permission-mode", "auto")
+CODEX_CMD = (
+    "codex",
+    "exec",
+    "-m",
+    "gpt-6-astra",
+    "-c",
+    "model_reasoning_effort=medium",
+    "--approve-for-me",
+)
+DEFAULT_INTERVAL = 60
+HISTORY_SHOWN = 5
+
+
+@dataclass(frozen=True)
+class Job:
+    project: str
+    worktree: str
+    branch: str
+    pr: int
+    url: str
+    queued_at: str
+    agent: Agent = "claude"
+    method: Method | None = None
+    interval: int = DEFAULT_INTERVAL
+
+
+@dataclass(frozen=True)
+class Progress:
+    loops: int = 0
+    phase: str = "starting"
+    next_check_at: float = 0.0
+
+
+@dataclass(frozen=True)
+class PullRequest:
+    state: str
+    base: str
+    head: str
+    merge_state: str
+    auto_merge: bool
+
+
+@dataclass(frozen=True)
+class Request:
+    command: Literal["enqueue", "queue", "cancel"]
+    agent: Agent | None = None
+    method: Method | None = None
+    interval: int | None = None
+    all: bool = False
+
+
+def die(message: str) -> None:
+    print(message, file=sys.stderr)
+    sys.exit(1)
+
+
+def now() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def capture(*cmd: str, cwd: str | Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
+
+
+def git(cwd: str | Path, *args: str) -> str:
+    result = capture("git", *args, cwd=cwd)
+    if result.returncode != 0:
+        die(result.stderr.strip() or f"git {' '.join(args)} failed")
+    return result.stdout.strip()
+
+
+def write_json(path: Path, data: object) -> None:
+    tmp = path.with_name(f"{path.name}.tmp")
+    tmp.write_text(json.dumps(data))
+    tmp.rename(path)
+
+
+def git_common_dir(cwd: str | Path) -> Path:
+    return Path(git(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+
+
+def repo_identity(cwd: str | Path) -> tuple[Path, str]:
+    """The repository's state directory and its main checkout's name."""
+    common = git_common_dir(cwd)
+    project = common.parent.name if common.name == ".git" else common.stem
+    digest = hashlib.sha1(str(common).encode(), usedforsecurity=False).hexdigest()[:8]
+    return STATE_ROOT / f"{project}-{digest}", project
+
+
+def jobs_of(repo_dir: Path) -> list[tuple[Path, Job]]:
+    jobs = []
+    for job_path in sorted((repo_dir / "jobs").glob("*.json")):
+        try:
+            jobs.append((job_path, Job(**json.loads(job_path.read_text()))))
+        except FileNotFoundError:
+            continue
+    return jobs
+
+
+def progress_path(repo_dir: Path, job_path: Path) -> Path:
+    return repo_dir / "progress" / job_path.name
+
+
+def read_progress(repo_dir: Path, job_path: Path) -> Progress:
+    try:
+        return Progress(**json.loads(progress_path(repo_dir, job_path).read_text()))
+    except FileNotFoundError:
+        return Progress()
+
+
+def log_path(repo_dir: Path, job_path: Path) -> Path:
+    return repo_dir / "logs" / f"{job_path.stem}.log"
+
+
+def spawn_worker(repo_dir: Path) -> None:
+    with (repo_dir / "worker.log").open("a") as out:
+        subprocess.Popen(
+            [str(Path(__file__).resolve()), "_worker", str(repo_dir)],
+            cwd=repo_dir,
+            stdin=subprocess.DEVNULL,
+            stdout=out,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+
+
+def enqueue(request: Request) -> None:
+    if not REBASE_SCRIPT.exists():
+        die(f"missing {REBASE_SCRIPT}")
+    worktree = git(Path.cwd(), "rev-parse", "--show-toplevel")
+    repo_dir, project = repo_identity(worktree)
+    for dirname in ("jobs", "progress", "logs"):
+        (repo_dir / dirname).mkdir(parents=True, exist_ok=True)
+    jobs = jobs_of(repo_dir)
+
+    for job_path, job in jobs:
+        if job.worktree == worktree:
+            updated = replace(
+                job,
+                agent=request.agent or job.agent,
+                method=request.method or job.method,
+                interval=request.interval or job.interval,
+            )
+            write_json(job_path, asdict(updated))
+            print(f"updated PR #{job.pr}: {describe(updated)}")
+            return
+
+    branch = git(worktree, "branch", "--show-current")
+    if not branch:
+        die("HEAD is detached; check out the PR branch first")
+    view = capture("gh", "pr", "view", "--json", "number,state,url", cwd=worktree)
+    if view.returncode != 0:
+        die(view.stderr.strip() or f"no PR found for {branch}")
+    pr = json.loads(view.stdout)
+    if pr["state"] != "OPEN":
+        die(f"PR #{pr['number']} is {pr['state']}")
+
+    job = Job(
+        project=project,
+        worktree=worktree,
+        branch=branch,
+        pr=pr["number"],
+        url=pr["url"],
+        queued_at=now(),
+        agent=request.agent or "claude",
+        method=request.method,
+        interval=request.interval or DEFAULT_INTERVAL,
+    )
+    job_path = repo_dir / "jobs" / f"{time.time_ns()}.json"
+    write_json(job_path, asdict(job))
+    spawn_worker(repo_dir)
+    print(f"queued PR #{job.pr} ({branch}) at position {len(jobs) + 1}: {describe(job)}")
+    print(f"log: {log_path(repo_dir, job_path)}")
+
+
+def describe(job: Job) -> str:
+    merge = f"{job.method} merge" if job.method else "manual merge"
+    return f"{job.agent} resolves conflicts, {merge}, poll every {job.interval}s"
+
+
+def all_repo_dirs() -> list[Path]:
+    return sorted(p for p in STATE_ROOT.glob("*") if p.is_dir()) if STATE_ROOT.is_dir() else []
+
+
+def cancel() -> None:
+    worktree = git(Path.cwd(), "rev-parse", "--show-toplevel")
+    repo_dir, _ = repo_identity(worktree)
+    for job_path, job in jobs_of(repo_dir):
+        if job.worktree == worktree:
+            job_path.unlink(missing_ok=True)
+            print(f"cancelled PR #{job.pr}; a running rebase or agent finishes first")
+            return
+    die(f"{worktree} is not queued")
+
+
+def cancel_all() -> None:
+    cancelled = []
+    for repo_dir in all_repo_dirs():
+        for job_path, job in jobs_of(repo_dir):
+            job_path.unlink(missing_ok=True)
+            cancelled.append(f"{job.project} #{job.pr}")
+    if not cancelled:
+        print("no pending PRs")
+        return
+    print(f"cancelled {', '.join(cancelled)}; running rebases or agents finish first")
+
+
+def view_pr(job: Job, log: TextIO) -> PullRequest | None:
+    fields = "state,baseRefName,headRefOid,mergeStateStatus,autoMergeRequest"
+    view = capture("gh", "pr", "view", job.url, "--json", fields, cwd=job.worktree)
+    if view.returncode != 0:
+        log.write(f"[{now()}] gh pr view failed: {view.stderr.strip()}\n")
+        return None
+    data = json.loads(view.stdout)
+    return PullRequest(
+        state=data["state"],
+        base=data["baseRefName"],
+        head=data["headRefOid"],
+        merge_state=data["mergeStateStatus"],
+        auto_merge=data["autoMergeRequest"] is not None,
+    )
+
+
+def rebase(job: Job, base: str, log: TextIO) -> str:
+    log.write(f"\n[{now()}] rebase onto {base}\n")
+    result = capture(sys.executable, str(REBASE_SCRIPT), base, cwd=job.worktree)
+    output = result.stdout + result.stderr
+    log.write(output)
+    markers = [ln for ln in output.splitlines() if ln.startswith("RLFP-RESULT:")]
+    return markers[-1].removeprefix("RLFP-RESULT:").strip() if markers else "NO-RESULT"
+
+
+def agent_command(job: Job, base: str) -> list[str]:
+    if job.agent == "codex":
+        # Commits and refs of a linked worktree live in the main checkout's .git.
+        common = str(git_common_dir(job.worktree))
+        return [*CODEX_CMD, "--add-dir", common, f"$rebase-latest-force-push {base}"]
+    return [*CLAUDE_CMD, f"/rebase-latest-force-push {base}"]
+
+
+def resolve_with_agent(job: Job, base: str, log: TextIO) -> str:
+    """Hand a conflicted rebase to the job's agent, then report where the branch stands."""
+    # The skill starts from a clean branch and runs the rebase itself.
+    git(job.worktree, "rebase", "--abort")
+    log.write(f"\n[{now()}] conflict: handing off to {job.agent}\n")
+    subprocess.run(
+        agent_command(job, base),
+        cwd=job.worktree,
+        stdin=subprocess.DEVNULL,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    status = rebase(job, base, log)
+    return status if status in KEEP_GOING else f"{job.agent.upper()}-{status}"
+
+
+def merge(job: Job, method: Method, pr: PullRequest, log: TextIO) -> None:
+    cmd = ["gh", "pr", "merge", job.url, f"--{method}", "--match-head-commit", pr.head]
+    if pr.merge_state != "CLEAN":
+        if pr.auto_merge:
+            return
+        cmd.append("--auto")
+    log.write(f"[{now()}] {' '.join(cmd)}\n")
+    result = capture(*cmd, cwd=job.worktree)
+    log.write(result.stdout + result.stderr)
+
+
+def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
+    loops = read_progress(repo_dir, job_path).loops
+
+    def report(phase: str, next_check_at: float = 0.0) -> None:
+        write_json(progress_path(repo_dir, job_path), asdict(Progress(loops, phase, next_check_at)))
+
+    while True:
+        try:
+            job = Job(**json.loads(job_path.read_text()))
+        except FileNotFoundError:
+            return "CANCELLED"
+        if not Path(job.worktree).is_dir():
+            return "WORKTREE-GONE"
+        if git(job.worktree, "branch", "--show-current") != job.branch:
+            return "BRANCH-CHANGED"
+
+        loops += 1
+        report("checking")
+        pr = view_pr(job, log)
+        if pr and pr.state != "OPEN":
+            return pr.state
+        if pr:
+            report("rebasing")
+            status = rebase(job, pr.base, log)
+            # A rebase-merged PR's commits already sit in the base, so the
+            # rebase empties the branch before gh reports the merge.
+            if status == "NO-COMMITS":
+                pr = view_pr(job, log)
+                return pr.state if pr and pr.state != "OPEN" else status
+            if status == "CONFLICT":
+                report(f"{job.agent} resolving")
+                status = resolve_with_agent(job, pr.base, log)
+            if status not in KEEP_GOING:
+                return status
+            # After a push GitHub has not re-evaluated mergeability yet, so
+            # merging waits for a loop where the branch did not move.
+            if status == "UP-TO-DATE" and job.method:
+                report("merging")
+                merge(job, job.method, pr, log)
+
+        report("waiting", time.time() + job.interval)
+        time.sleep(job.interval)
+
+
+def process(repo_dir: Path, job_path: Path, job: Job) -> None:
+    job_log = log_path(repo_dir, job_path)
+    # Line buffering keeps the log current for tailing and puts it on disk
+    # before an agent subprocess writes to the same file descriptor.
+    with job_log.open("a", buffering=1) as log:
+        log.write(f"[{now()}] start PR #{job.pr} ({job.branch}) in {job.worktree}\n")
+        outcome = drive(repo_dir, job_path, log)
+        log.write(f"[{now()}] finished: {outcome}\n")
+    entry = asdict(job) | {"outcome": outcome, "finished_at": now(), "log": str(job_log)}
+    with (repo_dir / "history.jsonl").open("a") as history:
+        history.write(json.dumps(entry) + "\n")
+    job_path.unlink(missing_ok=True)
+    progress_path(repo_dir, job_path).unlink(missing_ok=True)
+
+
+def worker(repo_dir: Path) -> None:
+    while True:
+        with (repo_dir / "worker.lock").open("w") as lock:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return
+            while jobs := jobs_of(repo_dir):
+                process(repo_dir, *jobs[0])
+        # A job queued between the last check and releasing the lock has a
+        # freshly spawned worker that lost the lock race; pick it up here.
+        if not jobs_of(repo_dir):
+            return
+
+
+def until_next_push(progress: Progress) -> str:
+    if progress.phase != "waiting":
+        return progress.phase
+    minutes, seconds = divmod(max(0, round(progress.next_check_at - time.time())), 60)
+    return f"≤ {minutes}m{seconds:02d}s" if minutes else f"≤ {seconds}s"
+
+
+def show() -> None:
+    pending = []
+    finished = []
+    for repo_dir in all_repo_dirs():
+        jobs = jobs_of(repo_dir)
+        if jobs:
+            spawn_worker(repo_dir)
+        for position, (job_path, job) in enumerate(jobs, start=1):
+            progress = read_progress(repo_dir, job_path)
+            pending.append(
+                [
+                    job.project,
+                    position,
+                    Path(job.worktree).name,
+                    job.branch,
+                    f"#{job.pr}",
+                    job.agent,
+                    job.method or "manual",
+                    progress.loops,
+                    until_next_push(progress) if position == 1 else f"after #{jobs[0][1].pr}",
+                ]
+            )
+        history = repo_dir / "history.jsonl"
+        if history.exists():
+            finished += [json.loads(line) for line in history.read_text().splitlines()]
+
+    if pending:
+        headers = [
+            "project",
+            "#",
+            "worktree",
+            "branch",
+            "PR",
+            "agent",
+            "merge",
+            "loops",
+            "next push",
+        ]
+        print(tabulate(pending, headers=headers))
+    else:
+        print("no pending PRs")
+
+    recent = sorted(finished, key=lambda entry: entry["finished_at"])[-HISTORY_SHOWN:]
+    if recent:
+        rows = [
+            [
+                e["finished_at"],
+                e["project"],
+                e["branch"],
+                f"#{e['pr']}",
+                e["outcome"],
+                "" if e["outcome"] == "MERGED" else e["log"],
+            ]
+            for e in recent
+        ]
+        print()
+        print(tabulate(rows, headers=["finished", "project", "branch", "PR", "outcome", "log"]))
+
+
+def parse(argv: list[str]) -> Request:
+    parser = argparse.ArgumentParser(
+        prog="pr_merge_loop",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("words", nargs="*", metavar="WORD")
+    parser.add_argument("-i", "--interval", type=int, metavar="SECONDS")
+    parser.add_argument("--all", action="store_true")
+    args = parser.parse_intermixed_args(argv)
+    words: set[str] = set(args.words)
+
+    known = {*LISTING, "cancel", *AGENTS, *METHODS}
+    if unknown := sorted(words - known):
+        parser.error(f"unknown word(s): {', '.join(unknown)}")
+    agents = [a for a in AGENTS if a in words]
+    methods = [m for m in METHODS if m in words]
+    commands = (["queue"] if words & {*LISTING} else []) + (["cancel"] if "cancel" in words else [])
+    for seen in (agents, methods, commands):
+        if len(seen) > 1:
+            parser.error(f"{' and '.join(seen)} are mutually exclusive")
+    if args.interval is not None and args.interval < 1:
+        parser.error("--interval must be at least 1 second")
+
+    agent = agents[0] if agents else None
+    method = methods[0] if methods else None
+    command = commands[0] if commands else "enqueue"
+    if command != "enqueue" and (agent or method or args.interval is not None):
+        parser.error(f"{command} takes no other words or options")
+    if args.all and command != "cancel":
+        parser.error("--all only applies to cancel")
+    return Request(command, agent, method, args.interval, args.all)
+
+
+def main() -> None:
+    if len(sys.argv) == 3 and sys.argv[1] == "_worker":
+        worker(Path(sys.argv[2]))
+        return
+
+    request = parse(sys.argv[1:])
+    match request.command:
+        case "queue":
+            show()
+        case "cancel" if request.all:
+            cancel_all()
+        case "cancel":
+            cancel()
+        case "enqueue":
+            enqueue(request)
+
+
+if __name__ == "__main__":
+    main()
