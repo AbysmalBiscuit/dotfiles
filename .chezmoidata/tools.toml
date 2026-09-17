@@ -321,6 +321,20 @@ init_command = "direnv hook SHELL"
 
 [[tools]]
 lang = "go"
+name = "doppler"
+desc = "The official CLI for interacting with your Doppler secrets and configuration."
+url = "https://docs.doppler.com/docs/cli"
+git = "https://github.com/DopplerHQ/cli"
+install_command = "mise use -g doppler@latest"
+completions_command = "doppler completion SHELL"
+supported_shells = [
+    "bash",
+    "fish",
+    "zsh"
+]
+
+[[tools]]
+lang = "go"
 name = "fzf"
 desc = "Fuzzy finder."
 git = "https://github.com/junegunn/fzf"
