@@ -22,6 +22,7 @@ that job's options.
   cancel                    drop the current worktree's job
   --all                     with cancel, drop every pending job in every repo
   -i, --interval SECONDS    poll interval (default 60)
+  --log                     write the job's log (off by default)
 
 Each repository gets one background worker that serves its queued worktrees in
 order. A job polls its PR with gh and runs rebase_latest_force_push against the
@@ -36,7 +37,8 @@ gh's `mergeable` flag tests a merge, not a replay of each commit, so the rebase
 itself is what detects conflicts. `queue` restarts workers for repos that still
 have queued jobs, which resumes the queue after a reboot.
 
-State and logs live under $XDG_STATE_HOME/pr_merge_loop/.
+State, and logs for jobs queued with --log, live under
+$XDG_STATE_HOME/pr_merge_loop/.
 """
 
 from __future__ import annotations
@@ -51,7 +53,7 @@ import time
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum, auto
-from os import environ
+from os import devnull, environ
 from pathlib import Path
 from typing import TextIO
 
@@ -108,6 +110,7 @@ class Job:
     agent: Agent = Agent.CLAUDE
     method: Method = Method.REBASE
     interval: int = DEFAULT_INTERVAL
+    log: bool = False
 
     @classmethod
     def read(cls, path: Path) -> Job:
@@ -138,6 +141,7 @@ class Request:
     method: Method | None = None
     interval: int | None = None
     all: bool = False
+    log: bool = False
 
 
 def die(message: str) -> None:
@@ -203,8 +207,14 @@ def log_path(repo_dir: Path, job_path: Path) -> Path:
     return repo_dir / "logs" / f"{job_path.stem}.log"
 
 
-def spawn_worker(repo_dir: Path) -> None:
-    with (repo_dir / "worker.log").open("a") as out:
+def open_log(path: Path, enabled: bool) -> TextIO:
+    # Line buffering keeps the log current for tailing and puts it on disk
+    # before a subprocess writes to the same file descriptor.
+    return path.open("a", buffering=1) if enabled else open(devnull, "w")
+
+
+def spawn_worker(repo_dir: Path, log: bool) -> None:
+    with open_log(repo_dir / "worker.log", log) as out:
         subprocess.Popen(
             [str(Path(__file__).resolve()), "_worker", str(repo_dir)],
             cwd=repo_dir,
@@ -231,6 +241,7 @@ def enqueue(request: Request) -> None:
                 agent=request.agent or job.agent,
                 method=request.method or job.method,
                 interval=request.interval or job.interval,
+                log=request.log or job.log,
             )
             write_json(job_path, asdict(updated))
             print(f"updated PR #{job.pr}: {describe(updated)}")
@@ -256,16 +267,20 @@ def enqueue(request: Request) -> None:
         agent=request.agent or Agent.CLAUDE,
         method=request.method or Method.REBASE,
         interval=request.interval or DEFAULT_INTERVAL,
+        log=request.log,
     )
     job_path = repo_dir / "jobs" / f"{time.time_ns()}.json"
     write_json(job_path, asdict(job))
-    spawn_worker(repo_dir)
+    spawn_worker(repo_dir, job.log)
     print(f"queued PR #{job.pr} ({branch}) at position {len(jobs) + 1}: {describe(job)}")
-    print(f"log: {log_path(repo_dir, job_path)}")
+    if job.log:
+        print(f"log: {log_path(repo_dir, job_path)}")
 
 
 def describe(job: Job) -> str:
-    return f"{job.agent} resolves conflicts, {job.method} merge, poll every {job.interval}s"
+    merge = f"{job.method} merge"
+    logging = ", logging" if job.log else ""
+    return f"{job.agent} resolves conflicts, {merge}, poll every {job.interval}s{logging}"
 
 
 def all_repo_dirs() -> list[Path]:
@@ -402,13 +417,15 @@ def drive(repo_dir: Path, job_path: Path, log: TextIO) -> str:
 
 def process(repo_dir: Path, job_path: Path, job: Job) -> None:
     job_log = log_path(repo_dir, job_path)
-    # Line buffering keeps the log current for tailing and puts it on disk
-    # before an agent subprocess writes to the same file descriptor.
-    with job_log.open("a", buffering=1) as log:
+    with open_log(job_log, job.log) as log:
         log.write(f"[{now()}] start PR #{job.pr} ({job.branch}) in {job.worktree}\n")
         outcome = drive(repo_dir, job_path, log)
         log.write(f"[{now()}] finished: {outcome}\n")
-    entry = asdict(job) | {"outcome": outcome, "finished_at": now(), "log": str(job_log)}
+    entry = asdict(job) | {
+        "outcome": outcome,
+        "finished_at": now(),
+        "log": str(job_log) if job.log else "",
+    }
     with (repo_dir / "history.jsonl").open("a") as history:
         history.write(json.dumps(entry) + "\n")
     job_path.unlink(missing_ok=True)
@@ -443,7 +460,7 @@ def show() -> None:
     for repo_dir in all_repo_dirs():
         jobs = jobs_of(repo_dir)
         if jobs:
-            spawn_worker(repo_dir)
+            spawn_worker(repo_dir, any(job.log for _, job in jobs))
         for position, (job_path, job) in enumerate(jobs, start=1):
             progress = read_progress(repo_dir, job_path)
             pending.append(
@@ -505,6 +522,7 @@ def parse(argv: list[str]) -> Request:
     parser.add_argument("words", nargs="*", metavar="WORD")
     parser.add_argument("-i", "--interval", type=int, metavar="SECONDS")
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--log", action="store_true")
     args = parser.parse_intermixed_args(argv)
     words: set[str] = set(args.words)
 
@@ -522,11 +540,11 @@ def parse(argv: list[str]) -> Request:
     agent = agents[0] if agents else None
     method = methods[0] if methods else None
     command = commands[0] if commands else Command.ENQUEUE
-    if command != Command.ENQUEUE and (agent or method or args.interval is not None):
+    if command != Command.ENQUEUE and (agent or method or args.log or args.interval is not None):
         parser.error(f"{command} takes no other words or options")
     if args.all and command != Command.CANCEL:
         parser.error("--all only applies to cancel")
-    return Request(command, agent, method, args.interval, args.all)
+    return Request(command, agent, method, args.interval, args.all, args.log)
 
 
 def main() -> None:

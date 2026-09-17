@@ -17,7 +17,7 @@ def "nu-complete pr_merge_loop words" [context: string] {
     if "command" in $used {
         return []
     }
-    let has_options = ($used | is-not-empty) or ($typed | any {|word| $word in ["-i" "--interval"] })
+    let has_options = ($used | is-not-empty) or ($typed | any {|word| $word in ["-i" "--interval" "--log"] })
     $PR_MERGE_LOOP_WORDS
     | where group not-in $used
     | where {|word| not ($has_options and $word.group == "command") }
@@ -28,6 +28,7 @@ def "nu-complete pr_merge_loop words" [context: string] {
 export extern pr_merge_loop [
     ...words: string@"nu-complete pr_merge_loop words" # claude|codex, rebase|squash|merge, queue|list, cancel
     --interval(-i): int # Poll interval in seconds
+    --log # Write the job's log
     --all # With cancel, cancel every pending job
     --help(-h) # Show help
 ]

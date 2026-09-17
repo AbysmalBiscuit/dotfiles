@@ -7,11 +7,12 @@ function __pr_merge_loop_seen
 end
 
 set -l listing '__pr_merge_loop_seen queue list cancel'
-set -l options '__pr_merge_loop_seen claude codex rebase squash merge manual -i --interval'
+set -l options '__pr_merge_loop_seen claude codex rebase squash merge manual -i --interval --log'
 
 complete -c pr_merge_loop -f
 complete -c pr_merge_loop -s h -l help -d 'Show help'
 complete -c pr_merge_loop -n "not $listing" -s i -l interval -x -d 'Poll interval in seconds'
+complete -c pr_merge_loop -n "not $listing" -l log -d "Write the job's log"
 complete -c pr_merge_loop -n '__pr_merge_loop_seen cancel' -l all -d 'Cancel every pending job'
 
 complete -c pr_merge_loop -n "not $listing; and not $options" -a queue -d 'Show pending PRs and recent outcomes'
