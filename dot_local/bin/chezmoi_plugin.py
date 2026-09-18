@@ -13,8 +13,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -57,6 +58,24 @@ def source_dir() -> Path:
     except (OSError, subprocess.CalledProcessError) as err:
         raise PluginError("cannot locate the chezmoi source directory") from err
     return Path(result.stdout.strip())
+
+
+def inventory_entries(source: Path) -> list[dict[str, Any]]:
+    """Return the tool entries from .chezmoidata, WSL's included under WSL."""
+    inventories = [("tools.toml", "tools")]
+    if os.environ.get("WSL_DISTRO_NAME"):
+        inventories.append(("wsl_tools.toml", "wsl_tools"))
+
+    entries: list[dict[str, Any]] = []
+    for filename, key in inventories:
+        path = source / ".chezmoidata" / filename
+        if not path.is_file():
+            continue
+        with path.open("rb") as handle:
+            entries.extend(tomllib.load(handle).get(key, []))
+    if not entries:
+        raise PluginError(f"no tool inventory under {source / '.chezmoidata'}")
+    return entries
 
 
 def render(template: Path) -> str:

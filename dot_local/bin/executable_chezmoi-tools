@@ -18,11 +18,10 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from chezmoi_plugin import PluginError, run, source_dir
+from chezmoi_plugin import PluginError, inventory_entries, run, source_dir
 
 # Package managers whose install invocation follows from the lang alone. go is
 # absent because its install path needs a module URL that the name doesn't carry,
@@ -63,30 +62,16 @@ class Tool:
 
 
 def load_tools(source: Path) -> list[Tool]:
-    inventories = [("tools.toml", "tools")]
-    if os.environ.get("WSL_DISTRO_NAME"):
-        inventories.append(("wsl_tools.toml", "wsl_tools"))
-
-    tools: list[Tool] = []
-    for filename, key in inventories:
-        path = source / ".chezmoidata" / filename
-        if not path.is_file():
-            continue
-        with path.open("rb") as handle:
-            data = tomllib.load(handle)
-        for entry in data.get(key, []):
-            name = entry["name"]
-            tools.append(
-                Tool(
-                    name=name,
-                    lang=entry.get("lang", ""),
-                    cmds=tuple(entry.get("cmds") or [name]),
-                    desc=entry.get("desc", ""),
-                    install_command=entry.get("install_command"),
-                )
-            )
-    if not tools:
-        raise PluginError(f"no tool inventory under {source / '.chezmoidata'}")
+    tools = [
+        Tool(
+            name=entry["name"],
+            lang=entry.get("lang", ""),
+            cmds=tuple(entry.get("cmds") or [entry["name"]]),
+            desc=entry.get("desc", ""),
+            install_command=entry.get("install_command"),
+        )
+        for entry in inventory_entries(source)
+    ]
     return sorted(tools, key=lambda tool: (tool.lang, tool.name.lower()))
 
 
