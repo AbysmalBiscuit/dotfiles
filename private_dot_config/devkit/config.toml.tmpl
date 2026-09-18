@@ -33,7 +33,9 @@ args = ["commit"]
 reason = """Name the paths and commit them in one step:
   devrun task commit --arg files='src/a.rs,src/b.rs' --arg commit_subject='fix(scope): imperative subject'
 `files` is comma-separated, with whitespace preserved in each path. Unrelated staged paths stay staged. \
-Optional: `--arg commit_body='why this change is needed'` and `--arg coauthors='Name <email>; Other <email>'`, `;`-separated. \
+Optional: `--arg commit_body='why this change is needed'`. Agents must pass `--arg coauthors='Name <email>; Other <email>'`, `;`-separated; optional for humans. \
+For Codex, use `--arg coauthors='Codex <noreply@openai.com>'`. \
+For Claude Code, use `--arg coauthors='MODEL <noreply@anthropic.com>'`, replacing `MODEL` with the full model name actually used, for example `Claude Opus 5`. \
 To commit part of a file, write a patch against HEAD and run `devrun task commit-patch --arg patch=<file>` with the same message args. \
 To rewrite the last commit, `devrun task commit-amend` with the message args and no files."""
 
@@ -219,7 +221,7 @@ herdr_session = "herdr-session# {[{ if .is_windows }]}.cmd# {[{ end }]}"
 # message. `coauthors` is `;`-separated, each entry a full `Name <email>`.
 commit_subject = ""
 commit_body = ""
-coauthors = ""
+coauthors = { default = "", required = "agents" }
 
 # Filled by a human after the PR is open; agents leave it empty.
 human_tldr = ""
