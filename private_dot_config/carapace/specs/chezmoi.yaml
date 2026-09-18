@@ -12,6 +12,8 @@ commands:
     flags:
       --list: Print the drift candidates and exit
     commands:
+      - name: update
+        description: Upgrade the agent CLIs, then refresh their plugins
       - name: plugins
         description: Manage plugins installed into agent CLIs
         commands:

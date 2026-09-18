@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Manage agent configs and the plugins installed into agent CLIs.
+"""Manage agent configs, the agent CLIs themselves, and their plugins.
 
-`chezmoi agents plugins update` refreshes the plugins in PLUGINS for every agent
-CLI on PATH. Every other argument goes to .agentcfg/promote.py in the chezmoi
-source directory, which assigns a merge strategy to every live agent-config key
-no rule covers, and which chezmoi also runs as its apply.pre hook. promote.py
-puts its own directory on sys.path, so running it in this interpreter needs no
-further setup.
+`chezmoi agents update` upgrades every CLI in AGENT_CLIS that is on PATH, then
+refreshes their plugins. `chezmoi agents plugins update` does the plugin half on
+its own. Every other argument goes to .agentcfg/promote.py in the chezmoi source
+directory, which assigns a merge strategy to every live agent-config key no rule
+covers, and which chezmoi also runs as its apply.pre hook. promote.py puts its
+own directory on sys.path, so running it in this interpreter needs no further
+setup.
 
 chezmoi dispatches `chezmoi agents ...` to whatever `chezmoi-agents` resolves to
 on PATH, so every subcommand here is reachable under either name.
@@ -15,13 +16,18 @@ on PATH, so every subcommand here is reachable under either name.
 from __future__ import annotations
 
 import argparse
+import os
 import runpy
 import shlex
 import shutil
 import subprocess
 import sys
+from typing import TYPE_CHECKING, Any
 
-from chezmoi_plugin import PluginError, run, source_dir
+from chezmoi_plugin import PluginError, inventory_entries, run, source_dir
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 PLUGINS: tuple[str, ...] = (
     "devkit@devkit",
@@ -50,14 +56,44 @@ def update_codex(plugin: str, marketplace: str) -> int:
     return step("codex", "plugin", "add", plugin)
 
 
-def update_plugins(_args: argparse.Namespace) -> int:
+# Each agent CLI, paired with how its plugins are refreshed. A CLI belongs here
+# once it carries both an update_command in the tool inventory and plugins.
+AGENT_CLIS: dict[str, Callable[[str, str], int]] = {
+    "claude": update_claude,
+    "codex": update_codex,
+}
+
+
+def update_plugins() -> int:
     worst = 0
-    for cli, update in (("claude", update_claude), ("codex", update_codex)):
+    for cli, update_plugin in AGENT_CLIS.items():
         if shutil.which(cli) is None:
             print(f"{cli}: not on PATH, skipping", file=sys.stderr)
             continue
         for plugin in PLUGINS:
-            worst = max(worst, update(plugin, plugin.partition("@")[2]))
+            worst = max(worst, update_plugin(plugin, plugin.partition("@")[2]))
+    return worst
+
+
+def update_argv(entry: dict[str, Any]) -> list[str]:
+    """Return a tool's update invocation for this platform, empty when it has none."""
+    commands = entry.get("update_command", {})
+    platform = "windows" if os.name == "nt" else "default"
+    return commands.get(platform, commands.get("default", []))
+
+
+def update_harnesses() -> int:
+    entries = {entry["name"]: entry for entry in inventory_entries(source_dir())}
+    worst = 0
+    for cli in AGENT_CLIS:
+        if shutil.which(cli) is None:
+            print(f"{cli}: not on PATH, skipping", file=sys.stderr)
+            continue
+        argv = update_argv(entries.get(cli, {}))
+        if not argv:
+            print(f"{cli}: no update command for this platform, skipping", file=sys.stderr)
+            continue
+        worst = max(worst, step(*argv))
     return worst
 
 
@@ -67,17 +103,28 @@ def plugins(argv: list[str]) -> int:
         description="Manage the plugins installed into agent CLIs.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
-    update_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "update", help="refresh each plugin's marketplace and reinstall the plugin"
     )
-    update_parser.set_defaults(func=update_plugins)
-    args = parser.parse_args(argv)
-    return args.func(args)
+    parser.parse_args(argv)
+    return update_plugins()
+
+
+def update(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="chezmoi agents update",
+        description="Upgrade the installed agent CLIs, then refresh their plugins.",
+    )
+    parser.parse_args(argv)
+    # Plugins go second so they install against the CLI version that will load them.
+    return max(update_harnesses(), update_plugins())
 
 
 def main() -> int:
     if sys.argv[1:2] == ["plugins"]:
         return plugins(sys.argv[2:])
+    if sys.argv[1:2] == ["update"]:
+        return update(sys.argv[2:])
 
     script = source_dir() / ".agentcfg" / "promote.py"
     if not script.is_file():
