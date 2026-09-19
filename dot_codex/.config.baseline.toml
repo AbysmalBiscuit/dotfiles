@@ -72,12 +72,6 @@ hooks = [
 hooks = [
     {
         type = "command",
-        command = "bash '/home/lev/.codex/herdr-agent-state.sh' session",
-        command_windows = 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Lev\.codex\herdr-agent-state.ps1" session',
-        timeout = 10,
-    },
-    {
-        type = "command",
         command = "python3 ~/.agents/scripts/alacritree_follow.py",
         command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree_follow.py',
         timeout = 30,

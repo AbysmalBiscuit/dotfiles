@@ -5,10 +5,18 @@ from __future__ import annotations
 import enum
 import tomllib
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 WILDCARD = "*"
 ORDER = "order"
+ENFORCE_IGNORE = "enforce_ignore"
+
+
+class RuleError(ValueError):
+    """A rules file contains an invalid declaration."""
 
 
 class Strategy(str, enum.Enum):
@@ -38,7 +46,7 @@ def score(pattern: list[str], path: tuple[str, ...]) -> tuple[int, int] | None:
     """
     if len(pattern) > len(path):
         return None
-    for pat_seg, path_seg in zip(pattern, path):
+    for pat_seg, path_seg in zip(pattern, path, strict=False):
         if pat_seg != WILDCARD and pat_seg != path_seg:
             return None
     return (len(pattern), sum(1 for s in pattern if s != WILDCARD))
@@ -52,10 +60,13 @@ def _ties(a: tuple[str, ...], b: tuple[str, ...]) -> bool:
     """
     if len(a) != len(b):
         return False
-    literals = lambda pattern: sum(1 for s in pattern if s != WILDCARD)
+
+    def literals(pattern):
+        return sum(1 for s in pattern if s != WILDCARD)
+
     if literals(a) != literals(b):
         return False
-    return all(x == WILDCARD or y == WILDCARD or x == y for x, y in zip(a, b))
+    return all(x in (WILDCARD, y) or y == WILDCARD for x, y in zip(a, b, strict=True))
 
 
 def _load_order(path: Path, raw: object) -> tuple[tuple[str, ...], ...]:
@@ -65,27 +76,46 @@ def _load_order(path: Path, raw: object) -> tuple[tuple[str, ...], ...]:
     so an order target has to be one key.
     """
     if not isinstance(raw, list):
-        raise ValueError(f"{path}: {ORDER!r} must be a list of paths, got {raw!r}")
+        raise RuleError(f"{path}: {ORDER!r} must be a list of paths, got {raw!r}")
     loaded = []
     for target in raw:
         if not isinstance(target, list) or not target:
-            raise ValueError(
-                f"{path}: {ORDER!r} entry must be a non-empty list of strings, "
-                f"got {target!r}"
+            raise RuleError(
+                f"{path}: {ORDER!r} entry must be a non-empty list of strings, got {target!r}"
             )
         for segment in target:
             if not isinstance(segment, str):
-                raise ValueError(
-                    f"{path}: {ORDER!r} entry contains a non-string segment, "
-                    f"got {segment!r}"
+                raise RuleError(
+                    f"{path}: {ORDER!r} entry contains a non-string segment, got {segment!r}"
                 )
             if segment == WILDCARD:
-                raise ValueError(
+                raise RuleError(
                     f"{path}: {ORDER!r} entry {target!r} uses {WILDCARD!r}; "
                     "an order target must name one key"
                 )
         loaded.append(tuple(target))
     return tuple(loaded)
+
+
+@dataclass(frozen=True)
+class EnforceIgnore:
+    hook_commands: tuple[str, ...] = ()
+
+    @classmethod
+    def load(cls, path: Path, raw: object) -> EnforceIgnore:
+        if not isinstance(raw, dict):
+            raise RuleError(f"{path}: enforce_ignore must be a table")
+        unknown = raw.keys() - {"hook_commands"}
+        if unknown:
+            raise RuleError(f"{path}: unknown enforce_ignore keys: {sorted(unknown)}")
+        commands = raw.get("hook_commands", [])
+        if not isinstance(commands, list) or any(
+            not isinstance(pattern, str) or not pattern for pattern in commands
+        ):
+            raise RuleError(
+                f"{path}: enforce_ignore.hook_commands must be a list of non-empty strings"
+            )
+        return cls(hook_commands=tuple(commands))
 
 
 @dataclass(frozen=True)
@@ -99,28 +129,29 @@ class RuleSet:
 
     patterns: tuple[tuple[Strategy, tuple[str, ...]], ...]
     order: tuple[tuple[str, ...], ...] = ()
+    enforce_ignore: EnforceIgnore = EnforceIgnore()
 
     @classmethod
     def load(cls, path: Path) -> RuleSet:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
         order = _load_order(path, raw.pop(ORDER, []))
+        enforce_ignore = EnforceIgnore.load(path, raw.pop(ENFORCE_IGNORE, {}))
         declarable = {s.value for s in DECLARABLE}
         collected: list[tuple[Strategy, tuple[str, ...]]] = []
         for key, value in raw.items():
             if key not in declarable:
-                raise ValueError(
+                raise RuleError(
                     f"unknown strategy {key!r} in {path}; "
-                    f"expected one of {sorted(declarable)} or {ORDER!r}"
+                    f"expected one of {sorted(declarable)}, {ORDER!r}, or {ENFORCE_IGNORE!r}"
                 )
             for pattern in value:
                 if not isinstance(pattern, list):
-                    raise ValueError(
-                        f"{path}: pattern in {key!r} must be a list of strings, "
-                        f"got {pattern!r}"
+                    raise RuleError(
+                        f"{path}: pattern in {key!r} must be a list of strings, got {pattern!r}"
                     )
                 for segment in pattern:
                     if not isinstance(segment, str):
-                        raise ValueError(
+                        raise RuleError(
                             f"{path}: pattern in {key!r} contains non-string segment, "
                             f"got {segment!r}"
                         )
@@ -128,13 +159,13 @@ class RuleSet:
         for i, (strategy_a, pattern_a) in enumerate(collected):
             for strategy_b, pattern_b in collected[i + 1 :]:
                 if strategy_a is not strategy_b and _ties(pattern_a, pattern_b):
-                    raise ValueError(
+                    raise RuleError(
                         f"{path}: {list(pattern_a)} and {list(pattern_b)} score "
                         f"equally on every path they both match but declare "
                         f"{strategy_a.value} and {strategy_b.value}; make one "
                         "deeper or more literal"
                     )
-        return cls(patterns=tuple(collected), order=order)
+        return cls(patterns=tuple(collected), order=order, enforce_ignore=enforce_ignore)
 
     def patterns_for(
         self, path: tuple[str, ...]
@@ -162,6 +193,5 @@ class RuleSet:
         plugins.x.enabled even where ["plugins", "x"] is declared removed.
         """
         return any(
-            self.resolve(path[:depth]) is Strategy.REMOVE
-            for depth in range(1, len(path) + 1)
+            self.resolve(path[:depth]) is Strategy.REMOVE for depth in range(1, len(path) + 1)
         )

@@ -7,17 +7,11 @@ enforce = [
     ["marketplaces", "*", "source"],
     ["marketplaces", "*", "source_type"],
     ["mcp_servers", "*"],
-    ["hooks", "SessionStart"],
-    ["hooks", "SessionEnd"],
+    ["hooks", "*"],
     ["tui", "status_line"],
     ["tui", "status_line_use_colors"],
     ["tui", "keymap", "*", "*"],
     ["tui", "*"],
-    ["hooks", "PostToolUse"],
-    ["hooks", "PreToolUse"],
-    ["hooks", "Stop"],
-    ["hooks", "SubagentStop"],
-    ["hooks", "UserPromptSubmit"],
 ]
 seed = [
     ["model"],
@@ -48,3 +42,6 @@ remove = [
 ]
 
 order = [["hooks", "state"]]
+
+[enforce_ignore]
+hook_commands = ["*herdr-agent-state.sh*", "*herdr-agent-state.ps1*"]

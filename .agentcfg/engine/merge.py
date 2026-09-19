@@ -9,6 +9,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping
 
+from engine.hooks import ignored_groups, is_hook_event
 from engine.lint import descends
 from engine.rules import RuleSet, Strategy, score
 
@@ -17,9 +18,7 @@ def merge(baseline: Mapping, live: Mapping, rules: RuleSet) -> dict:
     return _merge_level(baseline, live, rules, ())
 
 
-def _merge_level(
-    baseline: Mapping, live: Mapping, rules: RuleSet, prefix: tuple[str, ...]
-) -> dict:
+def _merge_level(baseline: Mapping, live: Mapping, rules: RuleSet, prefix: tuple[str, ...]) -> dict:
     out: dict = {}
 
     for key in live:
@@ -28,6 +27,8 @@ def _merge_level(
             continue
         if key in baseline:
             value = _combine(baseline[key], live[key], rules, path)
+        elif is_hook_event(path) and rules.resolve(path) is Strategy.ENFORCE:
+            value = ignored_groups(live[key], rules.enforce_ignore.hook_commands)
         elif descends(live[key]):
             # Descend even with nothing curated here, or a remove rule deeper
             # in a live-only table never runs. With no removals below, this
@@ -37,8 +38,10 @@ def _merge_level(
             value = copy.deepcopy(live[key])
         # An enforced empty baseline table means "this table exists and is
         # empty", so only prune where remove emptied it.
-        if value == {} and descends(live[key]) and all(
-            rules.removes((*path, member)) for member in live[key]
+        if (
+            value == {}
+            and descends(live[key])
+            and all(rules.removes((*path, member)) for member in live[key])
         ):
             continue
         out[key] = value
@@ -75,6 +78,10 @@ def _combine(base_value, live_value, rules: RuleSet, path: tuple[str, ...]):
     strategy = rules.resolve(path)
 
     if strategy is Strategy.ENFORCE:
+        if is_hook_event(path) and isinstance(base_value, list):
+            return copy.deepcopy(base_value) + ignored_groups(
+                live_value, rules.enforce_ignore.hook_commands
+            )
         return copy.deepcopy(base_value)
     if strategy is Strategy.UNION:
         if not isinstance(live_value, list) or not isinstance(base_value, list):

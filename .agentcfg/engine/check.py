@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from engine.hooks import is_hook_event
 from engine.lint import leaves, show
 from engine.rules import RuleSet, Strategy
 
@@ -38,8 +39,7 @@ class CheckReport:
             ("live-only", self.live_only),
             ("seed drift", self.seed_drift),
         ):
-            for path in paths:
-                lines.append(f"  {label}: {show(path)}")
+            lines.extend(f"  {label}: {show(path)}" for path in paths)
         return "\n".join(lines)
 
 
@@ -75,6 +75,8 @@ def classify(live: Mapping, baseline: Mapping, rules: RuleSet) -> CheckReport:
             continue
         if strategy is Strategy.IGNORE:
             continue
+        if strategy is Strategy.ENFORCE and is_hook_event(path):
+            continue
 
         base_value, in_baseline = _get(baseline, path)
         if not in_baseline:
@@ -86,10 +88,6 @@ def classify(live: Mapping, baseline: Mapping, rules: RuleSet) -> CheckReport:
             claimed = path[: len(pattern)]
             if claimed not in report.live_only:
                 report.live_only.append(claimed)
-        elif (
-            strategy is Strategy.SEED
-            and "*" not in pattern
-            and base_value != live_value
-        ):
+        elif strategy is Strategy.SEED and "*" not in pattern and base_value != live_value:
             report.seed_drift.append(path)
     return report

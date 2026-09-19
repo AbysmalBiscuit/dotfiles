@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 
+from engine.hooks import ignored_groups, is_hook_event
 from engine.rules import RuleSet, Strategy
 
 
@@ -43,6 +44,15 @@ def show(path: tuple[str, ...]) -> str:
 def lint(baseline: Mapping, rules: RuleSet) -> None:
     for path, value in leaves(baseline):
         strategy = rules.resolve(path)
+        if (
+            strategy is Strategy.ENFORCE
+            and is_hook_event(path)
+            and ignored_groups(value, rules.enforce_ignore.hook_commands)
+        ):
+            raise LintError(
+                f"{show(path)}: hooks matching enforce_ignore belong to the live config; "
+                "remove them from the baseline."
+            )
 
         if rules.removes(path):
             raise LintError(
@@ -60,6 +70,5 @@ def lint(baseline: Mapping, rules: RuleSet) -> None:
 
         if strategy is Strategy.UNION and not isinstance(value, list):
             raise LintError(
-                f"{show(path)}: union requires a list in the baseline, "
-                f"found {type(value).__name__}"
+                f"{show(path)}: union requires a list in the baseline, found {type(value).__name__}"
             )

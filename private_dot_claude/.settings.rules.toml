@@ -53,3 +53,6 @@ remove = [
     ["enabledPlugins", "mattpocock-skills@claude-plugins-official"],
     ["enabledPlugins", "superpowers-developing-for-claude-code@superpowers-marketplace"],
 ]
+
+[enforce_ignore]
+hook_commands = ["*herdr-agent-state.sh*", "*herdr-agent-state.ps1*"]

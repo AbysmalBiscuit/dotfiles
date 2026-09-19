@@ -67,6 +67,29 @@
         ]
       ]
     },
+    "enforce_ignore": {
+      "title": "Exceptions to hook enforcement",
+      "description": "For enforced hooks.<event> lists, preserve matching live hook entries and their group's matcher and metadata. Nonmatching entries come from the baseline; an event absent from the baseline retains only matching entries. These exceptions do not override remove, seed, union, or ignore rules. The baseline must not contain a hook matching an exception.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hook_commands": {
+          "description": "Case-sensitive shell globs matched against the complete command or command_windows string. A match in either field preserves the entire hook entry. Use * for any characters, ? for one character, and [abc] for a character set. Omitted or empty means no exceptions.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "examples": [
+            [
+              "*local-status-hook.py*",
+              "another-tool *"
+            ]
+          ]
+        }
+      }
+    },
     "order": {
       "title": "order — where the key sits in the written file",
       "description": "Layout only: each listed key is floated to the end of its parent table when the merged document is written. It never decides which value wins.\n\nAn entry is one full key path with no `*`, because a wildcard would name several keys with no way to say which trails which. Mostly useful in TOML, where a table declared before its siblings' scalar keys would swallow them.",
