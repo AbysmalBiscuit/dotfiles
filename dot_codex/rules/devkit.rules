@@ -1,0 +1,15 @@
+# Docs lookups update cache locks and may materialize library checkouts.
+prefix_rule(
+    pattern=["devkit", "docs", ["list", "info", "path"]],
+    decision="allow",
+    justification="Read library documentation through devkit's shared cache.",
+    match=["devkit docs list --project", "devkit docs info codex", "devkit docs path codex"],
+    not_match=["devkit docs prune", "devkit docs rm codex", "devkit issue end"],
+)
+prefix_rule(
+    pattern=["docm", ["list", "info", "path"]],
+    decision="allow",
+    justification="Read library documentation through devkit's shared cache.",
+    match=["docm list --project", "docm info codex", "docm path codex"],
+    not_match=["docm prune", "docm rm codex", "docm sync"],
+)

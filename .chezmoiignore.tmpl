@@ -71,6 +71,7 @@ localSettings.yaml
 {{- end }}
 
 {{- if not (index .tool "devkit") }}
+.codex/rules/devkit.rules
 .config/fish/conf.d/devkit.fish
 {{- end }}
 
