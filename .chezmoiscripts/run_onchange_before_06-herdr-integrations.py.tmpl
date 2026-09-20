@@ -15,11 +15,14 @@ enforces, so the baseline carries a copy of herdr's entry verbatim and wins.
 Running before the file apply is what makes that ordering hold.
 """
 
-# # {{ if .has.herdr }}# {{ output "herdr" "integration" "status" | sha256sum }}
+from __future__ import annotations
+
+# {{ if not (index .has "herdr") }}
+exit(0)
+# {{ end }}
+# # {{ if index .has "herdr" }}# {{ output "herdr" "integration" "status" | sha256sum }}
 # # {{ output "herdr" "--skill" | sha256sum }}
 # # {{ output "herdr" "--version" | sha256sum }}# {{ end }}
-
-from __future__ import annotations
 
 import hashlib
 import os
@@ -32,7 +35,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-HAS_HERDR = False  # {{ if .has.herdr }} or True# {{ end }}
+HAS_HERDR = False  # {{ if index .has "herdr" }} or True# {{ end }}
 
 INTEGRATIONS = ("claude", "codex")
 
