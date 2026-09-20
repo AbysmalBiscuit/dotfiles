@@ -60,6 +60,10 @@ Each template variable is passed as `--arg key=value`:
   issue_magic_word=Refs when this branch does not finish its own issue (default Closes)
   implemented_by='<who did which part>' adds one prose line above the credit"""
 
+[harness.commands.sudo]
+programs = ["sudo"]
+reason = "Never run sudo"
+
 [hooks]
 after_worktree_create = [
   # {[{ if $alacritree }]}

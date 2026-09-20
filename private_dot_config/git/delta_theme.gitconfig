@@ -1,0 +1,64 @@
+# ABC theme for delta.
+# Activate with `features = abc` under [delta] in ~/.gitconfig.
+# Requires the ABC bat theme: ~/.config/bat/themes/ABC.tmTheme + `bat cache --build`.
+
+[delta "abc"]
+	dark = true
+	syntax-theme = ABC
+
+	minus-style = syntax "#352734"
+	minus-non-emph-style = syntax "#352734"
+	minus-emph-style = syntax bold "#633f50"
+	minus-empty-line-marker-style = normal "#352734"
+
+	plus-style = syntax "#273732"
+	plus-non-emph-style = syntax "#273732"
+	plus-emph-style = syntax bold "#46614d"
+	plus-empty-line-marker-style = normal "#273732"
+
+	zero-style = syntax
+	whitespace-error-style = "#f0616d" reverse
+
+	file-style = "#91CCFF" bold
+	file-decoration-style = "#375780" ul
+	file-added-label = [+]
+	file-copied-label = [C]
+	file-modified-label = [M]
+	file-removed-label = [-]
+	file-renamed-label = [R]
+
+	hunk-header-style = file line-number syntax
+	hunk-header-decoration-style = "#273E5C" box
+	hunk-header-file-style = "#e5e5e5"
+	hunk-header-line-number-style = "#FFD700"
+
+	commit-style = "#f9e2af" bold
+	commit-decoration-style = "#375780" box ul
+
+	line-numbers = true
+	line-numbers-left-format = "{nm:>4}┊"
+	line-numbers-right-format = "{np:>4}│"
+	line-numbers-left-style = "#375780"
+	line-numbers-right-style = "#375780"
+	line-numbers-minus-style = "#f0616d"
+	line-numbers-plus-style = "#11cf45"
+	line-numbers-zero-style = "#7f7f7f"
+
+	inline-hint-style = "#7f7f7f" italic
+
+	merge-conflict-ours-diff-header-style = "#f9e2af" bold
+	merge-conflict-ours-diff-header-decoration-style = "#375780" box
+	merge-conflict-theirs-diff-header-style = "#f9e2af" bold
+	merge-conflict-theirs-diff-header-decoration-style = "#375780" box
+
+	blame-code-style = syntax
+	blame-format = "{author:<18} ({commit:>8}) {timestamp:^16}"
+	blame-palette = "#0B111A" "#131b25" "#0D141F" "#1B2433"
+	blame-separator-style = "#7f7f7f"
+
+	grep-file-style = "#91CCFF" bold
+	grep-line-number-style = "#FFD700"
+	grep-match-line-style = syntax
+	grep-match-word-style = "#e5e5e5" "#2E4A8C"
+	grep-header-decoration-style = "#273E5C" box
+	grep-header-file-style = "#91CCFF" bold

@@ -8,6 +8,15 @@
 os:
   editPreset: "nvim"
 # {{- end }}
+# {{ if index .tool "delta" }}
+git:
+  # Lazygit ignores core.pager and sets GIT_PAGER from here. It runs the pager
+  # in a pty sized to the diff panel, so delta detects the width on its own.
+  # Cycle between these with the `|` key.
+  pagers:
+    - pager: delta --dark --paging=never
+    - pager: 'delta --dark --paging=never --features "side-by-side abc"'
+# {{- end }}
 gui:
   # Use the mocha catppuccin theme
   theme:

@@ -287,6 +287,9 @@ Documents
 .claude.json
 .config/fish/exact_completions/claude.fish
 {{- end }}
+{{- if not (index .has "delta") }}
+.config/git/delta_theme.gitconfig
+{{- end }}
 {{ if not (index .has "highlight") -}}
 .local/share/highlight
 {{- end }}

@@ -3,8 +3,6 @@
   email = {{ .personal.email | quote }}
   name = {{ .personal.fullname | quote }}
   signingkey = {{ .personal.gpg_key }}
-[interactive]
-  color = auto
 [core]
   attributesfile = ~/.gitattributes_global
   excludesfile = ~/.gitignore_global
@@ -14,7 +12,8 @@
   longpaths = true
   editor = {{ .path.editor | replaceAllRegex "\\\\" "/" | quote }}
 {{- if index .tool "delta" }}
-  pager = delta
+{{- $delta_pager := joinPath .chezmoi.homeDir ".local" "bin" "git-delta-pager.py" | replaceAllRegex "\\\\" "/" }}
+  pager = {{ if .path.python }}'{{ .path.python }}' {{ end }}'{{ $delta_pager }}'
 {{- else if index .tool "bat" }}
   pager = bat
 {{- end }}
@@ -81,6 +80,14 @@
   gpgSign = true
 [init]
   defaultBranch = main
+[include]
+  path = {{ joinPath .chezmoi.homeDir ".config" "git" "delta_theme.gitconfig" }}
+[interactive]
+  color = auto
+{{- if index .tool "delta" }}
+  diffFilter = delta --color-only
+  pager = delta
+{{- end }}
 [fetch]
   prune = true
 [tag]
@@ -104,11 +111,16 @@
 [diff]
   tool = {{ .tool.meld }}
 [merge]
-    tool = meld
+  tool = meld
+{{- else }}
+[merge]
+  conflictStyle = zdiff3
 {{- end }}
 [delta]
+  features = abc
   navigate = true  # use n and N to move between diff sections
   dark = true      # or light = true, or omit for auto-detection
+  hyperlinks = true
 [difftool "meld"]
   cmd = meld $LOCAL $REMOTE
 [mergetool "meld"]
@@ -116,6 +128,8 @@
 [difftool "nvim"]
   cmd = nvim -d $LOCAL $REMOTE
 [mergetool "nvim"]
+{{- if index .tool "neovim" }}
   cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d $LOCAL $MERGED $REMOTE
-  ff=false
-  conflictStyle=diff3
+{{- end }}
+  ff = false
+  conflictStyle = diff3
