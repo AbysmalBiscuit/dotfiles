@@ -12,6 +12,7 @@ Environment:
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 
 DEFAULT_MIN_COLUMNS: int = 170
@@ -40,10 +41,6 @@ def min_columns() -> int:
 
 
 def configured_features() -> list[str]:
-    # Imported here because it costs about 8ms, and the narrow-terminal path
-    # never needs it.
-    import subprocess
-
     try:
         result = subprocess.run(
             ["git", "config", "--get", "delta.features"],
@@ -64,7 +61,13 @@ def main() -> None:
         features = " ".join(["side-by-side", *configured_features()])
         args[1:1] = ["--features", features]
 
-    os.execvp(args[0], args)  # noqa: S606
+    # Windows has no exec: os.execvp detaches delta and returns straight away,
+    # so whoever invoked the pager sees it finish before a byte is written.
+    # Waiting on a child behaves the same way everywhere.
+    try:
+        sys.exit(subprocess.run(args, check=False).returncode)
+    except KeyboardInterrupt:
+        sys.exit(130)
 
 
 if __name__ == "__main__":
