@@ -11,3 +11,12 @@ keys = ["*.*"]
 
 [rule.formatting]
 array_auto_collapse = true
+
+[[rule]]
+include = ["**/.chezmoidata/*tools.toml"]
+keys = ["*.*"]
+
+[rule.formatting]
+array_auto_collapse = false
+array_trailing_comma = false
+indent_string = "    "
