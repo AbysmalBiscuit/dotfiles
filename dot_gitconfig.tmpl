@@ -1,4 +1,13 @@
 # vim: shiftwidth=2 tabstop=2 expandtab
+{{ $difftool := "" -}}
+{{- $mergetool := "" -}}
+{{- if index .tool "neovim" -}}
+{{- $difftool = "nvim" -}}
+{{- $mergetool = "nvim" -}}
+{{- else if index .tool "meld" -}}
+{{- $difftool = "meld" -}}
+{{- $mergetool = "meld" -}}
+{{- end -}}
 [user]
   email = {{ .personal.email | quote }}
   name = {{ .personal.fullname | quote }}
@@ -102,18 +111,17 @@
 [mergetool]
   prompt = false
 # per tool configurations
-{{- if index .tool "neovim" }}
 [diff]
-  tool = {{ .tool.neovim }}
+{{- if $difftool }}
+  tool = {{ $difftool }}
+{{- end }}
+  algorithm = histogram
+  colorMoved = default
+  mnemonicPrefix = true
 [merge]
-  tool = nvim
-{{- else if index .tool "meld" }}
-[diff]
-  tool = {{ .tool.meld }}
-[merge]
-  tool = meld
+{{- if $mergetool }}
+  tool = {{ $mergetool }}
 {{- else }}
-[merge]
   conflictStyle = zdiff3
 {{- end }}
 [delta]
@@ -132,4 +140,4 @@
   cmd = {{ .path.nvim | replaceAllRegex "\\\\" "/" | quote }} -d $LOCAL $MERGED $REMOTE
 {{- end }}
   ff = false
-  conflictStyle = diff3
+  conflictStyle = zdiff3
