@@ -426,6 +426,12 @@ database = "{{ $keepassxc_database }}"
 args = {{ $keepassxc_args }}
 mode = "open"
 
+[diff]
+{{ if index $has "delta" | default (lookPath "delta") -}}
+command = "delta"
+args = ["--paging=never", {{ printf "%q" "{{ .Destination }}" }}, {{ printf "%q" "{{ .Target }}" }}]
+{{- end }}
+
 [merge]
 {{ if eq $editor "nvim" -}}
 command = {{ $editor | quote }}
