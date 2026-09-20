@@ -16,7 +16,6 @@ on PATH, so every subcommand here is reachable under either name.
 from __future__ import annotations
 
 import argparse
-import os
 import runpy
 import shlex
 import shutil
@@ -24,7 +23,7 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING, Any
 
-from chezmoi_plugin import PluginError, inventory_entries, run, source_dir
+from chezmoi_plugin import PluginError, inventory_entries, resolve_platform, run, source_dir
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -77,9 +76,8 @@ def update_plugins() -> int:
 
 def update_argv(entry: dict[str, Any]) -> list[str]:
     """Return a tool's update invocation for this platform, empty when it has none."""
-    commands = entry.get("update_command", {})
-    platform = "windows" if os.name == "nt" else "default"
-    return commands.get(platform, commands.get("default", []))
+    resolved = resolve_platform(entry.get("update"))
+    return list(resolved) if resolved else []
 
 
 def update_harnesses() -> int:

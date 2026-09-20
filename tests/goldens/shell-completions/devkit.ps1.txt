@@ -1,0 +1,61 @@
+#!/usr/bin/env pwsh
+
+$ErrorActionPreference = 'Stop'
+
+$outDir = "C:\Users\Lev\.cache\shell-completions"
+New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+# Only the files generated here, never the whole tree: script 91 owns the
+# downloaded subdirectory, and the profile loads both.
+Get-ChildItem -Path $outDir -Filter '*.ps1' -File | Remove-Item -Force
+
+# Nushell batches into one file, so only that file is replaced. Wiping the
+# whole autoload directory would take out anything else chezmoi drops there.
+$nuFile = "C:\Users\Lev\.config\nushell\autoload\_generated.nu"
+New-Item -ItemType Directory -Path (Split-Path -Parent $nuFile) -Force | Out-Null
+if (Test-Path $nuFile) {
+    Remove-Item $nuFile -Force
+}
+$nuParts = [System.Collections.Generic.List[string]]::new()
+devkit completions --all powershell | Out-String -Width 8192 | ForEach-Object {
+    [System.IO.File]::WriteAllText(
+        "C:\Users\Lev\.cache\shell-completions\devkit.ps1",
+        $_,
+        [System.Text.UTF8Encoding]::new($true)
+    )
+}
+devkit completions --all nushell| nu --stdin -c 'let src = ($in | lines)
+let nl = (char newline)
+let dq = (char dq)
+let rest = ([`    ...args: string@`, $dq, `nu-complete no-files`, $dq] | str join)
+let helper = ([`  def `, $dq, `nu-complete no-files`, $dq, ` [] { [] }`] | str join)
+$src | reduce --fold { out: [], blk: false, pos: false } {|line, acc|
+  if $acc.blk and $line == `  ]` {
+    let out = (if $acc.pos { $acc.out } else { $acc.out | append $rest })
+    { out: ($out | append $line), blk: false, pos: false }
+  } else if $acc.blk {
+    let t = ($line | str trim --left)
+    let pos = ($acc.pos or ((not ($t | is-empty)) and (not ($t | str starts-with `--`)) and (not ($t | str starts-with `#`))))
+    { out: ($acc.out | append $line), blk: true, pos: $pos }
+  } else if (($line | str starts-with `  export extern `) and ($line | str ends-with `[`)) {
+    { out: ($acc.out | append $line), blk: true, pos: false }
+  } else if $line == `module completions {` {
+    { out: ($acc.out | append $line | append $helper), blk: false, pos: false }
+  } else {
+    { out: ($acc.out | append $line), blk: false, pos: false }
+  }
+} | get out | each {|l| $l + $nl } | str join' | Out-String -Width 8192 | ForEach-Object {
+    $nuParts.Add($_)
+}
+
+# No BOM: nushell's parser takes the mark as part of the first token.
+if ($nuParts.Count -gt 0) {
+    [System.IO.File]::WriteAllText(
+        $nuFile,
+        ($nuParts -join "`n"),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+}
+
+# PowerShell completions stay one file per tool because the parser requires
+# `using` statements at the top of a file, which a concatenation of several
+# tools' output cannot guarantee. Nushell has no such rule, so it batches.

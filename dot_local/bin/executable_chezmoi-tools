@@ -21,7 +21,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from chezmoi_plugin import PluginError, inventory_entries, run, source_dir
+from chezmoi_plugin import PluginError, inventory_entries, resolve_platform, run, source_dir
 
 # Package managers whose install invocation follows from the lang alone. go is
 # absent because its install path needs a module URL that the name doesn't carry,
@@ -35,9 +35,15 @@ DERIVED_INSTALL: dict[str, tuple[str, ...]] = {
 # ocargo forwards to cargo with this machine's optimization flags applied.
 CARGO_WRAPPER = "ocargo"
 
-# An install_command starting with this documents why the tool has no install of
-# its own, rather than naming a command to run.
-UNINSTALLABLE_PREFIX = "NONE:"
+# Per-tool update, when a tool declares none of its own. rust is absent because
+# it reuses its install command: cargo install reinstalls when a newer version
+# exists, and the stored command names the crate, which the tool name often does
+# not (rg from ripgrep, fd from fd-find, delta from git-delta). uv needs -U to
+# upgrade, so re-running a python install command changes nothing.
+DERIVED_UPDATE: dict[str, tuple[str, ...]] = {
+    "bun": ("bun", "update", "-g"),
+    "python": ("uv", "tool", "upgrade"),
+}
 
 # Control operators only a shell can interpret. A command holding one has to run
 # through the shell instead of being split into an argv.
@@ -52,7 +58,9 @@ class Tool:
     lang: str
     cmds: tuple[str, ...]
     desc: str
-    install_command: str | None
+    install: str | dict[str, object] | None
+    update: list[str] | dict[str, object] | None
+    provided_by: str | None
 
     def installed_as(self) -> str | None:
         for cmd in self.cmds:
@@ -68,7 +76,9 @@ def load_tools(source: Path) -> list[Tool]:
             lang=entry.get("lang", ""),
             cmds=tuple(entry.get("cmds") or [entry["name"]]),
             desc=entry.get("desc", ""),
-            install_command=entry.get("install_command"),
+            install=entry.get("install"),
+            update=entry.get("update"),
+            provided_by=entry.get("provided_by"),
         )
         for entry in inventory_entries(source)
     ]
@@ -86,17 +96,21 @@ def find_tool(tools: list[Tool], name: str) -> Tool:
 
 
 def install_command_for(tool: Tool) -> str:
-    command = tool.install_command
+    if tool.provided_by:
+        raise PluginError(f"{tool.name}: provided by {tool.provided_by}, install that instead")
+
+    command = resolve_platform(tool.install)
+    if command == "":
+        raise PluginError(f"{tool.name}: installation is disabled on this platform")
     if command is None:
         prefix = DERIVED_INSTALL.get(tool.lang)
         if prefix is None:
             raise PluginError(
-                f"{tool.name}: no install_command, and none follows from lang {tool.lang!r}"
+                f"{tool.name}: no install command, and none follows from lang {tool.lang!r}"
             )
         command = shlex.join([*prefix, tool.name])
-    elif command.startswith(UNINSTALLABLE_PREFIX):
-        reason = command.removeprefix(UNINSTALLABLE_PREFIX).strip()
-        raise PluginError(f"{tool.name}: not installable on its own ({reason})")
+    elif not isinstance(command, str):
+        raise PluginError(f"{tool.name}: install must be a command line, not a list")
 
     head, separator, tail = command.partition(" ")
     if head == "cargo":
@@ -104,11 +118,84 @@ def install_command_for(tool: Tool) -> str:
     return command
 
 
-def spawn_argv(command: str) -> list[str]:
+def update_command_for(tool: Tool) -> list[str]:
+    if tool.provided_by:
+        raise PluginError(f"{tool.name}: provided by {tool.provided_by}, update that instead")
+
+    declared = resolve_platform(tool.update)
+    if declared == []:
+        raise PluginError(f"{tool.name}: updates are disabled on this platform")
+    if declared is not None:
+        if isinstance(declared, str):
+            raise PluginError(f"{tool.name}: update must be an argument list, not a string")
+        return list(declared)
+
+    if tool.lang == "rust":
+        # Without a stored command there is only the tool name, and a crate name
+        # frequently differs from the command it installs: rg from ripgrep, dust
+        # from du-dust. Installing the wrong crate over a working binary is worse
+        # than declining, and the sweep updates these by their real crate names.
+        if resolve_platform(tool.install) is None:
+            raise PluginError(
+                f"{tool.name}: no update and no install command to reuse; "
+                "`chezmoi tools update --lang rust` updates every stale crate"
+            )
+        return split_command(install_command_for(tool))
+
+    prefix = DERIVED_UPDATE.get(tool.lang)
+    if prefix is None:
+        raise PluginError(f"{tool.name}: no update, and none follows from lang {tool.lang!r}")
+    return [*prefix, tool.name]
+
+
+def stale_cargo_packages() -> list[str]:
+    """Crate names cargo-update reports as out of date, registry and git alike.
+
+    Plain cargo rather than run_cargo: listing compiles nothing, so the codegen
+    flags are irrelevant, and run_cargo returns a return code, not output. -g
+    adds a second table for the git-installed crates, several of which are here.
+    """
+    listing = subprocess.run(
+        ["cargo", "install-update", "-l", "-g"], capture_output=True, text=True, check=False
+    )
+    if listing.returncode != 0:
+        detail = listing.stderr.strip() or listing.stdout.strip()
+        raise PluginError(f"cargo install-update -l -g failed: {detail}")
+    # Both tables end a stale row with Yes, and the header ends with "Needs
+    # update", so matching the end of the line reads either table.
+    rows = listing.stdout.splitlines()
+    return [row.split()[0] for row in rows if row.rstrip().endswith("Yes")]
+
+
+def bulk_update_rust(declared: list[str]) -> int:
+    """Update every stale crate cargo-update manages, minus the declared ones.
+
+    A tool with its own update self-updates, so reinstalling it here would undo
+    that. codex and tuicr are both rust and both declare one.
+    """
+    excluded = set(declared)
+    packages = [name for name in stale_cargo_packages() if name not in excluded]
+    if not packages:
+        print("rust: nothing to update")
+        return 0
+    print(f"\n$ cargo install-update -g {' '.join(packages)}", flush=True)
+    # Imported here rather than at the top because the module is ocargo.py only
+    # in the applied tree; in the chezmoi source directory it is
+    # executable_ocargo.py, and every other subcommand still has to run there.
+    from ocargo import run_cargo
+
+    return run_cargo(["install-update", "-g", *packages])
+
+
+def split_command(command: str) -> list[str]:
+    """A command line as an argv, through the shell when only a shell can run it."""
     if not SHELL_OPERATORS.isdisjoint(command):
         return ["cmd.exe", "/c", command] if os.name == "nt" else ["sh", "-c", command]
+    return shlex.split(command)
 
-    argv = shlex.split(command)
+
+def spawn_argv(argv: list[str]) -> list[str]:
+    """An argv with its executable resolved on PATH, ready for subprocess.run."""
     exe = shutil.which(argv[0])
     if exe is None:
         raise PluginError(f"{argv[0]}: not on PATH")
@@ -191,12 +278,83 @@ def cmd_install(tools: list[Tool], args: argparse.Namespace) -> int:
 
         print(f"\n$ {command}", flush=True)
         try:
-            argv = spawn_argv(command)
+            argv = spawn_argv(split_command(command))
         except PluginError as err:
             print(err, file=sys.stderr)
             worst = max(worst, 1)
             continue
         worst = max(worst, subprocess.run(argv, check=False).returncode)
+    return worst
+
+
+def run_update(tool: Tool, dry_run: bool) -> int:
+    try:
+        command = update_command_for(tool)
+    except PluginError as err:
+        print(err, file=sys.stderr)
+        return 1
+    if dry_run:
+        print(f"would run: {shlex.join(command)}")
+        return 0
+    print(f"\n$ {shlex.join(command)}", flush=True)
+    try:
+        argv = spawn_argv(command)
+    except PluginError as err:
+        print(err, file=sys.stderr)
+        return 1
+    return subprocess.run(argv, check=False).returncode
+
+
+def cmd_update(tools: list[Tool], args: argparse.Namespace) -> int:
+    if args.names:
+        worst = 0
+        for name in args.names:
+            try:
+                tool = find_tool(tools, name)
+            except PluginError as err:
+                print(err, file=sys.stderr)
+                worst = max(worst, 1)
+                continue
+            worst = max(worst, run_update(tool, args.dry_run))
+        return worst
+
+    candidates = [
+        tool
+        for tool in tools
+        if (not args.lang or tool.lang == args.lang)
+        and not tool.provided_by
+        and tool.installed_as() is not None
+    ]
+
+    worst = 0
+    declared_rust: list[str] = []
+    for tool in candidates:
+        resolved = resolve_platform(tool.update)
+        if resolved is None:
+            continue
+        if tool.lang == "rust":
+            # A declared update means the crate manages itself, including when
+            # the declaration disables updates on this platform.
+            declared_rust.append(tool.name)
+        # A deliberate disable is not a failure of a pass over every tool. Only
+        # naming the tool reports it.
+        if not resolved:
+            continue
+        worst = max(worst, run_update(tool, args.dry_run))
+
+    if not args.lang or args.lang == "rust":
+        if args.dry_run:
+            print("would run: cargo install-update -g <stale packages>")
+        else:
+            worst = max(worst, bulk_update_rust(declared_rust))
+
+    # bun update -g takes no package set and updates every global package, so
+    # bun tools go one at a time rather than through a bulk pass.
+    for tool in candidates:
+        if tool.lang not in DERIVED_UPDATE or resolve_platform(tool.update) is not None:
+            continue
+        worst = max(worst, run_update(tool, args.dry_run))
+
     return worst
 
 
@@ -227,6 +385,17 @@ def parse_args() -> argparse.Namespace:
         help="print the command that would run without running it",
     )
     install_parser.set_defaults(func=cmd_install)
+
+    update_parser = subparsers.add_parser("update", help="update inventoried tools")
+    update_parser.add_argument("names", nargs="*", metavar="NAME")
+    update_parser.add_argument("--lang", help="only tools written in this lang")
+    update_parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="print the commands that would run without running them",
+    )
+    update_parser.set_defaults(func=cmd_update)
 
     complete_parser = subparsers.add_parser(
         "complete", help="list installable names for shell completion"

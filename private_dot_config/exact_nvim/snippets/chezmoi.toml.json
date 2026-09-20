@@ -11,10 +11,10 @@
       "desc = \"${4}\"",
       "url = \"${5}\"",
       "git = \"${6}\"",
-      "install_command = \"${7}\"",
-      "completions_command = \"${8}\"",
-      "init_command = \"${9}\"",
-      "supported_shells = [${10|bash,fish,zsh,nu|}]"
+      "install = \"${7}\"",
+      "completions = \"${8}\"",
+      "init = \"${9}\"",
+      "shells = [${10|bash,fish,zsh,nu|}]"
     ],
     "description": "insert a new pkg declaration"
   }

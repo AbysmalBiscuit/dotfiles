@@ -9,7 +9,6 @@ cmds = [
 desc = "PowerShell is a cross-platform (Windows, Linux, and macOS) automation and configuration tool/framework that works well with your existing tools and is optimized for dealing with structured data (e.g. JSON, CSV, XML, etc.), REST APIs, and object models. It includes a command-line shell, an associated scripting language, and a framework for processing cmdlets."
 url = "https://microsoft.com/PowerShell"
 git = "https://github.com/PowerShell/PowerShell"
-command_nu_name = "nushell"
 
 [[wsl_tools]]
 lang = "c++"
@@ -20,7 +19,6 @@ cmds = [
 desc = "Windows Subsystem for Linux (WSL) is a powerful way for you to run your Linux command-line tools, utilities and applications, all unmodified and directly on Windows without the overhead of a traditional virtual machine or dual boot setup."
 url = "https://wsl.dev/"
 git = "https://github.com/microsoft/WSL"
-command_nu_name = "nushell"
 
 [[wsl_tools]]
 lang = "go"
@@ -31,8 +29,7 @@ cmds = [
 desc = "Run large language models locally."
 url = "https://ollama.com"
 git = "https://github.com/ollama/ollama"
-install_command = "curl -fsSL https://ollama.com/install.sh | sh"
-command_nu_name = "nushell"
+install = "curl -fsSL https://ollama.com/install.sh | sh"
 
 [[wsl_tools]]
 lang = "rust"
@@ -42,7 +39,7 @@ cmds = [
 ]
 desc = "Blazing fast terminal file manager written in Rust."
 git = "https://github.com/sxyazi/yazi"
-install_command = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
+install = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
 
 [[wsl_tools]]
 lang = "rust"
@@ -52,9 +49,9 @@ cmds = [
 ]
 desc = "git worktrees + git diffs + LLM notifications and indicatiors built on top of Alacritty for zero-friction parallel dev"
 git = "https://github.com/mathix420/alacritree"
-install_command = "cargo install --git https://github.com/mathix420/alacritree"
-completions_command = "alacritree.exe completions SHELL"
-supported_shells = [
+install = "cargo install --git https://github.com/mathix420/alacritree"
+completions = "alacritree.exe completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -70,8 +67,7 @@ cmds = [
 ]
 desc = "A Spotify player in the terminal with full feature parity"
 git = "https://github.com/aome510/spotify-player"
-completions_command = "spotify-player.exe generate SHELL"
-command_nu_name = "nushell"
+completions = "spotify-player.exe generate SHELL"
 
 [[wsl_tools]]
 lang = "rust"
@@ -82,4 +78,3 @@ cmds = [
 desc = "Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter."
 url = "https://zed.dev/"
 git = "https://github.com/zed-industries/zed"
-command_nu_name = "nushell"

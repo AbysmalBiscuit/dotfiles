@@ -17,9 +17,7 @@ TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "tools.toml"
 WSL_TOOLS_TOML = SOURCE_DIR / ".chezmoidata" / "wsl_tools.toml"
 SCHEMA_JSON = SOURCE_DIR / ".chezmoidata" / ".tools.schema.json"
 SCHEMA_NAME = SCHEMA_JSON.name
-HEADER = (
-    f"#:schema {SCHEMA_NAME}\n"
-)
+HEADER = f"#:schema {SCHEMA_NAME}\n"
 
 
 def resolve(node: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
@@ -35,18 +33,18 @@ def resolve(node: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
 def field_default(node: dict[str, Any], root: dict[str, Any]) -> Any:
     """The value the sorter reads as "unset", derived from a property's type."""
     node = resolve(node, root)
+    # The bare form is canonical, and the schema lists it first.
+    if "oneOf" in node:
+        return field_default(node["oneOf"][0], root)
     if node.get("type") == "array":
         return []
     if node.get("type") == "object":
-        return {
-            name: field_default(sub, root)
-            for name, sub in node.get("properties", {}).items()
-        }
+        return {name: field_default(sub, root) for name, sub in node.get("properties", {}).items()}
     return ""
 
 
-def load_field_defaults() -> dict[str, Any]:
-    """Field order and unset values, taken from the schema the files declare.
+def load_schema() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Field order, unset values and schema nodes, from the schema the files declare.
 
     Keeping this here as a literal would mean editing two files to add one
     field, and a field missing from the copy here is dropped from the sorted
@@ -54,13 +52,12 @@ def load_field_defaults() -> dict[str, Any]:
     """
     root = json.loads(SCHEMA_JSON.read_text(encoding="utf-8"))
     tool = resolve(root["properties"]["tools"]["items"], root)
-    return {
-        name: field_default(node, root)
-        for name, node in tool["properties"].items()
-    }
+    nodes = dict(tool["properties"])
+    defaults = {name: field_default(node, root) for name, node in nodes.items()}
+    return root, nodes, defaults
 
 
-FIELD_DEFAULTS = load_field_defaults()
+SCHEMA_ROOT, FIELD_NODES, FIELD_DEFAULTS = load_schema()
 
 
 def format_toml_string(value: str) -> str:
@@ -71,12 +68,36 @@ def format_toml_string(value: str) -> str:
     return f'"{escaped}"'
 
 
+def branch_for(node: dict[str, Any], value: Any, root: dict[str, Any]) -> dict[str, Any]:
+    """The alternative of a oneOf whose type matches the value on disk."""
+    node = resolve(node, root)
+    if "oneOf" not in node:
+        return node
+    if isinstance(value, dict):
+        wanted = "object"
+    elif isinstance(value, list):
+        wanted = "array"
+    else:
+        wanted = "string"
+    for branch in node["oneOf"]:
+        resolved = resolve(branch, root)
+        if resolved.get("type") == wanted:
+            return resolved
+    raise ValueError(f"no schema branch accepts a {wanted}")
+
+
+def key_order(node: dict[str, Any], root: dict[str, Any]) -> list[str] | None:
+    """Property names in schema order, or None when the object is free-form."""
+    properties = resolve(node, root).get("properties")
+    return None if properties is None else list(properties)
+
+
 def append_value(
     lines: list[str],
     field: str,
-    value: str | list[str] | dict[str, Any],
+    value: Any,
     default: Any,
-    sort_list: bool = True,
+    node: dict[str, Any],
 ) -> None:
     if type(value) is str:
         value = value.strip()
@@ -84,34 +105,68 @@ def append_value(
     if value == default:
         return
 
+    branch = branch_for(node, value, SCHEMA_ROOT)
+
     if type(value) is str:
         lines.append(f"{field} = {format_toml_string(value)}")
     elif type(value) is list:
-        if sort_list:
+        # uniqueItems marks a set, where order carries nothing. An argv array
+        # declares no uniqueItems, and sorting one silently rewrites a command.
+        if branch.get("uniqueItems", False):
             value.sort()
-        lines.append(f'{field} = {json.dumps(value, indent=4, sort_keys=True)}')
+        lines.append(f"{field} = {json.dumps(value, indent=4, sort_keys=True)}")
     elif type(value) is dict:
-        unknown_keys = value.keys() - default.keys()
-        if unknown_keys:
-            unknown = ", ".join(sorted(unknown_keys))
-            raise ValueError(f"Unknown {field} keys: {unknown}")
-        for key in default:
+        properties = branch.get("properties", {})
+        order = key_order(branch, SCHEMA_ROOT)
+        if order is None:
+            order = sorted(value)
+        else:
+            unknown = value.keys() - set(order)
+            if unknown:
+                raise ValueError(f"Unknown {field} keys: {', '.join(sorted(unknown))}")
+        for key in order:
             if key in value:
-                append_value(lines, f"{field}.{key}", value[key], None, sort_list=False)
+                append_value(lines, f"{field}.{key}", value[key], None, properties.get(key, {}))
+
+
+# The table key a bare value expands to, per polymorphic field.
+BARE_KEY: dict[str, str] = {
+    "install": "default",
+    "update": "default",
+    "completions": "command",
+    "init": "command",
+}
+
+
+def collapse(field: str, value: Any) -> Any:
+    """A one-key table written the bare way, so one meaning has one spelling.
+
+    An empty value never collapses: the bare branch carries minLength and
+    minItems, so only the table form can spell a deliberate disable.
+    """
+    key = BARE_KEY.get(field)
+    if key is None or type(value) is not dict or list(value) != [key]:
+        return value
+    inner = value[key]
+    return value if inner == "" or inner == [] else inner
 
 
 def tool_to_toml(tool_header: str, tool: dict[str, Any]) -> str:
+    unknown = tool.keys() - FIELD_DEFAULTS.keys()
+    if unknown:
+        raise ValueError(f"Unknown tool keys: {', '.join(sorted(unknown))}")
+
     lines = [f"[[{tool_header}]]"]
-    for field, default in FIELD_DEFAULTS.items():
+    for field, schema_default in FIELD_DEFAULTS.items():
         if field == "cmds":
             default = [tool["name"]]
-        elif field == "supported_shells" and (
-            tool.get("completions_command", "") or tool.get("init_command", "")
-        ):
+        elif field == "shells" and (tool.get("completions") or tool.get("init")):
             default = ["bash", "fish", "zsh"]
+        else:
+            default = schema_default
 
-        value = tool.get(field, deepcopy(default))
-        append_value(lines, field, value, default)
+        value = collapse(field, tool.get(field, deepcopy(default)))
+        append_value(lines, field, value, default, FIELD_NODES[field])
 
     return "\n".join(lines)
 
@@ -129,11 +184,14 @@ def sort_file(file: Path) -> None:
         for tool in tools:
             dupe_dict[tool["name"]] += 1
         dupes = ", ".join(f"'{k}'" for k, v in dupe_dict.items() if v > 1)
-        msg = f"The following tools are duplicates: {dupes}. Manually clean the '{file.name}' file first."
+        msg = (
+            f"The following tools are duplicates: {dupes}. "
+            f"Manually clean the '{file.name}' file first."
+        )
         raise ValueError(msg)
 
     blocks = "\n\n".join(tool_to_toml(table_name, tool) for tool in tools)
-    output = HEADER + blocks
+    output = HEADER + blocks + "\n"
 
     current = file.read_bytes().decode("utf-8")
     if current == output:

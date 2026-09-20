@@ -64,3 +64,11 @@ commands:
         description: List tools not on PATH
         flags:
           --lang=: Only tools written in this language
+      - name: update
+        description: Update inventoried tools
+        flags:
+          --lang=: Only tools written in this language
+          -n, --dry-run: Print the commands without running them
+        completion:
+          positionalany: ["$(chezmoi tools complete --)"]
+          dashany: ["$(chezmoi tools complete --)"]

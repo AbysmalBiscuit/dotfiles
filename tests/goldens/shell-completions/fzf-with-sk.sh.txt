@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+fish -c 'set -x fish_update_completions_detach true; fish_update_completions; set -u fish_update_completions_detach'
+{
+    echo
+    
+} >'C:\Users\Lev\.bash_completion'
+
+{
+    echo
+    
+} >'C:\Users\Lev\.cache\fish\completions\_generated.fish'
+
+{
+    echo
+    
+} >'C:\Users\Lev\.oh-my-zsh\completions\_generated'
+
+{
+    echo
+    
+} >'C:\Users\Lev\.config\nushell\autoload\_generated.nu'

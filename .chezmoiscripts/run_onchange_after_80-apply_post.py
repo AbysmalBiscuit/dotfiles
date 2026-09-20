@@ -63,29 +63,33 @@ def tool_is_installed(tool: dict[str, object], installed: dict[str, object]) -> 
 
 
 def update_command(tool: dict[str, object]) -> list[str] | None:
-    table = tool.get("update_command")
-    if table is None:
-        return None
-    if not isinstance(table, dict):
-        name = tool.get("name", "unknown tool")
-        warn(f"{name} update_command must be a table")
+    value = tool.get("update")
+    if value is None:
         return None
 
-    platform = platform_name()
-    key = platform if platform in table else "default"
-    command = table.get(key)
+    name = tool.get("name", "unknown tool")
+    if isinstance(value, list):
+        command = value
+        key = "update"
+    elif isinstance(value, dict):
+        platform = platform_name()
+        chosen = platform if platform in value else "default"
+        command = value.get(chosen)
+        key = f"update.{chosen}"
+    else:
+        warn(f"{name} update must be a string array or a table")
+        return None
+
     if command is None or command == []:
         return None
     if not isinstance(command, list):
-        name = tool.get("name", "unknown tool")
-        warn(f"{name} update_command.{key} must be a string array")
+        warn(f"{name} {key} must be a string array")
         return None
 
     arguments: list[str] = []
     for argument in command:
         if not isinstance(argument, str) or not argument.strip():
-            name = tool.get("name", "unknown tool")
-            warn(f"{name} update_command.{key} must contain only non-empty strings")
+            warn(f"{name} {key} must contain only non-empty strings")
             return None
         arguments.append(argument)
     return arguments
@@ -121,22 +125,16 @@ def update_cli_tools() -> None:
 
 
 def source_dir() -> Path:
-    return Path(
-        os.environ.get("CHEZMOI_SOURCE_DIR") or Path(__file__).resolve().parent.parent
-    )
+    return Path(os.environ.get("CHEZMOI_SOURCE_DIR") or Path(__file__).resolve().parent.parent)
 
 
 def installed_tag(executable: str) -> str | None:
-    out = subprocess.run(
-        [executable, "--version"], capture_output=True, text=True, check=False
-    )
+    out = subprocess.run([executable, "--version"], capture_output=True, text=True, check=False)
     match = VERSION_RE.match(out.stdout.strip())
     return match.group(1) if match else None
 
 
-def run(
-    args: list[str], cwd: Path, timeout: int | None = None
-) -> subprocess.CompletedProcess:
+def run(args: list[str], cwd: Path, timeout: int | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         args, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout
     )

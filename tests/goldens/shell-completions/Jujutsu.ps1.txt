@@ -1,0 +1,41 @@
+#!/usr/bin/env pwsh
+
+$ErrorActionPreference = 'Stop'
+
+$outDir = "C:\Users\Lev\.cache\shell-completions"
+New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+# Only the files generated here, never the whole tree: script 91 owns the
+# downloaded subdirectory, and the profile loads both.
+Get-ChildItem -Path $outDir -Filter '*.ps1' -File | Remove-Item -Force
+
+# Nushell batches into one file, so only that file is replaced. Wiping the
+# whole autoload directory would take out anything else chezmoi drops there.
+$nuFile = "C:\Users\Lev\.config\nushell\autoload\_generated.nu"
+New-Item -ItemType Directory -Path (Split-Path -Parent $nuFile) -Force | Out-Null
+if (Test-Path $nuFile) {
+    Remove-Item $nuFile -Force
+}
+$nuParts = [System.Collections.Generic.List[string]]::new()
+jj util completion power-shell | Out-String -Width 8192 | ForEach-Object {
+    [System.IO.File]::WriteAllText(
+        "C:\Users\Lev\.cache\shell-completions\Jujutsu.ps1",
+        $_,
+        [System.Text.UTF8Encoding]::new($true)
+    )
+}
+jj util completion nushell | Out-String -Width 8192 | ForEach-Object {
+    $nuParts.Add($_)
+}
+
+# No BOM: nushell's parser takes the mark as part of the first token.
+if ($nuParts.Count -gt 0) {
+    [System.IO.File]::WriteAllText(
+        $nuFile,
+        ($nuParts -join "`n"),
+        [System.Text.UTF8Encoding]::new($false)
+    )
+}
+
+# PowerShell completions stay one file per tool because the parser requires
+# `using` statements at the top of a file, which a concatenation of several
+# tools' output cannot guarantee. Nushell has no such rule, so it batches.

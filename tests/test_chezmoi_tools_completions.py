@@ -27,13 +27,17 @@ desc = "Example tool"
 [[tools]]
 name = "completion-bundled"
 lang = "rust"
-install_command = "NONE: part of another tool"
+provided_by = "another-tool"
 """)
     binary = tmp_path / "bin"
     binary.mkdir()
     shutil.copyfile(REPO / "dot_local/bin/executable_chezmoi-tools", binary / "chezmoi-tools")
     (binary / "chezmoi-tools").chmod(0o755)
     shutil.copyfile(REPO / "dot_local/bin/chezmoi_plugin.py", binary / "chezmoi_plugin.py")
+    if os.name == "nt":
+        # Windows resolves a plugin through its .cmd shim, so without one here
+        # the PATH lookup skips this directory and finds the installed CLI.
+        (binary / "chezmoi-tools.cmd").write_text('@python3 "%~dp0chezmoi-tools" %*\n')
     spec = REPO / "private_dot_config/carapace/specs/chezmoi.yaml"
     if spec.exists():
         (config / "carapace/specs").mkdir(parents=True)
@@ -75,7 +79,7 @@ def test_carapace_completes_installable_names(tmp_path, carapace_env, arguments)
         (["tools", "install", "completion-cwd"], set()),
         (["tools", "install", "--d"], {"--dry-run"}),
         (["tools", "install", "--", "--d"], set()),
-        (["tools", ""], {"install", "list", "missing"}),
+        (["tools", ""], {"install", "list", "missing", "update"}),
         (["source-p"], {"source-path"}),
         (["agents", "remove", "--k"], {"--keep-installed"}),
     ],
@@ -108,12 +112,12 @@ def test_complete_returns_only_installable_names_and_descriptions(tmp_path, wsl,
     cmds = ["example"]
     [[tools]]
     name = "explicit"
-    install_command = "touch MUST_NOT_RUN"
+    install = "touch MUST_NOT_RUN"
     desc = "Explicit\\tinstaller\\nwith details"
     [[tools]]
     name = "bundled"
     lang = "rust"
-    install_command = "NONE: provided by another tool"
+    provided_by = "another-tool"
     [[tools]]
     name = "unsupported"
     lang = "go"
@@ -121,7 +125,7 @@ def test_complete_returns_only_installable_names_and_descriptions(tmp_path, wsl,
     (data / "wsl_tools.toml").write_text("""
     [[wsl_tools]]
     name = "wsl-example"
-    install_command = "touch MUST_NOT_RUN"
+    install = "touch MUST_NOT_RUN"
     """)
     env = {**os.environ, "CHEZMOI_SOURCE_DIR": str(tmp_path)}
     env.pop("WSL_DISTRO_NAME", None)

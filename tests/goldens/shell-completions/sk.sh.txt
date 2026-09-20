@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+fish -c 'set -x fish_update_completions_detach true; fish_update_completions; set -u fish_update_completions_detach'
+{
+    echo
+    sk --shell bash --shell-bindings </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.bash_completion'
+
+{
+    echo
+    sk --shell fish --shell-bindings </dev/null
+    echo skim_key_bindings || true
+    echo
+
+} >'C:\Users\Lev\.cache\fish\completions\_generated.fish'
+
+{
+    echo
+    sk --shell zsh --shell-bindings </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.oh-my-zsh\completions\_generated'
+
+{
+    echo
+    
+} >'C:\Users\Lev\.config\nushell\autoload\_generated.nu'

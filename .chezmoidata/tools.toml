@@ -5,7 +5,7 @@ name = "inxi"
 desc = "inxi is a full rewrite of locsmif's infobash script."
 url = "https://smxi.org"
 git = "https://codeberg.org/smxi/inxi"
-install_command = "wget -O inxi https://codeberg.org/smxi/inxi/raw/master/inxi"
+install = "wget -O inxi https://codeberg.org/smxi/inxi/raw/master/inxi"
 
 [[tools]]
 lang = "bun"
@@ -19,7 +19,7 @@ name = "ccusage"
 desc = "ccusage reads local usage data from coding agent CLIs and turns it into daily, weekly, monthly, and session reports."
 url = "https://ccusage.com/"
 git = "https://github.com/ccusage/ccusage"
-install_command = "bun add -g ccusage@latest"
+install = "bun add -g ccusage@latest"
 
 [[tools]]
 lang = "bun"
@@ -31,7 +31,7 @@ git = "https://github.com/mlwmlw/cheerio-cli"
 lang = "bun"
 name = "claude"
 url = "https://claude.com/product/claude-code"
-update_command.default = [
+update = [
     "claude",
     "upgrade"
 ]
@@ -56,8 +56,8 @@ cmds = [
 desc = "Manage multiple AI terminal agents like Claude Code, Aider, Codex, OpenCode, and Amp."
 url = "https://smtg-ai.github.io/claude-squad/"
 git = "https://github.com/smtg-ai/claude-squad"
-completions_command = "cs completion SHELL"
-append_fish_completion = "| sed -E 's/\\bclaude-squad\\b/cs/'"
+completions.command = "cs completion SHELL"
+completions.append.fish = "| sed -E 's/\\bclaude-squad\\b/cs/'"
 
 [[tools]]
 lang = "bun"
@@ -66,9 +66,9 @@ desc = "fish language server"
 url = "https://fish-lsp.dev/"
 git = "https://github.com/ndonfris/fish-lsp"
 comment = "or let mason install it with neovim"
-install_command = "bun add -g fish-lsp"
-completions_command = "fish-lsp complete"
-supported_shells = [
+install = "bun add -g fish-lsp"
+completions = "fish-lsp complete"
+shells = [
     "fish"
 ]
 
@@ -80,7 +80,7 @@ cmds = [
 ]
 desc = "This is a command-line interface (CLI) for mermaid. It takes a mermaid definition file as input and generates an SVG/PNG/PDF file as output."
 git = "https://github.com/mermaid-js/mermaid-cli"
-install_command = "bun install -g @mermaid-js/mermaid-cli"
+install = "bun install -g @mermaid-js/mermaid-cli"
 
 [[tools]]
 lang = "c"
@@ -260,7 +260,7 @@ name = "age"
 desc = "A simple, modern, and secure file encryption tool."
 url = "https://github.com/FiloSottile/age"
 git = "https://github.com/FiloSottile/age"
-install_command = "go install filippo.io/age/cmd/...@latest"
+install = "go install filippo.io/age/cmd/...@latest"
 
 [[tools]]
 lang = "go"
@@ -269,12 +269,9 @@ desc = "A multi-shell completion library."
 url = "https://carapace.sh/"
 git = "https://github.com/carapace-sh/carapace"
 comment = "winget install -e --id rsteube.Carapace"
-install_command = "curl termux.carapace.sh | sh"
-completions_command = "carapace _carapace SHELL"
-completions_env = [
-    "CARAPACE_EXCLUDES=chezmoi"
-]
-supported_shells = [
+install = "curl termux.carapace.sh | sh"
+completions = "carapace _carapace SHELL"
+shells = [
     "bash",
     "cmd",
     "elvish",
@@ -287,7 +284,9 @@ supported_shells = [
     "xonsh",
     "zsh"
 ]
-command_nu_name = "nushell"
+shell_env = [
+    "CARAPACE_EXCLUDES=chezmoi"
+]
 
 [[tools]]
 lang = "go"
@@ -295,9 +294,9 @@ name = "chezmoi"
 desc = "A multi-machine dotfile manager, written in Go."
 url = "https://www.chezmoi.io/reference/"
 git = "https://github.com/twpayne/chezmoi/tree/master"
-install_command = "sh -c \"$(curl -fsLS get.chezmoi.io)\""
-completions_command = "carapace chezmoi SHELL"
-supported_shells = [
+install = "sh -c \"$(curl -fsLS get.chezmoi.io)\""
+completions = "carapace chezmoi SHELL"
+shells = [
     "bash",
     "powershell",
     "zsh"
@@ -316,8 +315,8 @@ name = "direnv"
 desc = "direnv is an extension for your shell. It augments existing shells with a new feature that can load and unload environment variables depending on the current directory."
 url = "https://direnv.net/"
 git = "https://github.com/direnv/direnv"
-install_command = "go install github.com/direnv/direnv@latest"
-init_command = "direnv hook SHELL"
+install = "go install github.com/direnv/direnv@latest"
+init = "direnv hook SHELL"
 
 [[tools]]
 lang = "go"
@@ -325,17 +324,17 @@ name = "doppler"
 desc = "The official CLI for interacting with your Doppler secrets and configuration."
 url = "https://docs.doppler.com/docs/cli"
 git = "https://github.com/DopplerHQ/cli"
-install_command = "mise use -g doppler@latest"
-completions_command = "doppler completion SHELL"
+install = "mise use -g doppler@latest"
+completions = "doppler completion SHELL"
 
 [[tools]]
 lang = "go"
 name = "fzf"
 desc = "Fuzzy finder."
 git = "https://github.com/junegunn/fzf"
-install_command = "go install github.com/junegunn/fzf@latest"
-init_command = "fzf --SHELL"
-init_command_only_if_no = [
+install = "go install github.com/junegunn/fzf@latest"
+init.command = "fzf --SHELL"
+init.only_if_no = [
     "sk"
 ]
 
@@ -345,8 +344,8 @@ name = "gh"
 desc = "GitHub's official command line tool."
 url = "https://cli.github.com/manual/"
 git = "https://github.com/cli/cli"
-completions_command = "gh completion -s SHELL"
-supported_shells = [
+completions = "gh completion -s SHELL"
+shells = [
     "bash",
     "fish",
     "powershell",
@@ -359,18 +358,18 @@ name = "go"
 desc = "The Go programming language"
 url = "https://go.dev/"
 git = "https://github.com/golang/go"
-install_command = "winget install --id GoLang.Go --exact --source winget"
+install.windows = "winget install --id GoLang.Go --exact --source winget"
 
 [[tools]]
 lang = "go"
 name = "lazygit"
-install_command = "go install github.com/jesseduffield/lazygit@latest"
+install = "go install github.com/jesseduffield/lazygit@latest"
 
 [[tools]]
 lang = "go"
 name = "mlr"
 git = "https://github.com/johnkerl/miller"
-install_command = "go install github.com/johnkerl/miller/v6/cmd/mlr@latest"
+install = "go install github.com/johnkerl/miller/v6/cmd/mlr@latest"
 
 [[tools]]
 lang = "go"
@@ -378,16 +377,16 @@ name = "ollama"
 desc = "Run large language models locally."
 url = "https://ollama.com"
 git = "https://github.com/ollama/ollama"
-install_command = "curl -fsSL https://ollama.com/install.sh | sh"
+install = "curl -fsSL https://ollama.com/install.sh | sh"
 
 [[tools]]
 lang = "go"
 name = "sesh"
 desc = "Sesh is a CLI that helps you create and manage tmux sessions quickly and easily using zoxide."
 git = "https://github.com/joshmedeski/sesh#how-to-install"
-install_command = "go install github.com/joshmedeski/sesh/v2@latest"
-completions_command = "sesh completion SHELL"
-supported_shells = [
+install = "go install github.com/joshmedeski/sesh/v2@latest"
+completions = "sesh completion SHELL"
+shells = [
     "bash",
     "fish",
     "powershell",
@@ -403,13 +402,13 @@ lang = "go"
 name = "uni"
 desc = "Query the Unicode database from the commandline, with good support for emojis"
 git = "https://github.com/arp242/uni"
-install_command = "go install zgo.at/uni/v2@latest"
+install = "go install zgo.at/uni/v2@latest"
 
 [[tools]]
 lang = "go"
 name = "wsl2-ssh-agent"
 git = "https://github.com/mame/wsl2-ssh-agent"
-install_command = "go install github.com/mame/wsl2-ssh-agent@latest"
+install = "go install github.com/mame/wsl2-ssh-agent@latest"
 
 [[tools]]
 lang = "go"
@@ -418,8 +417,8 @@ desc = "yq is a portable command-line YAML, JSON, XML, CSV, TOML, HCL and proper
 url = "https://mikefarah.gitbook.io/yq/"
 git = "https://github.com/mikefarah/yq"
 comment = "winget install -e --id MikeFarah.yq"
-install_command = "go install github.com/mikefarah/yq/v4@latest"
-completions_command = "yq shell-completion SHELL"
+install = "go install github.com/mikefarah/yq/v4@latest"
+completions = "yq shell-completion SHELL"
 
 [[tools]]
 lang = "java"
@@ -441,7 +440,7 @@ name = "luarocks"
 desc = "LuaRocks is the package manager for the Lua programming language."
 url = "https://luarocks.org/"
 git = "https://github.com/luarocks/luarocks"
-completions_command = "luarocks completion SHELL"
+completions = "luarocks completion SHELL"
 
 [[tools]]
 lang = "objective-c"
@@ -470,7 +469,7 @@ name = "graphify"
 desc = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, and more). Turn any folder of code, SQL schemas, R scripts, shell scripts, docs, papers, images, or videos into a queryable knowledge graph. App code + database schema + infrastructure in one graph."
 url = "https://graphifylabs.ai/"
 git = "https://github.com/Graphify-Labs/graphify"
-install_command = "uv tool install -U --force \"graphifyy[all]\""
+install = "uv tool install -U --force \"graphifyy[all]\""
 
 [[tools]]
 lang = "python"
@@ -480,7 +479,7 @@ cmds = [
 ]
 desc = "AI coding assistant skill (Claude Code, Codex, OpenCode, Cursor, Gemini CLI, and more). Turn any folder of code, SQL schemas, R scripts, shell scripts, docs, papers, images, or videos into a queryable knowledge graph. App code + database schema + infrastructure in one graph."
 git = "https://github.com/AbysmalBiscuit/graphify"
-install_command = "uv tool install -U --force \"graphifyy[anthropic,godot,leiden,mcp,office,ollama,pdf,sql,svg,video,watch] @ git+https://github.com/AbysmalBiscuit/graphify.git@v8\""
+install = "uv tool install -U --force \"graphifyy[anthropic,godot,leiden,mcp,office,ollama,pdf,sql,svg,video,watch] @ git+https://github.com/AbysmalBiscuit/graphify.git@v8\""
 
 [[tools]]
 lang = "python"
@@ -505,9 +504,9 @@ cmds = [
 ]
 desc = "Command line interface to the freedesktop.org trashcan."
 git = "https://github.com/andreafrancia/trash-cli"
-install_command = "uv tool install trash-cli --with completion"
-completions_command = "trash --print-completion SHELL"
-supported_shells = [
+install = "uv tool install trash-cli --with completion"
+completions = "trash --print-completion SHELL"
+shells = [
     "bash",
     "tcsh",
     "zsh"
@@ -542,17 +541,17 @@ cmds = [
 desc = "A Git-compatible VCS that is both simple and powerful"
 url = "https://docs.jj-vcs.dev/latest/cli-reference/"
 git = "https://github.com/jj-vcs/jj"
-install_command = "cargo install --locked --bin jj jj-cli"
-completions_command = "jj util completion SHELL"
-supported_shells = [
+install = "cargo install --locked --bin jj jj-cli"
+completions = "jj util completion SHELL"
+shells = [
     "bash",
     "fish",
     "nu",
     "powershell",
     "zsh"
 ]
-command_nu_name = "nushell"
-command_powershell_name = "power-shell"
+shell_arg.nu = "nushell"
+shell_arg.powershell = "power-shell"
 
 [[tools]]
 lang = "rust"
@@ -573,16 +572,16 @@ cmds = [
 desc = "visioncortex VTracer is an open source software to convert raster images (like jpg & png) into vector graphics (svg)."
 url = "https://www.visioncortex.org/vtracer/"
 git = "https://github.com/visioncortex/vtracer"
-install_command = "cargo install vtracer"
+install = "cargo install vtracer"
 
 [[tools]]
 lang = "rust"
 name = "alacritree"
 desc = "git worktrees + git diffs + LLM notifications and indicatiors built on top of Alacritty for zero-friction parallel dev"
 git = "https://github.com/mathix420/alacritree"
-install_command = "cargo install --git https://github.com/mathix420/alacritree"
-completions_command = "CMD completions SHELL"
-supported_shells = [
+install = "cargo install --git https://github.com/mathix420/alacritree"
+completions = "CMD completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -597,7 +596,7 @@ desc = "Alacritty is a modern terminal emulator that comes with sensible default
 url = "https://alacritty.org/"
 git = "https://github.com/alacritty/alacritty"
 comment = "Completions downloaded from GitHub: https://github.com/alacritty/alacritty/extra/completions"
-supported_shells = [
+shells = [
     "bash",
     "fish",
     "zsh"
@@ -611,7 +610,7 @@ cmds = [
 ]
 desc = "Advent of Code command-line tool"
 git = "https://github.com/scarvalhojr/aoc-cli"
-install_command = "cargo install aoc-cli"
+install = "cargo install aoc-cli"
 
 [[tools]]
 lang = "rust"
@@ -629,8 +628,8 @@ cmds = [
 desc = "A CLI tool for code structural search, lint and rewriting. Written in Rust"
 url = "https://ast-grep.github.io/"
 git = "https://github.com/ast-grep/ast-grep"
-completions_command = "ast-grep completions SHELL"
-supported_shells = [
+completions = "ast-grep completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -643,7 +642,7 @@ lang = "rust"
 name = "bacon"
 desc = "A background code checker for Rust."
 url = "https://github.com/Canop/bacon"
-install_command = "cargo install bacon --features=clipboard,sound"
+install = "cargo install bacon --features=clipboard,sound"
 
 [[tools]]
 lang = "rust"
@@ -651,7 +650,7 @@ name = "bandwhich"
 desc = "Display the current network utilization by process, connection, or remote IP/hostname."
 url = "https://github.com/imsnif/bandwhich"
 git = "https://github.com/imsnif/bandwhich"
-install_command = "cargo install --git https://github.com/cross-rs/cross.git cross"
+install = "cargo install --git https://github.com/cross-rs/cross.git cross"
 
 [[tools]]
 lang = "rust"
@@ -663,8 +662,8 @@ desc = "Display system information about the CPU, memory, disks, network, and pr
 url = "https://clementtsang.github.io/bottom/nightly/#usage-and-configuration"
 git = "https://github.com/ClementTsang/bottom"
 comment = "Completions need to be downloaded"
-install_command = "cargo install bottom"
-supported_shells = [
+install = "cargo install bottom"
+shells = [
     "bash",
     "elvish",
     "fig",
@@ -679,9 +678,9 @@ lang = "rust"
 name = "cargo-binstall"
 desc = "Binstall provides a low-complexity mechanism for installing Rust binaries as an alternative to building from source (via cargo install) or manually downloading packages."
 git = "https://github.com/cargo-bins/cargo-binstall"
-install_command = "cargo install cargo-binstall"
-completions_command = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
-supported_shells = [
+install = "cargo install cargo-binstall"
+completions = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
+shells = [
     "fish"
 ]
 
@@ -690,7 +689,7 @@ lang = "rust"
 name = "cargo-cache"
 desc = "Inspect and clean the cargo home directory: print the size of each cache component and remove them selectively."
 git = "https://github.com/matthiaskrgr/cargo-cache"
-install_command = "cargo install cargo-cache --locked"
+install = "cargo install cargo-cache --locked"
 
 [[tools]]
 lang = "rust"
@@ -701,7 +700,7 @@ cmds = [
 desc = "shippable application packaging for rust projects"
 url = "https://axodotdev.github.io/cargo-dist/"
 git = "https://github.com/axodotdev/cargo-dist"
-install_command = "cargo install cargo-dist --locked"
+install = "cargo install cargo-dist --locked"
 
 [[tools]]
 lang = "rust"
@@ -709,14 +708,14 @@ name = "cargo-nextest"
 desc = "A next-generation test runner for Rust"
 url = "https://nexte.st/"
 git = "https://github.com/nextest-rs/nextest"
-install_command = "cargo install --frozen cargo-nextest"
+install = "cargo install --frozen cargo-nextest"
 
 [[tools]]
 lang = "rust"
 name = "cargo-sweep"
 desc = "A cargo subcommand for cleaning up unused build files generated by Cargo."
 git = "https://github.com/holmgr/cargo-sweep"
-install_command = "cargo install cargo-sweep --locked"
+install = "cargo install cargo-sweep --locked"
 
 [[tools]]
 lang = "rust"
@@ -726,9 +725,9 @@ cmds = [
 ]
 desc = "A cargo subcommand for checking and applying updates to installed executables"
 git = "https://github.com/nabijaczleweli/cargo-update"
-install_command = "cargo install cargo-update"
-completions_command = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
-supported_shells = [
+install = "cargo install cargo-update"
+completions = "fish -c \"help2comp --stdout --subcommand 'cargo install-update'\""
+shells = [
     "fish"
 ]
 
@@ -744,13 +743,13 @@ name = "codex"
 desc = "Lightweight coding agent that runs in your terminal"
 url = "https://learn.chatgpt.com/docs/codex/cli"
 git = "https://github.com/openai/codex"
-update_command.default = [
+update.default = [
     "codex",
     "update"
 ]
-update_command.windows = []
-completions_command = "codex completion SHELL"
-supported_shells = [
+update.windows = []
+completions = "codex completion SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -768,9 +767,9 @@ name = "delta"
 desc = "A syntax-highlighting pager for git, diff, grep, and blame output"
 url = "https://dandavison.github.io/delta/"
 git = "https://github.com/dandavison/delta"
-install_command = "cargo install git-delta"
-completions_command = "delta --generate-completion SHELL"
-supported_shells = [
+install = "cargo install git-delta"
+completions = "delta --generate-completion SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -793,17 +792,9 @@ cmds = [
 ]
 desc = "A rust devkit for running multiple parallel agents"
 git = "https://github.com/AbysmalBiscuit/devkit.git"
-install_command = "cargo install --locked --git https://github.com/AbysmalBiscuit/devkit"
-completions_command = "devkit completions --all SHELL"
-supported_shells = [
-    "bash",
-    "elvish",
-    "fish",
-    "nushell",
-    "powershell",
-    "zsh"
-]
-append_nu_completion = """
+install = "cargo install --locked --git https://github.com/AbysmalBiscuit/devkit"
+completions.command = "devkit completions --all SHELL"
+completions.append.nu = """
 | nu --stdin -c 'let src = ($in | lines)
 let nl = (char newline)
 let dq = (char dq)
@@ -826,6 +817,14 @@ $src | reduce --fold { out: [], blk: false, pos: false } {|line, acc|
   }
 } | get out | each {|l| $l + $nl } | str join'
 """
+shells = [
+    "bash",
+    "elvish",
+    "fish",
+    "nushell",
+    "powershell",
+    "zsh"
+]
 
 [[tools]]
 lang = "rust"
@@ -833,12 +832,12 @@ name = "difft"
 desc = "Compare files or directories based on the syntax of the programming language."
 url = "https://difftastic.wilfred.me.uk/"
 git = "https://github.com/Wilfred/difftastic"
-install_command = "cargo install --locked difftastic"
+install = "cargo install --locked difftastic"
 
 [[tools]]
 lang = "rust"
 name = "dotter"
-completions_command = "dotter gen-completions --shell SHELL"
+completions = "dotter gen-completions --shell SHELL"
 
 [[tools]]
 lang = "rust"
@@ -846,9 +845,9 @@ name = "dua"
 desc = "Dua (Disk Usage Analyzer): get the disk space usage of a directory."
 url = "https://github.com/Byron/dua-cli"
 git = "https://github.com/Byron/dua-cli"
-install_command = "cargo +nightly install dua-cli"
-completions_command = "dua completions SHELL"
-supported_shells = [
+install = "cargo +nightly install dua-cli"
+completions = "dua completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -867,7 +866,7 @@ lang = "rust"
 name = "dysk"
 desc = "Display filesystem information in a table."
 url = "https://manned.org/dysk"
-install_command = "cargo install --locked dysk"
+install = "cargo install --locked dysk"
 
 [[tools]]
 lang = "rust"
@@ -875,7 +874,7 @@ name = "eza"
 desc = "Modern, maintained replacement for `ls`, built on `exa`."
 url = "https://github.com/eza-community/eza"
 comment = "Completions need to be downloaded"
-supported_shells = [
+shells = [
     "bash",
     "fish",
     "nu",
@@ -892,9 +891,9 @@ cmds = [
 ]
 desc = "A simple, fast and user-friendly alternative to 'find'"
 git = "https://github.com/sharkdp/fd"
-install_command = "cargo install fd-find"
-completions_command = "fd --gen-completions SHELL"
-supported_shells = [
+install = "cargo install fd-find"
+completions = "fd --gen-completions SHELL"
+shells = [
     "bash",
     "fish",
     "powershell",
@@ -906,7 +905,7 @@ lang = "rust"
 name = "fish"
 git = "https://github.com/fish-shell/fish-shell"
 comment = "Not on crates.io; the registry's 'fish' crate is an unrelated webhook library. update_fish.py builds the newest release tag and lays down the share tree that __fish_data_dir points at, which a plain cargo install leaves empty."
-install_command = "uv tool install sphinx && python3 \"$(chezmoi source-path)\"/update_fish.py"
+install = "uv tool install sphinx && python3 \"$(chezmoi source-path)\"/update_fish.py"
 
 [[tools]]
 lang = "rust"
@@ -923,7 +922,7 @@ lang = "rust"
 name = "glyf"
 desc = "fast glyph finder"
 git = "https://github.com/youssefadly237/glyf"
-install_command = "cargo install --features mlua --git https://github.com/youssefadly237/glyf"
+install = "cargo install --features mlua --git https://github.com/youssefadly237/glyf"
 
 [[tools]]
 lang = "rust"
@@ -943,9 +942,9 @@ cargo install --git https://github.com/herdrdev/herdr.git --locked herdr
 
 crates.io is stale (0.1.0), so build from git. build.rs compiles the vendored libghostty-vt and needs Zig 0.15.2 on PATH (`mise use -g zig@0.15.2`) or ZIG pointing at the binary. prebuilt binaries instead: `curl -fsSL https://herdr.dev/install.sh | sh`, windows `powershell -ExecutionPolicy Bypass -c \"irm https://herdr.dev/install.ps1 | iex\"`.
 """
-install_command = "cargo install --locked --git https://github.com/herdrdev/herdr"
-completions_command = "herdr completion SHELL"
-supported_shells = [
+install = "cargo install --locked --git https://github.com/herdrdev/herdr"
+completions = "herdr completion SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -970,7 +969,7 @@ name = "jless"
 desc = "jless is a command-line JSON viewer designed for reading, exploring, and searching through JSON data."
 url = "https://jless.io/"
 git = "https://github.com/PaulJuliusMartinez/jless"
-install_command = "cargo install jless"
+install = "cargo install jless"
 
 [[tools]]
 lang = "rust"
@@ -978,7 +977,7 @@ name = "just"
 desc = "just is a handy way to save and run project-specific commands."
 url = "https://just.systems/"
 git = "https://github.com/casey/just"
-completions_command = "JUST_COMPLETE=SHELL just"
+completions = "JUST_COMPLETE=SHELL just"
 
 [[tools]]
 lang = "rust"
@@ -990,7 +989,7 @@ name = "kanata"
 desc = "Improve keyboard comfort and usability with advanced customization"
 url = "https://jtroo.github.io/config.html"
 git = "https://github.com/jtroo/kanata"
-install_command = "cargo install kanata"
+install = "cargo install kanata"
 
 [[tools]]
 lang = "rust"
@@ -1003,9 +1002,9 @@ lang = "rust"
 name = "mcpls"
 desc = "Universal MCP to LSP bridge - expose Language Server Protocol capabilities as MCP tools"
 git = "https://github.com/AbysmalBiscuit/mcpls"
-install_command = "cargo install --locked --git https://github.com/AbysmalBiscuit/mcpls mcpls"
-completions_command = "mcpls completions SHELL"
-supported_shells = [
+install = "cargo install --locked --git https://github.com/AbysmalBiscuit/mcpls mcpls"
+completions = "mcpls completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -1021,8 +1020,8 @@ desc = "dev tools, env vars, task runner"
 url = "https://mise.jdx.dev/"
 git = "https://github.com/jdx/mise"
 comment = "curl https://mise.run | sh ; cargo binstall mise"
-install_command = "cargo install --locked mise; cargo install usage-cli"
-supported_shells = [
+install = "cargo install --locked mise; cargo install usage-cli"
+shells = [
     "bash",
     "fish",
     "zsh"
@@ -1045,7 +1044,7 @@ lang = "rust"
 name = "nufmt"
 desc = "Formatter for Nushell scripts."
 git = "https://github.com/nushell/nufmt"
-install_command = "cargo install --git https://github.com/nushell/nufmt"
+install = "cargo install --git https://github.com/nushell/nufmt"
 
 [[tools]]
 lang = "rust"
@@ -1065,7 +1064,7 @@ lang = "rust"
 name = "procs"
 desc = "Display information about the active processes."
 url = "https://github.com/dalance/procs/blob/master/man/procs.1.adoc"
-completions_command = "procs --gen-completion-out SHELL"
+completions = "procs --gen-completion-out SHELL"
 
 [[tools]]
 lang = "rust"
@@ -1078,7 +1077,7 @@ cmds = [
 desc = "Tmux on Windows Powershell - tmux for PowerShell, Windows Terminal, cmd.exe. Includes psmux, pmux, and tmux commands. This is native Powershell Tmux designed for Windows in Rust 🦀"
 url = "https://psmux.pages.dev/"
 git = "https://github.com/psmux/psmux"
-install_command = "cargo install psmux"
+install = "cargo install psmux"
 
 [[tools]]
 lang = "rust"
@@ -1087,7 +1086,7 @@ desc = "qsv is a command line program for querying, slicing, indexing, analyzing
 url = "https://qsv.dathere.com/"
 git = "https://github.com/dathere/qsv"
 comment = "Completions need to be downloaded"
-supported_shells = [
+shells = [
     "bash",
     "elvish",
     "fig",
@@ -1111,16 +1110,16 @@ name = "rage"
 desc = "A simple, secure, and modern file encryption tool (and Rust library) with small explicit keys, no configuration options, and UNIX-style composability."
 url = "https://github.com/str4d/rage"
 git = "https://github.com/str4d/rage"
-install_command = "cargo install rage"
+install = "cargo install rage"
 
 [[tools]]
 lang = "rust"
 name = "rg"
 desc = "ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern."
 git = "https://github.com/BurntSushi/ripgrep?tab=readme-ov-file#installation"
-install_command = "cargo install ripgrep"
-completions_command = "rg --generate complete-SHELL"
-supported_shells = [
+install = "cargo install ripgrep"
+completions = "rg --generate complete-SHELL"
+shells = [
     "bash",
     "fish",
     "powershell",
@@ -1148,8 +1147,8 @@ lang = "rust"
 name = "ruff"
 desc = "An extremely fast Python linter and code formatter, written in Rust."
 url = "https://docs.astral.sh/ruff/tutorial/"
-install_command = "cargo install ruff"
-completions_command = "ruff generate-shell-completion SHELL"
+install = "cargo install ruff"
+completions = "ruff generate-shell-completion SHELL"
 
 [[tools]]
 lang = "rust"
@@ -1160,14 +1159,14 @@ lang = "rust"
 name = "rustup"
 desc = "Install, manage, and update Rust toolchains."
 url = "https://rust-lang.github.io/rustup/"
-install_command = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+install = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 
 [[tools]]
 lang = "rust"
 name = "sccache"
 desc = "Sccache is a ccache-like tool. It is used as a compiler wrapper and avoids compilation when possible. Sccache has the capability to utilize caching in remote storage environments, including various cloud storage options, or alternatively, in local storage."
 git = "https://github.com/mozilla/sccache"
-install_command = "cargo install sccache --locked"
+install = "cargo install sccache --locked"
 
 [[tools]]
 lang = "rust"
@@ -1181,9 +1180,9 @@ name = "sk"
 desc = "Fuzzy finder written in Rust."
 url = "https://github.com/skim-rs/skim"
 git = "https://github.com/skim-rs/skim"
-install_command = "cargo install --git https://github.com/skim-rs/skim.git"
-init_command = "sk --shell SHELL --shell-bindings"
-append_fish_init = "\\n    echo skim_key_bindings"
+install = "cargo install --git https://github.com/skim-rs/skim.git"
+init.command = "sk --shell SHELL --shell-bindings"
+init.append.fish = "\\n    echo skim_key_bindings"
 
 [[tools]]
 lang = "rust"
@@ -1193,7 +1192,7 @@ cmds = [
 ]
 desc = "A Spotify player in the terminal with full feature parity"
 git = "https://github.com/aome510/spotify-player"
-completions_command = "spotify-player generate SHELL"
+completions = "spotify-player generate SHELL"
 
 [[tools]]
 lang = "rust"
@@ -1201,13 +1200,13 @@ name = "starship"
 desc = "The minimal, blazing-fast, and infinitely customizable prompt for any shell!"
 url = "https://starship.rs"
 git = "https://github.com/starship/starship"
-install_command = "cargo install starship --locked"
-completions_command = "starship completions SHELL"
-init_command = "starship init SHELL --print-full-init"
-init_command_exclude_shells = [
+install = "cargo install starship --locked"
+completions = "starship completions SHELL"
+init.command = "starship init SHELL --print-full-init"
+init.exclude_shells = [
     "nu"
 ]
-supported_shells = [
+shells = [
     "bash",
     "cmd",
     "elvish",
@@ -1215,7 +1214,7 @@ supported_shells = [
     "ion",
     "nushell",
     "powershell",
-    "tsch",
+    "tcsh",
     "xonsh",
     "zsh"
 ]
@@ -1227,7 +1226,7 @@ desc = "A TOML toolkit: formatter, linter, and language server."
 url = "https://taplo.tamasfe.dev/"
 git = "https://github.com/AbysmalBiscuit/taplo"
 comment = "Fork carries the all-of completion stack overflow fix upstream lacks."
-install_command = "cargo install --git https://github.com/AbysmalBiscuit/taplo --branch main --features lsp --locked taplo-cli"
+install = "cargo install --git https://github.com/AbysmalBiscuit/taplo --branch main --features lsp --locked taplo-cli"
 
 [[tools]]
 lang = "rust"
@@ -1241,7 +1240,7 @@ name = "tldr"
 desc = "Display simple help pages for command-line tools from the tldr-pages project."
 url = "https://tealdeer-rs.github.io/tealdeer/intro.html"
 git = "https://github.com/tealdeer-rs/tealdeer?tab=readme-ov-file"
-install_command = "cargo install tealdeer"
+install = "cargo install tealdeer"
 
 [[tools]]
 lang = "rust"
@@ -1262,8 +1261,8 @@ name = "tuicr"
 desc = "A terminal UI for code review with Vim keybindings, inline comments, and review export to remote forges, clipboard, or stdout."
 url = "https://tuicr.dev/"
 git = "https://github.com/agavra/tuicr"
-install_command = "cargo install tuicr"
-update_command.default = [
+install = "cargo install tuicr"
+update = [
     "tuicr",
     "update"
 ]
@@ -1279,8 +1278,8 @@ lang = "rust"
 name = "uv"
 desc = "A fast Python package and project manager."
 url = "https://docs.astral.sh/uv/reference/cli/"
-completions_command = "uv generate-shell-completion SHELL"
-supported_shells = [
+completions = "uv generate-shell-completion SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -1293,9 +1292,8 @@ supported_shells = [
 lang = "rust"
 name = "uvx"
 desc = "This command is an alias of `uv tool run`."
-install_command = "NONE: installed with uv"
-completions_command = "uvx --generate-shell-completion SHELL"
-supported_shells = [
+completions = "uvx --generate-shell-completion SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -1303,6 +1301,7 @@ supported_shells = [
     "powershell",
     "zsh"
 ]
+provided_by = "uv"
 
 [[tools]]
 lang = "rust"
@@ -1315,9 +1314,9 @@ lang = "rust"
 name = "watchexec"
 desc = "Run arbitrary commands when files change."
 url = "https://manned.org/watchexec"
-install_command = "cargo install --locked watchexec-cli"
-completions_command = "watchexec --completions SHELL"
-supported_shells = [
+install = "cargo install --locked watchexec-cli"
+completions = "watchexec --completions SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -1329,8 +1328,8 @@ supported_shells = [
 [[tools]]
 lang = "rust"
 name = "wezterm"
-completions_command = "wezterm shell-completion --shell SHELL"
-supported_shells = [
+completions = "wezterm shell-completion --shell SHELL"
+shells = [
     "bash",
     "elvish",
     "fig",
@@ -1338,7 +1337,7 @@ supported_shells = [
     "powershell",
     "zsh"
 ]
-command_powershell_name = "power-shell"
+shell_arg.powershell = "power-shell"
 
 [[tools]]
 lang = "rust"
@@ -1359,7 +1358,7 @@ lang = "rust"
 name = "ya"
 desc = "Manage Yazi plugins and flavors, publish or subscribe to DDS messages."
 url = "https://yazi-rs.github.io/docs/cli/"
-install_command = "NONE: installed automatically with yazi"
+provided_by = "yazi"
 
 [[tools]]
 lang = "rust"
@@ -1367,14 +1366,14 @@ name = "yazi"
 desc = "Blazing fast terminal file manager written in Rust."
 url = "https://yazi-rs.github.io/"
 git = "https://github.com/sxyazi/yazi"
-install_command = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
+install = "cargo install --force --git https://github.com/sxyazi/yazi.git yazi-build"
 
 [[tools]]
 lang = "rust"
 name = "zccache"
 desc = "A local compiler cache for Rust and C/C++ with cache sharing across worktrees."
 git = "https://github.com/zackees/zccache"
-install_command = "cargo install --git https://github.com/zackees/zccache --locked --features zccache-bin --bin zccache zccache"
+install = "cargo install --git https://github.com/zackees/zccache --locked --features zccache-bin --bin zccache zccache"
 
 [[tools]]
 lang = "rust"
@@ -1386,8 +1385,8 @@ git = "https://github.com/zed-industries/zed"
 [[tools]]
 lang = "rust"
 name = "zellij"
-install_command = "cargo install --locked zellij"
-completions_command = "zellij setup --generate-completion SHELL"
+install = "cargo install --locked zellij"
+completions = "zellij setup --generate-completion SHELL"
 
 [[tools]]
 lang = "rust"
@@ -1395,9 +1394,9 @@ name = "zoxide"
 desc = "Keep track of the most frequently used directories."
 url = "https://manned.org/zoxide"
 git = "https://github.com/ajeetdsouza/zoxide?tab=readme-ov-file#installation"
-install_command = "cargo install zoxide --locked"
-init_command = "zoxide init SHELL"
-supported_shells = [
+install = "cargo install zoxide --locked"
+init = "zoxide init SHELL"
+shells = [
     "bash",
     "elvish",
     "fish",
@@ -1420,7 +1419,7 @@ desc = "Incredibly fast JavaScript runtime, bundler, test runner, and package ma
 url = "https://bun.com/"
 git = "https://github.com/oven-sh/bun"
 comment = "Completions need to be downloaded"
-install_command = "curl -fsSL https://bun.sh/install | bash"
+install = "curl -fsSL https://bun.sh/install | bash"
 
 [[tools]]
 lang = "zig"

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+fish -c 'set -x fish_update_completions_detach true; fish_update_completions; set -u fish_update_completions_detach'
+{
+    echo
+    jj util completion bash </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.bash_completion'
+
+{
+    echo
+    jj util completion fish </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.cache\fish\completions\_generated.fish'
+
+{
+    echo
+    jj util completion zsh </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.oh-my-zsh\completions\_generated'
+
+{
+    echo
+    jj util completion nushell </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.config\nushell\autoload\_generated.nu'

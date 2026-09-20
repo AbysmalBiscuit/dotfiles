@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -e
+fish -c 'set -x fish_update_completions_detach true; fish_update_completions; set -u fish_update_completions_detach'
+{
+    echo
+    devkit completions --all bash </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.bash_completion'
+
+{
+    echo
+    devkit completions --all fish </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.cache\fish\completions\_generated.fish'
+
+{
+    echo
+    devkit completions --all zsh </dev/null || true
+    echo
+
+} >'C:\Users\Lev\.oh-my-zsh\completions\_generated'
+
+{
+    echo
+    devkit completions --all nushell </dev/null| nu --stdin -c 'let src = ($in | lines)
+let nl = (char newline)
+let dq = (char dq)
+let rest = ([`    ...args: string@`, $dq, `nu-complete no-files`, $dq] | str join)
+let helper = ([`  def `, $dq, `nu-complete no-files`, $dq, ` [] { [] }`] | str join)
+$src | reduce --fold { out: [], blk: false, pos: false } {|line, acc|
+  if $acc.blk and $line == `  ]` {
+    let out = (if $acc.pos { $acc.out } else { $acc.out | append $rest })
+    { out: ($out | append $line), blk: false, pos: false }
+  } else if $acc.blk {
+    let t = ($line | str trim --left)
+    let pos = ($acc.pos or ((not ($t | is-empty)) and (not ($t | str starts-with `--`)) and (not ($t | str starts-with `#`))))
+    { out: ($acc.out | append $line), blk: true, pos: $pos }
+  } else if (($line | str starts-with `  export extern `) and ($line | str ends-with `[`)) {
+    { out: ($acc.out | append $line), blk: true, pos: false }
+  } else if $line == `module completions {` {
+    { out: ($acc.out | append $line | append $helper), blk: false, pos: false }
+  } else {
+    { out: ($acc.out | append $line), blk: false, pos: false }
+  }
+} | get out | each {|l| $l + $nl } | str join' || true
+    echo
+
+} >'C:\Users\Lev\.config\nushell\autoload\_generated.nu'
