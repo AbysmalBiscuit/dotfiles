@@ -78,6 +78,33 @@ def inventory_entries(source: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def platform_name() -> str:
+    if sys.platform == "win32":
+        return "windows"
+    if sys.platform == "darwin":
+        return "macos"
+    return "linux"
+
+
+def resolve_platform(
+    value: str | list[str] | dict[str, Any] | None,
+    bare_key: str = "default",
+) -> str | list[str] | None:
+    """The value for this machine, from either form of a polymorphic field.
+
+    None means the field is unset and the caller should derive from lang. An
+    empty string or list means the operation is deliberately disabled here.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        return value
+    if bare_key != "default":
+        return value.get(bare_key)
+    resolved = value.get(platform_name())
+    return value.get("default") if resolved is None else resolved
+
+
 def render(template: Path) -> str:
     """Return a source template with its chezmoi template actions expanded."""
     if not template.is_file():
