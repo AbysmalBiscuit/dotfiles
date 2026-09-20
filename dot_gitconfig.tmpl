@@ -90,7 +90,7 @@
 [init]
   defaultBranch = main
 [include]
-  path = {{ joinPath .chezmoi.homeDir ".config" "git" "delta_theme.gitconfig" }}
+  path = {{ joinPath .chezmoi.homeDir ".config" "git" "delta_theme.gitconfig" | replaceAllRegex "\\\\" "\\\\" }}
 [interactive]
   color = auto
 {{- if index .tool "delta" }}
