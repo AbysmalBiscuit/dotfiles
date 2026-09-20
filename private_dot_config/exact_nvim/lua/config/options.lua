@@ -31,15 +31,11 @@ if not g.has_nightly_rust and vim.fn.executable(vim.fn.expand("~/.cargo/bin/rust
   g.has_nightly_rust = string.match(output, ".*nightly.*") ~= nil
 end
 
----@type boolean Variable to track if has fish shell and ocargo function
-g.has_ocargo = vim.env.HAS_OCARGO == "true"
+---@type string Absolute path to the shared cargo wrapper, expanded so it works under any shell
+g.ocargo_script = vim.fn.expand("~/.local/bin/ocargo.py")
 
-if not g.has_ocargo and g.has_nightly_rust and not vim.g.is_windows and vim.fn.executable("fish") == 1 then
-  local openPop = assert(io.popen("fish --command 'functions --names'", "r"))
-  local output = openPop:read("*all")
-  openPop:close()
-  g.has_ocargo = string.match(output, ".* ocargo.*") ~= nil
-end
+---@type boolean Variable to track if the ocargo wrapper script can be run
+g.has_ocargo = g.has_nightly_rust and vim.fn.executable("python3") == 1 and vim.fn.filereadable(g.ocargo_script) == 1
 
 ---@type boolean Tracks if macOS
 g.is_macos = vim.fn.has("macunix") == 1 or vim.env.OS == "darwin"

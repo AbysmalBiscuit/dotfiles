@@ -83,14 +83,26 @@ local function get_scroll_function(direction, opts)
   end
 end
 
+---Build command for blink.cmp's native fuzzy matcher
+---@return string|false command Shell command, or false when no nightly toolchain is available
+local function get_blink_build()
+  if not vim.g.has_ocargo then
+    return vim.g.has_nightly_rust and "cargo +nightly build --release" or false
+  end
+
+  local ocargo = 'python3 "' .. vim.g.ocargo_script .. '" --nightly --no-mold build --release'
+
+  if vim.g.is_macos then
+    return 'RUSTFLAGS="-C link-arg=-L/usr/local/lib -C link-arg=-lluajit" ' .. ocargo
+  end
+  return ocargo
+end
+
 ---@type LazyPluginSpec[]
 return {
   {
     "saghen/blink.cmp",
-    build = vim.g.is_macos
-        and "fish --command 'RUSTFLAGS=\"-C link-arg=-L/usr/local/lib -C link-arg=-lluajit\" ocargo --nightly --no-mold build --release'"
-      or vim.g.has_ocargo and "fish --command 'ocargo --nightly --lto --dylib build --release'"
-      or (vim.g.has_nightly_rust and "cargo +nightly build --release"),
+    build = get_blink_build(),
     dependencies = {
       -- "codota/tabnine-nvim"
       { "mikavilpas/blink-ripgrep.nvim", version = "*" },
