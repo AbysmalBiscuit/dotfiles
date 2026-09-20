@@ -189,6 +189,9 @@ return {
           -- "obsidian_new",
           -- "obsidian_tags",
         },
+        per_filetype = {
+          gitconfig = { "gitconfig", inherit_defaults = true },
+        },
         providers = {
           lsp = {
             async = true,
@@ -292,6 +295,12 @@ return {
           exe = {
             name = "exe",
             module = "blink_exe_source",
+          },
+          gitconfig = {
+            name = "gitconfig",
+            module = "blink_gitconfig_source",
+            async = true,
+            score_offset = 10,
           },
           -- avante = {
           --   module = "blink-cmp-avante",
