@@ -39,11 +39,11 @@ export NPY_NUM_BUILD_JOBS="# {{ .system.build_jobs }}"
 # rust
 # -C link-arg=-z -C link-arg=pack-relative-relocs -C force-frame-pointers=yes
 export RUSTFLAGS='-C target-cpu=native'
-# {{ if .is_windows -}}
-# {{- /* Windows linker doesn't support the linker args */ -}}
-export RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
-# {{- else -}}
+# {{ if .is_linux -}}
+# {{- /* -z pack-relative-relocs is an ELF option; the Windows and Apple linkers reject it */ -}}
 export RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1 -C link-arg=-z -C link-arg=pack-relative-relocs"
+# {{- else -}}
+export RUSTFLAGS_RELEASE="${RUSTFLAGS} -C opt-level=3 -C debuginfo=none -C debug_assertions=no -C codegen-units=1"
 # {{- end }}
 
 # {{- if .is_macos }}
