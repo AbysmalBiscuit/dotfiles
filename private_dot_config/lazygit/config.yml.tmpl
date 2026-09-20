@@ -2,8 +2,6 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 # git:
 #   overrideGpg: true
-
-
 # {{ if and .is_windows (index .has "nvim" | default false) }}
 os:
   editPreset: "nvim"
@@ -15,11 +13,11 @@ git:
   # rather than the terminal, and picks side-by-side above its threshold. The
   # threshold is lower than git's because the panel is a fraction of the width.
   # Press `|` to fall through to the plain entry.
-  pagers:
-# {{ if .path.python }}
-# {{ printf "    - pager: DELTA_SIDE_BY_SIDE_MIN_COLUMNS=140 '%s' '%s' --dark --paging=never" .path.python (joinPath .chezmoi.homeDir ".local" "bin" "git-delta-pager.py" | replaceAllRegex "\\\\" "/") }}
-# {{ end }}
-    - pager: delta --dark --paging=never
+  diffRenderers:
+# {{- if .path.python }}
+    - command: DELTA_SIDE_BY_SIDE_MIN_COLUMNS=140 '# {{ .path.python }}' '# {{ joinPath .chezmoi.homeDir ".local" "bin" "git-delta-pager.py" | replaceAllRegex "\\\\" "/" }}' --dark --paging=never
+# {{- end }}
+    - command: delta --dark --paging=never
 # {{- end }}
 gui:
   # Use the mocha catppuccin theme
