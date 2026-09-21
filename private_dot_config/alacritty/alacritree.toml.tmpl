@@ -1,6 +1,11 @@
 # chezmoi:template:left-delimiter="# {{" right-delimiter="}}"
 #:schema https://raw.githubusercontent.com/AbysmalBiscuit/alacritree/integration/all-features/schema/alacritree-config.json
 # vim: shiftwidth=2 : set ff=unix :
+
+[cursor]
+style.blinking = "On"
+unfocused_hollow = true
+
 [font]
 fallback = [
   # Sarasa's cell is half an em, and nothing here fits it: Meslo's icons are
@@ -42,6 +47,13 @@ show_unmatched = true
 show_panes = true
 follow_focus = "always"
 
+[integrations.zellij]
+attach = "session"
+enabled = true
+show_unmatched = true
+show_panes = true
+follow_focus = "always"
+
 [ui]
 confirm_session_close = "busy"
 confirm_session_detach = false
@@ -74,6 +86,9 @@ search_depth = "sessions"
 hold_exited_sessions = "never"
 sidebar_scroll_align = "center"
 sidebar_follow_active = true
+
+[ui.cursor]
+animate = true
 
 [ui.decorations]
 
