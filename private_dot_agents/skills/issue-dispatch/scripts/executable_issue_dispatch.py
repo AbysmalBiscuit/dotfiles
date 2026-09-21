@@ -11,12 +11,16 @@ import json
 import re
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 GITHUB_URL = re.compile(r"^https?://github\.com/[^/]+/[^/]+/issues/(\d+)")
 AGENT_NAME_MAX = 32
 SLUG_MAX = 40
 NEW_TAB_LINE = re.compile(r"^tab \S+\s+\S+ as (\S+)\s", re.MULTILINE)
+ISSUE_START = {"claude": "/issue-start"}
+ISSUE_START_FALLBACK = "Run the issue-start skill, then stop."
+ISSUE_START_TIMEOUT_MS = "900000"
 
 
 @dataclass
@@ -26,6 +30,8 @@ class Row:
     agent: str = "-"
     status: str = "failed"
     detail: str = ""
+    issue: str = ""
+    starting: bool = False
 
 
 class StepError(Exception):
@@ -83,8 +89,8 @@ def github_number(ref: str) -> str | None:
     return match.group(1) if match else None
 
 
-def setup(ref: str) -> tuple[str, str, str]:
-    """Runs `issue setup`; returns (issue id, worktree, branch)."""
+def setup(ref: str) -> tuple[str, str, str, bool]:
+    """Runs `issue setup`; returns (issue id, worktree, branch, summary written)."""
     number = github_number(ref)
     if number:
         done = run(["gh", "issue", "view", number, "--json", "title"])
@@ -98,7 +104,8 @@ def setup(ref: str) -> tuple[str, str, str]:
     record = first_json(done.stdout)
     if done.returncode != 0 or "worktree" not in record:
         raise StepError(f"issue setup: {output(done)}")
-    return str(record.get("issue") or number or ref), record["worktree"], record.get("branch", "-")
+    issue = str(record.get("issue") or number or ref)
+    return issue, record["worktree"], record.get("branch", "-"), number is None
 
 
 def agent_name(kind: str, issue: str) -> str:
@@ -131,26 +138,49 @@ def start_agent(kind: str, issue: str, worktree: str) -> tuple[str, bool]:
     return match.group(1), "waiting for startup input" in done.stderr
 
 
-def prompt_agent(name: str, issue: str, extra: str) -> None:
-    prompt = f"Work on issue {issue}. {extra}".strip()
-    prompted, code, message = herdr("agent", "prompt", name, prompt)
+def prompt_agent(name: str, prompt: str) -> None:
+    prompted, code, message = herdr("agent", "prompt", name, prompt.strip())
     if prompted is None:
         raise StepError(f"agent prompt: {message or code}")
 
 
-def dispatch(ref: str, kind: str, extra: str) -> Row:
+def launch(ref: str, kind: str, extra: str) -> Row:
+    """Starts the agent. A summarized issue gets /issue-start first; hand_over sends the issue."""
     row = Row(ref)
     try:
-        issue, worktree, row.branch = setup(ref)
-        row.agent, blocked = start_agent(kind, issue, worktree)
+        row.issue, worktree, row.branch, summarized = setup(ref)
+        row.agent, blocked = start_agent(kind, row.issue, worktree)
         if blocked:
             row.status, row.detail = "blocked", "waiting at a startup prompt; not prompted"
             return row
-        prompt_agent(row.agent, issue, extra)
+        if summarized:
+            row.starting = True
+        else:
+            prompt_agent(row.agent, f"Work on issue {row.issue}. {extra}")
         row.status = "working"
     except StepError as error:
         row.detail = str(error)
     return row
+
+
+def hand_over(row: Row, kind: str, extra: str) -> None:
+    """Runs issue-start and waits for it to settle, then tells the agent to do the issue."""
+    start = ISSUE_START.get(kind, ISSUE_START_FALLBACK)
+    waited, code, message = herdr(
+        "agent", "prompt", row.agent, start, "--wait", "--timeout", ISSUE_START_TIMEOUT_MS
+    )
+    if waited is None:
+        row.status, row.detail = "failed", f"issue-start: {message or code}"
+        return
+    state, _, _ = herdr("agent", "get", row.agent)
+    if (state or {}).get("agent", {}).get("agent_status") == "blocked":
+        row.status = "blocked"
+        row.detail = "asked a question during issue-start; not given the issue"
+        return
+    try:
+        prompt_agent(row.agent, f"Now do what issue {row.issue} says. {extra}")
+    except StepError as error:
+        row.status, row.detail = "failed", str(error)
 
 
 def unique(refs: list[str]) -> list[str]:
@@ -176,7 +206,11 @@ def main() -> int:
         print("ID-RESULT: BAD-KIND")
         return 1
 
-    rows = [dispatch(ref, args.kind, args.extra) for ref in unique(args.refs)]
+    rows = [launch(ref, args.kind, args.extra) for ref in unique(args.refs)]
+    starting = [row for row in rows if row.starting]
+    if starting:
+        with ThreadPoolExecutor(max_workers=len(starting)) as pool:
+            list(pool.map(lambda row: hand_over(row, args.kind, args.extra), starting))
     for row in rows:
         print(f"{row.ref}\t{row.branch}\t{row.agent}\t{row.status}\t{row.detail}")
     working = sum(row.status == "working" for row in rows)

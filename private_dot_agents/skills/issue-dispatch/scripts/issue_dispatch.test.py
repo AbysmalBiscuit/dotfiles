@@ -21,10 +21,12 @@ class FakeTools:
         shell: bool = True,
         start_error: str | None = None,
         failing_issue: str | None = None,
+        settled_status: str = "done",
     ) -> None:
         self.shell = shell
         self.start_error = start_error
         self.failing_issue = failing_issue
+        self.settled_status = settled_status
         self.calls: list[list[str]] = []
 
     def __call__(self, cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
@@ -56,6 +58,9 @@ class FakeTools:
                 return f"tab w1:t2  {kind} as fallback  {path}\n", "", 0
             case ["herdr", "agent", "prompt", *_]:
                 return json.dumps({"result": {}}), "", 0
+            case ["herdr", "agent", "get", *_]:
+                agent = {"agent_status": self.settled_status}
+                return json.dumps({"result": {"agent": agent}}), "", 0
         raise AssertionError(cmd)
 
     def named(self, *prefix: str) -> list[list[str]]:
@@ -96,6 +101,29 @@ class DispatchTests(unittest.TestCase):
         tools = FakeTools()
         dispatch(tools, "ENG-12")
         self.assertEqual(tools.named("issue", "setup"), [["issue", "setup", "--summary", "ENG-12"]])
+
+    def test_summarized_issue_runs_issue_start_before_the_issue(self) -> None:
+        tools = FakeTools()
+        lines = dispatch(tools, "--extra", "Plan first.", "ENG-12", "ENG-13")
+        for issue in ("ENG-12", "ENG-13"):
+            agent = f"claude-{issue.lower()}"
+            prompts = [cmd[4:] for cmd in tools.named("herdr", "agent", "prompt", agent)]
+            self.assertEqual(
+                prompts,
+                [
+                    ["/issue-start", "--wait", "--timeout", "900000"],
+                    [f"Now do what issue {issue} says. Plan first."],
+                ],
+            )
+        self.assertEqual(lines[-1], "ID-RESULT: OK")
+
+    def test_question_during_issue_start_holds_the_issue_back(self) -> None:
+        tools = FakeTools(settled_status="blocked")
+        lines = dispatch(tools, "ENG-12")
+        prompts = [cmd[4] for cmd in tools.named("herdr", "agent", "prompt")]
+        self.assertEqual(prompts, ["/issue-start"])
+        self.assertIn("\tblocked\t", lines[0])
+        self.assertEqual(lines[-1], "ID-RESULT: FAILED")
 
     def test_refused_shell_falls_back_to_new_tab(self) -> None:
         tools = FakeTools(start_error="agent_pane_busy")

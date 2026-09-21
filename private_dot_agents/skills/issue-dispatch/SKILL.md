@@ -1,6 +1,6 @@
 ---
 name: issue-dispatch-idp
-description: "Set up a worktree per issue and start an interactive coding agent (Claude Code by default, or Codex etc.) in each, told to work its issue."
+description: "Set up a worktree per issue and start an interactive coding agent (Claude Code by default, or Codex etc.) in each, told to run /issue-start and then work its issue."
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Bash
@@ -27,7 +27,9 @@ From the repo the issues belong to:
 python3 ~/.agents/skills/issue-dispatch/scripts/issue_dispatch.py [--kind KIND] [--extra "EXTRA"] REF...
 ```
 
-It handles setup, slugs, the Herdr pane, fallbacks and prompting for every issue in one run. Wait for it to finish; the last line is `ID-RESULT: <STATUS>`.
+It handles setup, slugs, the Herdr pane, fallbacks and prompting for every issue in one run. A Linear issue gets a session summary at setup, so its agent first runs `/issue-start` to load that handoff; once that settles, the script tells it to do the issue. A GitHub issue has no summary and is told to work the issue directly. Wait for the script to finish; the last line is `ID-RESULT: <STATUS>`.
+
+When you dispatch or prompt a session by hand instead of through the script, follow the same order: `/issue-start` first, then the issue.
 
 | `ID-RESULT` | Meaning |
 |---|---|
@@ -42,5 +44,5 @@ Each row before it is tab-separated: ref, branch, agent name, status, detail.
 
 Show the rows as a table. For each non-working row, name what the user has to do:
 
-- `blocked`: the agent waits at a startup prompt (usually a trust prompt) and never got its task. The user answers the prompt in that pane, then sends the task.
+- `blocked`: the agent waits at a startup prompt (usually a trust prompt) or asked a question during `/issue-start`, and never got its task. The detail says which. The user answers in that pane, then sends the task.
 - `failed`: quote the detail. A failure after setup (branch shown) leaves the worktree in place, so a re-run of that ref fails at setup; start the agent there by hand instead.
