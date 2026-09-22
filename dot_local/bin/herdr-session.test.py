@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import runpy
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 HELPER = Path(__file__).with_name("executable_herdr-session")
-TARGET = "/tmp/removed-worktree"
+TMP = Path(tempfile.gettempdir()).resolve()
+TARGET = str(TMP / "removed-worktree")
 
 
 class CloseWorkspaceTests(unittest.TestCase):
@@ -27,7 +29,7 @@ class CloseWorkspaceTests(unittest.TestCase):
             {
                 "pane_id": "w1:p2",
                 "workspace_id": "w1",
-                "cwd": "/tmp/elsewhere" if outside else TARGET,
+                "cwd": str(TMP / "elsewhere") if outside else TARGET,
                 "agent": agent,
             },
         ]
