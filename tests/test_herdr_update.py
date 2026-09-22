@@ -220,7 +220,7 @@ class HerdrUpdateTests(unittest.TestCase):
                 process.wait(timeout=5)
 
     def test_apply_skips_opted_out_updates_and_runs_other_updates(self) -> None:
-        hook_path = SCRIPT.parents[1] / ".chezmoiscripts/run_onchange_after_80-apply_post.py"
+        hook_path = SCRIPT.parents[1] / ".chezmoiscripts/run_after_80-apply_post.py"
         spec = importlib.util.spec_from_file_location("apply_post", hook_path)
         assert spec is not None
         assert spec.loader is not None

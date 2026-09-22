@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""This hook runs after `chezmoi apply`.
-
-It does the following:
-- Update various cli tools
-"""
+"""Update opted-in tools every three days after apply and refresh the chezmoi docs pin."""
 
 import os
 import re
 import shutil
 import subprocess
 import sys
+import time
 import tomllib
 from pathlib import Path
 
 HAS_FILE = Path.home() / ".config" / "chezmoi" / "has.toml"
 TOOLS_FILE = Path(".chezmoidata") / "tools.toml"
+UPDATE_INTERVAL_SECONDS = 3 * 24 * 60 * 60
 
 REPO = "https://github.com/twpayne/chezmoi"
 NOTES = (
@@ -117,6 +115,12 @@ def update_cli_tools() -> None:
             continue
 
         name = tool.get("name", "unknown tool")
+        stamp = HAS_FILE.parent / "tool-updates" / f"{command_key(str(name))}.stamp"
+        try:
+            if time.time() - float(stamp.read_text()) < UPDATE_INTERVAL_SECONDS:
+                continue
+        except (OSError, ValueError):
+            pass
         try:
             completed = subprocess.run(command, shell=False, check=False)
         except OSError as error:
@@ -124,6 +128,12 @@ def update_cli_tools() -> None:
             continue
         if completed.returncode != 0:
             warn(f"{name} update failed with exit code {completed.returncode}")
+            continue
+        try:
+            stamp.parent.mkdir(parents=True, exist_ok=True)
+            stamp.write_text(str(time.time()))
+        except OSError as error:
+            warn(f"could not record {name} update time: {error}")
 
 
 def source_dir() -> Path:
