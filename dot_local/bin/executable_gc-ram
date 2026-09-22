@@ -5,3 +5,6 @@ sudo sync
 echo 3 | sudo tee /proc/sys/vm/drop_caches
 echo "RAM After:"
 free -h
+echo "Compacting RAM"
+echo 1 | sudo tee /proc/sys/vm/compact_memory
+echo "Done!"
