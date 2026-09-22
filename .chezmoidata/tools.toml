@@ -255,6 +255,19 @@ desc = "Wrapper around GNU source-highlight for use with less, auto-selecting be
 url = "https://www.gnu.org/software/src-highlite/source-highlight.html"
 
 [[tools]]
+lang = "c++"
+name = "taskwarrior"
+cmds = [
+    "task"
+]
+desc = "Command-line task management"
+url = "https://taskwarrior.org/"
+git = "https://github.com/GothenburgBitFactory/taskwarrior"
+install.linux = "sudo apt-get install taskwarrior"
+install.macos = "brew install task"
+install.windows = ""
+
+[[tools]]
 lang = "go"
 name = "age"
 desc = "A simple, modern, and secure file encryption tool."
