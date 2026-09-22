@@ -236,7 +236,7 @@ When generating mermaid-js diagrams, use the `mmdc` cli tool to validate the syn
 
 {{- end }}
 
-{{- if stat (joinPath .chezmoi.homeDir ".claude" "skills" "graphify" "SKILL.md") }}
+{{- if and (false) (stat (joinPath .chezmoi.homeDir ".claude" "skills" "graphify" "SKILL.md")) }}
 
 ## graphify
 
@@ -250,8 +250,10 @@ When the user types `/graphify`, use the installed graphify skill or instruction
 ### Picking a tool
 
 Take the first rung that does the job:
-
-1. Your harness's file tools: reading and editing files start here. Every change to a file goes through the edit tool.
+{{ if index .has "mcpls" }}
+0. mcpls tools for a **symbol**: definition, references, callers, type, rename.
+{{- end }}
+1.Your harness's file tools: reading and editing files start here. Every change to a file goes through the edit tool.
 2. One shell command:
 {{- if index .tool "rg" }}
    - `rg` for finding file contents and files
