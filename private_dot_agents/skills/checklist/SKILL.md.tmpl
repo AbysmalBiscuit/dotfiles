@@ -1,0 +1,60 @@
+{{- $taskwarrior := index .has "task" -}}
+{{- $alacritree := "" -}}
+{{- if not $taskwarrior -}}
+{{- else if index .has "alacritree" -}}
+{{-   $alacritree = "alacritree" -}}
+{{- else if index .has "alacritree_exe" -}}
+{{-   $alacritree = "alacritree.exe" -}}
+{{- end -}}
+---
+name: checklist
+description: "Use before acting on work with 3+ steps, such as a numbered or bulleted request, one operation repeated across files or targets, or a plan to execute. Applies even when rushed or the steps seem obvious."
+{{- if $alacritree }}
+allowed-tools: Bash(task:*), Bash({{ $alacritree }} task scope:*)
+{{- else if $taskwarrior }}
+allowed-tools: Bash(task:*)
+{{- else }}
+allowed-tools: TaskCreate, TaskUpdate
+{{- end }}
+---
+
+# Checklist
+
+Work with 3+ steps gets a checklist before its first action. The user follows progress through it, and it holds every step until it is finished. Sub-parts count as steps. Work you realize qualifies partway through still gets a checklist for the remaining steps.
+
+## Tracker
+{{- if $taskwarrior }}
+
+The checklist lives in taskwarrior, under the project {{ if $alacritree }}that `{{ $alacritree }} task scope` prints. alacritree shows that project live in its tasks tab.{{ else }}named after the basename of the git root, or of the working directory outside a repo.{{ end }} Use that project as `<scope>`.
+
+| Action | Command |
+|--------|---------|
+| add | `task rc.verbose=new-uuid add project:<scope> -- '<step>'` prints `Created task <uuid>.` |
+| start | `task <uuid> start` |
+| finish | `task <uuid> done` |
+| drop | `task rc.confirmation=off <uuid> delete` |
+
+Add all steps in one Bash call by chaining the `add` commands with `&&`, so the UUIDs print in step order. Address tasks by UUID, because numeric IDs renumber as tasks complete.
+{{ else }}
+The checklist lives in the task tool, which pins it above the input.
+
+| Action | Call |
+|--------|------|
+| add | `TaskCreate` with `subject` (brief title) and `description` (what needs doing), one call per step |
+| start | `TaskUpdate` with `status: in_progress` |
+| finish | `TaskUpdate` with `status: completed` |
+| drop | `TaskUpdate` with `status: deleted` |
+
+In a subagent context with no task tool, track the steps in your replies.
+{{- end }}
+
+## Steps
+
+1. Add one task per step, in order, before any other action.
+2. For each step, start it, do the work, and finish it once its result is verified. One task is in progress at a time.
+3. Add newly discovered work as a task before doing it.
+4. Drop a step that turns out unnecessary, and say why in your reply.
+
+The checklist is done when every task in it is finished or dropped.
+
+Keep the checklist in the tracker and report progress in prose, since a list typed into chat scrolls away and can't be updated. If the tracker fails, say so in your reply.
