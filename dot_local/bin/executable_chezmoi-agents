@@ -2,8 +2,9 @@
 """Manage agent configs, the agent CLIs themselves, and their plugins.
 
 `chezmoi agents update` upgrades every CLI in AGENT_CLIS that is on PATH, then
-refreshes their plugins. `chezmoi agents plugins update` does the plugin half on
-its own. Every other argument goes to .agentcfg/promote.py in the chezmoi source
+updates the plugin binaries and refreshes their plugins. `chezmoi agents plugins
+update` updates the plugin binaries and plugins on its own. Every other argument
+goes to .agentcfg/promote.py in the chezmoi source
 directory, which assigns a merge strategy to every live agent-config key no rule
 covers, and which chezmoi also runs as its apply.pre hook. promote.py puts its
 own directory on sys.path, so running it in this interpreter needs no further
@@ -64,6 +65,11 @@ AGENT_CLIS: dict[str, Callable[[str, str], int]] = {
 
 
 def update_plugins() -> int:
+    if any(shutil.which(cli) for cli in AGENT_CLIS) and (
+        status := step("chezmoi", "tools", "update", "devkit", "mcpls")
+    ):
+        print("plugin binary update failed; leaving plugins unchanged", file=sys.stderr)
+        return status
     worst = 0
     for cli, update_plugin in AGENT_CLIS.items():
         if shutil.which(cli) is None:
@@ -102,7 +108,7 @@ def plugins(argv: list[str]) -> int:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser(
-        "update", help="refresh each plugin's marketplace and reinstall the plugin"
+        "update", help="update plugin binaries, then refresh marketplaces and plugins"
     )
     parser.parse_args(argv)
     return update_plugins()

@@ -793,6 +793,13 @@ cmds = [
 desc = "A rust devkit for running multiple parallel agents"
 git = "https://github.com/AbysmalBiscuit/devkit.git"
 install = "cargo install --locked --git https://github.com/AbysmalBiscuit/devkit"
+update = [
+    "python3",
+    "-c",
+    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_release.py'), run_name='__main__')",
+    "devkit"
+]
+update_on_apply = false
 completions.command = "devkit completions --all SHELL"
 completions.append.nu = """
 | nu --stdin -c 'let src = ($in | lines)
@@ -1009,6 +1016,13 @@ name = "mcpls"
 desc = "Universal MCP to LSP bridge - expose Language Server Protocol capabilities as MCP tools"
 git = "https://github.com/AbysmalBiscuit/mcpls"
 install = "cargo install --locked --git https://github.com/AbysmalBiscuit/mcpls mcpls"
+update = [
+    "python3",
+    "-c",
+    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_release.py'), run_name='__main__')",
+    "mcpls"
+]
+update_on_apply = false
 completions = "mcpls completions SHELL"
 shells = [
     "bash",

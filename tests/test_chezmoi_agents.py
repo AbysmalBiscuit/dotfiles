@@ -16,6 +16,7 @@ HARNESS_CALLS = [
 ]
 
 PLUGIN_CALLS = [
+    "chezmoi tools update devkit mcpls",
     "claude plugin marketplace update devkit",
     "claude plugin update devkit@devkit",
     "claude plugin marketplace update mcpls",
@@ -44,7 +45,7 @@ def fake_agents(
     log = tmp_path / "calls.log"
     binary = tmp_path / "bin"
     binary.mkdir()
-    for name in names:
+    for name in (*names, "chezmoi"):
         script = binary / name
         script.write_text(
             f'#!/bin/sh\necho "{name} $*" >> "{log}"\n'
@@ -75,6 +76,15 @@ def test_update_refreshes_marketplace_then_reinstalls_each_plugin(tmp_path):
 
     assert result.returncode == 0, result.stderr
     assert log.read_text().splitlines() == PLUGIN_CALLS
+
+
+def test_failed_binary_update_leaves_plugins_unchanged(tmp_path):
+    env, log = fake_agents(tmp_path, failing="chezmoi tools update devkit mcpls")
+
+    result = launch(env, "plugins", "update")
+
+    assert result.returncode == 3
+    assert log.read_text().splitlines() == ["chezmoi tools update devkit mcpls"]
 
 
 def test_failed_codex_marketplace_upgrade_keeps_the_installed_plugin(tmp_path):
