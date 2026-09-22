@@ -125,6 +125,12 @@ Never write it on behalf of a human.
 ## Plans
 
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
+{{- if index .has "task" }}
+
+## Task tracking
+
+Track multi-step work in taskwarrior{{ if or (index .has "alacritree") (index .has "alacritree_exe") }} so alacritree shows it{{ end }}, following the `checklist` skill, in place of the harness's built-in task tool.
+{{- end }}
 
 ## Coding preferences
 
