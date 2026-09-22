@@ -31,7 +31,7 @@ import sys
 import time
 import tomllib
 from pathlib import Path
-from typing import NoReturn
+from typing import NamedTuple, NoReturn
 
 PROG = "herdr-session"
 SERVER_START_TIMEOUT = 15.0
@@ -73,8 +73,8 @@ AGENT_BINARIES = {
 
 
 def die(message: str) -> NoReturn:
-    print(f"{PROG}: {message}", file=sys.stderr)
-    raise SystemExit(1)
+    """Exit 1 with the message on stderr; an importer catching it reads `.code`."""
+    raise SystemExit(f"{PROG}: {message}")
 
 
 def warn(message: str) -> None:
@@ -285,28 +285,30 @@ def detected_pane(panes: list[dict], session: str, tab_id: str) -> dict | None:
     return None
 
 
-def attach_tab(herdr: Herdr, tab_id: str, *, focus: bool) -> None:
+def attach_tab(herdr: Herdr, tab_id: str, *, focus: bool) -> str | None:
     """Open the tab in Alacritree, as clicking its sidebar row does.
 
     Alacritree discovers Herdr's panes on its own schedule, so a tab created a
     moment ago is not in its list yet and the pane is waited for.
+
+    Returns the Alacritree session it opened in, or None when it did not.
     """
     exe = os.environ.get("ALACRITREE_EXE") or shutil.which("alacritree")
     if not exe:
-        return
+        return None
     session = herdr.session or "default"
     deadline = time.monotonic() + PANE_DETECT_TIMEOUT
     while True:
         listing, message = alacritree(exe, "multiplexer", "list")
         if message:
             warn(f"could not open tab {tab_id} in alacritree: {message}")
-            return
+            return None
         mux = detected_pane(listing.get("panes", []), session, tab_id)
         if mux:
             break
         if time.monotonic() >= deadline:
             warn(f"could not open tab {tab_id} in alacritree: no pane for it")
-            return
+            return None
         time.sleep(PANE_DETECT_POLL)
 
     args = ["multiplexer", "attach", mux["side"], mux["terminal_id"]]
@@ -315,8 +317,8 @@ def attach_tab(herdr: Herdr, tab_id: str, *, focus: bool) -> None:
     reply, message = alacritree(exe, *args)
     if message:
         warn(f"could not open tab {tab_id} in alacritree: {message}")
-        return
-    print(f"alacritree session {reply.get('session_id', '?')}  attached  {tab_id}")
+        return None
+    return str(reply.get("session_id", "?"))
 
 
 # --- agents ------------------------------------------------------------------
@@ -389,14 +391,31 @@ def agent_name(herdr: Herdr, base: str) -> str:
     die(f"no free agent name based on {slug!r}")
 
 
-def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[str]) -> str:
+class Tab(NamedTuple):
+    tab_id: str
+    kind: str
+    agent: str | None
+    waiting: bool
+
+
+def new_tab(herdr: Herdr, workspace: Workspace, kind: str, extra: list[str]) -> Tab:
+    """Open a tab in `workspace` running a shell or an agent.
+
+    A new workspace comes with a shell tab of its own. The new tab is opened in
+    the directory asked for, which may sit below the checkout root that shell
+    starts in, so the starter is closed rather than reused.
+    """
+    cwd = workspace.directory
     result = herdr.require(
-        "tab", "create", "--workspace", workspace_id, "--cwd", str(cwd), "--no-focus"
+        "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(cwd), "--no-focus"
     )
     tab_id = result.get("tab", {}).get("tab_id") or die("herdr created a tab without an id")
+    if workspace.starter:
+        closed, code, message = herdr.call("tab", "close", workspace.starter)
+        if closed is None:
+            warn(f"could not close starter tab {workspace.starter}: {message or code or 'failed'}")
     if kind == "shell":
-        print(f"tab {tab_id}  shell  {cwd}")
-        return tab_id
+        return Tab(tab_id, kind, None, waiting=False)
 
     pane_id = result.get("root_pane", {}).get("pane_id")
     if not pane_id:
@@ -409,20 +428,14 @@ def new_tab(herdr: Herdr, workspace_id: str, cwd: Path, kind: str, extra: list[s
     if started is None and code != "agent_not_ready":
         herdr.call("tab", "close", tab_id)
         die(f"could not start {kind}: {message or code or 'failed'}")
-    if code == "agent_not_ready":
-        warn(f"{kind} as {name} is waiting for startup input in tab {tab_id}")
-    print(f"tab {tab_id}  {kind} as {name}  {cwd}")
-    return tab_id
+    return Tab(tab_id, kind, name, waiting=code == "agent_not_ready")
 
 
 # --- commands ----------------------------------------------------------------
 
 
-def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
-    directory = Path(args.path or Path.cwd()).expanduser().resolve()
-    if not directory.is_dir():
-        die(f"{directory}: not a directory")
-    root = checkout_root(directory) or directory
+def sessions(herdr: Herdr, root: Path, current_id: str | None = None) -> list[dict]:
+    """One row per pane in the checkout's workspaces, or in `current_id` alone."""
     result, code, message = herdr.call("api", "snapshot")
     if result is None:
         if code != "server_not_running":
@@ -431,9 +444,6 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
     else:
         snapshot = result["snapshot"]
     panes = snapshot.get("panes", [])
-    current_id = None
-    if os.environ.get("HERDR_ENV") == "1" and not args.path and not args.session:
-        current_id = os.environ.get("HERDR_WORKSPACE_ID")
     matching = {
         workspace["workspace_id"]
         for workspace in snapshot.get("workspaces", [])
@@ -452,7 +462,7 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
     }
     tabs = {tab["tab_id"]: tab for tab in snapshot.get("tabs", [])}
     agents = {agent["pane_id"]: agent for agent in snapshot.get("agents", [])}
-    rows = [
+    return [
         {
             "tab_id": pane["tab_id"],
             "tab": tabs.get(pane["tab_id"], {}).get("label", ""),
@@ -465,6 +475,17 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
         for pane in panes
         if pane["workspace_id"] in matching
     ]
+
+
+def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
+    directory = Path(args.path or Path.cwd()).expanduser().resolve()
+    if not directory.is_dir():
+        die(f"{directory}: not a directory")
+    root = checkout_root(directory) or directory
+    current_id = None
+    if os.environ.get("HERDR_ENV") == "1" and not args.path and not args.session:
+        current_id = os.environ.get("HERDR_WORKSPACE_ID")
+    rows = sessions(herdr, root, current_id)
     if args.json:
         print(json.dumps(rows))
     elif rows:
@@ -485,23 +506,26 @@ def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
     return 0
 
 
-def workspace_for(herdr: Herdr, args: argparse.Namespace) -> tuple[Path, str, str | None]:
-    """Ensure this checkout has a workspace.
+class Workspace(NamedTuple):
+    directory: Path
+    root: Path
+    workspace_id: str
+    starter: str | None
+    """The tab a workspace starts with, set only when this run created it."""
 
-    Returns (directory, workspace id, starter tab); the starter tab is set only
-    when the workspace was created here.
-    """
-    directory = Path(args.path or Path.cwd()).expanduser().resolve()
+
+def workspace_for(herdr: Herdr, path: str | None, label: str | None) -> Workspace:
+    """Ensure the checkout at `path`, or the current directory, has a workspace."""
+    directory = Path(path or Path.cwd()).expanduser().resolve()
     if not directory.is_dir():
         die(f"{directory}: not a directory")
     root = checkout_root(directory)
-    label = args.label or (root or directory).name
+    label = label or (root or directory).name
     if root:
         workspace_id, starter = open_checkout(herdr, root, label)
     else:
         root, (workspace_id, starter) = directory, open_directory(herdr, directory, label)
-    print(f"workspace {workspace_id}  {'created' if starter else 'existing'}  {root}")
-    return directory, workspace_id, starter
+    return Workspace(directory, root, workspace_id, starter)
 
 
 def pane_is_idle_shell(herdr: Herdr, pane: dict) -> bool:
@@ -659,20 +683,22 @@ def main() -> int:
     if args.command == "list":
         return list_sessions(herdr, args)
 
-    directory, workspace_id, starter = workspace_for(herdr, args)
+    workspace = workspace_for(herdr, args.path, args.label)
+    state = "created" if workspace.starter else "existing"
+    print(f"workspace {workspace.workspace_id}  {state}  {workspace.root}")
     if args.command == "new":
-        tab_id = new_tab(herdr, workspace_id, directory, args.kind, args.agent_args)
-        # A new workspace comes with a shell tab of its own. The new tab is
-        # opened in `directory`, which may sit below the checkout root that
-        # shell starts in, so the starter is closed rather than reused.
-        if starter:
-            closed, code, message = herdr.call("tab", "close", starter)
-            if closed is None:
-                warn(f"could not close starter tab {starter}: {message or code or 'failed'}")
+        tab = new_tab(herdr, workspace, args.kind, args.agent_args)
+        if tab.waiting:
+            warn(f"{tab.kind} as {tab.agent} is waiting for startup input in tab {tab.tab_id}")
+        running = f"{tab.kind} as {tab.agent}" if tab.agent else tab.kind
+        print(f"tab {tab.tab_id}  {running}  {workspace.directory}")
+        tab_id = tab.tab_id
     else:
-        tab_id = starter or active_tab(herdr, workspace_id)
+        tab_id = workspace.starter or active_tab(herdr, workspace.workspace_id)
     if tab_id and not args.no_attach:
-        attach_tab(herdr, tab_id, focus=not args.no_focus)
+        session = attach_tab(herdr, tab_id, focus=not args.no_focus)
+        if session:
+            print(f"alacritree session {session}  attached  {tab_id}")
     return 0
 
 
