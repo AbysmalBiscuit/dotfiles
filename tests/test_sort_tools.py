@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import tomllib
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
@@ -45,6 +46,19 @@ def tool_schema(properties: dict) -> dict:
 
 
 BARE = {"lang": {"type": "string"}, "name": {"type": "string"}}
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_boolean_update_policy_survives_sort(tmp_path, enabled):
+    module = load_sorter(
+        tmp_path,
+        tool_schema({**BARE, "update_on_apply": {"type": "boolean", "default": True}}),
+        '[[tools]]\nname = "herdr"\n' + f"update_on_apply = {str(enabled).lower()}\n",
+    )
+    module.sort_file(module.TOOLS_TOML)
+    tool = tomllib.loads(module.TOOLS_TOML.read_text())["tools"][0]
+    assert tool.get("update_on_apply", True) is enabled
+
 
 ARGUMENTS = {"type": "array", "items": {"type": "string", "minLength": 1}}
 

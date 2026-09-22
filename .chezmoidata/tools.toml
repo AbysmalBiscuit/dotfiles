@@ -943,6 +943,12 @@ cargo install --git https://github.com/herdrdev/herdr.git --locked herdr
 crates.io is stale (0.1.0), so build from git. build.rs compiles the vendored libghostty-vt and needs Zig 0.15.2 on PATH (`mise use -g zig@0.15.2`) or ZIG pointing at the binary. prebuilt binaries instead: `curl -fsSL https://herdr.dev/install.sh | sh`, windows `powershell -ExecutionPolicy Bypass -c \"irm https://herdr.dev/install.ps1 | iex\"`.
 """
 install = "cargo install --locked --git https://github.com/herdrdev/herdr"
+update = [
+    "python3",
+    "-c",
+    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_herdr.py'), run_name='__main__')"
+]
+update_on_apply = false
 completions = "herdr completion SHELL"
 shells = [
     "bash",

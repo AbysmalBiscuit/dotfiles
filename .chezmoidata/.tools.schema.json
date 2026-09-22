@@ -107,6 +107,11 @@
           ],
           "description": "Arguments used to update the tool, for every platform or per platform."
         },
+        "update_on_apply": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the declared update during chezmoi apply. Set false to update only through chezmoi tools update."
+        },
         "completions": {
           "oneOf": [
             { "type": "string", "minLength": 1 },

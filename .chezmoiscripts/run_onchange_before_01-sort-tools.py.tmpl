@@ -36,6 +36,8 @@ def field_default(node: dict[str, Any], root: dict[str, Any]) -> Any:
     # The bare form is canonical, and the schema lists it first.
     if "oneOf" in node:
         return field_default(node["oneOf"][0], root)
+    if node.get("type") == "boolean":
+        return node.get("default", False)
     if node.get("type") == "array":
         return []
     if node.get("type") == "object":
@@ -109,6 +111,8 @@ def append_value(
 
     if type(value) is str:
         lines.append(f"{field} = {format_toml_string(value)}")
+    elif type(value) is bool:
+        lines.append(f"{field} = {str(value).lower()}")
     elif type(value) is list:
         # uniqueItems marks a set, where order carries nothing. An argv array
         # declares no uniqueItems, and sorting one silently rewrites a command.

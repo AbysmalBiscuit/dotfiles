@@ -109,6 +109,8 @@ def update_cli_tools() -> None:
     for tool in tools:
         if not isinstance(tool, dict) or not tool_is_installed(tool, installed):
             continue
+        if tool.get("update_on_apply") is False:
+            continue
 
         command = update_command(tool)
         if command is None:
