@@ -40,6 +40,9 @@ fallback = [
 preset = "tuicr"
 section_buttons = true
 
+[integrations.gh]
+pr_status = true
+
 [integrations.herdr]
 attach = "session"
 enabled = true
@@ -62,8 +65,6 @@ confirm_session_detach = false
 last_session_close = "ring_project"
 # a removal moves the terminal to the neighbouring row rather than the first
 sidebar_focus = "follow"
-# PR status badges on worktree rows (polls gh)
-pr_status = true
 # upstream badge on worktree rows: level, diverged, gone, or untracked. Local
 # refs only — a branch deleted on the remote reads as tracked until a prune
 upstream_status = true
