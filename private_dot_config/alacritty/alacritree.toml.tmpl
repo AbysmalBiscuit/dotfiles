@@ -177,6 +177,9 @@ name = "nushell"
 program = "nu# {{ if .is_windows }}.exe# {{ end }}"
 # {{- end }}
 
+[wsl]
+warm_spare = true
+
 # [debug]
 # gpu_timing = true
 # frame_log = true
