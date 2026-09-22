@@ -1,3 +1,5 @@
+#:schema https://github.com/AbysmalBiscuit/mcpls/releases/latest/download/mcpls-config.json
+#:toml-version 1.1
 # Language servers for MCP clients (Claude Code, Codex) via mcpls.
 #
 # Servers spawn only when a project_marker matches; missing binaries are
@@ -14,6 +16,12 @@
 rename = true
 format_document = true
 code_actions = true
+
+[diagnostics]
+footer = true
+
+[diagnostics.hooks]
+enabled = true
 
 [workspace]
 heuristics_max_depth = 10
