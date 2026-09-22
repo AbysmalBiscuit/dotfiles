@@ -126,10 +126,12 @@ Never write it on behalf of a human.
 
 - At the end of each plan, give me a list of unresolved questions to answer, if any.
 {{- if index .has "task" }}
+{{- $alacritree := "" }}
+{{- if index .has "alacritree" }}{{ $alacritree = "alacritree" }}{{ else if index .has "alacritree_exe" }}{{ $alacritree = "alacritree.exe" }}{{ end }}
 
 ## Task tracking
 
-Track multi-step work in taskwarrior{{ if or (index .has "alacritree") (index .has "alacritree_exe") }} so alacritree shows it{{ end }}, following the `checklist` skill, in place of the harness's built-in task tool.
+Track work with 3+ steps in taskwarrior instead of the built-in task tool. Add every step up front with `task rc.verbose=new-uuid add project:<scope> -- '<step>'`, where `<scope>` is {{ if $alacritree }}the output of `{{ $alacritree }} task scope`{{ else }}the git root's basename{{ end }}. Mark each step with `task <uuid> start` and `task <uuid> done`. Full rules: `checklist` skill.
 {{- end }}
 
 ## Coding preferences
