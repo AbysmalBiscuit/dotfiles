@@ -125,7 +125,11 @@ sidebar = true
 # {{- if .is_windows }}
 
 [keyboard]
-bindings = [{ key = "Backspace", mods = "Control", chars = "\u0017" }]
+bindings = [
+  { key = "Backspace", mods = "Control", chars = "\u0017" },
+  { key = "Enter", mods = "Shift", chars = "\u001B[13;2u" },
+  { key = "Enter", mods = "Control", chars = "\u001B[13;5u" },
+]
 
 
 [terminal.shell]
