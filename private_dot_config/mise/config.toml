@@ -1,5 +1,9 @@
 [tools]
 carapace = "latest"
+doppler = "latest"
 "npm:oxfmt" = "latest"
 "npm:oxlint" = "latest"
 zig = "0.16.0"
+
+[settings]
+minimum_release_age_excludes = ["doppler"]
