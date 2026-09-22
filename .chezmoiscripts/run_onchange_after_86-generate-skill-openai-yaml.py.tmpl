@@ -28,8 +28,8 @@ installed by something else, so this never writes into them.
 from __future__ import annotations
 
 import importlib.util
-import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,12 +44,16 @@ def warn(message: str) -> None:
 
 
 def ensure_pyyaml() -> None:
-    """Re-exec under uv, which resolves the PEP 723 header above.
+    """Re-run under uv, which resolves the PEP 723 header above.
 
     chezmoi runs .py scripts with the interpreter from [interpreters.py], a bare
     CPython that has no third-party packages, so the header alone gets nothing.
     uv accepts the temporary path chezmoi executes this from regardless of its
     name.
+
+    uv runs as a waited-on child rather than through os.execv: Windows has no
+    exec, so execv returns at once, chezmoi deletes its temporary copy of this
+    script, and uv's Python then finds the file gone.
     """
     if importlib.util.find_spec("yaml") is not None:
         return
@@ -57,7 +61,8 @@ def ensure_pyyaml() -> None:
     if uv is None:
         warn("neither pyyaml nor uv is available, skipping")
         raise SystemExit(0)
-    os.execv(uv, [uv, "run", "--quiet", "--script", __file__, *sys.argv[1:]])
+    command = [uv, "run", "--quiet", "--script", __file__, *sys.argv[1:]]
+    raise SystemExit(subprocess.run(command, check=False).returncode)
 
 
 def split_frontmatter(text: str) -> str | None:
