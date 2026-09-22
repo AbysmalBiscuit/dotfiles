@@ -263,9 +263,9 @@ cmds = [
 desc = "Command-line task management"
 url = "https://taskwarrior.org/"
 git = "https://github.com/GothenburgBitFactory/taskwarrior"
+install.windows = ""
 install.linux = "sudo apt-get install taskwarrior"
 install.macos = "brew install task"
-install.windows = ""
 
 [[tools]]
 lang = "go"
