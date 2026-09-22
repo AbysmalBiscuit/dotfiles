@@ -1262,10 +1262,6 @@ desc = "A terminal UI for code review with Vim keybindings, inline comments, and
 url = "https://tuicr.dev/"
 git = "https://github.com/agavra/tuicr"
 install = "cargo install tuicr"
-update = [
-    "tuicr",
-    "update"
-]
 
 [[tools]]
 lang = "rust"
