@@ -29,7 +29,7 @@ python3 ~/.agents/skills/issue-dispatch/scripts/issue_dispatch.py [--kind KIND] 
 
 It handles setup, slugs, the Herdr pane, fallbacks and prompting for every issue in one run. A Linear issue gets a session summary at setup, so its agent first runs `/issue-start` to load that handoff; once that settles, the script tells it to do the issue. A GitHub issue has no summary and is told to work the issue directly. Wait for the script to finish; the last line is `ID-RESULT: <STATUS>`.
 
-When you dispatch or prompt a session by hand instead of through the script, follow the same order: `/issue-start` first, then the issue.
+When you dispatch or prompt a session by hand instead of through the script, follow the same order: `/issue-start` first, then the issue. Send the issue instruction as keystrokes (`herdr pane send-text`, then `herdr pane send-keys <pane> enter`), not with `herdr agent prompt`: that delivers a bracketed paste, and an agent that has just oriented declines to act on a message made only of pasted text.
 
 | `ID-RESULT` | Meaning |
 |---|---|

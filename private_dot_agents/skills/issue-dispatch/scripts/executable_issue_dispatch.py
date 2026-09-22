@@ -169,18 +169,36 @@ def hand_over(row: Row, kind: str, extra: str) -> None:
     waited, code, message = herdr(
         "agent", "prompt", row.agent, start, "--wait", "--timeout", ISSUE_START_TIMEOUT_MS
     )
+    if code == "agent_prompt_stalled":
+        # A slash command can open the autocomplete menu, which swallows the Enter.
+        state, _, _ = herdr("agent", "get", row.agent)
+        pane = (state or {}).get("agent", {}).get("pane_id", "")
+        run(["herdr", "pane", "send-keys", pane, "enter"])
+        waited, code, message = herdr(
+            "agent", "wait", row.agent, "--until", "working", "--timeout", "10000"
+        )
+        if waited is not None:
+            waited, code, message = herdr(
+                "agent", "wait", row.agent, "--timeout", ISSUE_START_TIMEOUT_MS
+            )
     if waited is None:
         row.status, row.detail = "failed", f"issue-start: {message or code}"
         return
     state, _, _ = herdr("agent", "get", row.agent)
-    if (state or {}).get("agent", {}).get("agent_status") == "blocked":
+    agent = (state or {}).get("agent", {})
+    if agent.get("agent_status") == "blocked":
         row.status = "blocked"
         row.detail = "asked a question during issue-start; not given the issue"
         return
-    try:
-        prompt_agent(row.agent, f"Now do what issue {row.issue} says. {extra}")
-    except StepError as error:
-        row.status, row.detail = "failed", str(error)
+    # `agent prompt` delivers a bracketed paste, which a session that has just
+    # oriented treats as untrusted pasted text; typed keystrokes read as the user.
+    pane = agent.get("pane_id", "")
+    prompt = f"Now do what issue {row.issue} says. {extra}".strip()
+    for step in (["send-text", pane, prompt], ["send-keys", pane, "enter"]):
+        done = run(["herdr", "pane", *step])
+        if done.returncode != 0:
+            row.status, row.detail = "failed", f"typing the issue prompt: {output(done)}"
+            return
 
 
 def unique(refs: list[str]) -> list[str]:

@@ -22,7 +22,9 @@ class FakeTools:
         start_error: str | None = None,
         failing_issue: str | None = None,
         settled_status: str = "done",
+        stall_issue_start: bool = False,
     ) -> None:
+        self.stall_issue_start = stall_issue_start
         self.shell = shell
         self.start_error = start_error
         self.failing_issue = failing_issue
@@ -56,11 +58,16 @@ class FakeTools:
                 return json.dumps({"result": {}}), "", 0
             case ["herdr-session", "new", kind, "--path", path, *_]:
                 return f"tab w1:t2  {kind} as fallback  {path}\n", "", 0
-            case ["herdr", "agent", "prompt", *_]:
+            case ["herdr", "agent", "prompt", _, "/issue-start", *_] if self.stall_issue_start:
+                error = {"error": {"code": "agent_prompt_stalled", "message": "idle"}}
+                return "", json.dumps(error), 1
+            case ["herdr", "agent", "prompt" | "wait", *_]:
                 return json.dumps({"result": {}}), "", 0
-            case ["herdr", "agent", "get", *_]:
-                agent = {"agent_status": self.settled_status}
+            case ["herdr", "agent", "get", name]:
+                agent = {"agent_status": self.settled_status, "pane_id": f"pane-{name}"}
                 return json.dumps({"result": {"agent": agent}}), "", 0
+            case ["herdr", "pane", "send-text" | "send-keys", *_]:
+                return "", "", 0
         raise AssertionError(cmd)
 
     def named(self, *prefix: str) -> list[list[str]]:
@@ -107,14 +114,36 @@ class DispatchTests(unittest.TestCase):
         lines = dispatch(tools, "--extra", "Plan first.", "ENG-12", "ENG-13")
         for issue in ("ENG-12", "ENG-13"):
             agent = f"claude-{issue.lower()}"
-            prompts = [cmd[4:] for cmd in tools.named("herdr", "agent", "prompt", agent)]
+            pane = f"pane-{agent}"
+            sent = [
+                cmd[2:]
+                for cmd in tools.calls
+                if cmd[:4] == ["herdr", "agent", "prompt", agent] or cmd[3:4] == [pane]
+            ]
             self.assertEqual(
-                prompts,
+                sent,
                 [
-                    ["/issue-start", "--wait", "--timeout", "900000"],
-                    [f"Now do what issue {issue} says. Plan first."],
+                    ["prompt", agent, "/issue-start", "--wait", "--timeout", "900000"],
+                    ["send-text", pane, f"Now do what issue {issue} says. Plan first."],
+                    ["send-keys", pane, "enter"],
                 ],
             )
+        self.assertEqual(lines[-1], "ID-RESULT: OK")
+
+    def test_swallowed_enter_on_issue_start_is_pressed_again(self) -> None:
+        tools = FakeTools(stall_issue_start=True)
+        lines = dispatch(tools, "ENG-12")
+        pane = "pane-claude-eng-12"
+        self.assertEqual(
+            [cmd[2:] for cmd in tools.calls if cmd[3:4] == [pane] or cmd[2:3] == ["wait"]],
+            [
+                ["send-keys", pane, "enter"],
+                ["wait", "claude-eng-12", "--until", "working", "--timeout", "10000"],
+                ["wait", "claude-eng-12", "--timeout", "900000"],
+                ["send-text", pane, "Now do what issue ENG-12 says."],
+                ["send-keys", pane, "enter"],
+            ],
+        )
         self.assertEqual(lines[-1], "ID-RESULT: OK")
 
     def test_question_during_issue_start_holds_the_issue_back(self) -> None:
@@ -122,6 +151,7 @@ class DispatchTests(unittest.TestCase):
         lines = dispatch(tools, "ENG-12")
         prompts = [cmd[4] for cmd in tools.named("herdr", "agent", "prompt")]
         self.assertEqual(prompts, ["/issue-start"])
+        self.assertEqual(tools.named("herdr", "pane", "send-text"), [])
         self.assertIn("\tblocked\t", lines[0])
         self.assertEqual(lines[-1], "ID-RESULT: FAILED")
 
