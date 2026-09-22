@@ -7,17 +7,24 @@ Run with --help for arguments; ../SKILL.md describes the output.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 GITHUB_URL = re.compile(r"^https?://github\.com/[^/]+/[^/]+/issues/(\d+)")
 AGENT_NAME_MAX = 32
 SLUG_MAX = 40
-NEW_TAB_LINE = re.compile(r"^tab \S+\s+\S+ as (\S+)\s", re.MULTILINE)
+HERDR_SESSION = Path.home() / ".local/bin/herdr-session"
 ISSUE_START = {"claude": "/issue-start"}
 ISSUE_START_FALLBACK = "Run the issue-start skill, then stop."
 ISSUE_START_TIMEOUT_MS = "900000"
@@ -61,17 +68,18 @@ def first_json(text: str) -> dict:
     return {}
 
 
-def herdr(*args: str) -> tuple[dict | None, str, str]:
-    """Returns (result, error_code, message); result is None on failure."""
-    done = run(["herdr", *args])
-    payload = first_json(done.stdout) or first_json(done.stderr)
-    error = payload.get("error")
-    if isinstance(error, dict):
-        return None, str(error.get("code") or ""), str(error.get("message") or "")
-    result = payload.get("result")
-    if done.returncode != 0 or not isinstance(result, dict):
-        return None, "", output(done) or f"herdr {' '.join(args)} failed"
-    return result, "", ""
+def load_herdr_session() -> ModuleType:
+    """The herdr-session script as a module; it has no .py suffix to import by."""
+    loader = SourceFileLoader("herdr_session", str(HERDR_SESSION))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    if spec is None:
+        raise SystemExit(f"cannot load {HERDR_SESSION}")
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+hs = load_herdr_session()
 
 
 def slugify(title: str) -> str:
@@ -112,79 +120,74 @@ def agent_name(kind: str, issue: str) -> str:
     return re.sub(r"[^a-z0-9_-]+", "-", f"{kind}-{issue}".lower())[:AGENT_NAME_MAX]
 
 
-def shell_pane(worktree: str) -> str | None:
-    done = run(["herdr-session", "list", "--path", worktree, "--json"])
-    if done.returncode != 0:
-        return None
+def start_agent(herdr: hs.Herdr, kind: str, issue: str, worktree: str) -> tuple[str, bool]:
+    """Starts the agent in the worktree's idle shell, else in a new tab.
+
+    Returns (name, blocked at startup).
+    """
     try:
-        rows = json.loads(done.stdout or "[]")
-    except json.JSONDecodeError:
-        return None
-    return next((row["pane_id"] for row in rows if row.get("agent") == "shell"), None)
+        rows = hs.sessions(herdr, Path(worktree).resolve())
+        pane = next((row["pane_id"] for row in rows if row["agent"] == "shell"), None)
+        if pane:
+            name = agent_name(kind, issue)
+            started, code, _ = herdr.call("agent", "start", name, "--kind", kind, "--pane", pane)
+            if started is not None or code == "agent_not_ready":
+                return name, started is None
+        workspace = hs.workspace_for(herdr, worktree, None)
+        tab = hs.new_tab(herdr, workspace, kind, [])
+    except SystemExit as error:
+        raise StepError(str(error.code)) from None
+    hs.attach_tab(herdr, tab.tab_id, focus=False)
+    return tab.agent, tab.waiting
 
 
-def start_agent(kind: str, issue: str, worktree: str) -> tuple[str, bool]:
-    """Starts the agent; returns (name, blocked at startup)."""
-    pane = shell_pane(worktree)
-    if pane:
-        name = agent_name(kind, issue)
-        started, code, _ = herdr("agent", "start", name, "--kind", kind, "--pane", pane)
-        if started is not None or code == "agent_not_ready":
-            return name, started is None
-    done = run(["herdr-session", "new", kind, "--path", worktree, "--no-focus"])
-    match = NEW_TAB_LINE.search(done.stdout)
-    if done.returncode != 0 or not match:
-        raise StepError(f"herdr-session new: {output(done)}")
-    return match.group(1), "waiting for startup input" in done.stderr
-
-
-def prompt_agent(name: str, prompt: str) -> None:
-    prompted, code, message = herdr("agent", "prompt", name, prompt.strip())
+def prompt_agent(herdr: hs.Herdr, name: str, prompt: str) -> None:
+    prompted, code, message = herdr.call("agent", "prompt", name, prompt.strip())
     if prompted is None:
         raise StepError(f"agent prompt: {message or code}")
 
 
-def launch(ref: str, kind: str, extra: str) -> Row:
+def launch(herdr: hs.Herdr, ref: str, kind: str, extra: str) -> Row:
     """Starts the agent. A summarized issue gets /issue-start first; hand_over sends the issue."""
     row = Row(ref)
     try:
         row.issue, worktree, row.branch, summarized = setup(ref)
-        row.agent, blocked = start_agent(kind, row.issue, worktree)
+        row.agent, blocked = start_agent(herdr, kind, row.issue, worktree)
         if blocked:
             row.status, row.detail = "blocked", "waiting at a startup prompt; not prompted"
             return row
         if summarized:
             row.starting = True
         else:
-            prompt_agent(row.agent, f"Work on issue {row.issue}. {extra}")
+            prompt_agent(herdr, row.agent, f"Work on issue {row.issue}. {extra}")
         row.status = "working"
     except StepError as error:
         row.detail = str(error)
     return row
 
 
-def hand_over(row: Row, kind: str, extra: str) -> None:
+def hand_over(herdr: hs.Herdr, row: Row, kind: str, extra: str) -> None:
     """Runs issue-start and waits for it to settle, then tells the agent to do the issue."""
     start = ISSUE_START.get(kind, ISSUE_START_FALLBACK)
-    waited, code, message = herdr(
+    waited, code, message = herdr.call(
         "agent", "prompt", row.agent, start, "--wait", "--timeout", ISSUE_START_TIMEOUT_MS
     )
     if code == "agent_prompt_stalled":
         # A slash command can open the autocomplete menu, which swallows the Enter.
-        state, _, _ = herdr("agent", "get", row.agent)
+        state, _, _ = herdr.call("agent", "get", row.agent)
         pane = (state or {}).get("agent", {}).get("pane_id", "")
         run(["herdr", "pane", "send-keys", pane, "enter"])
-        waited, code, message = herdr(
+        waited, code, message = herdr.call(
             "agent", "wait", row.agent, "--until", "working", "--timeout", "10000"
         )
         if waited is not None:
-            waited, code, message = herdr(
+            waited, code, message = herdr.call(
                 "agent", "wait", row.agent, "--timeout", ISSUE_START_TIMEOUT_MS
             )
     if waited is None:
         row.status, row.detail = "failed", f"issue-start: {message or code}"
         return
-    state, _, _ = herdr("agent", "get", row.agent)
+    state, _, _ = herdr.call("agent", "get", row.agent)
     agent = (state or {}).get("agent", {})
     if agent.get("agent_status") == "blocked":
         row.status = "blocked"
@@ -218,17 +221,18 @@ def main() -> int:
     parser.add_argument("--extra", default="", help="text appended to every agent's prompt")
     args = parser.parse_args()
 
-    installed = run(["herdr-session", "new", "--list-agents"]).stdout.split()
+    installed = hs.installed_agents()
     if args.kind not in installed:
         print(f"{args.kind} is not installed; choose one of: {', '.join(installed)}")
         print("ID-RESULT: BAD-KIND")
         return 1
 
-    rows = [launch(ref, args.kind, args.extra) for ref in unique(args.refs)]
+    herdr = hs.Herdr(None)
+    rows = [launch(herdr, ref, args.kind, args.extra) for ref in unique(args.refs)]
     starting = [row for row in rows if row.starting]
     if starting:
         with ThreadPoolExecutor(max_workers=len(starting)) as pool:
-            list(pool.map(lambda row: hand_over(row, args.kind, args.extra), starting))
+            list(pool.map(lambda row: hand_over(herdr, row, args.kind, args.extra), starting))
     for row in rows:
         print(f"{row.ref}\t{row.branch}\t{row.agent}\t{row.status}\t{row.detail}")
     working = sum(row.status == "working" for row in rows)
