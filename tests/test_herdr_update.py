@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.request
 import zipfile
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -56,8 +57,9 @@ class HerdrUpdateTests(unittest.TestCase):
             url: payload,
         }
 
-        def download(request: str, **_kwargs: object) -> io.BytesIO:
-            return io.BytesIO(responses[request])
+        def download(request: urllib.request.Request, **_kwargs: object) -> io.BytesIO:
+            assert request.get_header("User-agent") == "chezmoi-herdr-update"
+            return io.BytesIO(responses[request.full_url])
 
         with ExitStack() as stack:
             stack.enter_context(patch("shutil.which", return_value=str(executable)))

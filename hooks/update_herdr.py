@@ -48,7 +48,10 @@ def sha256(path: Path) -> str:
 
 
 def preview_asset(target: str) -> tuple[str, str]:
-    with urllib.request.urlopen(MANIFEST_URL, timeout=DOWNLOAD_TIMEOUT) as response:  # noqa: S310
+    request = urllib.request.Request(  # noqa: S310
+        MANIFEST_URL, headers={"User-Agent": "chezmoi-herdr-update"}
+    )
+    with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT) as response:  # noqa: S310
         manifest = json.load(response)
     if manifest["channel"] != "preview":
         raise ValueError("the preview manifest does not describe a preview release")
@@ -159,8 +162,11 @@ def update(executable: Path) -> None:
     with tempfile.TemporaryDirectory(prefix=".herdr-update-", dir=executable.parent) as temporary:
         directory = Path(temporary)
         archive = directory / "download"
+        request = urllib.request.Request(  # noqa: S310
+            url, headers={"User-Agent": "chezmoi-herdr-update"}
+        )
         with (
-            urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT) as source,  # noqa: S310
+            urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT) as source,  # noqa: S310
             archive.open("wb") as output,
         ):
             shutil.copyfileobj(source, output)
