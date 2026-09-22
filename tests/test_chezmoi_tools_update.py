@@ -72,6 +72,29 @@ def test_declared_update_wins_over_derivation():
     assert chezmoi_tools.update_command_for(tool(update=["tuicr", "update"])) == ["tuicr", "update"]
 
 
+def test_cli_update_runs_source_script_from_another_directory(tmp_path):
+    source = tmp_path / "custom source with spaces"
+    inventory = source / ".chezmoidata"
+    inventory.mkdir(parents=True)
+    hooks = source / "hooks"
+    hooks.mkdir()
+    (hooks / "update.py").write_text("import sys; print('updated ' + sys.argv[1])\n")
+    (inventory / "tools.toml").write_text(
+        '[[tools]]\nname = "example"\nlang = "python"\n'
+        'update = ["python3", "${CHEZMOI_SOURCE_DIR}/hooks/update.py", "example"]\n'
+    )
+    result = subprocess.run(
+        [sys.executable, str(BIN / "executable_chezmoi-tools"), "update", "example"],
+        cwd=tmp_path,
+        env={**os.environ, "CHEZMOI_SOURCE_DIR": str(source)},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "updated example" in result.stdout
+
+
 def test_python_update_derives_from_lang():
     assert chezmoi_tools.update_command_for(tool(lang="python")) == ["uv", "tool", "upgrade", "zzz"]
 

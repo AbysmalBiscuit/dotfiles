@@ -808,8 +808,7 @@ git = "https://github.com/AbysmalBiscuit/devkit.git"
 install = "cargo install --locked --git https://github.com/AbysmalBiscuit/devkit"
 update = [
     "python3",
-    "-c",
-    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_release.py'), run_name='__main__')",
+    "${CHEZMOI_SOURCE_DIR}/hooks/update_release.py",
     "devkit"
 ]
 update_on_apply = false
@@ -965,8 +964,7 @@ crates.io is stale (0.1.0), so build from git. build.rs compiles the vendored li
 install = "cargo install --locked --git https://github.com/herdrdev/herdr"
 update = [
     "python3",
-    "-c",
-    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_herdr.py'), run_name='__main__')"
+    "${CHEZMOI_SOURCE_DIR}/hooks/update_herdr.py"
 ]
 update_on_apply = false
 completions = "herdr completion SHELL"
@@ -1031,8 +1029,7 @@ git = "https://github.com/AbysmalBiscuit/mcpls"
 install = "cargo install --locked --git https://github.com/AbysmalBiscuit/mcpls mcpls"
 update = [
     "python3",
-    "-c",
-    "import os, runpy; runpy.run_path(os.path.join(os.environ['CHEZMOI_SOURCE_DIR'], 'hooks', 'update_release.py'), run_name='__main__')",
+    "${CHEZMOI_SOURCE_DIR}/hooks/update_release.py",
     "mcpls"
 ]
 update_on_apply = false

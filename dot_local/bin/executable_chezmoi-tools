@@ -128,7 +128,12 @@ def update_command_for(tool: Tool) -> list[str]:
     if declared is not None:
         if isinstance(declared, str):
             raise PluginError(f"{tool.name}: update must be an argument list, not a string")
-        return list(declared)
+        return [
+            argument.replace("${CHEZMOI_SOURCE_DIR}", str(source_dir()))
+            if "${CHEZMOI_SOURCE_DIR}" in argument
+            else argument
+            for argument in declared
+        ]
 
     if tool.lang == "rust":
         # Without a stored command there is only the tool name, and a crate name
