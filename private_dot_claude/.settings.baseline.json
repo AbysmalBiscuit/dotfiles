@@ -13,6 +13,7 @@
     "ast-grep@ast-grep-marketplace": true,
     "devkit@devkit": true,
     "linear@claude-plugins-official": false,
+    "mcpls@mcpls": true,
     "posthog@claude-plugins-official": false,
     "pr-crucible@pr-crucible": false,
     "sentry@claude-plugins-official": false,
@@ -46,6 +47,12 @@
     "devkit": {
       "source": {
         "repo": "AbysmalBiscuit/devkit",
+        "source": "github"
+      }
+    },
+    "mcpls": {
+      "source": {
+        "repo": "AbysmalBiscuit/mcpls",
         "source": "github"
       }
     },
