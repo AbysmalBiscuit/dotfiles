@@ -1,0 +1,18 @@
+# Targets to keep off this machine, one path relative to the home directory per
+# line. .chezmoiignore includes this file so chezmoi stops applying them, and
+# run_before_04-remove-disabled.py deletes whatever is already there. Drop a
+# line to have the next apply restore it.
+.agents/skills/ask-matt
+.agents/skills/check-migration
+.agents/skills/find-skills
+.agents/skills/grill-me-codex
+.agents/skills/grill-with-docs-codex
+.agents/skills/issue-review-kysely
+.agents/skills/issue-setup-batch
+.agents/skills/issue-setup-migration
+.agents/skills/issue-start-migrate
+.agents/skills/kysely-cleanup
+.agents/skills/report-pr-review
+.agents/skills/setup-matt-pocock-skills
+.agents/skills/validate-migration
+.agents/skills/validate-migration-parallel
