@@ -41,6 +41,7 @@ search-path = [
     # The chezmoi-* plugins import chezmoi_plugin from beside themselves, which
     # at run time is sys.path[0] for whichever one was invoked.
     "dot_local/bin",
+    "private_dot_agents/exact_lib",
     "private_dot_agents/skills/exact_history",
 ]
 
