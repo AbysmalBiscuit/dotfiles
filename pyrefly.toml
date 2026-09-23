@@ -41,7 +41,7 @@ search-path = [
     # The chezmoi-* plugins import chezmoi_plugin from beside themselves, which
     # at run time is sys.path[0] for whichever one was invoked.
     "dot_local/bin",
-    "private_dot_agents/skills/history",
+    "private_dot_agents/skills/exact_history",
 ]
 
 # PEP 723 script dependencies are installed by uv at run time, so they are never
@@ -59,5 +59,5 @@ replace-imports-with-any = [
 ]
 
 [[sub-config]]
-matches = "private_dot_agents/skills/history/**"
+matches = "private_dot_agents/skills/exact_history/**"
 check-unannotated-defs = true
