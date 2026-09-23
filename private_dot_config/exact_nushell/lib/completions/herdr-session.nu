@@ -7,9 +7,19 @@ def "nu-complete herdr-session agents" [] {
     }
 }
 
+def "nu-complete herdr-session machines" [] {
+    let machines = (do { ^herdr machine list --json } | complete)
+    if $machines.exit_code == 0 {
+        $machines.stdout | from json | where enabled | each {|m| {value: $m.label, description: $m.target} }
+    } else {
+        []
+    }
+}
+
 # Create or join the current workspace
 export extern herdr-session [
     --session: string # Named Herdr server session
+    --machine: string@"nu-complete herdr-session machines" # Saved SSH machine
     --path: directory # Workspace directory
     --label: string # Name for a new workspace
     --no-attach # Leave Alacritree on its current session
@@ -20,6 +30,7 @@ export extern herdr-session [
 # Create or join the current workspace
 export extern "herdr-session open" [
     --session: string
+    --machine: string@"nu-complete herdr-session machines"
     --path: directory
     --label: string
     --no-attach
@@ -32,6 +43,7 @@ export extern "herdr-session new" [
     kind?: string@"nu-complete herdr-session agents"
     --list-agents # Print installed agent choices
     --session: string
+    --machine: string@"nu-complete herdr-session machines"
     --path: directory
     --label: string
     --no-attach
@@ -44,6 +56,7 @@ export extern "herdr-session new" [
 export extern "herdr-session list" [
     --json # Print session rows as JSON
     --session: string
+    --machine: string@"nu-complete herdr-session machines"
     --path: directory
     --help(-h)
 ]
@@ -51,6 +64,7 @@ export extern "herdr-session list" [
 # Close this workspace and its processes
 export extern "herdr-session close" [
     --session: string
+    --machine: string@"nu-complete herdr-session machines"
     --path: directory
     --help(-h)
 ]

@@ -7,7 +7,7 @@ function __fish_herdr_session_needs_agent
             continue
         end
         switch $word
-            case --path --session --label
+            case --path --session --machine --label
                 set skip 1
             case --
                 return 1
@@ -19,6 +19,10 @@ function __fish_herdr_session_needs_agent
     test $skip -eq 0
 end
 
+function __fish_herdr_session_machines
+    herdr machine list --json 2>/dev/null | jq -r '.[] | select(.enabled) | "\(.label)\t\(.target)"'
+end
+
 complete -c herdr-session -f
 complete -c herdr-session -n 'not __fish_seen_subcommand_from open new list close' -a open -d 'Create or join this workspace'
 complete -c herdr-session -n 'not __fish_seen_subcommand_from open new list close' -a new -d 'Open a new shell or agent tab'
@@ -26,6 +30,7 @@ complete -c herdr-session -n 'not __fish_seen_subcommand_from open new list clos
 complete -c herdr-session -n 'not __fish_seen_subcommand_from open new list close' -a close -d 'Close this workspace and its processes'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -s h -l help -d 'Show help'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l session -r -d 'Use a named Herdr server session'
+complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l machine -r -a '(__fish_herdr_session_machines)' -d 'Use a saved SSH machine'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l path -r -a '(__fish_complete_directories)' -d 'Workspace directory'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l label -r -d 'Name for a new workspace'
 complete -c herdr-session -n 'not contains -- -- (commandline -opc)' -l no-attach -d 'Leave Alacritree on its current session'

@@ -16,6 +16,10 @@ made without focus, so no Herdr client moves. Alacritree, which lists Herdr's
 panes in its own sidebar, is then pointed at the reported tab, the same move
 as clicking that row. Pass --no-attach to leave it where it is, or --no-focus
 to open the tab there without switching to it.
+
+--machine sends every call to a machine saved with `herdr machine add`, and
+--path then names a checkout on that machine. The remote server must already
+be running, and nothing is attached in Alacritree.
 """
 
 from __future__ import annotations
@@ -112,30 +116,26 @@ def pane_cwd(pane: dict) -> str:
     return cwd[: -len(DELETED_SUFFIX)] if cwd.endswith(DELETED_SUFFIX) else cwd
 
 
-def checkout_root(directory: Path) -> Path | None:
-    """The worktree root `directory` sits in, or None outside a repository."""
-    done = run(["git", "-C", str(directory), "rev-parse", "--show-toplevel"])
-    if done.returncode != 0:
-        return None
-    root = done.stdout.strip()
-    return Path(root).resolve() if root else None
-
-
 # --- talking to herdr --------------------------------------------------------
 
 
 class Herdr:
     """One run's connection to a Herdr server; every reply is JSON on stdout."""
 
-    def __init__(self, session: str | None) -> None:
+    def __init__(self, session: str | None, machine: str | None) -> None:
         self.exe = shutil.which("herdr") or die("herdr is not on PATH")
         self.session = session
+        self.machine = machine
         self._started_server = False
 
     def _argv(self, args: tuple[str, ...] = ()) -> list[str]:
         # --session is stripped from anywhere in the command line before
         # subcommand dispatch, so it is accepted in front of any command.
-        prefix = ["--session", self.session] if self.session else []
+        # --machine has to come first.
+        if self.machine:
+            prefix = ["--machine", self.machine]
+        else:
+            prefix = ["--session", self.session] if self.session else []
         return [self.exe, *prefix, *args]
 
     def call(self, *args: str) -> tuple[dict | None, str, str]:
@@ -171,6 +171,8 @@ class Herdr:
         return result
 
     def start_server(self) -> None:
+        if self.machine:
+            die(f"no server running on {self.machine}; --machine cannot start one")
         if os.environ.get("NO_COLOR") and os.environ.get("TERM") == "dumb":
             die(
                 "start Herdr from an interactive terminal first;"
@@ -195,6 +197,34 @@ class Herdr:
 
 
 # --- workspaces --------------------------------------------------------------
+
+
+def target_directory(herdr: Herdr, path: str | None) -> Path:
+    """The directory a command acts on, on the machine the server runs on."""
+    if not herdr.machine:
+        return Path(path or Path.cwd()).expanduser().resolve()
+    if not path or not Path(path).is_absolute():
+        die("--machine needs --path set to an absolute path on that machine")
+    return Path(path)
+
+
+def checkout_root(herdr: Herdr, directory: Path) -> Path | None:
+    """The worktree root `directory` sits in, or None outside a repository."""
+    if not herdr.machine:
+        done = run(["git", "-C", str(directory), "rev-parse", "--show-toplevel"])
+        root = done.stdout.strip() if done.returncode == 0 else ""
+        return Path(root).resolve() if root else None
+
+    # A remote checkout is only visible to the Git on its own machine.
+    listing, code, message = herdr.call("worktree", "list", "--cwd", str(directory))
+    if code == "not_git_worktree":
+        return None
+    if listing is None:
+        die(f"worktree list: {message or code or 'failed'}")
+    roots = [
+        Path(w["path"]) for w in listing.get("worktrees", []) if under(str(directory), w["path"])
+    ]
+    return max(roots, key=lambda root: len(root.parts), default=None)
 
 
 def open_checkout(herdr: Herdr, root: Path, label: str | None) -> tuple[str, str | None]:
@@ -324,7 +354,10 @@ def attach_tab(herdr: Herdr, tab_id: str, *, focus: bool) -> str | None:
 # --- agents ------------------------------------------------------------------
 
 
-def installed_agents() -> list[str]:
+def installed_agents(machine: str | None) -> list[str]:
+    """Agents this machine has, or every supported one for a remote machine."""
+    if machine:
+        return sorted(AGENT_BINARIES)
     config_home = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
     has_file = config_home / "chezmoi/has.toml"
     try:
@@ -341,8 +374,8 @@ def installed_agents() -> list[str]:
     )
 
 
-def choose_agent() -> str | None:
-    choices = [*installed_agents(), "shell"]
+def choose_agent(machine: str | None) -> str | None:
+    choices = [*installed_agents(machine), "shell"]
     if not sys.stdin.isatty():
         die(f"choose an agent explicitly: {PROG} new {{{','.join(choices)}}}")
     if picker := shutil.which("fzf"):
@@ -478,10 +511,10 @@ def sessions(herdr: Herdr, root: Path, current_id: str | None = None) -> list[di
 
 
 def list_sessions(herdr: Herdr, args: argparse.Namespace) -> int:
-    directory = Path(args.path or Path.cwd()).expanduser().resolve()
-    if not directory.is_dir():
+    directory = target_directory(herdr, args.path)
+    if not herdr.machine and not directory.is_dir():
         die(f"{directory}: not a directory")
-    root = checkout_root(directory) or directory
+    root = checkout_root(herdr, directory) or directory
     current_id = None
     if os.environ.get("HERDR_ENV") == "1" and not args.path and not args.session:
         current_id = os.environ.get("HERDR_WORKSPACE_ID")
@@ -516,10 +549,10 @@ class Workspace(NamedTuple):
 
 def workspace_for(herdr: Herdr, path: str | None, label: str | None) -> Workspace:
     """Ensure the checkout at `path`, or the current directory, has a workspace."""
-    directory = Path(path or Path.cwd()).expanduser().resolve()
-    if not directory.is_dir():
+    directory = target_directory(herdr, path)
+    if not herdr.machine and not directory.is_dir():
         die(f"{directory}: not a directory")
-    root = checkout_root(directory)
+    root = checkout_root(herdr, directory)
     label = label or (root or directory).name
     if root:
         workspace_id, starter = open_checkout(herdr, root, label)
@@ -552,7 +585,7 @@ def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
     Built for a worktree removal hook, so a Herdr that is not running is not
     worth starting and an unopened checkout is not worth complaining about.
     """
-    target = str(Path(args.path or Path.cwd()).expanduser().resolve())
+    target = str(target_directory(herdr, args.path))
     panes, code, message = herdr.call("pane", "list")
     if panes is None:
         if code != "server_not_running":
@@ -581,6 +614,10 @@ def close_workspaces(herdr: Herdr, args: argparse.Namespace) -> int:
 def main() -> int:
     shared = argparse.ArgumentParser(add_help=False)
     shared.add_argument("--session", help="use this named session instead of the default")
+    shared.add_argument(
+        "--machine",
+        help="send every call to this saved SSH machine; needs an absolute --path on it",
+    )
     shared.add_argument("--path", help="directory to open (default: the current one)")
     shared.add_argument("--label", help="workspace name, used only when creating one")
     shared.add_argument(
@@ -660,24 +697,26 @@ def main() -> int:
         if args.command != "new":
             parser.error("agent arguments are only accepted by new")
         args.agent_args.extend(argv[separator + 1 :])
+    if args.machine and args.session:
+        parser.error("--machine uses the session saved with that machine; drop --session")
     for stream in (sys.stdout, sys.stderr):
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8", errors="replace")
 
     if args.command == "new":
         if args.list_agents:
-            print("\n".join(installed_agents()))
+            print("\n".join(installed_agents(args.machine)))
             return 0
         if args.kind is None:
-            args.kind = choose_agent()
+            args.kind = choose_agent(args.machine)
             if args.kind is None:
                 return 0
-        elif args.kind != "shell" and args.kind not in installed_agents():
+        elif args.kind != "shell" and args.kind not in installed_agents(args.machine):
             die(f"{args.kind} is not an installed, supported agent; use new --list-agents")
         if args.kind == "shell" and args.agent_args:
             parser.error("shell does not accept agent arguments")
 
-    herdr = Herdr(args.session)
+    herdr = Herdr(args.session, args.machine)
     if args.command == "close":
         return close_workspaces(herdr, args)
     if args.command == "list":
@@ -695,7 +734,7 @@ def main() -> int:
         tab_id = tab.tab_id
     else:
         tab_id = workspace.starter or active_tab(herdr, workspace.workspace_id)
-    if tab_id and not args.no_attach:
+    if tab_id and not args.no_attach and not args.machine:
         session = attach_tab(herdr, tab_id, focus=not args.no_focus)
         if session:
             print(f"alacritree session {session}  attached  {tab_id}")

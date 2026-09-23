@@ -84,5 +84,126 @@ class CloseWorkspaceTests(unittest.TestCase):
         self.assertEqual(self.run_close(outside=True), [])
 
 
+class MachineTests(unittest.TestCase):
+    def run_helper(
+        self, argv: list[str], replies: dict[tuple[str, str], tuple[str, dict]]
+    ) -> tuple[object, list[list[str]], list[list[str]]]:
+        """Run the helper, answering each `herdr <group> <action>` from `replies`.
+
+        A reply is (error_code, result); a non-empty code is sent as an API error.
+        """
+        calls: list[list[str]] = []
+        spawned: list[list[str]] = []
+
+        def run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+            calls.append(cmd)
+            args = cmd[3:] if cmd[1:2] == ["--machine"] else cmd[1:]
+            code, result = replies.get((args[0], args[1]), ("", {}))
+            if code:
+                return subprocess.CompletedProcess(
+                    cmd, 1, "", json.dumps({"error": {"code": code, "message": code}})
+                )
+            return subprocess.CompletedProcess(cmd, 0, json.dumps({"result": result}), "")
+
+        with (
+            patch("sys.argv", [str(HELPER), *argv]),
+            patch("shutil.which", return_value="herdr"),
+            patch("subprocess.run", side_effect=run),
+            patch("subprocess.Popen", side_effect=lambda cmd, **_: spawned.append(cmd)),
+            patch.dict("os.environ", {"ALACRITREE_EXE": "alacritree"}),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            runpy.run_path(str(HELPER), run_name="__main__")
+        return raised.exception.code, calls, spawned
+
+    def test_opens_remote_checkout_found_by_remote_herdr(self) -> None:
+        code, calls, _ = self.run_helper(
+            ["--machine", "box", "--path", "/srv/app/src"],
+            {
+                ("worktree", "list"): (
+                    "",
+                    {
+                        "source": {"repo_root": "/srv/app"},
+                        "worktrees": [{"path": "/srv/app"}, {"path": "/srv/app-review"}],
+                    },
+                ),
+                ("worktree", "open"): (
+                    "",
+                    {"workspace": {"workspace_id": "w3"}, "tab": {"tab_id": "w3:t1"}},
+                ),
+            },
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(all(cmd[:3] == ["herdr", "--machine", "box"] for cmd in calls), calls)
+        self.assertIn(
+            [
+                "herdr",
+                "--machine",
+                "box",
+                "worktree",
+                "open",
+                "--cwd",
+                "/srv/app",
+                "--path",
+                "/srv/app",
+                "--no-focus",
+                "--label",
+                "app",
+            ],
+            calls,
+        )
+
+    def test_opens_remote_directory_outside_git(self) -> None:
+        code, calls, _ = self.run_helper(
+            ["--machine", "box", "--path", "/srv/notes"],
+            {
+                ("worktree", "list"): ("not_git_worktree", {}),
+                ("pane", "list"): ("", {"panes": []}),
+                ("workspace", "create"): (
+                    "",
+                    {"workspace": {"workspace_id": "w4"}, "tab": {"tab_id": "w4:t1"}},
+                ),
+            },
+        )
+        self.assertEqual(code, 0)
+        self.assertIn(
+            [
+                "herdr",
+                "--machine",
+                "box",
+                "workspace",
+                "create",
+                "--cwd",
+                "/srv/notes",
+                "--no-focus",
+                "--label",
+                "notes",
+            ],
+            calls,
+        )
+
+    def test_does_not_start_a_server_for_a_machine(self) -> None:
+        code, _, spawned = self.run_helper(
+            ["--machine", "box", "--path", "/srv/app"],
+            {("worktree", "list"): ("server_not_running", {})},
+        )
+        self.assertNotEqual(code, 0)
+        self.assertEqual(spawned, [])
+
+    def test_requires_absolute_remote_path(self) -> None:
+        for argv in (["--machine", "box"], ["--machine", "box", "--path", "app"]):
+            with self.subTest(argv=argv):
+                code, calls, _ = self.run_helper(argv, {})
+                self.assertNotEqual(code, 0)
+                self.assertEqual(calls, [])
+
+    def test_rejects_session_with_machine(self) -> None:
+        code, calls, _ = self.run_helper(
+            ["--machine", "box", "--session", "work", "--path", "/srv/app"], {}
+        )
+        self.assertNotEqual(code, 0)
+        self.assertEqual(calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()
