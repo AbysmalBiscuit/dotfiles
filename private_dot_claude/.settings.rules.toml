@@ -13,6 +13,7 @@ enforce = [
     ["attribution"],
     ["fileSuggestion"],
     ["cleanupPeriodDays"],
+    ["skillOverrides"],
 ]
 union = [
     ["permissions", "allow"],

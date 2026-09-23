@@ -287,6 +287,16 @@
   },
   "prefersReducedMotion": true,
   "remoteControlAtStartup": false,
+  "skillOverrides": {
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:skill-creator": "off",
+    "anthropic-skills:xlsx": "off"
+  },
   "skipWorkflowUsageWarning": true,
   "statusLine": {
     "command": "bunx --bun ccstatusline",
