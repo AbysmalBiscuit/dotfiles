@@ -5,6 +5,7 @@
     "commit": "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
     "pr": "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
   },
+  "autoCompactEnabled": true,
   "autoMemoryEnabled": false,
   "cleanupPeriodDays": 3650,
   "editorMode": "vim",
@@ -88,6 +89,7 @@
         ]
       }
     ],
+    "PostToolUseFailure": [],
     "PreToolUse": [
       {
         "matcher": "Bash|PowerShell|ToolSearch|Write|Edit|MultiEdit|NotebookEdit",
@@ -183,8 +185,7 @@
       }
     ],
     "WorktreeCreate": [],
-    "WorktreeRemove": [],
-    "PostToolUseFailure": []
+    "WorktreeRemove": []
   },
   "model": "opus",
   "outputStyle": "unslop",

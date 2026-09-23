@@ -1,58 +1,60 @@
 #:schema ../.agentcfg/schema/agentcfg-rules-claude.json
+#:toml-version 1.1
 # Maps settings.json keys to a merge strategy. The schema above documents each
 # strategy; see .agentcfg/engine/merge.py for the merge itself.
 
 enforce = [
-    ["permissions", "deny"],
-    ["permissions", "defaultMode"],
-    ["hooks", "*"],
-    ["env", "*"],
-    ["statusLine"],
-    ["extraKnownMarketplaces", "*"],
     ["$schema"],
     ["attribution"],
-    ["fileSuggestion"],
+    ["autoCompactEnabled"],
     ["cleanupPeriodDays"],
+    ["env", "*"],
+    ["extraKnownMarketplaces", "*"],
+    ["fileSuggestion"],
+    ["hooks", "*"],
+    ["permissions", "defaultMode"],
+    ["permissions", "deny"],
     ["skillOverrides"],
+    ["statusLine"],
 ]
 union = [
     ["permissions", "allow"],
 ]
 seed = [
-    ["model"],
-    ["theme"],
-    ["outputStyle"],
+    ["agentPushNotifEnabled"],
+    ["autoMemoryEnabled"],
     ["editorMode"],
     ["effortLevel"],
     ["enabledPlugins", "*"],
-    ["autoMemoryEnabled"],
+    ["model"],
+    ["outputStyle"],
+    ["prefersReducedMotion"],
+    ["remoteControlAtStartup"],
     ["skipWorkflowUsageWarning"],
     ["teammateMode"],
-    ["agentPushNotifEnabled"],
-    ["remoteControlAtStartup"],
+    ["theme"],
     ["tui"],
     ["voice"],
-    ["prefersReducedMotion"],
 ]
 ignore = [
-    ["feedbackSurveyRate"],
     ["companyAnnouncements"],
     ["env", "TEMP"],
     ["env", "TMP"],
+    ["feedbackSurveyRate"],
 ]
 # agent-guard takes its log level from its own config.toml. An env var here
 # would outrank that file on Claude alone, which is how the two drift apart.
 remove = [
-    ["env", "AGENT_GUARD_LOG"],
     ["enabledPlugins", "claude-md-management@claude-plugins-official"],
     ["enabledPlugins", "elements-of-style@superpowers-marketplace"],
+    ["enabledPlugins", "mattpocock-skills@claude-plugins-official"],
     ["enabledPlugins", "plugin-dev@claude-plugins-official"],
     ["enabledPlugins", "pyright-lsp@claude-plugins-official"],
     ["enabledPlugins", "rust-analyzer-lsp@claude-plugins-official"],
     ["enabledPlugins", "skill-creator@claude-plugins-official"],
-    ["enabledPlugins", "typescript-lsp@claude-plugins-official"],
-    ["enabledPlugins", "mattpocock-skills@claude-plugins-official"],
     ["enabledPlugins", "superpowers-developing-for-claude-code@superpowers-marketplace"],
+    ["enabledPlugins", "typescript-lsp@claude-plugins-official"],
+    ["env", "AGENT_GUARD_LOG"],
 ]
 
 [enforce_ignore]
