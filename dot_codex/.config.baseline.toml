@@ -118,6 +118,10 @@ source_type = "git"
 source = "https://github.com/obra/superpowers-marketplace.git"
 source_type = "git"
 
+[marketplaces.mcpls]
+source = "https://github.com/AbysmalBiscuit/mcpls.git"
+source_type = "git"
+
 [mcp_servers.adaptyv_bio_mcp]
 url = "https://mcp.adaptyv.bio/mcp"
 
@@ -137,6 +141,9 @@ enabled = false
 enabled = false
 
 [plugins."superpowers@superpowers-marketplace"]
+enabled = true
+
+[plugins."mcpls@mcpls"]
 enabled = true
 
 [tui]
