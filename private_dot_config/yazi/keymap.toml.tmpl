@@ -120,13 +120,17 @@ desc = "Open $SHELL here"
 # Also copy file paths to system clipboard
 # {{- end }}
 [[mgr.prepend_keymap]]
-on  = "y"
-run = [ 'shell -- for path in %s; do echo "file://$path"; done | # {{ .system.copy_command }}# {{ $url_yank }}', "yank" ]
+on = "y"
+run = [
+  'shell -- for path in %s; do echo "file://$path"; done | # {{ .system.copy_command }}# {{ $url_yank }}',
+  "yank",
+]
+desc = "Yank file paths to clipboard"
 
 # Yank file content
 [[mgr.prepend_keymap]]
-on  = "Y"
-run = [ '''shell --
+on = "Y"
+run = ['''shell --
 sep=$(printf '#%.0s' $(seq 1 80))
 count=0
 for path in %s; do
@@ -141,7 +145,8 @@ done
     cat "$path"
     echo
   done
-} | # {{ .system.copy_command }}''', "yank" ]
+} | # {{ .system.copy_command }}''', "yank"]
+desc = "Yank file contents to clipboard"
 # {{- else -}}
 # If you also using Yazi on Windows:
 [[mgr.prepend_keymap]]
