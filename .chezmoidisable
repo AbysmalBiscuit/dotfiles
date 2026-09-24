@@ -1,6 +1,6 @@
 # Targets to keep off this machine, one path relative to the home directory per
 # line. .chezmoiignore includes this file so chezmoi stops applying them, and
-# run_before_04-remove-disabled.py deletes whatever is already there. Drop a
+# run_after_04-remove-disabled.py deletes whatever is already there. Drop a
 # line to have the next apply restore it.
 .agents/skills/ask-matt
 .agents/skills/check-migration
