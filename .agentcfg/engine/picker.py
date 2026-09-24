@@ -7,11 +7,13 @@ the wrappers non-interactively and must never block on a terminal.
 
 from __future__ import annotations
 
+import io
 import json
 import os
 import shutil
 import sys
 from collections.abc import Mapping
+from types import ModuleType
 
 from engine.promote import DEFAULT_STRATEGY, Candidate
 from engine.rules import Strategy
@@ -52,19 +54,20 @@ _OFF = "\x1b[0m"
 
 
 def _enable_ansi() -> None:
-    if os.name != "nt":
-        return
-    try:
-        import ctypes
+    if os.name == "nt":
+        try:
+            import ctypes
 
-        kernel32 = ctypes.windll.kernel32
-        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
-    except Exception:
-        pass
+            kernel32 = ctypes.windll.kernel32
+            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+        except Exception:
+            pass
 
 
 class _Reader:
     """Read one keypress, returning a name for the keys the picker binds."""
+
+    _msvcrt: ModuleType
 
     def __enter__(self):
         if os.name == "nt":
@@ -235,8 +238,9 @@ def pick(candidates: list[Candidate], title: str) -> dict[tuple[str, ...], Strat
     try:
         # The frame draws box and arrow glyphs; a cp1252 stdout raises on them.
         # newline="" stops Windows turning the frame's \r\n into \r\r\n.
-        sys.stdout.reconfigure(encoding="utf-8", newline="")
-    except (AttributeError, OSError):
+        if isinstance(sys.stdout, io.TextIOWrapper):
+            sys.stdout.reconfigure(encoding="utf-8", newline="")
+    except OSError:
         pass
     height = max(5, shutil.get_terminal_size((100, 30)).lines - 8)
 

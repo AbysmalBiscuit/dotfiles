@@ -7,25 +7,25 @@ translate every LF to CRLF and make chezmoi diff permanently non-empty.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 
 
 class CodecError(Exception):
     pass
 
 
-def _float_to_end(container: Mapping, path: tuple[str, ...]) -> None:
+def _float_to_end(container: MutableMapping, path: tuple[str, ...]) -> None:
     """Move one key to the end of its table. Missing paths are left alone.
 
     Reassigning after a pop is the whole trick: both a dict and a tomlkit
     table append a key they do not already hold.
     """
     for segment in path[:-1]:
-        if not isinstance(container, Mapping) or segment not in container:
+        if not isinstance(container, MutableMapping) or segment not in container:
             return
         container = container[segment]
     key = path[-1]
-    if not isinstance(container, Mapping) or key not in container:
+    if not isinstance(container, MutableMapping) or key not in container:
         return
     value = container.pop(key)
     container[key] = value

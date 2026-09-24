@@ -11,6 +11,8 @@ import sys
 spec = importlib.util.spec_from_file_location(
     "hook", pathlib.Path(__file__).parent.parent / "mandatory" / "secret_decrypt.py"
 )
+assert spec is not None
+assert spec.loader is not None
 hook = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hook)
 

@@ -23,6 +23,7 @@ for today's.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
@@ -635,7 +636,8 @@ def main() -> int:
     # Titles carry emoji and box drawing, which the Windows default of cp1252
     # cannot encode -- printing one would otherwise abort a preview mid-render.
     for stream in (sys.stdout, sys.stderr):
-        stream.reconfigure(encoding="utf-8", errors="replace")
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     handlers = {"record": cmd_record, "save": cmd_save, "open": cmd_open, "show": cmd_show}
     return handlers[args.command](args)
 

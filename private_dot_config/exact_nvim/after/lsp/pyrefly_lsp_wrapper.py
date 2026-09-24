@@ -12,7 +12,7 @@ proc = subprocess.Popen(
 
 
 def filter_stderr():
-    for line in proc.stderr:
+    for line in proc.stderr or ():
         if not re.match(rb"^\s*INFO", line):
             sys.stderr.buffer.write(line)
             sys.stderr.buffer.flush()

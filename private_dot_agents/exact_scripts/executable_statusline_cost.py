@@ -25,6 +25,7 @@ ccusage detects. Ledgers are merge ledgers keyed by (date, agent), max on
 conflict -- deleting an agent's local logs never erases fleet history.
 """
 
+import io
 import json
 import math
 import os
@@ -100,6 +101,9 @@ def run_out(args):
     identically on Git Bash (Windows) and POSIX. Bash is always present:
     it is what launches this script. Failures return whatever stdout the
     command produced, like `cmd || true`."""
+    creationflags = 0
+    if os.name == "nt":
+        creationflags = subprocess.CREATE_NO_WINDOW
     try:
         r = subprocess.run(
             [BASH, "-c", '"$0" "$@"', *[str(a) for a in args]],
@@ -107,7 +111,7 @@ def run_out(args):
             text=True,
             encoding="utf-8",
             errors="replace",
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            creationflags=creationflags,
         )
     except OSError:
         return ""
@@ -451,7 +455,8 @@ def main(argv):
 if __name__ == "__main__":
     for stream in (sys.stdout, sys.stderr):
         try:
-            stream.reconfigure(encoding="utf-8")
-        except (AttributeError, OSError):
+            if isinstance(stream, io.TextIOWrapper):
+                stream.reconfigure(encoding="utf-8")
+        except OSError:
             pass
     main(sys.argv)

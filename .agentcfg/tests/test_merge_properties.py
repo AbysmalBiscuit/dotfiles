@@ -118,7 +118,7 @@ POOL = list(STRATEGY_CHOICES)
 # Patterns central to the wildcard-table-descend hazard are included more
 # often than a flat coin flip would, so the two rules land in the same
 # generated rule set often enough to matter.
-INCLUDE_WEIGHT = {MCP_STAR: 4, MCP_ENABLED: 4}
+INCLUDE_WEIGHT: dict[tuple[str, ...], int] = {MCP_STAR: 4, MCP_ENABLED: 4}
 
 
 @st.composite

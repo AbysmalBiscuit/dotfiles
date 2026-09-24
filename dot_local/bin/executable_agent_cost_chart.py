@@ -20,6 +20,7 @@ hardcode a path into ~/.claude.
 """
 
 import argparse
+import io
 import json
 import os
 import re
@@ -27,6 +28,7 @@ import shutil
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TypedDict
 
 import plotext as plt
 
@@ -76,10 +78,17 @@ def ledger_files():
     return [f for f in files if "conflict" not in f.name.lower()]
 
 
-def all_rows():
+class Row(TypedDict):
+    date: str
+    agent: str
+    machine: str
+    cost: float
+
+
+def all_rows() -> list[Row]:
     """Every ledger row, tagged with the machine that reported it. Anything
     that doesn't parse is skipped -- one bad machine never breaks the fleet."""
-    rows = []
+    rows: list[Row] = []
     for f in ledger_files():
         data = load_json(f)
         if not isinstance(data, dict) or not isinstance(data.get("rows"), list):
@@ -196,12 +205,19 @@ def main(argv=None):
         labels = labels[-limit:]
     shown = set(labels)
 
+    def category(r: Row) -> str:
+        if args.by == "agent":
+            return r["agent"]
+        if args.by == "machine":
+            return r["machine"]
+        return ""
+
     categories = [""]
     if args.by:
         totals = {}
         for r in rows:
             if r["date"][:keylen] in shown:
-                totals[r[args.by]] = totals.get(r[args.by], 0.0) + r["cost"]
+                totals[category(r)] = totals.get(category(r), 0.0) + r["cost"]
         categories = sorted(totals, key=lambda c: (-totals[c], c))
 
     index = {label: i for i, label in enumerate(labels)}
@@ -210,7 +226,7 @@ def main(argv=None):
     for r in rows:
         i = index.get(r["date"][:keylen])
         if i is not None:
-            series[slot[r[args.by] if args.by else ""]][1][i] += r["cost"]
+            series[slot[category(r)]][1][i] += r["cost"]
 
     totals = [sum(values[i] for _, values in series) for i in range(len(labels))]
     grand = sum(totals)
@@ -235,7 +251,8 @@ def main(argv=None):
 if __name__ == "__main__":
     for stream in (sys.stdout, sys.stderr):
         try:
-            stream.reconfigure(encoding="utf-8")
-        except (AttributeError, OSError):
+            if isinstance(stream, io.TextIOWrapper):
+                stream.reconfigure(encoding="utf-8")
+        except OSError:
             pass
     sys.exit(main())
