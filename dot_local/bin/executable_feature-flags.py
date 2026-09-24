@@ -584,13 +584,14 @@ EMPTY_CALLS = dict.fromkeys(CALL_FIELDS, 0)
 
 def load_all(days: int, include_archived: bool) -> list[dict]:
     with spinner("loading flags"), ThreadPoolExecutor(max_workers=4) as pool:
-        jobs = [
-            pool.submit(fetch_flags, include_archived),
-            pool.submit(fetch_active_ids),
-            pool.submit(fetch_meta),
-            pool.submit(fetch_calls, days),
-        ]
-        flags, active, meta, calls = (job.result() for job in jobs)
+        flags_job = pool.submit(fetch_flags, include_archived)
+        active_job = pool.submit(fetch_active_ids)
+        meta_job = pool.submit(fetch_meta)
+        calls_job = pool.submit(fetch_calls, days)
+        flags = flags_job.result()
+        active = active_job.result()
+        meta = meta_job.result()
+        calls = calls_job.result()
     for flag in flags:
         flag["active"] = flag["id"] in active
         flag.update(meta.get(flag["id"], {}))

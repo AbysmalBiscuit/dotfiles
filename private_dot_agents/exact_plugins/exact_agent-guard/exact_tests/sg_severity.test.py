@@ -62,7 +62,8 @@ def report():
         return json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"]
 
 
-OUT = report() if shutil.which("ast-grep") else None
+HAS_AST_GREP = shutil.which("ast-grep") is not None
+OUT = report() if HAS_AST_GREP else ""
 
 
 def test_a_declared_severity_becomes_the_matching_prefix():
@@ -88,7 +89,7 @@ def test_the_tiers_reach_their_own_headings():
 
 
 if __name__ == "__main__":
-    if OUT is None:
+    if not HAS_AST_GREP:
         print("skip  ast-grep is not installed")
         sys.exit(0)
     failures = 0

@@ -35,6 +35,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import TypeGuard
 
 
 def flavor():
@@ -120,7 +121,7 @@ def load_json(path):
         return None
 
 
-def is_number(v):
+def is_number(v: object) -> TypeGuard[int | float]:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 

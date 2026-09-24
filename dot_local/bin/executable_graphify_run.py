@@ -567,7 +567,7 @@ def main() -> int:
         proc = subprocess.Popen([graphify, *args], env={**os.environ, **env},
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, bufsize=1, errors="replace")
-        for line in proc.stdout:
+        for line in proc.stdout or ():
             sys.stdout.write(line)
             if TROUBLE.search(line):
                 troubles.append(line.rstrip())
@@ -585,7 +585,7 @@ def main() -> int:
             cmd.append("--force")
         run(cmd + passthrough, {})
 
-    if "docs" in phases:
+    if "docs" in phases and plan:
         def docs_cmd(p: Plan, force: bool) -> list[str]:
             cmd = ["extract", str(root), "--backend", opts.backend,
                    "--token-budget", str(p.token_budget),
@@ -609,7 +609,7 @@ def main() -> int:
             step(f"Re-running docs at {second.model} for anything {plan.model} left incomplete")
             run(docs_cmd(second, force=False), {**second.env, **second.docs_env})
 
-    if "label" in phases:
+    if "label" in phases and plan:
         state = community_state(graph)
         if state and not state.stale and not opts.relabel:
             note(f"all {state.total} communities already named; skipping (--relabel to redo them)")
