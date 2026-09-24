@@ -150,20 +150,21 @@ def write_if_changed(path: Path, content: str) -> bool:
     return True
 
 
-def managed_skill_names() -> list[str]:
+def managed_skill_dirs() -> list[Path]:
     if not SOURCE.is_dir():
         return []
-    return sorted(entry.name for entry in SOURCE.iterdir() if entry.is_dir())
+    return sorted(entry for entry in SOURCE.iterdir() if entry.is_dir())
 
 
 def main() -> int:
     ensure_pyyaml()
 
     written: list[str] = []
-    for name in managed_skill_names():
-        if (SOURCE / name / "agents" / "openai.yaml").is_file():
+    for source in managed_skill_dirs():
+        if (source / "agents" / "openai.yaml").is_file():
             continue
 
+        name = source.name.removeprefix("exact_")
         skill_md = TARGET / name / "SKILL.md"
         if not skill_md.is_file():
             continue
