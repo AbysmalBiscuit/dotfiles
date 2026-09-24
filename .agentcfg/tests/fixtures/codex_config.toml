@@ -5,7 +5,6 @@ model = "gpt-5.6-sol"
 model_reasoning_effort = "xhigh"
 
 [features]
-experimental_use_rmcp_client = true
 hooks = true
 
 [hooks]

@@ -3,18 +3,32 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+import tomllib
+from typing import TYPE_CHECKING
 
 from engine.check import classify
 from engine.codecs import CodecError
+from engine.hooks import drop_unmet_requires
 from engine.lint import LintError, lint
 from engine.merge import merge
 from engine.paths import resolve
 from engine.rules import RuleSet
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 EXIT_OK = 0
 EXIT_DRIFT = 1
 EXIT_ERROR = 2
+
+
+def _installed_tools(target_root: Path) -> dict[str, object]:
+    """has_tool.toml from the has-cache script; absent means nothing counts as installed."""
+    try:
+        text = (target_root / ".config" / "chezmoi" / "has_tool.toml").read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {}
+    return tomllib.loads(text)
 
 
 def run(
@@ -41,7 +55,9 @@ def run(
 
     try:
         baseline_raw = baseline_path.read_bytes()
-        baseline = codec.plain(codec.load(baseline_raw))
+        baseline = drop_unmet_requires(
+            codec.plain(codec.load(baseline_raw)), _installed_tools(paths.target_root)
+        )
         rules = RuleSet.load(rules_path)
         if lint_enabled:
             lint(baseline, rules)

@@ -195,3 +195,58 @@ def test_empty_merge_output_is_still_refused(tmp_path, monkeypatch):
     assert code != 0
     assert out == b""
     assert "empty output" in err
+
+
+def _hooks_config(config, installed: dict[str, str]):
+    """A SessionStart group with one unconditional entry and one requiring alacritree."""
+    baseline = {
+        "hooks": {
+            "SessionStart": [
+                {
+                    "hooks": [
+                        {"type": "command", "command": "always"},
+                        {
+                            "type": "command",
+                            "command": "alacritree hook session-start --harness claude",
+                            "requires": "alacritree",
+                        },
+                    ]
+                },
+                {"hooks": [{"type": "command", "command": "only", "requires": "alacritree"}]},
+            ]
+        }
+    }
+    (config / ".settings.baseline.json").write_text(json.dumps(baseline), encoding="utf-8")
+    (config / ".settings.rules.toml").write_text('enforce = [["hooks", "*"]]\n', encoding="utf-8")
+    has_tool = config.parent.parent / "home" / ".config" / "chezmoi" / "has_tool.toml"
+    has_tool.parent.mkdir(parents=True)
+    has_tool.write_text(
+        "".join(f'{tool} = "{cmd}"\n' for tool, cmd in installed.items()), encoding="utf-8"
+    )
+
+
+def test_requires_keeps_hook_when_tool_is_installed(config):
+    _hooks_config(config, {"alacritree": "alacritree"})
+    code, out, _ = invoke(config, b"")
+    assert code == 0
+    assert json.loads(out)["hooks"]["SessionStart"] == [
+        {
+            "hooks": [
+                {"type": "command", "command": "always"},
+                {"type": "command", "command": "alacritree hook session-start --harness claude"},
+            ]
+        },
+        {"hooks": [{"type": "command", "command": "only"}]},
+    ]
+
+
+def test_requires_drops_hook_and_emptied_group_when_tool_is_missing(config):
+    _hooks_config(config, {"alacritree": ""})
+    live = json.dumps(
+        {"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "stale"}]}]}}
+    ).encode()
+    code, out, _ = invoke(config, live)
+    assert code == 0
+    assert json.loads(out)["hooks"]["SessionStart"] == [
+        {"hooks": [{"type": "command", "command": "always"}]}
+    ]

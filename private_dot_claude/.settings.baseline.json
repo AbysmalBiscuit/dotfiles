@@ -138,6 +138,18 @@
             "command": "python3 ~/.local/bin/alacritree_session.py record",
             "timeout": 10,
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "alacritree hook session-start --harness claude",
+            "timeout": 2,
+            "requires": "alacritree"
+          },
+          {
+            "type": "command",
+            "command": "alacritree.exe hook session-start --harness claude",
+            "timeout": 2,
+            "requires": "alacritree_exe"
           }
         ]
       }

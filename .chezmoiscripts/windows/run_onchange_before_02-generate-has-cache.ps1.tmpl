@@ -17,6 +17,27 @@ $allCmds = [System.Collections.Generic.HashSet[string]]::new([System.StringCompa
 $pathDirs = $env:PATH -split [System.IO.Path]::PathSeparator
 $pathExts = $env:PATHEXT -split ';'
 
+# Taskwarrior 3 has no Windows build, so shims route `task` to the default
+# WSL distro's, the same store alacritree falls back to. They land before the
+# PATH scan so the scan records `task` as present.
+$localBin = "# {{ joinPath .chezmoi.homeDir ".local" "bin" }}"
+$taskShims = @{
+    (Join-Path $localBin 'task')     = "#!/bin/sh`nexport MSYS_NO_PATHCONV=1`nexec wsl.exe -e task `"`$@`"`n"
+    (Join-Path $localBin 'task.cmd') = "@wsl.exe -e task %*`r`n"
+}
+$wslHasTask = $false
+if (Get-Command wsl.exe -ErrorAction SilentlyContinue) {
+    & wsl.exe -e task --version *> $null
+    $wslHasTask = $LASTEXITCODE -eq 0
+}
+foreach ($shim in $taskShims.GetEnumerator()) {
+    if ($wslHasTask) {
+        [System.IO.File]::WriteAllText($shim.Key, $shim.Value)
+    } else {
+        Remove-Item -LiteralPath $shim.Key -ErrorAction SilentlyContinue
+    }
+}
+
 foreach ($dir in $pathDirs) {
     if (-not $dir -or -not (Test-Path -LiteralPath $dir)) { continue }
     try {

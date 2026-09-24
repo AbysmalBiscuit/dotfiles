@@ -76,6 +76,18 @@ hooks = [
         command_windows = 'C:\Users\Lev\.local\bin\python3.exe C:\Users\Lev\.agents\scripts\alacritree_follow.py',
         timeout = 30,
     },
+    {
+        type = "command",
+        command = "alacritree hook session-start --harness codex",
+        timeout = 2,
+        requires = "alacritree",
+    },
+    {
+        type = "command",
+        command = "alacritree.exe hook session-start --harness codex",
+        timeout = 2,
+        requires = "alacritree_exe",
+    },
 ]
 
 [[hooks.Stop]]
