@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from chezmoi_plugin import PluginError, inventory_entries, resolve_platform, run, source_dir
+from ocargo import run_cargo
 
 # Package managers whose install invocation follows from the lang alone. go is
 # absent because its install path needs a module URL that the name doesn't carry,
@@ -184,11 +185,6 @@ def bulk_update_rust(declared: list[str]) -> int:
         print("rust: nothing to update")
         return 0
     print(f"\n$ cargo install-update -g {' '.join(packages)}", flush=True)
-    # Imported here rather than at the top because the module is ocargo.py only
-    # in the applied tree; in the chezmoi source directory it is
-    # executable_ocargo.py, and every other subcommand still has to run there.
-    from ocargo import run_cargo
-
     return run_cargo(["install-update", "-g", *packages])
 
 

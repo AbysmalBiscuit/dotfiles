@@ -12,7 +12,7 @@ BIN = REPO / "dot_local" / "bin"
 
 for _name, _filename in (
     ("chezmoi_plugin", "chezmoi_plugin.py"),
-    ("ocargo", "executable_ocargo.py"),
+    ("ocargo", "ocargo.py"),
     ("chezmoi_tools", "executable_chezmoi-tools"),
 ):
     _loader = SourceFileLoader(_name, str(BIN / _filename))
@@ -23,9 +23,6 @@ for _name, _filename in (
     _loader.exec_module(_module)
 
 chezmoi_tools = sys.modules["chezmoi_tools"]
-# bulk_update_rust imports run_cargo at call time, so the patch target is the
-# ocargo module rather than a name bound in chezmoi-tools.
-ocargo = sys.modules["ocargo"]
 PluginError = sys.modules["chezmoi_plugin"].PluginError
 
 
@@ -121,7 +118,7 @@ def test_bulk_skips_when_nothing_is_stale(monkeypatch):
     """cargo install-update -g with no packages is not a no-op."""
     calls = []
     monkeypatch.setattr(chezmoi_tools, "stale_cargo_packages", list)
-    monkeypatch.setattr(ocargo, "run_cargo", lambda argv: calls.append(argv) or 0)
+    monkeypatch.setattr(chezmoi_tools, "run_cargo", lambda argv: calls.append(argv) or 0)
     assert chezmoi_tools.bulk_update_rust([]) == 0
     assert calls == []
 
@@ -129,7 +126,7 @@ def test_bulk_skips_when_nothing_is_stale(monkeypatch):
 def test_bulk_excludes_tools_with_a_declared_update(monkeypatch):
     calls = []
     monkeypatch.setattr(chezmoi_tools, "stale_cargo_packages", lambda: ["ripgrep", "tuicr"])
-    monkeypatch.setattr(ocargo, "run_cargo", lambda argv: calls.append(argv) or 0)
+    monkeypatch.setattr(chezmoi_tools, "run_cargo", lambda argv: calls.append(argv) or 0)
     chezmoi_tools.bulk_update_rust(["tuicr"])
     assert calls == [["install-update", "-g", "ripgrep"]]
 
