@@ -17,7 +17,7 @@ function fish_user_key_bindings
     for mode in default insert
         bind --mode $mode ctrl-backspace backward-kill-path-component
         bind --mode $mode ctrl-delete kill-word
-        bind --mode insert o self-insert
-        bind --mode insert O self-insert
+        # bind --mode insert o self-insert
+        # bind --mode insert O self-insert
     end
 end
