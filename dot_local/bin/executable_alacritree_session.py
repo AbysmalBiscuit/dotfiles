@@ -32,6 +32,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import NoReturn
 
 WSL_UNC = re.compile(r"^\\\\wsl(?:\.localhost|\$)\\([^\\]+)(\\.*)?$", re.IGNORECASE)
 MNT_DRIVE = re.compile(r"^/mnt/([a-zA-Z])(/.*)?$")
@@ -52,7 +53,7 @@ def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
     )
 
 
-def die(message: str) -> None:
+def die(message: str) -> NoReturn:
     print(f"alacritree-session: {message}", file=sys.stderr)
     raise SystemExit(1)
 
@@ -560,6 +561,10 @@ def cmd_open(args: argparse.Namespace) -> int:
             continue
 
         session_id = data.get("session_id")
+        if session_id is None:
+            warn(f"{requested}: session create returned no session_id")
+            failures += 1
+            continue
         last_workspace = owner or ""
 
         # A worktree session already starts at its root; only a home session or
@@ -568,7 +573,7 @@ def cmd_open(args: argparse.Namespace) -> int:
             # A pane under a WSL worktree runs a Linux shell; the home
             # workspace runs the configured one, which reads Windows paths.
             inside = owner is not None and posix_path(owner) is not None
-            spelling = posix_path(win) if inside else win
+            spelling = (posix_path(win) if inside else None) or win
             sent, err = client.send_line(session_id, f"cd {quote(spelling, inside)}")
             if not sent:
                 warn(f"session {session_id} opened but cd failed: {err}")
