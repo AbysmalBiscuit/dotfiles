@@ -358,9 +358,13 @@ if g.is_windows then
       vim.fn.expand("~/AppData/Local/Microsoft/WindowsApps/pwsh.exe"),
       "C:/Program Files/PowerShell/7/pwsh.exe",
     }) do
-      if vim.fn.filereadable(candidate) == 1 then
+      -- Store installs expose pwsh as an App Execution Alias, which jobstart()
+      -- cannot run; readlink resolves it to the real exe.
+      local exe = vim.uv.fs_readlink(candidate) or candidate
+      if vim.fn.executable(exe) == 1 then
         -- 'shell' splits on spaces unless the whole path is quoted
-        pwsh = '"' .. candidate .. '"'
+        pwsh = '"' .. exe .. '"'
+        break
       end
     end
   end
