@@ -123,6 +123,10 @@ return {
       explorer = {
         replace_netrw = false,
       },
+      ---@type snacks.terminal.Config
+      terminal = {
+        shell = vim.g.is_windows and vim.fn.executable("nu") == 1 and "nu" or nil,
+      },
       ---@type snacks.picker.Config
       picker = {
         follow = true,
