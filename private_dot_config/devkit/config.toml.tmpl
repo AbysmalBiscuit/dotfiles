@@ -1,5 +1,5 @@
 #:schema https://github.com/AbysmalBiscuit/devkit/releases/latest/download/devkit-config.json
-#:toml-version 1.0
+#:toml-version 1.1
 # chezmoi:template:left-delimiter="# {[{" right-delimiter="}]}"
 
 # {[{ $alacritree := index .tool "alacritree_exe" | default (index .tool "alacritree") | default "" }]}
@@ -77,21 +77,17 @@ after_worktree_create = [
   # {[{ end }]}
 ]
 
-# {[{ if $herdr }]}
-after_worktree_remove = [
-  [
-    "{{ herdr_session }}",
-    "close",
-    "--if-idle",
-    "--path",
-    "{{ worktree }}",
-  ],
-]
-# {[{ end }]}
+after_worktree_remove = []
 
 # {[{ if $alacritree }]}
 after_end = [["{{ alacritree }}", "project", "refresh"]]
 # {[{ end }]}
+
+before_worktree_remove = [
+  # {[{ if $herdr }]}
+  ["{{ herdr_session }}", "close", "--if-idle", "--path", "{{ worktree }}"],
+  # {[{ end }]}
+]
 
 [apps]
 
@@ -108,7 +104,10 @@ run = [
   "--literal-pathspecs",
   "add",
   "--",
-  { split = "{{ files }}", on = "," },
+  {
+    split = "{{ files }}",
+    on = ",",
+  },
 ]
 
 # The same pathspec at commit time excludes other sessions' staged changes.
