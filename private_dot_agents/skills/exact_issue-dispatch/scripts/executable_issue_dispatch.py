@@ -221,13 +221,13 @@ def main() -> int:
     parser.add_argument("--extra", default="", help="text appended to every agent's prompt")
     args = parser.parse_args()
 
-    installed = hs.installed_agents()
+    installed = hs.installed_agents(None)
     if args.kind not in installed:
         print(f"{args.kind} is not installed; choose one of: {', '.join(installed)}")
         print("ID-RESULT: BAD-KIND")
         return 1
 
-    herdr = hs.Herdr(None)
+    herdr = hs.Herdr(None, None)
     rows = [launch(herdr, ref, args.kind, args.extra) for ref in unique(args.refs)]
     starting = [row for row in rows if row.starting]
     if starting:
