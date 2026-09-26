@@ -28,6 +28,7 @@ HERDR_SESSION = Path.home() / ".local/bin/herdr-session"
 ISSUE_START = {"claude": "/issue-start"}
 ISSUE_START_FALLBACK = "Run the issue-start skill, then stop."
 ISSUE_START_TIMEOUT_MS = "900000"
+TASK = "Now do what issue {issue} says."
 
 
 @dataclass
@@ -38,7 +39,6 @@ class Row:
     status: str = "failed"
     detail: str = ""
     issue: str = ""
-    starting: bool = False
 
 
 class StepError(Exception):
@@ -97,8 +97,8 @@ def github_number(ref: str) -> str | None:
     return match.group(1) if match else None
 
 
-def setup(ref: str) -> tuple[str, str, str, bool]:
-    """Runs `issue setup`; returns (issue id, worktree, branch, summary written)."""
+def setup(ref: str) -> tuple[str, str, str]:
+    """Runs `issue setup`; returns (issue id, worktree, branch)."""
     number = github_number(ref)
     if number:
         done = run(["gh", "issue", "view", number, "--json", "title"])
@@ -107,13 +107,13 @@ def setup(ref: str) -> tuple[str, str, str, bool]:
         title = first_json(done.stdout).get("title", "")
         cmd = ["issue", "setup", number, "--slug", slugify(title)]
     else:
-        cmd = ["issue", "setup", "--summary", ref]
-    done = run(cmd)
+        cmd = ["issue", "setup", ref]
+    done = run([*cmd, "--summary"])
     record = first_json(done.stdout)
     if done.returncode != 0 or "worktree" not in record:
         raise StepError(f"issue setup: {output(done)}")
     issue = str(record.get("issue") or number or ref)
-    return issue, record["worktree"], record.get("branch", "-"), number is None
+    return issue, record["worktree"], record.get("branch", "-")
 
 
 def agent_name(kind: str, issue: str) -> str:
@@ -147,28 +147,34 @@ def prompt_agent(herdr: hs.Herdr, name: str, prompt: str) -> None:
         raise StepError(f"agent prompt: {message or code}")
 
 
-def launch(herdr: hs.Herdr, ref: str, kind: str, extra: str) -> Row:
-    """Starts the agent. A summarized issue gets /issue-start first; hand_over sends the issue."""
+def launch(herdr: hs.Herdr, ref: str, kind: str) -> Row:
+    """Sets up the worktree and starts an unprompted agent in it; hand_over prompts it."""
     row = Row(ref)
     try:
-        row.issue, worktree, row.branch, summarized = setup(ref)
+        row.issue, worktree, row.branch = setup(ref)
         row.agent, blocked = start_agent(herdr, kind, row.issue, worktree)
         if blocked:
             row.status, row.detail = "blocked", "waiting at a startup prompt; not prompted"
             return row
-        if summarized:
-            row.starting = True
-        else:
-            prompt_agent(herdr, row.agent, f"Work on issue {row.issue}. {extra}")
         row.status = "working"
     except StepError as error:
         row.detail = str(error)
     return row
 
 
-def hand_over(herdr: hs.Herdr, row: Row, kind: str, extra: str) -> None:
-    """Runs issue-start and waits for it to settle, then tells the agent to do the issue."""
-    start = ISSUE_START.get(kind, ISSUE_START_FALLBACK)
+def hand_over(herdr: hs.Herdr, row: Row, start: str | None, task: str) -> None:
+    """Runs the start command and waits for it to settle, then tells the agent the task.
+
+    `{issue}` in either expands to the row's issue id.
+    """
+    task = task.replace("{issue}", row.issue)
+    if start is None:
+        try:
+            prompt_agent(herdr, row.agent, task)
+        except StepError as error:
+            row.status, row.detail = "failed", str(error)
+        return
+    start = start.replace("{issue}", row.issue)
     waited, code, message = herdr.call(
         "agent", "prompt", row.agent, start, "--wait", "--timeout", ISSUE_START_TIMEOUT_MS
     )
@@ -185,22 +191,21 @@ def hand_over(herdr: hs.Herdr, row: Row, kind: str, extra: str) -> None:
                 "agent", "wait", row.agent, "--timeout", ISSUE_START_TIMEOUT_MS
             )
     if waited is None:
-        row.status, row.detail = "failed", f"issue-start: {message or code}"
+        row.status, row.detail = "failed", f"{start}: {message or code}"
         return
     state, _, _ = herdr.call("agent", "get", row.agent)
     agent = (state or {}).get("agent", {})
     if agent.get("agent_status") == "blocked":
         row.status = "blocked"
-        row.detail = "asked a question during issue-start; not given the issue"
+        row.detail = f"asked a question during {start}; not given the task"
         return
     # `agent prompt` delivers a bracketed paste, which a session that has just
     # oriented treats as untrusted pasted text; typed keystrokes read as the user.
     pane = agent.get("pane_id", "")
-    prompt = f"Now do what issue {row.issue} says. {extra}".strip()
-    for step in (["send-text", pane, prompt], ["send-keys", pane, "enter"]):
+    for step in (["send-text", pane, task], ["send-keys", pane, "enter"]):
         done = run(["herdr", "pane", *step])
         if done.returncode != 0:
-            row.status, row.detail = "failed", f"typing the issue prompt: {output(done)}"
+            row.status, row.detail = "failed", f"typing the task: {output(done)}"
             return
 
 
@@ -218,8 +223,18 @@ def main() -> int:
         "refs", nargs="+", metavar="REF", help="GitHub number or URL, Linear id or URL"
     )
     parser.add_argument("--kind", default="claude", help="installed agent kind")
-    parser.add_argument("--extra", default="", help="text appended to every agent's prompt")
+    parser.add_argument(
+        "--start",
+        help="command the agent runs before its task, `none` to skip (default: /issue-start)",
+    )
+    parser.add_argument(
+        "--task", default=TASK, help=f"what the agent is told to do (default: {TASK!r})"
+    )
+    parser.add_argument("--extra", default="", help="text appended to the task")
     args = parser.parse_args()
+    default_start = ISSUE_START.get(args.kind, ISSUE_START_FALLBACK)
+    start = None if args.start == "none" else args.start or default_start
+    task = f"{args.task} {args.extra}".strip()
 
     installed = hs.installed_agents(None)
     if args.kind not in installed:
@@ -228,11 +243,11 @@ def main() -> int:
         return 1
 
     herdr = hs.Herdr(None, None)
-    rows = [launch(herdr, ref, args.kind, args.extra) for ref in unique(args.refs)]
-    starting = [row for row in rows if row.starting]
-    if starting:
-        with ThreadPoolExecutor(max_workers=len(starting)) as pool:
-            list(pool.map(lambda row: hand_over(herdr, row, args.kind, args.extra), starting))
+    rows = [launch(herdr, ref, args.kind) for ref in unique(args.refs)]
+    started = [row for row in rows if row.status == "working"]
+    if started:
+        with ThreadPoolExecutor(max_workers=len(started)) as pool:
+            list(pool.map(lambda row: hand_over(herdr, row, start, task), started))
     for row in rows:
         print(f"{row.ref}\t{row.branch}\t{row.agent}\t{row.status}\t{row.detail}")
     working = sum(row.status == "working" for row in rows)

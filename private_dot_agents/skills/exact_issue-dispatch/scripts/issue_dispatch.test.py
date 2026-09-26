@@ -53,8 +53,7 @@ class FakeTools:
         match cmd:
             case ["gh", "issue", "view", number, *_]:
                 return json.dumps({"title": f"Fix the thing #{number}!"}), "", 0
-            case ["issue", "setup", *rest]:
-                issue = rest[1] if rest[0] == "--summary" else rest[0]
+            case ["issue", "setup", issue, *_]:
                 if issue == self.failing_issue:
                     return "", "Error: branch already exists", 1
                 worktree = self.home / "wt" / issue
@@ -161,47 +160,77 @@ class DispatchTests(unittest.TestCase):
         self.addCleanup(home.cleanup)
         self.home = Path(home.name)
 
-    def test_github_number_gets_slug_and_prompted_agent_in_hook_shell(self) -> None:
+    def sent_to(self, tools: FakeTools, agent: str) -> list[list[str]]:
+        pane = f"pane-{agent}"
+        return [
+            cmd[2:]
+            for cmd in tools.calls
+            if cmd[:4] == ["herdr", "agent", "prompt", agent] or cmd[3:4] == [pane]
+        ]
+
+    def test_github_number_gets_slug_and_agent_in_hook_shell(self) -> None:
         tools = FakeTools(self.home)
-        lines = dispatch(tools, "--kind", "codex", "--extra", "Plan first.", "#110")
+        lines = dispatch(tools, "--kind", "codex", "#110")
         self.assertEqual(
             tools.named("issue", "setup"),
-            [["issue", "setup", "110", "--slug", "fix-the-thing-110"]],
+            [["issue", "setup", "110", "--slug", "fix-the-thing-110", "--summary"]],
         )
         self.assertEqual(
             tools.named("herdr", "agent", "start"),
             [["herdr", "agent", "start", "codex-110", "--kind", "codex", "--pane", "w1:p1"]],
-        )
-        self.assertEqual(
-            tools.named("herdr", "agent", "prompt"),
-            [["herdr", "agent", "prompt", "codex-110", "Work on issue 110. Plan first."]],
         )
         self.assertEqual(lines, ["#110\t110-x\tcodex-110\tworking\t", "ID-RESULT: OK"])
 
     def test_linear_ref_writes_summary(self) -> None:
         tools = FakeTools(self.home)
         dispatch(tools, "ENG-12")
-        self.assertEqual(tools.named("issue", "setup"), [["issue", "setup", "--summary", "ENG-12"]])
+        self.assertEqual(tools.named("issue", "setup"), [["issue", "setup", "ENG-12", "--summary"]])
 
-    def test_summarized_issue_runs_issue_start_before_the_issue(self) -> None:
+    def test_every_issue_runs_issue_start_before_its_task(self) -> None:
         tools = FakeTools(self.home)
-        lines = dispatch(tools, "--extra", "Plan first.", "ENG-12", "ENG-13")
-        for issue in ("ENG-12", "ENG-13"):
+        lines = dispatch(tools, "--extra", "Plan first.", "ENG-12", "110")
+        for issue in ("ENG-12", "110"):
             agent = f"claude-{issue.lower()}"
             pane = f"pane-{agent}"
-            sent = [
-                cmd[2:]
-                for cmd in tools.calls
-                if cmd[:4] == ["herdr", "agent", "prompt", agent] or cmd[3:4] == [pane]
-            ]
             self.assertEqual(
-                sent,
+                self.sent_to(tools, agent),
                 [
                     ["prompt", agent, "/issue-start", "--wait", "--timeout", "900000"],
                     ["send-text", pane, f"Now do what issue {issue} says. Plan first."],
                     ["send-keys", pane, "enter"],
                 ],
             )
+        self.assertEqual(lines[-1], "ID-RESULT: OK")
+
+    def test_start_and_task_overrides_expand_the_issue(self) -> None:
+        tools = FakeTools(self.home)
+        dispatch(
+            tools,
+            "--start",
+            "/issue-start-migrate {issue}",
+            "--task",
+            "Plan {issue} only.",
+            "--extra",
+            "No code.",
+            "ENG-12",
+        )
+        agent, pane = "claude-eng-12", "pane-claude-eng-12"
+        self.assertEqual(
+            self.sent_to(tools, agent),
+            [
+                ["prompt", agent, "/issue-start-migrate ENG-12", "--wait", "--timeout", "900000"],
+                ["send-text", pane, "Plan ENG-12 only. No code."],
+                ["send-keys", pane, "enter"],
+            ],
+        )
+
+    def test_start_none_prompts_the_task_directly(self) -> None:
+        tools = FakeTools(self.home)
+        lines = dispatch(tools, "--start", "none", "110")
+        self.assertEqual(
+            self.sent_to(tools, "claude-110"),
+            [["prompt", "claude-110", "Now do what issue 110 says."]],
+        )
         self.assertEqual(lines[-1], "ID-RESULT: OK")
 
     def test_swallowed_enter_on_issue_start_is_pressed_again(self) -> None:
