@@ -300,9 +300,7 @@ def commit_patch(patch: Path, message: str) -> int:
             retain = False
             return result.returncode
         try:
-            shutil.copyfile(replacement, lock)
-            with lock.open("rb") as handle:
-                os.fsync(handle.fileno())
+            write_synced(lock, replacement.read_bytes())
             os.replace(lock, index)
             owns_lock = False
             retain = False
