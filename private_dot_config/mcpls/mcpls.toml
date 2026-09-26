@@ -43,7 +43,8 @@ project_markers = ["Cargo.toml", "rust-toolchain.toml"]
 # Defaults compile and run build.rs and proc-macros from the open repo.
 [lsp_servers.initialization_options]
 cargo.buildScripts.enable = false
-procMacro.enable = false
+check.command = "clippy"
+procMacro.enable = true
 
 [[lsp_servers]]
 language_id = "python"
